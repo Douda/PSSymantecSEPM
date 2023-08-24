@@ -1,0 +1,10 @@
+TOPIC
+    about_PSSymantecSEPM
+
+SHORT DESCRIPTION
+    Common set of tools to interact with Symantec Endpoint Protection Manager (SEPM) product
+
+EXAMPLES
+    PS C:\> Get-SepCloudPolicies
+
+    ...
