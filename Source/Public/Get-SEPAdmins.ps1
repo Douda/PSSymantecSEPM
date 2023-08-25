@@ -17,8 +17,12 @@ General notes
 #>
     [CmdletBinding()]
     Param (
-        [Parameter()][String]$AdminName
+        # AdminName
+        [Parameter()]
+        [String]
+        $AdminName
     )
+    # 
     if ($PSVersionTable.PSVersion.Major -lt 6) {
         if ($null -ne $headers) {
             $URI = $BaseURL + "/admin-users"
