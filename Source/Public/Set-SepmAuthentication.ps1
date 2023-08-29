@@ -67,7 +67,7 @@ function Set-SepmAuthentication {
         return
     }
 
-    if (-not $PSBoundParameters.ContainsKey('Credential')) {
+    if (-not $PSBoundParameters.ContainsKey('Creds')) {
         $message = 'Please provide your Username and Password.'
         if (-not $SessionOnly) {
             $message = $message + '  ***The token is being cached across PowerShell sessions.  To clear caching, call Clear-SepmAuthentication.***'
@@ -96,7 +96,7 @@ function Set-SepmAuthentication {
 
     if (-not $SessionOnly) {
         Set-SepmConfiguration -Username $Creds.UserName
-        Set-SepmConfiguration -Password $Creds.GetNetworkCredential().SecurePassword
+        Set-SepmConfiguration -Password ($Creds.GetNetworkCredential().SecurePassword | ConvertFrom-SecureString)
         Set-SepmConfiguration -ServerAddress $ServerAddress
     }
 }
