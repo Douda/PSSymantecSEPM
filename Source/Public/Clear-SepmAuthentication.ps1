@@ -21,7 +21,7 @@ function Clear-SepmAuthentication {
 
     .NOTES
         This command will not clear your configuration settings.
-        Please use Reset-GitHubConfiguration to accomplish that.
+        Please use Reset-SepmConfiguration to accomplish that.
 #>
     [CmdletBinding(SupportsShouldProcess)]
     param(
