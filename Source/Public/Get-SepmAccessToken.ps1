@@ -61,6 +61,7 @@ function Get-SepmAccessToken {
         "(e.g. <sepservername>:8446)"
         $ServerAddress = Read-Host -Prompt "SEPM Server address"
         $script:BaseURL = "https://" + $ServerAddress + '/sepm/api/v1'
+        $script:ServerAddress = $ServerAddress
     }
     if ($null -eq $script:Credential) {
         $script:Credential = Get-Credential
