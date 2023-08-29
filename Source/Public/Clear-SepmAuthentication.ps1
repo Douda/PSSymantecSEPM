@@ -45,10 +45,10 @@ function Clear-SepmAuthentication {
             ($ev.Count -gt 0) -and
             ($ev[0].FullyQualifiedErrorId -notlike 'PathNotFound*')) {
             $message = "Experienced a problem trying to remove the file that persists the Access Token [$script:credentialsFilePath]."
-            Write-Log -Message $message -Level Warning -Exception $ev[0]
+            # Write-Log -Message $message -Level Warning -Exception $ev[0]
         }
     }
 
     $message = "This has not cleared your configuration settings.  Call Reset-SepmConfiguration to accomplish that."
-    Write-Log -Message $message -Level Verbose
+    # Write-Log -Message $message -Level Verbose
 }

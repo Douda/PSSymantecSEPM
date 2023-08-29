@@ -78,7 +78,7 @@ function Set-SepmAuthentication {
 
     if ([String]::IsNullOrWhiteSpace($Creds.GetNetworkCredential().Password)) {
         $message = "Password not provided.  Nothing to do."
-        Write-Log -Message $message -Level Error
+        # Write-Log -Message $message -Level Error
         throw $message
     }
 

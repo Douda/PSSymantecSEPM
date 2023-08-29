@@ -42,12 +42,12 @@ function Reset-SepmConfiguration {
 
         if (($null -ne $ev) -and ($ev.Count -gt 0) -and ($ev[0].FullyQualifiedErrorId -notlike 'PathNotFound*')) {
             $message = "Reset was unsuccessful.  Experienced a problem trying to remove the file [$script:configurationFilePath]."
-            Write-Log -Message $message -Level Warning -Exception $ev[0]
+            # Write-Log -Message $message -Level Warning -Exception $ev[0]
         }
     }
 
     Initialize-SepmConfiguration
 
     $message = "This has not cleared your authentication token.  Call Clear-GitHubAuthentication to accomplish that."
-    Write-Log -Message $message -Level Verbose
+    # Write-Log -Message $message -Level Verbose
 }

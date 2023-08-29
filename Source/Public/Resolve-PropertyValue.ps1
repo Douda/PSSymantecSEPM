@@ -59,7 +59,7 @@ function Resolve-PropertyValue {
             return $InputObject.$Name
         } else {
             $message = "The locally cached $Name configuration was not of type $Type (it was $($InputObject.$Name.GetType())).  Reverting to default value."
-            Write-Log -Message $message -Level Warning
+            # Write-Log -Message $message -Level Warning
             return $DefaultValue
         }
     } else {

@@ -36,7 +36,7 @@ function Read-SepmConfiguration {
             return ($content | ConvertFrom-Json)
         } catch {
             $message = 'The configuration file for this module is in an invalid state.  Use Reset-SepmConfiguration to recover.'
-            Write-Log -Message $message -Level Warning
+            # Write-Log -Message $message -Level Warning
         }
     }
 

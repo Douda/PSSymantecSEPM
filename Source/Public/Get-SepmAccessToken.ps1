@@ -46,12 +46,12 @@ function Get-SepmAccessToken {
             $secureString = $content | ConvertTo-SecureString
 
             $message = "Restoring Access Token from file.  This value can be cleared in the future by calling Clear-GitHubAuthentication."
-            Write-Log -Message $messsage -Level Verbose
+            # Write-Log -Message $messsage -Level Verbose
             $script:accessToken = New-Object System.Management.Automation.PSCredential "<username is ignored>", $secureString
             return $script:accessToken.GetNetworkCredential().Password
         } catch {
             $message = 'The Access Token file for this module contains an invalid SecureString (files can''t be shared by users or computers).  Use Set-SepmAuthentication to update it.'
-            Write-Log -Message $message -Level Warning
+            # Write-Log -Message $message -Level Warning
         }
     }
 
