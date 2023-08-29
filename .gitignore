@@ -8,3 +8,4 @@ gitversion.exe
 # Ignore Thunder client
 thunder-tests/
 .vscode/settings.json
+.vscode/launch.json
