@@ -41,6 +41,6 @@ function Save-SepmConfiguration {
 
     if (($null -ne $ev) -and ($ev.Count -gt 0)) {
         $message = "Failed to persist these updated settings to disk.  They will remain for this PowerShell session only."
-        # Write-Log -Message $message -Level Warning -Exception $ev[0]
+        Write-Warning -Message $message
     }
 }

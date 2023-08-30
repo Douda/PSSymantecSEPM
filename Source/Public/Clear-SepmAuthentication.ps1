@@ -28,27 +28,25 @@ function Clear-SepmAuthentication {
         [switch] $SessionOnly
     )
 
-    Write-InvocationLog
-
-    Set-TelemetryEvent -EventName Clear-SepmAuthentication
-
     if (-not $PSCmdlet.ShouldProcess('Sepm Authentication', 'Clear')) {
         return
     }
 
     $script:Credential = $null
+    $script:accessToken = $null
 
     if (-not $SessionOnly) {
         Remove-Item -Path $script:credentialsFilePath -Force -ErrorAction SilentlyContinue -ErrorVariable ev
+        Remove-Item -Path $script:accessTokenFilePath -Force -ErrorAction SilentlyContinue -ErrorVariable ev
 
         if (($null -ne $ev) -and
             ($ev.Count -gt 0) -and
             ($ev[0].FullyQualifiedErrorId -notlike 'PathNotFound*')) {
             $message = "Experienced a problem trying to remove the file that persists the Access Token [$script:credentialsFilePath]."
-            # Write-Log -Message $message -Level Warning -Exception $ev[0]
+            Write-Warning -Message $message
         }
     }
 
     $message = "This has not cleared your configuration settings.  Call Reset-SepmConfiguration to accomplish that."
-    # Write-Log -Message $message -Level Verbose
+    Write-Verbose -Message $message
 }

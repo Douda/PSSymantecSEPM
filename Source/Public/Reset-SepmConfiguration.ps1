@@ -24,7 +24,7 @@ function Reset-SepmConfiguration {
 
     .NOTES
         This command will not clear your authentication token.
-        Please use Clear-GitHubAuthentication to accomplish that.
+        Please use Clear-SepmAuthentication to accomplish that.
 #>
     [CmdletBinding(SupportsShouldProcess)]
     param(
@@ -35,19 +35,17 @@ function Reset-SepmConfiguration {
         return
     }
 
-    Set-TelemetryEvent -EventName Reset-SepmConfiguration
-
     if (-not $SessionOnly) {
         $null = Remove-Item -Path $script:configurationFilePath -Force -ErrorAction SilentlyContinue -ErrorVariable ev
 
         if (($null -ne $ev) -and ($ev.Count -gt 0) -and ($ev[0].FullyQualifiedErrorId -notlike 'PathNotFound*')) {
             $message = "Reset was unsuccessful.  Experienced a problem trying to remove the file [$script:configurationFilePath]."
-            # Write-Log -Message $message -Level Warning -Exception $ev[0]
+            Write-Warning -Message $message
         }
     }
 
     Initialize-SepmConfiguration
 
-    $message = "This has not cleared your authentication token.  Call Clear-GitHubAuthentication to accomplish that."
-    # Write-Log -Message $message -Level Verbose
+    $message = "This has not cleared your authentication token.  Call Clear-SepmAuthentication to accomplish that."
+    Write-Verbose -Message $message
 }
