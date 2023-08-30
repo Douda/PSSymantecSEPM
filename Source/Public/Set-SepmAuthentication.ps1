@@ -42,10 +42,9 @@ function Set-SepmAuthentication {
         which will be securely stored on the machine for use in all future PowerShell sessions.
 
     .EXAMPLE
-        Set-SepmAuthentication -SessionOnly
+        Get-Credential | Set-SepmAuthentication
 
-        Prompts the user for their GitHub API Token, but keeps it in memory only for the duration
-        of this PowerShell session.
+        Prompts the user for username and password and pipes the resulting credential object
 
     .EXAMPLE
         Set-SepmAuthentication -Credential $cred -SessionOnly
@@ -57,6 +56,8 @@ function Set-SepmAuthentication {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUsePSCredentialType", "", Justification = "The System.Management.Automation.Credential() attribute does not appear to work in PowerShell v4 which we need to support.")]
     param(
         [string] $ServerAddress,
+
+        [int] $Port = 8446,
         
         [PSCredential] $Creds,
 
@@ -78,10 +79,11 @@ function Set-SepmAuthentication {
 
     if ([String]::IsNullOrWhiteSpace($Creds.GetNetworkCredential().Password)) {
         $message = "Password not provided.  Nothing to do."
-        # Write-Log -Message $message -Level Error
+        Write-Error -Message $message
         throw $message
     }
 
+    # Setting script scope variables so that they can be used in other functions
     $script:Credential = $Creds
 
     if (-not $PSBoundParameters.ContainsKey('ServerAddress')) {
@@ -90,13 +92,23 @@ function Set-SepmAuthentication {
             $message = $message + '  ***The token is being cached across PowerShell sessions.  To clear caching, call Clear-SepmAuthentication.***'
         }
 
-        $ServerAddress = Read-Host -Prompt "ServerAddress"
+        $ServerAddress = Read-Host -Prompt "SEPM Server address"
+    }
+
+    # verify if the the $port is not the default one
+    if ($Port -ne 8446) {
+        $message = 'Please provide SEPM API Service port (Default 8446).'
+        if (-not $SessionOnly) {
+            $message = $message + '  ***The token is being cached across PowerShell sessions.  To clear caching, call Clear-SepmAuthentication.***'
+        }
+        $Port = Read-Host -Prompt "SEPM API Service port"
     }
 
 
+
     if (-not $SessionOnly) {
-        Set-SepmConfiguration -Username $Creds.UserName
-        Set-SepmConfiguration -Password ($Creds.GetNetworkCredential().SecurePassword | ConvertFrom-SecureString)
         Set-SepmConfiguration -ServerAddress $ServerAddress
+        Set-SepmConfiguration -Port $Port
+        $Creds | Export-Clixml -Path $script:credentialsFilePath -Force
     }
 }
