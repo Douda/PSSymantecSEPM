@@ -44,25 +44,25 @@ function Get-SepmAccessToken {
     if (-not [String]::IsNullOrEmpty($content)) {
         try {
             $secureString = $content | ConvertTo-SecureString
-
-            $message = "Restoring Access Token from file.  This value can be cleared in the future by calling Clear-GitHubAuthentication."
-            # Write-Log -Message $messsage -Level Verbose
+            $message = "Restoring Access Token from file.  This value can be cleared in the future by calling Clear-SepmAuthentication."
+            Write-Verbose -Message $message
             $script:accessToken = New-Object System.Management.Automation.PSCredential "<username is ignored>", $secureString
             return $script:accessToken.GetNetworkCredential().Password
         } catch {
             $message = 'The Access Token file for this module contains an invalid SecureString (files can''t be shared by users or computers).  Use Set-SepmAuthentication to update it.'
-            # Write-Log -Message $message -Level Warning
+            Write-Warning -Message $message
         }
     }
 
     # Finally, if there is still no available token, query one from the SEPM server.
-    if ($null -eq $BaseURL) {
-        "Please enter your symantec server's name and port."
-        "(e.g. <sepservername>:8446)"
-        $ServerAddress = Read-Host -Prompt "SEPM Server address"
-        $script:BaseURL = "https://" + $ServerAddress + '/sepm/api/v1'
-        $script:ServerAddress = $ServerAddress
+    # Then caches the token in memory and stores it in a file on disk as a SecureString
+    if ($null -eq $script:configuration.ServerAddress) {
+        $message = "SEPM Server name not found. Use Set-SepmConfiguration to update it"
+        Write-Warning -Message $message
+        throw $message
     }
+    $script:BaseURL = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
+    
     if ($null -eq $script:Credential) {
         $script:Credential = Get-Credential
     }
@@ -71,36 +71,45 @@ function Get-SepmAccessToken {
         "password" = ([System.Net.NetworkCredential]::new("", $script:Credential.Password).Password)
         "domain"   = ""
     }
-    if ($null -ne $body) {
-        $URI = $BaseURL + '/identity/authenticate'
-        try {
-            Invoke-WebRequest $BaseURL
-        } catch {
-            'SSL Certificate test failed, skipping certificate validation. Please check your certificate settings and verify this is a legitimate source.'
-            $Response = Read-Host -Prompt 'Please press enter to ignore this and continue without SSL/TLS secure channel'
-            if ($Response -eq "") {
-                if ($PSVersionTable.PSVersion.Major -lt 6) {
-                    Skip-Cert
-                }
-                if ($PSVersionTable.PSVersion.Major -ge 6) {
-                    $Global:SkipCert = $true
-                }
-            }
-        }
-        try {
+    if ($null -eq $body) { 
+        $message = "Issue setting up username & password. Use Set-SepmAuthentication to update them"
+        throw $message 
+    }
+
+    $URI = $script:BaseURL + '/identity/authenticate'
+    try {
+        Invoke-WebRequest $script:BaseURL
+    } catch {
+        'SSL Certificate test failed, skipping certificate validation. Please check your certificate settings and verify this is a legitimate source.'
+        $Response = Read-Host -Prompt 'Please press enter to ignore this and continue without SSL/TLS secure channel'
+        if ($Response -eq "") {
             if ($PSVersionTable.PSVersion.Major -lt 6) {
-                $SEPToken = (Invoke-RestMethod -Method POST -Uri $URI -ContentType "application/json" -Body ($body | ConvertTo-Json)).token
+                Skip-Cert
             }
             if ($PSVersionTable.PSVersion.Major -ge 6) {
-                if ($Global:SkipCert -eq $true) {
-                    $SEPToken = (Invoke-RestMethod -Method POST -Uri $URI -ContentType "application/json" -Body ($body | ConvertTo-Json) -SkipCertificateCheck).token
-                } else {
-                    $SEPToken = (Invoke-RestMethod -Method POST -Uri $URI -ContentType "application/json" -Body ($body | ConvertTo-Json) -SkipCertificateCheck).token
-                }
+                $Global:SkipCert = $true
             }
-        } catch {
-            Get-RestErrorDetails
         }
     }
-    $script:accessToken = New-Object System.Management.Automation.PSCredential "<username is ignored>", $SEPToken
+    try {
+        if ($PSVersionTable.PSVersion.Major -lt 6) {
+            $SEPToken = (Invoke-RestMethod -Method POST -Uri $URI -ContentType "application/json" -Body ($body | ConvertTo-Json)).token
+        }
+        if ($PSVersionTable.PSVersion.Major -ge 6) {
+            if ($Global:SkipCert -eq $true) {
+                $SEPToken = (Invoke-RestMethod -Method POST -Uri $URI -ContentType "application/json" -Body ($body | ConvertTo-Json) -SkipCertificateCheck).token
+            } else {
+                $SEPToken = (Invoke-RestMethod -Method POST -Uri $URI -ContentType "application/json" -Body ($body | ConvertTo-Json) -SkipCertificateCheck).token
+            }
+        }
+    } catch {
+        Get-RestErrorDetails
+    }
+    # Cache the token in memory and stores it in a file on disk as a SecureString
+    $script:accessToken = New-Object System.Management.Automation.PSCredential "<username is ignored>", ($SEPToken | ConvertTo-SecureString -AsPlainText -Force)
+    if (-not (Test-Path ($Script:accessTokenFilePath | Split-Path))) {
+        New-Item -ItemType Directory -Path ($Script:accessTokenFilePath | Split-Path) -Force | Out-Null
+    }
+    $script:accessToken | Export-Clixml -Path $script:accessTokenFilePath -Force
+    return $script:accessToken.GetNetworkCredential().Password
 }
