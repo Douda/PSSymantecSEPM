@@ -43,11 +43,9 @@ function Set-SepmConfiguration {
     param(
         [string] $ServerAddress,
 
-        [int] $port,
+        [int] $Port,
 
-        [string] $username,
-
-        [securestring] $password,
+        [string] $Username,
 
         [switch] $SessionOnly
     )
