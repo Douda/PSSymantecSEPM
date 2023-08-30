@@ -39,8 +39,6 @@ function Import-SepmConfiguration {
     $config = [PSCustomObject]@{
         'ServerAddress' = ''
         'port'          = '8446'
-        'username'      = ''
-        'password'      = ''
     }
 
     $jsonObject = Read-SepmConfiguration -Path $Path
