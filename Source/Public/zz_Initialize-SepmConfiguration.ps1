@@ -30,7 +30,7 @@
 [string] $script:accessTokenFilePath = [System.IO.Path]::Combine(
     [System.Environment]::GetFolderPath('LocalApplicationData'),
     'PSSymantecSEPM',
-    'accessToken.txt')
+    'accessToken.xml')
 
 # Only tell users about needing to configure an API token once per session.
 $script:seenTokenWarningThisSession = $false
@@ -58,6 +58,9 @@ function Initialize-SepmConfiguration {
 
     $script:seenTokenWarningThisSession = $false
     $script:configuration = Import-SepmConfiguration -Path $script:configurationFilePath
+    if (Test-Path $script:credentialsFilePath) {
+        $script:Credential = Import-Clixml -Path $script:credentialsFilePath -ErrorAction SilentlyContinue
+    }
     
 }
 
