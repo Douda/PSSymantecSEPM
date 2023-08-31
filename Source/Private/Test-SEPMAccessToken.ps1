@@ -24,11 +24,15 @@ function Test-SEPMAccessToken {
 
     # If no paramater is passed, test the cached token
     if ($null -eq $TokenInfo) {
-        if ($script:accessToken.tokenExpiration -lt (Get-Date)) {
-            return $true
+        # if token in memory
+        if (-not [string]::IsNullOrEmpty($script:accessToken.token) ) {
+            # if token still valid
+            if ($script:accessToken.tokenExpiration -lt (Get-Date)) {
+                return $true
+            } 
         } else {
-            return $false
-        }
+                return $false
+            }
     }
 
     # Check if the access token has expired
