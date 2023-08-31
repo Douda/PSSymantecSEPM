@@ -8,8 +8,7 @@ function Get-SepmAccessToken {
 
         First will try to use the one that may have been provided as a parameter.
         If not provided, then will try to use the one already cached in memory.
-        If still not found, will look to see if there is a file with the API token stored
-        as a SecureString.
+        If still not found, will look to see if there is a file with the API token stored on disk
         Finally, if there is still no available token, query one from the SEPM server.
 
     .PARAMETER AccessToken
@@ -19,64 +18,54 @@ function Get-SepmAccessToken {
         System.String
 #>
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "", Justification = "For back-compat with v0.1.0, this still supports the deprecated method of using a global variable for storing the Access Token.")]
-    [OutputType([String])]
+    [OutputType([PSCustomObject])]
     param(
-        [string] $AccessToken
+        [PSCustomObject] $AccessToken
     )
 
     # First will try to use the one that may have been provided as a parameter.
-    if (-not [String]::IsNullOrEmpty($AccessToken)) {
-        return $AccessToken
+    if (-not [String]::IsNullOrEmpty($AccessToken.token)) {
+        if (Test-SEPMAccessToken -Token $AccessToken) {
+            return $AccessToken
+        }
     }
 
     # If not provided, then will try to use the one already cached in memory.
-    if ($null -ne $script:accessToken) {
-        $token = $script:accessToken.GetNetworkCredential().Password
-
-        if (-not [String]::IsNullOrEmpty($token)) {
-            return $token
+    if (-not [String]::IsNullOrEmpty($script:accessToken)) {
+        if (Test-SEPMAccessToken -Token $script:accessToken) {
+            return $script:accessToken
         }
     }
 
-    # If still not found, will look to see if there is a file with the API token stored as a SecureString.
-    $content = Get-Content -Path $script:accessTokenFilePath -ErrorAction Ignore
-    if (-not [String]::IsNullOrEmpty($content)) {
-        try {
-            $secureString = $content | ConvertTo-SecureString
-            $message = "Restoring Access Token from file.  This value can be cleared in the future by calling Clear-SepmAuthentication."
-            Write-Verbose -Message $message
-            $script:accessToken = New-Object System.Management.Automation.PSCredential "<username is ignored>", $secureString
-            return $script:accessToken.GetNetworkCredential().Password
-        } catch {
-            $message = 'The Access Token file for this module contains an invalid SecureString (files can''t be shared by users or computers).  Use Set-SepmAuthentication to update it.'
-            Write-Warning -Message $message
+    # If still not found, will look to see if there is a file with the API token stored in the disk
+    if (Test-Path $script:accessTokenFilePath) {
+        $AccessToken = Import-Clixml -Path $script:accessTokenFilePath -ErrorAction Ignore
+        if (Test-SEPMAccessToken -Token $AccessToken) {
+            $script:accessToken = $AccessToken
+            return $script:accessToken
         }
     }
-
+        
     # Finally, if there is still no available token, query one from the SEPM server.
     # Then caches the token in memory and stores it in a file on disk as a SecureString
     if ($null -eq $script:configuration.ServerAddress) {
-        $message = "SEPM Server name not found. Use Set-SepmConfiguration to update it"
+        $message = "SEPM Server name not found. Use Set-SepmConfiguration to update it and try again"
         Write-Warning -Message $message
         throw $message
     }
-    $script:BaseURL = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
     
     if ($null -eq $script:Credential) {
         $script:Credential = Get-Credential
     }
+
     $body = @{
         "username" = $script:Credential.UserName
         "password" = ([System.Net.NetworkCredential]::new("", $script:Credential.Password).Password)
+        "appName"  = "PSSymantecSEPM PowerShell Module"
         "domain"   = ""
     }
-    if ($null -eq $body) { 
-        $message = "Issue setting up username & password. Use Set-SepmAuthentication to update them"
-        throw $message 
-    }
 
-    $URI = $script:BaseURL + '/identity/authenticate'
+    $URI_Authenticate = $script:BaseURL + '/identity/authenticate'
     try {
         Invoke-WebRequest $script:BaseURL
     } catch {
@@ -87,29 +76,42 @@ function Get-SepmAccessToken {
                 Skip-Cert
             }
             if ($PSVersionTable.PSVersion.Major -ge 6) {
-                $Global:SkipCert = $true
+                $script:SkipCert = $true
             }
         }
     }
+
     try {
+        $Params = @{
+            Method      = 'POST'
+            Uri         = $URI_Authenticate
+            ContentType = "application/json"
+            Body        = ($body | ConvertTo-Json)
+        }
         if ($PSVersionTable.PSVersion.Major -lt 6) {
-            $SEPToken = (Invoke-RestMethod -Method POST -Uri $URI -ContentType "application/json" -Body ($body | ConvertTo-Json)).token
+            $Response = Invoke-RestMethod @Params
         }
         if ($PSVersionTable.PSVersion.Major -ge 6) {
-            if ($Global:SkipCert -eq $true) {
-                $SEPToken = (Invoke-RestMethod -Method POST -Uri $URI -ContentType "application/json" -Body ($body | ConvertTo-Json) -SkipCertificateCheck).token
+            if ($script:SkipCert -eq $true) {
+                $Response = Invoke-RestMethod @Params -SkipCertificateCheck
             } else {
-                $SEPToken = (Invoke-RestMethod -Method POST -Uri $URI -ContentType "application/json" -Body ($body | ConvertTo-Json) -SkipCertificateCheck).token
+                $Response = Invoke-RestMethod @Params
             }
         }
     } catch {
         Get-RestErrorDetails
     }
-    # Cache the token in memory and stores it in a file on disk as a SecureString
-    $script:accessToken = New-Object System.Management.Automation.PSCredential "<username is ignored>", ($SEPToken | ConvertTo-SecureString -AsPlainText -Force)
+
+    # Caches the token in memory and stores token information & expiration in a file on disk 
+    $CachedToken = [PSCustomObject]@{
+        token           = $response.token
+        tokenExpiration = (Get-Date).AddSeconds($Response.tokenExpiration)
+    }
+    $script:accessToken = $CachedToken
+
     if (-not (Test-Path ($Script:accessTokenFilePath | Split-Path))) {
         New-Item -ItemType Directory -Path ($Script:accessTokenFilePath | Split-Path) -Force | Out-Null
     }
     $script:accessToken | Export-Clixml -Path $script:accessTokenFilePath -Force
-    return $script:accessToken.GetNetworkCredential().Password
+    return $script:accessToken
 }
