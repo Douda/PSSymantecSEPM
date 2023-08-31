@@ -26,6 +26,7 @@ function Get-SepmAccessToken {
     # First will try to use the one that may have been provided as a parameter.
     if (-not [String]::IsNullOrEmpty($AccessToken.token)) {
         if (Test-SEPMAccessToken -Token $AccessToken) {
+            $script:accessToken = $AccessToken
             return $AccessToken
         }
     }
@@ -74,6 +75,7 @@ function Get-SepmAccessToken {
         if ($Response -eq "") {
             if ($PSVersionTable.PSVersion.Major -lt 6) {
                 Skip-Cert
+                $script:SkipCert = $true
             }
             if ($PSVersionTable.PSVersion.Major -ge 6) {
                 $script:SkipCert = $true
@@ -106,6 +108,7 @@ function Get-SepmAccessToken {
     $CachedToken = [PSCustomObject]@{
         token           = $response.token
         tokenExpiration = (Get-Date).AddSeconds($Response.tokenExpiration)
+        SkipCert        = $script:SkipCert
     }
     $script:accessToken = $CachedToken
 
