@@ -58,8 +58,6 @@ function Resolve-PropertyValue {
             (($Type -in $numberEquivalents) -and ($InputObject.$Name.GetType().Name -in $numberEquivalents))) {
             return $InputObject.$Name
         } else {
-            $message = "The locally cached $Name configuration was not of type $Type (it was $($InputObject.$Name.GetType())).  Reverting to default value."
-            # Write-Log -Message $message -Level Warning
             return $DefaultValue
         }
     } else {
