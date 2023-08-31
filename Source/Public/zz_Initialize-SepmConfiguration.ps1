@@ -63,6 +63,9 @@ function Initialize-SepmConfiguration {
     $script:seenTokenWarningThisSession = $false
     $script:configuration = Import-SepmConfiguration -Path $script:configurationFilePath
     if ($script:configuration) {
+        if ([string]::IsNullOrEmpty($script:configuration.ServerAddress)) {
+            Set-SepmAuthentication
+        }
         $script:BaseURL = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
     }
     if (Test-Path $script:credentialsFilePath) {
