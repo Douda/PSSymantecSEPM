@@ -22,17 +22,34 @@ General notes
         [String]
         $AdminName
     )
-    # 
-    if ($PSVersionTable.PSVersion.Major -lt 6) {
-        if ($null -ne $headers) {
-            $URI = $BaseURL + "/admin-users"
+
+    # initialize the configuration
+    $test_token = Test-SEPMAccessToken
+    if ($test_token -eq $false) {
+        Get-SEPMAccessToken
+    }
+    $URI = $script:BaseURL + "/admin-users"
+    $headers = @{
+        "Authorization" = "Bearer " + $script:accessToken.token
+        "Content"       = 'application/json'
+    }
+    $params = @{
+        Method  = 'GET'
+        Uri     = $URI
+        headers = $headers
+    }
+
+    # Invoke the request
+    # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
+    # else we need to use the Skip-Cert function if self-signed certs are being used.
+    switch ($PSVersionTable.PSVersion.Major) {
+        { $_ -ge 6 } { 
             try {
-                $admins = (Invoke-RestMethod -Method GET -Uri $URI -Headers $headers)
-                if ($AdminName -eq "") {
-                    $admins
-                }
-                if ("" -ne $AdminName) {
-                    $admins  | Where-Object { $_.loginName -eq $AdminName }
+                # if ($script:SkipCert -eq $true) {
+                if ($script:accessToken.skipCert -eq $true) {
+                    $resp = Invoke-RestMethod @params -SkipCertificateCheck
+                } else {
+                    $resp = Invoke-RestMethod @params
                 }
             } catch {
                 "An error was found with this command. Please review the resultant error for details."
@@ -40,79 +57,22 @@ General notes
                 "Errors: $RESTError"
             }
         }
-        if ($null -eq $headers) {
-            Get-SEPToken
-            if ($null -ne $headers) {
-                $URI = $BaseURL + "/admin-users"
-                try {
-                    $admins = (Invoke-RestMethod -Method GET -Uri $URI -Headers $headers)
-                    if ($AdminName -eq "") {
-                        $admins
-                    }
-                    if ("" -ne $AdminName) {
-                        $admins  | Where-Object { $_.loginName -eq $AdminName }
-                    }
-                } catch {
-                    "An error was found with this command. Please review the resultant error for details."
-                    $RESTError = Get-RestError($_)
-                    "Errors: $RESTError"
-                }
+        default {
+            # if ($script:SkipCert -eq $true) {
+            if ($script:accessToken.skipCert -eq $true) {
+                Skip-Cert
+                $resp = Invoke-RestMethod @params
+            } else {
+                $resp = Invoke-RestMethod @params
             }
         }
     }
-    if ($PSVersionTable.PSVersion.Major -ge 6) {
-        if ($null -ne $headers) {
-            $URI = $BaseURL + "/admin-users"
-            try {
-                if ($Global:SkipCert -eq $true) {
-                    $admins = (Invoke-RestMethod -Method GET -Uri $URI -Headers $headers -SkipCertificateCheck)
-                    if ($AdminName -eq "") {
-                        $admins
-                    }
-                    if ("" -ne $AdminName) {
-                        $admins  | Where-Object { $_.loginName -eq $AdminName }
-                    }
-                } else {
-                    $admins = (Invoke-RestMethod -Method GET -Uri $URI -Headers $headers)
-                    if ($AdminName -eq "") {
-                        $admins
-                    }
-                    if ("" -ne $AdminName) {
-                        $admins  | Where-Object { $_.loginName -eq $AdminName }
-                    } 
-                }
-            } catch {
-                "An error was found with this command. Please review the resultant error for details."
-                $RESTError = Get-RestError($_)
-                "Errors: $RESTError"
-            }
-        }
-        if ($null -eq $headers) {
-            Get-SEPToken
-            if ($null -ne $headers) {
-                $URI = $BaseURL + "/admin-users"
-                try {
-                    if ($Global:SkipCert -eq $true) {
-                        $admins = (Invoke-RestMethod -Method GET -Uri $URI -Headers $headers -SkipCertificateCheck)
-                        if ($AdminName -eq "") {
-                            $admins
-                        }
-                        if ("" -ne $AdminName) {
-                            $admins  | Where-Object { $_.loginName -eq $AdminName }
-                        }
-                    } else {
-                        $admins = (Invoke-RestMethod -Method GET -Uri $URI -Headers $headers)
-                        if ($AdminName -eq "") {
-                            $admins
-                        }
-                        if ("" -ne $AdminName) {
-                            $admins  | Where-Object { $_.loginName -eq $AdminName }
-                        } 
-                    }
-                } catch {
-                    Get-RestErrorDetails
-                }
-            }
-        }
+
+    # Process the response
+    if ([string]::IsNullOrEmpty($AdminName)) {
+        return $resp
+    } else {
+        $resp = $resp | Where-Object { $_.loginName -eq $AdminName }
+        return $resp
     }
 }
