@@ -1,16 +1,13 @@
 Function Get-SEPMVersion {
     <# TODO update help
     .SYNOPSIS
-        A short one-line action-based description, e.g. 'Tests if a function is valid'
+        Gets the current version of Symantec Endpoint Protection Manager.
     .DESCRIPTION
-        A longer description of the function, its purpose, common use cases, etc.
-    .NOTES
-        Information or caveats about the function e.g. 'This function is not supported in Linux'
-    .LINK
-        Specify a URI to a help page, this will show when Get-Help -Online is used.
+        Gets the current version of Symantec Endpoint Protection Manager. This function dot not require authentication.
     .EXAMPLE
-        Test-MyTestFunction -Verbose
-        Explanation of the function or its result. You can include multiple examples with additional .EXAMPLE lines
+        Get-SEPMVersion
+
+        Gets the current version of Symantec Endpoint Protection Manager.
     #>
     
 
@@ -58,9 +55,7 @@ Function Get-SEPMVersion {
                     $resp = Invoke-RestMethod @params
                 }
             } catch {
-                "An error was found with this command. Please review the resultant error for details."
-                $RESTError = Get-RestError($_)
-                "Errors: $RESTError"
+                Write-Warning -Message "Error: $_"
             }
         }
     }
