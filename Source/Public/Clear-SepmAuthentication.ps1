@@ -6,31 +6,16 @@ function Clear-SepmAuthentication {
     .DESCRIPTION
         Clears out any API token from memory, as well as from local file storage.
 
-        The Git repo for this module can be found here: http://aka.ms/PowerShellForGitHub
-
-    .PARAMETER SessionOnly
-        By default, this will clear out the cache in memory, as well as in the local
-        configuration file.  If this switch is specified, authentication will be cleared out
-        in this session only -- the local configuration file cache will remain
-        (and thus still be available in a new PowerShell session).
-
     .EXAMPLE
         Clear-SepmAuthentication
 
-        Clears out any GitHub API token from memory, as well as from local file storage.
+        Clears out any API token from memory, as well as from local file storage.
 
     .NOTES
         This command will not clear your configuration settings.
         Please use Reset-SepmConfiguration to accomplish that.
 #>
-    [CmdletBinding(SupportsShouldProcess)]
-    param(
-        [switch] $SessionOnly
-    )
 
-    if (-not $PSCmdlet.ShouldProcess('Sepm Authentication', 'Clear')) {
-        return
-    }
 
     $script:Credential = $null
     $script:accessToken = $null
