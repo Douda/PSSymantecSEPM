@@ -51,6 +51,11 @@ function Set-SepmAuthentication {
 
         Uses the API token stored in the password field of the provided credential object for
         authentication, but keeps it in memory only for the duration of this PowerShell session..
+
+        .EXAMPLE
+        Set-SepmAuthentication -Port 8888
+
+        Changes the API communication port to 8888. Default is 8446.
 #>
     [CmdletBinding(SupportsShouldProcess)]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUsePSCredentialType", "", Justification = "The System.Management.Automation.Credential() attribute does not appear to work in PowerShell v4 which we need to support.")]
