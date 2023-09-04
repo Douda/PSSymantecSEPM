@@ -27,18 +27,17 @@ function Test-SEPMAccessToken {
         # if token in memory
         if (-not [string]::IsNullOrEmpty($script:accessToken.token) ) {
             # if token still valid
-            if ($script:accessToken.tokenExpiration -lt (Get-Date)) {
+            if ($script:accessToken.tokenExpiration -gt (Get-Date)) {
                 return $true
             } 
-        } else {
-                return $false
-            }
+        }
     }
 
     # Check if the access token has expired
-    if ($TokenInfo.tokenExpiration -lt (Get-Date)) {
+    if ($TokenInfo.tokenExpiration -gt (Get-Date)) {
         return $true
-    } else {
-        return $false
     }
+
+    # If we get here, no valid token was found
+    return $false
 }
