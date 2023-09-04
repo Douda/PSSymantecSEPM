@@ -49,6 +49,7 @@ function Get-SEPComputers {
             $ComputerName = ""
         }
 
+        # URI query strings
         $QueryStrings = @{
             sort         = "COMPUTER_NAME"
             pageIndex    = 1
