@@ -24,7 +24,7 @@ function Get-SEPComputers {
             ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true
         )]
-        [Alias("Hostname", "DeviceName", "Device", "Computer", "ComputerName")]
+        [Alias("Hostname", "DeviceName", "Device", "Computer")]
         [String]
         $ComputerName
     )
