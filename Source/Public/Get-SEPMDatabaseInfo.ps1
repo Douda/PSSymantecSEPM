@@ -19,7 +19,7 @@ function Get-SEPMDatabaseInfo {
     if ($test_token -eq $false) {
         Get-SEPMAccessToken
     }
-    $URI = $script:BaseURL + "/admin/database"
+    $URI = $script:BaseURLv1 + "/admin/database"
     $headers = @{
         "Authorization" = "Bearer " + $script:accessToken.token
         "Content"       = 'application/json'

@@ -50,7 +50,7 @@ function Get-SEPMIpsPolicy {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken
         }
-        $URI = $script:BaseURL + "/policies/ips"
+        $URI = $script:BaseURLv1 + "/policies/ips"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'

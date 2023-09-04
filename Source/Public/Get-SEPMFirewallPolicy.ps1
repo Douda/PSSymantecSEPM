@@ -38,7 +38,7 @@ function Get-SEPMFirewallPolicy {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken
         }
-        $URI = $script:BaseURL + "/policies/firewall"
+        $URI = $script:BaseURLv1 + "/policies/firewall"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'

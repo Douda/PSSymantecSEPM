@@ -38,7 +38,7 @@ function Get-SEPMExceptionPolicy {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken
         }
-        $URI = $script:BaseURL + "/policies/exceptions"
+        $URI = $script:BaseURLv1 + "/policies/exceptions"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'

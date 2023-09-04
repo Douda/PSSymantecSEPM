@@ -57,7 +57,7 @@ function Get-SEPMPoliciesSummary {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken
         }
-        $URI = $script:BaseURL + "/policies/summary"
+        $URI = $script:BaseURLv1 + "/policies/summary"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
@@ -141,7 +141,7 @@ function Get-SEPMPoliciesSummary {
             return $allResults
         }
         if ($PolicyType) {
-            $URI = $script:BaseURL + "/policies/summary" + "/" + $PolicyType
+            $URI = $script:BaseURLv1 + "/policies/summary" + "/" + $PolicyType
             $allResults = @()
         
             # URI query strings

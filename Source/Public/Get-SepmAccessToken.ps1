@@ -66,9 +66,9 @@ function Get-SepmAccessToken {
         "domain"   = $script:configuration.domain
     }
 
-    $URI_Authenticate = $script:BaseURL + '/identity/authenticate'
+    $URI_Authenticate = $script:BaseURLv1 + '/identity/authenticate'
     try {
-        Invoke-WebRequest $script:BaseURL
+        Invoke-WebRequest $script:BaseURLv1
     } catch {
         'SSL Certificate test failed, skipping certificate validation. Please check your certificate settings and verify this is a legitimate source.'
         $Response = Read-Host -Prompt 'Please press enter to ignore this and continue without SSL/TLS secure channel'

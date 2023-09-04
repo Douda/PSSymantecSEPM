@@ -35,7 +35,7 @@ Function Get-SEPAdmins {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken
         }
-        $URI = $script:BaseURL + "/admin-users"
+        $URI = $script:BaseURLv1 + "/admin-users"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'

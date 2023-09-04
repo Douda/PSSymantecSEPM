@@ -16,7 +16,7 @@ function Get-SEPClientThreatStats {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken
         }
-        $URI = $script:BaseURL + "/stats/threat"
+        $URI = $script:BaseURLv1 + "/stats/threat"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'

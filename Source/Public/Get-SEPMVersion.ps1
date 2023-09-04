@@ -16,7 +16,7 @@ Function Get-SEPMVersion {
     if ($test_token -eq $false) {
         Get-SEPMAccessToken
     }
-    $URI = $script:BaseURL + "/version"
+    $URI = $script:BaseURLv1 + "/version"
     $headers = @{
         "Authorization" = "Bearer " + $script:accessToken.token
         "Content"       = 'application/json'

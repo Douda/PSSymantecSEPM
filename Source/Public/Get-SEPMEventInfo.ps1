@@ -24,7 +24,7 @@ function Get-SEPMEventInfo {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken
         }
-        $URI = $script:BaseURL + "/events/critical"
+        $URI = $script:BaseURLv1 + "/events/critical"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'

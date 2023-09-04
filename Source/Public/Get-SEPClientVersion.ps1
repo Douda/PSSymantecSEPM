@@ -30,7 +30,7 @@ function Get-SEPClientVersion {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken
         }
-        $URI = $script:BaseURL + "/stats/client/version"
+        $URI = $script:BaseURLv1 + "/stats/client/version"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'

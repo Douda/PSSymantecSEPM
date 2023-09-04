@@ -16,7 +16,7 @@ function Get-SEPMGroups {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken
         }
-        $URI = $script:BaseURL + "/groups"
+        $URI = $script:BaseURLv1 + "/groups"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'

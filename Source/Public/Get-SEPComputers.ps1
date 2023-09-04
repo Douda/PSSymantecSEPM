@@ -35,7 +35,7 @@ function Get-SEPComputers {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken
         }
-        $URI = $script:BaseURL + "/computers"
+        $URI = $script:BaseURLv1 + "/computers"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
