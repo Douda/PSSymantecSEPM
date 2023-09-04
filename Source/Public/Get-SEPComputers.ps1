@@ -57,7 +57,7 @@ function Get-SEPComputers {
             computerName = $ComputerName
         }
 
-        # Contruct the URI
+        # Construct the URI
         $builder = New-Object System.UriBuilder($URI)
         $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
         foreach ($param in $QueryStrings.GetEnumerator()) {
