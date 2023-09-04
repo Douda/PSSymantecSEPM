@@ -38,7 +38,8 @@ function Get-SEPMExceptionPolicy {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken
         }
-        $URI = $script:BaseURLv1 + "/policies/exceptions"
+        # BaseURL V2
+        $URI = $script:BaseURLv2 + "/policies/exceptions"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
@@ -109,6 +110,9 @@ function Get-SEPMExceptionPolicy {
             }
         }
 
+        # JSON response to convert to PSObject
+        $resp = $resp | ConvertFrom-Json -AsHashtable -Depth 100
+        
         # return the response
         return $resp
     }
