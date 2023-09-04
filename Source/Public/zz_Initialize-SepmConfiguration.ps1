@@ -13,7 +13,7 @@
 
 # SEPM Server configuration
 [string] $script:ServerAddress = $null
-[string] $script:BaseURL = $null
+[string] $script:BaseURLv1 = $null
 [bool] $script:SkipCert = $false # Needed for self-signed certificates
 
 # The location of the file that we'll store any settings that can/should roam with the user.
@@ -59,7 +59,7 @@ function Initialize-SepmConfiguration {
         if ([string]::IsNullOrEmpty($script:configuration.ServerAddress)) {
             Set-SepmAuthentication
         }
-        $script:BaseURL = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
+        $script:BaseURLv1 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
     }
     if (Test-Path $script:credentialsFilePath) {
         $script:Credential = Import-Clixml -Path $script:credentialsFilePath -ErrorAction SilentlyContinue
