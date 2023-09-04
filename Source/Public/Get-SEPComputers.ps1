@@ -33,7 +33,7 @@ function Get-SEPComputers {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
         if ($test_token -eq $false) {
-            Get-SEPMAccessToken
+            Get-SEPMAccessToken | Out-Null
         }
         $URI = $script:BaseURLv1 + "/computers"
         $headers = @{

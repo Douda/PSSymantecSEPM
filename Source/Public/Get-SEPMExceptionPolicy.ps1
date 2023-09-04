@@ -36,7 +36,7 @@ function Get-SEPMExceptionPolicy {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
         if ($test_token -eq $false) {
-            Get-SEPMAccessToken
+            Get-SEPMAccessToken | Out-Null
         }
         # BaseURL V2
         $URI = $script:BaseURLv2 + "/policies/exceptions"
