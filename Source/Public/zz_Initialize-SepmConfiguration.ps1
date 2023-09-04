@@ -14,7 +14,7 @@
 # SEPM Server configuration
 [string] $script:ServerAddress = $null
 [string] $script:BaseURL = $null
-[bool] $script:SkipCert = $false
+[bool] $script:SkipCert = $false # Needed for self-signed certificates
 
 # The location of the file that we'll store any settings that can/should roam with the user.
 [string] $script:configurationFilePath = [System.IO.Path]::Combine(
@@ -35,14 +35,8 @@
     'PSSymantecSEPM',
     'accessToken.xml')
 
-# Only tell users about needing to configure an API token once per session.
-#TODO make use of the boolean
-$script:seenTokenWarningThisSession = $false
-
 # The session-cached copy of the module's configuration properties
 [PSCustomObject] $script:configuration = $null
-
-
 
 function Initialize-SepmConfiguration {
     <#
@@ -60,7 +54,6 @@ function Initialize-SepmConfiguration {
     [CmdletBinding()]
     param()
 
-    $script:seenTokenWarningThisSession = $false
     $script:configuration = Import-SepmConfiguration -Path $script:configurationFilePath
     if ($script:configuration) {
         if ([string]::IsNullOrEmpty($script:configuration.ServerAddress)) {
