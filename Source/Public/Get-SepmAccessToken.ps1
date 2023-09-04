@@ -63,7 +63,7 @@ function Get-SepmAccessToken {
         "username" = $script:Credential.UserName
         "password" = ([System.Net.NetworkCredential]::new("", $script:Credential.Password).Password)
         "appName"  = "PSSymantecSEPM PowerShell Module"
-        "domain"   = ""
+        "domain"   = $script:configuration.domain
     }
 
     $URI_Authenticate = $script:BaseURL + '/identity/authenticate'
