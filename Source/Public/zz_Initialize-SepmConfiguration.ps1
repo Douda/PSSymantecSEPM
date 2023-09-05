@@ -60,6 +60,7 @@ function Initialize-SepmConfiguration {
             Set-SepmAuthentication
         }
         $script:BaseURLv1 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
+        $script:BaseURLv2 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v2"
     }
     if (Test-Path $script:credentialsFilePath) {
         $script:Credential = Import-Clixml -Path $script:credentialsFilePath -ErrorAction SilentlyContinue
