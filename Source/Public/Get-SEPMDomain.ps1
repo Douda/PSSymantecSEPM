@@ -5,7 +5,7 @@ function Get-SEPMDomain {
     .DESCRIPTION
         Gets a list of all accessible domains
     .EXAMPLE
-        PS C:\GitHub_Projects\PSSymantecSEPM> Get-SEPMDomain
+        PS C:\PSSymantecSEPM> Get-SEPMDomain
 
         id                 : XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         name               : Default
