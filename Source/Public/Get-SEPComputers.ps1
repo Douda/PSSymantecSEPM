@@ -19,7 +19,7 @@ function Get-SEPComputers {
     .EXAMPLE
         "MyComputer1","MyComputer2" | Get-SEPComputers
 
-        Gets computer details for the specified computer MyComputer
+        Gets computer details for the specified computer MyComputer via pipeline
     .EXAMPLE
         Get-SEPComputers -GroupName "My Company\EMEA\Workstations"
 

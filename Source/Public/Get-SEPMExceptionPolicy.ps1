@@ -1,22 +1,24 @@
 function Get-SEPMExceptionPolicy {
     <#
     .SYNOPSIS
-        Get Firewall Policy
+        Get Exception Policy
     .DESCRIPTION
-        Get Firewall Policy details
+        Get Exception Policy details
+        Note this is a V2 API call, and replies are originally JSON based
     .EXAMPLE
-        PS C:\PSSymantecSEPM> Get-SEPMExceptionPolicy -PolicyName "Standard Servers - Firewall policy"
+        PS C:\PSSymantecSEPM> Get-SEPMExceptionPolicy -PolicyName "Standard Servers - Exception policy"
 
-        sources          : 
-        configuration    : @{enforced_rules=System.Object[]; baseline_rules=System.Object[]; ignore_parent_rules=; smart_dhcp=False; smart_dns=False; smart_wins=False; token_ring_traffic=False; netbios_protection=False; reverse_dns=False; port_scan=False;        
-                        dos=False; antimac_spoofing=False; autoblock=False; autoblock_duration=600; stealth_web=False; antiIP_spoofing=False; hide_os=False; windows_firewall=NO_ACTION; windows_firewall_notification=False; endpoint_notification=; p2p_auth=;    
-                        mac=}
-        enabled          : True
-        desc             : Standard Server Firewall Policy - This policy is for standard servers. It is a strict policy that blocks all traffic except for the services that are explicitly allowed.
-        name             : Standard Servers - Firewall policy
-        lastmodifiedtime : 1692253688318
+        Name                           Value
+        ----                           -----
+        sources                        {}
+        configuration                  {[files, System.Object[]], [non_pe_rules, System.Object[]], [directories, System.Object[]], [webdomains, System.Object[]]…}
+        lockedoptions                  {[knownrisk, True], [extension, True], [file, True], [domain, True]…}
+        enabled                        True
+        desc
+        name                           Standard Servers - Exception policy
+        lastmodifiedtime               1646398353107
 
-        Shows an example of getting the firewall policy details for the policy named "Standard Servers - Firewall policy"
+        Shows an example of getting the Exception policy details for the policy named "Standard Servers - Exception policy"
 #>
 
     [CmdletBinding()]

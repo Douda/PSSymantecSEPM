@@ -5,7 +5,11 @@ function Get-SEPClientStatus {
     .DESCRIPTION
         Gets a list and count of the online and offline clients.
     .EXAMPLE
-        Get-SEPClientStatus
+        C:\PSSymantecSEPM> Get-SEPClientStatus
+
+        lastUpdated     clientCountStatsList
+        -----------     --------------------
+        1693910248728   {@{status=ONLINE; clientsCount=212}, @{status=OFFLINE; clientsCount=48}}
 
         Gets a list and count of the online and offline clients.
 #>

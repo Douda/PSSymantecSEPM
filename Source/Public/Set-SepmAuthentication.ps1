@@ -1,19 +1,12 @@
 function Set-SepmAuthentication {
     <#
     .SYNOPSIS
-        Allows the user to configure the API token that should be used for authentication
-        with the GitHub API.
+        Allows the user to configure the SEPM Authentication
 
     .DESCRIPTION
-        Allows the user to configure the API token that should be used for authentication
-        with the GitHub API.
+        Allows the user to configure the SEPM Authentication
 
-        The token will be stored on the machine as a SecureString and will automatically
-        be read on future PowerShell sessions with this module.  If the user ever wishes
-        to remove their authentication from the system, they simply need to call
-        Clear-SepmAuthentication.
-
-        The Git repo for this module can be found here: http://aka.ms/PowerShellForGitHub
+        Username and password will be securely stored on the machine for use in all future PowerShell sessions.
 
     .PARAMETER Credential
         If provided, instead of prompting the user for their API Token, it will be extracted
@@ -28,18 +21,14 @@ function Set-SepmAuthentication {
     .EXAMPLE
         Set-SepmAuthentication
 
-        Prompts the user for their GitHub API Token and stores it in a file on the machine as a
-        SecureString for use in future PowerShell sessions.
+        Prompts the user for credentials and SEPM server address
 
     .EXAMPLE
         $secureString = ("<Your Access Token>" | ConvertTo-SecureString -AsPlainText -Force)
-        $cred = New-Object System.Management.Automation.PSCredential "username is ignored", $secureString
+        $cred = New-Object System.Management.Automation.PSCredential "username", $secureString
         Set-SepmAuthentication -Credential $cred
-        $secureString = $null # clear this out now that it's no longer needed
-        $cred = $null # clear this out now that it's no longer needed
 
-        Allows you to specify your access token as a plain-text string ("<Your Access Token>")
-        which will be securely stored on the machine for use in all future PowerShell sessions.
+        Allows you to specify your username and password as a PSCredential object
 
     .EXAMPLE
         Get-Credential | Set-SepmAuthentication
@@ -47,10 +36,7 @@ function Set-SepmAuthentication {
         Prompts the user for username and password and pipes the resulting credential object
 
     .EXAMPLE
-        Set-SepmAuthentication -Credential $cred -SessionOnly
-
-        Uses the API token stored in the password field of the provided credential object for
-        authentication, but keeps it in memory only for the duration of this PowerShell session..
+        Set-SepmAuthentication -Credential $cred -ServerAddress "SEPMSRV01"
 
         .EXAMPLE
         Set-SepmAuthentication -Port 8888

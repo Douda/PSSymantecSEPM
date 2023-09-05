@@ -1,27 +1,24 @@
 function Get-SEPGUPList {
     <#
     .SYNOPSIS
-        Gets a list and count of clients by client product version.
+        Gets a list of group update providers
     .DESCRIPTION
-        Gets a list and count of clients by client product version.
+        Gets a list of SEP clients acting as group update providers
     .EXAMPLE
-        PS C:\PSSymantecSEPM> $SEPversions = Get-SEPGUPList
-        PS C:\PSSymantecSEPM> $SEPversions.clientVersionList
+        PS C:\PSSymantecSEPM> Get-SEPGUPList
 
-        version        clientsCount formattedVersion
-        -------        ------------ ----------------
-        11.0.6000.550             1 11.0.6 (11.0 MR6) build 550
-        12.1.2015.2015            1 12.1.2 (12.1 RU2) build 2015
-        12.1.6867.6400            1 12.1.6 (12.1 RU6 MP4) build 6867
-        12.1.7004.6500            3 12.1.6 (12.1 RU6 MP5) build 7004
-        12.1.7454.7000          177 12.1.7 (12.1 RU7) build 7454
-        14.0.3752.1000           36 14.0.3 (14.0 RU3 MP7) build 1000
-        14.2.1031.0100           21 14.2.1 (14.2 RU1) build 0100
-        14.2.3335.1000            3 14.2.3 (14.2 RU3 MP3) build 1000
-        14.3.510.0000            12 14.3 (14.3) build 0000
-        14.3.558.0000             5 14.3 (14.3) build 0000
+        Gets a list of GUPs clients
+    .EXAMPLE
+    PS C:\PSSymantecSEPM> Get-SEPGUPList | Select-Object Computername, AgentVersion, IpAddress, port
 
-        Gets a list and count of clients by client product version.
+    computerName  agentVersion   ipAddress       port
+    ------------  ------------   ---------       ----
+    Server01      12.1.7454.7000 10.0.0.150      2967
+    Server02      14.3.558.0000  10.1.0.150      2967
+    Workstation01 12.1.7454.7000 192.168.0.1     2967
+    Workstation02 14.3.558.0000  192.168.1.1     2967
+
+    Gets a list of GUPs clients with specific properties
 #>
 
     begin {

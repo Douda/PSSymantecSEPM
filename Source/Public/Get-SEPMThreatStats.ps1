@@ -5,7 +5,11 @@ function Get-SEPMThreatStats {
     .DESCRIPTION
         Gets threat statistics
     .EXAMPLE
-        Get-SEPMThreatStats
+        PS C:\PSSymantecSEPM> Get-SEPMThreatStats
+
+        Stats
+        -----
+        @{lastUpdated=1693912098821; infectedClients=1}
 
         Gets threat statistics
 #>

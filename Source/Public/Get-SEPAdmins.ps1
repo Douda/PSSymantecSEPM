@@ -12,10 +12,11 @@ Function Get-SEPAdmins {
         Displays only a specific user from the Admin List
 
     .EXAMPLE
+        Get-SEPAdmins
+    
+    .EXAMPLE
     Get-SEPAdmins -AdminName admin
 
-    .EXAMPLE
-    Get-SEPAdmins
 #>
     [CmdletBinding()]
     Param (
@@ -25,7 +26,7 @@ Function Get-SEPAdmins {
             ValueFromPipelineByPropertyName = $true
         )]
         [String]
-        [Alias("Admin", "AdminName")]
+        [Alias("Admin")]
         $AdminName
     )
 
