@@ -38,7 +38,7 @@ function Set-SepmAuthentication {
     .EXAMPLE
         Set-SepmAuthentication -Credential $cred -ServerAddress "SEPMSRV01"
 
-        .EXAMPLE
+    .EXAMPLE
         Set-SepmAuthentication -Port 8888
 
         Changes the API communication port to 8888. Default is 8446.
@@ -50,9 +50,7 @@ function Set-SepmAuthentication {
 
         [int] $Port = 8446,
         
-        [PSCredential] $Creds,
-
-        [switch] $SessionOnly
+        [PSCredential] $Creds
     )
 
     if (-not $PSCmdlet.ShouldProcess('Sepm Authentication', 'Set')) {
@@ -60,11 +58,7 @@ function Set-SepmAuthentication {
     }
 
     if (-not $PSBoundParameters.ContainsKey('Creds')) {
-        $message = 'Please provide your Username and Password.'
-        if (-not $SessionOnly) {
-            $message = $message + '  ***The token is being cached across PowerShell sessions.  To clear caching, call Clear-SepmAuthentication.***'
-        }
-
+        $message = 'Please provide your Username and Password'
         $Creds = Get-Credential -Message $message
     }
 
@@ -79,27 +73,17 @@ function Set-SepmAuthentication {
 
     if (-not $PSBoundParameters.ContainsKey('ServerAddress')) {
         $message = 'Please provide your ServerAddress.'
-        if (-not $SessionOnly) {
-            $message = $message + '  ***The token is being cached across PowerShell sessions.  To clear caching, call Clear-SepmAuthentication.***'
-        }
-
         $ServerAddress = Read-Host -Prompt "SEPM Server address"
     }
 
     # verify if the the $port is not the default one
     if ($Port -ne 8446) {
-        $message = 'Please provide SEPM API Service port (Default 8446).'
-        if (-not $SessionOnly) {
-            $message = $message + '  ***The token is being cached across PowerShell sessions.  To clear caching, call Clear-SepmAuthentication.***'
-        }
+        $message = 'Please provide SEPM API Service port (Default 8446)'
         $Port = Read-Host -Prompt "SEPM API Service port"
     }
 
+    Set-SepmConfiguration -ServerAddress $ServerAddress
+    Set-SepmConfiguration -Port $Port
+    $Creds | Export-Clixml -Path $script:credentialsFilePath -Force
 
-
-    if (-not $SessionOnly) {
-        Set-SepmConfiguration -ServerAddress $ServerAddress
-        Set-SepmConfiguration -Port $Port
-        $Creds | Export-Clixml -Path $script:credentialsFilePath -Force
-    }
 }
