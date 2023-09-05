@@ -23,35 +23,33 @@ Note : Any configuration issue, you can
 
 ## List of commands
 ```PowerShell
-PS C:\PSSymantecSEPM> Get-Command -Module PSSymantecSEPM
+PS C:\PSSymantecSEPM> Get-Command -Module PSSymantecSEPM | Select-Object -Property Name
 
 Clear-SepmAuthentication
 Get-SEPAdmins
 Get-SEPClientDefVersions
 Get-SEPClientStatus
-Get-SEPClientThreatStats
 Get-SEPClientVersion
 Get-SEPComputers
 Get-SEPGUPList
 Get-SepmAccessToken
-Get-SepmConfiguration
 Get-SEPMDatabaseInfo
 Get-SEPMDomain
 Get-SEPMEventInfo
 Get-SEPMExceptionPolicy
+Get-SEPMFileFingerprintList
 Get-SEPMFirewallPolicy
 Get-SEPMGroups
 Get-SEPMIpsPolicy
 Get-SEPMLatestDefinition
 Get-SEPMPoliciesSummary
+Get-SEPMReplicationStatus
+Get-SEPMThreatStats
 Get-SEPMVersion
-Import-SepmConfiguration
-Initialize-SepmConfiguration
-Read-SepmConfiguration
 Reset-SepmConfiguration
-Save-SepmConfiguration
 Set-SepmAuthentication
 Set-SepmConfiguration
+Start-SEPMReplication
 ```
 
 Every command has a help page, eg. `Get-Help Get-SEPComputers`
