@@ -1,0 +1,11 @@
+# ignore the build folder
+Output/
+Data/
+Aurelien/
+# Ignore version number folders and "output" where we build
+[0-9]*/
+gitversion.exe
+# Ignore Thunder client
+thunder-tests/
+.vscode/settings.json
+.vscode/launch.json
