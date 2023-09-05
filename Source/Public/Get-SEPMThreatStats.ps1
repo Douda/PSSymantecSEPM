@@ -1,11 +1,11 @@
-function Get-SEPClientThreatStats {
+function Get-SEPMThreatStats {
     <#
     .SYNOPSIS
         Gets threat statistics
     .DESCRIPTION
         Gets threat statistics
     .EXAMPLE
-        Get-SEPClientThreatStats
+        Get-SEPMThreatStats
 
         Gets threat statistics
 #>
