@@ -5,7 +5,7 @@ function Get-SEPComputers {
     .DESCRIPTION
         Gets the information about the computers in a specified domain. either from computer names or group names
     .PARAMETER ComputerName
-        Specifies the name of the computer for which you want to get the information.
+        Specifies the name of the computer for which you want to get the information. Supports wildcards
     .PARAMETER GroupName
         Specifies the group full path name for which you want to get the information.        
     .EXAMPLE
@@ -13,13 +13,13 @@ function Get-SEPComputers {
 
         Gets computer details for all computers in the domain
     .EXAMPLE
-        Get-SEPComputers -ComputerName "ComputerName"
-
-        Gets computer details for the specified computer ComputerName
-    .EXAMPLE
         "MyComputer1","MyComputer2" | Get-SEPComputers
 
         Gets computer details for the specified computer MyComputer via pipeline
+    .EXAMPLE
+        Get-SEPComputers -ComputerName "MyComputer*"
+
+        Gets computer details for all computer names starting by MyComputer
     .EXAMPLE
         Get-SEPComputers -GroupName "My Company\EMEA\Workstations"
 
