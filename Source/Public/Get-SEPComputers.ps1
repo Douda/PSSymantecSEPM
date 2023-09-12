@@ -64,6 +64,7 @@ function Get-SEPComputers {
 
     process {
 
+        # Using computer name API call
         if ($ComputerName) {
             $allResults = @()
             $URI = $script:BaseURLv1 + "/computers"
@@ -127,7 +128,7 @@ function Get-SEPComputers {
             return $allResults
         }
 
-        #Using computer name API call then filtering
+        # Using computer name API call then filtering
         elseif ($GroupName) {
             $allResults = @()
             $URI = $script:BaseURLv1 + "/computers"
@@ -137,7 +138,7 @@ function Get-SEPComputers {
                 sort         = "COMPUTER_NAME"
                 pageIndex    = 1
                 pageSize     = 100
-                computerName = $ComputerName
+                computerName = $ComputerName # empty string value to ensure the URI is constructed correctly & query all computers
             }
 
             # Construct the URI
@@ -194,71 +195,7 @@ function Get-SEPComputers {
             return $allResults
         }
 
-        # Using groupname API call
-        elseif ($GroupName) {
-            $allResults = @()
-                
-            # Get SEP Group ID from group name
-            $GroupID = Get-SEPMGroups | Where-Object { $_.fullPathName -eq $GroupName } | Select-Object -ExpandProperty id
-            $URI = $script:BaseURLv1 + "/groups/$GroupID/computers"
-
-            # URI query strings
-            $QueryStrings = @{
-                pageIndex = 1
-                sort      = "COMPUTER_NAME"
-            }
-
-            # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
-    
-            # Invoke the request
-            # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
-            # else we need to use the Skip-Cert function if self-signed certs are being used.
-            do {
-                try {
-                    # Invoke the request params
-                    $params = @{
-                        Method  = 'GET'
-                        Uri     = $URI
-                        headers = $headers
-                    }
-                    if ($script:accessToken.skipCert -eq $true) {
-                        if ($PSVersionTable.PSVersion.Major -lt 6) {
-                            Skip-Cert
-                            $resp = Invoke-RestMethod @params
-                        } else {
-                            $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                        }
-                    } else {
-                        $resp = Invoke-RestMethod @params
-                    } 
-                
-                    # Process the response
-                    $allResults += $resp.content
-
-                    # Increment the page index & update URI
-                    $QueryStrings.pageIndex++
-                    $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-                    foreach ($param in $QueryStrings.GetEnumerator()) {
-                        $query[$param.Key] = $param.Value
-                    }
-                    $builder.Query = $query.ToString()
-                    $URI = $builder.ToString()
-                } catch {
-                    Write-Warning -Message "Error: $_"
-                }
-            } until ($resp.lastPage -eq $true)
-
-            # return the response
-            return $allResults
-        }
-
+        # No parameters
         else {
             $allResults = @()
             $URI = $script:BaseURLv1 + "/computers"
