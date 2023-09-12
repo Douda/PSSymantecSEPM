@@ -57,7 +57,7 @@ function Initialize-SepmConfiguration {
     $script:configuration = Import-SepmConfiguration -Path $script:configurationFilePath
     if ($script:configuration) {
         if ([string]::IsNullOrEmpty($script:configuration.ServerAddress)) {
-            Set-SepmAuthentication
+            Set-SEPMAuthentication
         }
         $script:BaseURLv1 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
         $script:BaseURLv2 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v2"

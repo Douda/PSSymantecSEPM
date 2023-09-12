@@ -1,4 +1,4 @@
-function Reset-SepmConfiguration {
+function Reset-SEPMConfiguration {
     <#
     .SYNOPSIS
         Clears out the user's configuration file and configures this session with all default
@@ -9,13 +9,13 @@ function Reset-SepmConfiguration {
         configuration values.
 
     .EXAMPLE
-        Reset-SepmConfiguration
+        Reset-SEPMConfiguration
 
         Deletes the local configuration file and loads in all default configuration values.
 
     .NOTES
         This command will not clear your authentication token.
-        Please use Clear-SepmAuthentication to accomplish that.
+        Please use Clear-SEPMAuthentication to accomplish that.
 #>
     [CmdletBinding(SupportsShouldProcess)]
     param(
@@ -36,6 +36,6 @@ function Reset-SepmConfiguration {
 
     Initialize-SepmConfiguration
 
-    $message = "This has not cleared your authentication token.  Call Clear-SepmAuthentication to accomplish that."
+    $message = "This has not cleared your authentication token.  Call Clear-SEPMAuthentication to accomplish that."
     Write-Verbose -Message $message
 }

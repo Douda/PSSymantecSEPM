@@ -1,4 +1,4 @@
-function Get-SepmAccessToken {
+function Get-SEPMAccessToken {
     <# 
     .SYNOPSIS
         Retrieves the API token for use in the rest of the module.

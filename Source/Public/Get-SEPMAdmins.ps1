@@ -1,4 +1,4 @@
-Function Get-SEPAdmins {
+Function Get-SEPMAdmins {
     <#
     .SYNOPSIS
         Displays a list of admins in the Symantec Database
@@ -12,10 +12,10 @@ Function Get-SEPAdmins {
         Displays only a specific user from the Admin List
 
     .EXAMPLE
-        Get-SEPAdmins
+        Get-SEPMAdmins
     
     .EXAMPLE
-    Get-SEPAdmins -AdminName admin
+    Get-SEPMAdmins -AdminName admin
 
 #>
     [CmdletBinding()]

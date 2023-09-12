@@ -14,25 +14,25 @@ This PowerShell module provides a series of cmdlets to interact with the [Symant
 
 ## How to use it
 - `Set-SepmConfiguration` to provide your SEPM information (URL/IP)
-- `Set-SepmAuthentication` to provide your SEPM credentials
+- `Set-SEPMAuthentication` to provide your SEPM credentials
 - You're ready to use the module !
 
 Note : Any configuration issue, you can
-- `Reset-SepmConfiguration` to reset the configuration
-- `Clear-SepmAuthentication` to clear the authentication
+- `Reset-SEPMConfiguration` to reset the configuration
+- `Clear-SEPMAuthentication` to clear the authentication
 
 ## List of commands
 ```PowerShell
 PS C:\PSSymantecSEPM> Get-Command -Module PSSymantecSEPM | Select-Object -Property Name
 
-Clear-SepmAuthentication
-Get-SEPAdmins
+Clear-SEPMAuthentication
+Get-SEPMAdmins
 Get-SEPClientDefVersions
 Get-SEPClientStatus
 Get-SEPClientVersion
 Get-SEPComputers
 Get-SEPGUPList
-Get-SepmAccessToken
+Get-SEPMAccessToken
 Get-SEPMDatabaseInfo
 Get-SEPMDomain
 Get-SEPMEventInfo
@@ -46,8 +46,8 @@ Get-SEPMPoliciesSummary
 Get-SEPMReplicationStatus
 Get-SEPMThreatStats
 Get-SEPMVersion
-Reset-SepmConfiguration
-Set-SepmAuthentication
+Reset-SEPMConfiguration
+Set-SEPMAuthentication
 Set-SepmConfiguration
 Start-SEPMReplication
 ```

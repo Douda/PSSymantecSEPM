@@ -1,4 +1,4 @@
-function Set-SepmAuthentication {
+function Set-SEPMAuthentication {
     <#
     .SYNOPSIS
         Allows the user to configure the SEPM Authentication
@@ -19,27 +19,27 @@ function Set-SepmAuthentication {
         will only remain in memory for the duration of this PowerShell session.
 
     .EXAMPLE
-        Set-SepmAuthentication
+        Set-SEPMAuthentication
 
         Prompts the user for credentials and SEPM server address
 
     .EXAMPLE
         $secureString = ("<Your Access Token>" | ConvertTo-SecureString -AsPlainText -Force)
         $cred = New-Object System.Management.Automation.PSCredential "username", $secureString
-        Set-SepmAuthentication -Credential $cred
+        Set-SEPMAuthentication -Credential $cred
 
         Allows you to specify your username and password as a PSCredential object
 
     .EXAMPLE
-        Get-Credential | Set-SepmAuthentication
+        Get-Credential | Set-SEPMAuthentication
 
         Prompts the user for username and password and pipes the resulting credential object
 
     .EXAMPLE
-        Set-SepmAuthentication -Credential $cred -ServerAddress "SEPMSRV01"
+        Set-SEPMAuthentication -Credential $cred -ServerAddress "SEPMSRV01"
 
     .EXAMPLE
-        Set-SepmAuthentication -Port 8888
+        Set-SEPMAuthentication -Port 8888
 
         Changes the API communication port to 8888. Default is 8446.
 #>
