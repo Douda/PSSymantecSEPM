@@ -36,6 +36,7 @@ function Set-SEPMAuthentication {
         Prompts the user for username and password and pipes the resulting credential object
 
     .EXAMPLE
+        $creds = Get-Credential
         Set-SEPMAuthentication -Credential $cred -ServerAddress "SEPMSRV01"
 
     .EXAMPLE
