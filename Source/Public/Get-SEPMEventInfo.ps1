@@ -3,19 +3,24 @@ function Get-SEPMEventInfo {
     .SYNOPSIS
         Gets the information about the computers in a specified domain
     .DESCRIPTION
-        Gets the information about the computers in a specified domain. A system administrator account is required for this REST API.
+        Gets the information about the computers in a specified domain. 
+        A system administrator account is required for this REST API.
     .EXAMPLE
-        Get-SEPMEventInfo
+        PS C:\PSSymantecSEPM> $SEPMEvents = Get-SEPMEventInfo
 
-        Gets computer details for all computers in the domain
-    .EXAMPLE
-        Get-SEPMEventInfo -ComputerName "ComputerName"
+        lastUpdated     totalUnacknowledgedMessages     criticalEventsInfoList
+        -----------     ---------------------------     ----------------------
+        1693911276712                        4906       {@{eventId=XXXXXXXXXXXXXXXXXXXXXXXXX; eventDateTime=2023-08-12 19:22:21.0...
 
-        Gets computer details for the specified computer ComputerName
-    .EXAMPLE
-        "MyComputer" | Get-SEPMEventInfo
+        PS C:\PSSymantecSEPM> $SEPMEvents.criticalEventsInfoList | Select-Object -First 1
 
-        Gets computer details for the specified computer MyComputer
+        eventId       : XXXXXXXXXXXXXXXXXXXXXXXXX
+        eventDateTime : 2023-08-12 19:22:21.0
+        subject       : CRITICAL: OLD SONAR DEFINITIONS
+        message       : 306 computers found with SONAR definitions older than 7 days.
+        acknowledged  : 0
+
+        Example of an event gathered from the SEPM server.
 #>
 
     begin {

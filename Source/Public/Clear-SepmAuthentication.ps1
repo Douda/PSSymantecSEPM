@@ -1,4 +1,4 @@
-function Clear-SepmAuthentication {
+function Clear-SEPMAuthentication {
     <#
     .SYNOPSIS
         Clears out any API token from memory, as well as from local file storage.
@@ -7,13 +7,13 @@ function Clear-SepmAuthentication {
         Clears out any API token from memory, as well as from local file storage.
 
     .EXAMPLE
-        Clear-SepmAuthentication
+        Clear-SEPMAuthentication
 
         Clears out any API token from memory, as well as from local file storage.
 
     .NOTES
         This command will not clear your configuration settings.
-        Please use Reset-SepmConfiguration to accomplish that.
+        Please use Reset-SEPMConfiguration to accomplish that.
 #>
 
 
@@ -32,6 +32,6 @@ function Clear-SepmAuthentication {
         }
     }
 
-    $message = "This has not cleared your configuration settings.  Call Reset-SepmConfiguration to accomplish that."
+    $message = "This has not cleared your configuration settings.  Call Reset-SEPMConfiguration to accomplish that."
     Write-Verbose -Message $message
 }

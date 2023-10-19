@@ -1,11 +1,15 @@
 Function Get-SEPMVersion {
-    <# TODO update help
+    <# 
     .SYNOPSIS
         Gets the current version of Symantec Endpoint Protection Manager.
     .DESCRIPTION
         Gets the current version of Symantec Endpoint Protection Manager. This function dot not require authentication.
     .EXAMPLE
-        Get-SEPMVersion
+        PS C:\GitHub_Projects\PSSymantecSEPM> Get-SEPMVersion
+
+        API_SEQUENCE API_VERSION version
+        ------------ ----------- -------
+        230504014    14.3.7000   14.3.9816.7000
 
         Gets the current version of Symantec Endpoint Protection Manager.
     #>

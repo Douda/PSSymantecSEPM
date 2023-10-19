@@ -1,5 +1,5 @@
-function Get-SepmAccessToken {
-    <# TODO update this to use the new Get-SEPToken function
+function Get-SEPMAccessToken {
+    <# 
     .SYNOPSIS
         Retrieves the API token for use in the rest of the module.
 
@@ -9,7 +9,10 @@ function Get-SepmAccessToken {
         First will try to use the one that may have been provided as a parameter.
         If not provided, then will try to use the one already cached in memory.
         If still not found, will look to see if there is a file with the API token stored on disk
-        Finally, if there is still no available token, query one from the SEPM server.
+        Finally, if there is still no available token :
+            - query one from the SEPM server
+            - store it in memory and on disk
+            - return the token
 
     .PARAMETER AccessToken
         If provided, this will be returned instead of using the cached/configured value

@@ -1,29 +1,26 @@
-function Get-SEPComputers {
-    <#
+function Start-SEPActiveScan {
+    <# TODO - add help
     .SYNOPSIS
-        Gets the information about the computers in a specified domain
+        Sends Active Scan command to the specified computer(s) or group(s)
     .DESCRIPTION
-        Gets the information about the computers in a specified domain. either from computer names or group names
+        Sends a command from SEPM to SEP endpoints to request an active scan on the endpoint(s)
     .PARAMETER ComputerName
-        Specifies the name of the computer for which you want to get the information. Supports wildcards
+        Specifies the name of the computer for which you want to send the command. 
+        Accepts pipeline input by Value and ByPropertyName
     .PARAMETER GroupName
-        Specifies the group full path name for which you want to get the information.        
+        Specifies the group full path name for which you want to send the command        
     .EXAMPLE
-        Get-SEPComputers
+        PS C:\PSSymantecSEPM> Start-SEPActiveScan -ComputerName MyComputer01
 
-        Gets computer details for all computers in the domain
+        Sends an active scan command to the specified computer MyComputer01
     .EXAMPLE
-        "MyComputer1","MyComputer2" | Get-SEPComputers
+        "MyComputer1","MyComputer2" | Start-SEPActiveScan
 
-        Gets computer details for the specified computer MyComputer via pipeline
+        Sends an active scan command to the specified computers MyComputer1 & MyComputer2 via pipeline
     .EXAMPLE
-        Get-SEPComputers -ComputerName "MyComputer*"
+        Start-SEPActiveScan -GroupName "My Company\EMEA\Workstations"
 
-        Gets computer details for all computer names starting by MyComputer
-    .EXAMPLE
-        Get-SEPComputers -GroupName "My Company\EMEA\Workstations"
-
-        Gets computer details for all computers in the specified group MyGroup
+        Sends an active scan command to all endpoints part of the group "My Company\EMEA\Workstations"
 #>
     [CmdletBinding(
         DefaultParameterSetName = 'ComputerName'
@@ -63,18 +60,20 @@ function Get-SEPComputers {
     }
 
     process {
-
-        # Using computer name API call
+        # If specific computer name(s) are specified
         if ($ComputerName) {
-            $allResults = @()
-            $URI = $script:BaseURLv1 + "/computers"
+            # Get computer ID(s) from computer name(s)
+            $ComputerIDList = @()
+            foreach ($C in $ComputerName) {
+                $ComputerID = Get-SEPComputers -ComputerName $C | Select-Object -ExpandProperty uniqueId
+                $ComputerIDList += $ComputerID
+            }
+
+            $URI = $script:BaseURLv1 + "/command-queue/activescan"
 
             # URI query strings
             $QueryStrings = @{
-                sort         = "COMPUTER_NAME"
-                pageIndex    = 1
-                pageSize     = 100
-                computerName = $ComputerName
+                computer_ids = $ComputerIDList
             }
 
             # Construct the URI
@@ -89,48 +88,38 @@ function Get-SEPComputers {
             # Invoke the request
             # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
             # else we need to use the Skip-Cert function if self-signed certs are being used.
-            do {
-                try {
-                    # Invoke the request params
-                    $params = @{
-                        Method  = 'GET'
-                        Uri     = $URI
-                        headers = $headers
-                    }
-                    if ($script:accessToken.skipCert -eq $true) {
-                        if ($PSVersionTable.PSVersion.Major -lt 6) {
-                            Skip-Cert
-                            $resp = Invoke-RestMethod @params
-                        } else {
-                            $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                        }
-                    } else {
-                        $resp = Invoke-RestMethod @params
-                    } 
-                
-                    # Process the response
-                    $allResults += $resp.content
-
-                    # Increment the page index & update URI
-                    $QueryStrings.pageIndex++
-                    $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-                    foreach ($param in $QueryStrings.GetEnumerator()) {
-                        $query[$param.Key] = $param.Value
-                    }
-                    $builder.Query = $query.ToString()
-                    $URI = $builder.ToString()
-                } catch {
-                    Write-Warning -Message "Error: $_"
+            try {
+                # Invoke the request params
+                $params = @{
+                    Method  = 'POST'
+                    Uri     = $URI
+                    headers = $headers
                 }
-            } until ($resp.lastPage -eq $true)
+                if ($script:accessToken.skipCert -eq $true) {
+                    if ($PSVersionTable.PSVersion.Major -lt 6) {
+                        Skip-Cert
+                        $resp = Invoke-RestMethod @params
+                    } else {
+                        $resp = Invoke-RestMethod @params -SkipCertificateCheck
+                    }
+                } else {
+                    $resp = Invoke-RestMethod @params
+                } 
+                
+            } catch {
+                Write-Warning -Message "Error: $_"
+            }
 
             # return the response
-            return $allResults
+            return $resp
         }
 
-        # Using computer name API call then filtering
+        # If by groupname
         elseif ($GroupName) {
-            $allResults = @()
+            #######################################
+            # 1. finds all computers in the group #
+            #######################################
+            $allComputers = @()
             $URI = $script:BaseURLv1 + "/computers"
 
             # URI query strings
@@ -150,9 +139,7 @@ function Get-SEPComputers {
             $builder.Query = $query.ToString()
             $URI = $builder.ToString()
     
-            # Invoke the request
-            # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
-            # else we need to use the Skip-Cert function if self-signed certs are being used.
+            # Get computer list
             do {
                 try {
                     # Invoke the request params
@@ -173,7 +160,7 @@ function Get-SEPComputers {
                     } 
                 
                     # Process the response
-                    $allResults += $resp.content
+                    $allComputers += $resp.content
 
                     # Increment the page index & update URI
                     $QueryStrings.pageIndex++
@@ -188,42 +175,35 @@ function Get-SEPComputers {
                 }
             } until ($resp.lastPage -eq $true)
 
-            # Filtering
-            $allResults = $allResults | Where-Object { $_.group.name -eq $GroupName }
-
-            # return the response
-            return $allResults
-        }
-
-        # No parameters
-        else {
-            $allResults = @()
-            $URI = $script:BaseURLv1 + "/computers"
-
-            # URI query strings
-            $QueryStrings = @{
-                sort      = "COMPUTER_NAME"
-                pageIndex = 1
-                pageSize  = 100
-            }
-
-            # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
+            # filter list by group name
+            $allComputers = $allComputers | Where-Object { $_.group.name -eq $GroupName }
+            
+            #################################################
+            # 2. send command to all computers in the group #
+            #################################################
+            $URI = $script:BaseURLv1 + "/command-queue/activescan"
+            $AllResp = @()
+            
+            foreach ($id in $allComputers.uniqueId) {
+                # URI query strings
+                $QueryStrings = @{
+                    computer_ids = $id
+                }
     
-            # Invoke the request
-            # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
-            # else we need to use the Skip-Cert function if self-signed certs are being used.
-            do {
+                # Construct the URI
+                $builder = New-Object System.UriBuilder($URI)
+                $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
+                foreach ($param in $QueryStrings.GetEnumerator()) {
+                    $query[$param.Key] = $param.Value
+                }
+                $builder.Query = $query.ToString()
+                $URI = $builder.ToString()
+        
+                # Send command to all computers in the group
                 try {
                     # Invoke the request params
                     $params = @{
-                        Method  = 'GET'
+                        Method  = 'POST'
                         Uri     = $URI
                         headers = $headers
                     }
@@ -237,26 +217,16 @@ function Get-SEPComputers {
                     } else {
                         $resp = Invoke-RestMethod @params
                     } 
-                
-                    # Process the response
-                    $allResults += $resp.content
-
-                    # Increment the page index & update URI
-                    $QueryStrings.pageIndex++
-                    $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-                    foreach ($param in $QueryStrings.GetEnumerator()) {
-                        $query[$param.Key] = $param.Value
-                    }
-                    $builder.Query = $query.ToString()
-                    $URI = $builder.ToString()
+                    
                 } catch {
                     Write-Warning -Message "Error: $_"
+                    $AllResp += $_
                 }
-            } until ($resp.lastPage -eq $true)
-
+                $AllResp += $resp
+            }
+            
             # return the response
-            return $allResults
+            return $AllResp
         }
     }
-        
 }

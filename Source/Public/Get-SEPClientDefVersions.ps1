@@ -5,9 +5,18 @@ function Get-SEPClientDefVersions {
     .DESCRIPTION
         Gets a list of clients for a group by content version.
     .EXAMPLE
-        Get-SEPClientDefVersions
+        PS C:\PSSymantecSEPM> Get-SEPClientDefVersions
 
-        Gets a list of clients for a group by content version.
+        version             clientsCount
+        -------             ------------
+        2023-09-04 rev. 002           15
+        2023-09-03 rev. 002            4
+        2023-09-01 rev. 008            2
+        2023-08-31 rev. 021            2
+        2023-08-31 rev. 002            1
+        2023-08-29 rev. 003            1
+
+        Gets a list of clients grouped by content version.
 #>
 
     begin {

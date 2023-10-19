@@ -1,17 +1,17 @@
-function Get-SEPClientStatus {
+function Get-SEPMThreatStats {
     <#
     .SYNOPSIS
-        Gets a list and count of the online and offline clients.
+        Gets threat statistics
     .DESCRIPTION
-        Gets a list and count of the online and offline clients.
+        Gets threat statistics
     .EXAMPLE
-        C:\PSSymantecSEPM> Get-SEPClientStatus
+        PS C:\PSSymantecSEPM> Get-SEPMThreatStats
 
-        lastUpdated     clientCountStatsList
-        -----------     --------------------
-        1693910248728   {@{status=ONLINE; clientsCount=212}, @{status=OFFLINE; clientsCount=48}}
+        Stats
+        -----
+        @{lastUpdated=1693912098821; infectedClients=1}
 
-        Gets a list and count of the online and offline clients.
+        Gets threat statistics
 #>
 
     begin {
@@ -20,7 +20,7 @@ function Get-SEPClientStatus {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken | Out-Null
         }
-        $URI = $script:BaseURLv1 + "/stats/client/onlinestatus"
+        $URI = $script:BaseURLv1 + "/stats/threat"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'

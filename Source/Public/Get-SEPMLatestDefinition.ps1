@@ -5,7 +5,11 @@ function Get-SEPMLatestDefinition {
     .DESCRIPTION
         Gets the latest revision information for antivirus definitions from Symantec Security Response.
     .EXAMPLE
-        Get-SEPMLatestDefinition
+        PS C:\PSSymantecSEPM> Get-SEPMLatestDefinition
+
+        contentName publishedBySymantec publishedBySEPM
+        ----------- ------------------- ---------------
+        AV_DEFS     9/4/2023 rev. 2     9/4/2023 rev. 2
 
         Gets the latest revision information for antivirus definitions from Symantec Security Response.
 #>

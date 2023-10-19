@@ -7,7 +7,7 @@ function Get-SEPMPoliciesSummary {
         Also gets the list of groups to which the policies are assigned.
     .PARAMETER PolicyType
         The policy type for which the summary is to be retrieved. 
-        The valid values are hid, exceptions, mem, ntr, av, fw, ips, lucontent, lu, hi, adc, msl, upgrade.
+        The valid values are hid, exceptions, mem, ntr, av, fw, ips, lu, hi, adc, msl, upgrade.
 
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMPoliciesSummary

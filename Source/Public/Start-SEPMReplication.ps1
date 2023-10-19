@@ -1,18 +1,31 @@
-function Get-SEPClientStatus {
-    <#
+function Start-SEPMReplication {
+    <# TODO update help
     .SYNOPSIS
-        Gets a list and count of the online and offline clients.
+        Gets a list of all accessible domains
     .DESCRIPTION
-        Gets a list and count of the online and offline clients.
+        Gets a list of all accessible domains
     .EXAMPLE
-        C:\PSSymantecSEPM> Get-SEPClientStatus
+        PS C:\PSSymantecSEPM> Start-SEPMReplication -partnerSiteName "Remote site Americas"
 
-        lastUpdated     clientCountStatsList
-        -----------     --------------------
-        1693910248728   {@{status=ONLINE; clientsCount=212}, @{status=OFFLINE; clientsCount=48}}
+        code
+        ----
+        0
 
-        Gets a list and count of the online and offline clients.
+        Initiates replication with the remote site Americas. Response code 0 indicates success.
 #>
+
+    [CmdletBinding()]
+    param (
+        [Parameter()]
+        [string]
+        $partnerSiteName
+
+        # [bool]
+        # $logs,
+
+        # [bool]
+        # $ContentAndPackages
+    )
 
     begin {
         # initialize the configuration
@@ -20,7 +33,7 @@ function Get-SEPClientStatus {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken | Out-Null
         }
-        $URI = $script:BaseURLv1 + "/stats/client/onlinestatus"
+        $URI = $script:BaseURLv1 + "/replication/replicatenow"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
@@ -29,7 +42,11 @@ function Get-SEPClientStatus {
 
     process {
         # URI query strings
-        $QueryStrings = @{}
+        $QueryStrings = @{
+            partnerSiteName    = $partnerSiteName
+            logs               = $logs
+            ContentAndPackages = $ContentAndPackages
+        }
 
         # Construct the URI
         $builder = New-Object System.UriBuilder($URI)
@@ -41,7 +58,7 @@ function Get-SEPClientStatus {
         $URI = $builder.ToString()
 
         $params = @{
-            Method  = 'GET'
+            Method  = 'POST'
             Uri     = $URI
             headers = $headers
         }

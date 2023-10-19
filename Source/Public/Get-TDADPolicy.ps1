@@ -1,33 +1,23 @@
-Function Get-SEPAdmins {
+function Get-TDADPolicy {
     <#
     .SYNOPSIS
-        Displays a list of admins in the Symantec Database
-
+        Gets a list of all accessible domains
     .DESCRIPTION
-        Gets the list of administrators for a particular domain.
-
-        The Git repo for this module can be found here: https://github.com/Douda/PSSymantecSEPM
-
-    .PARAMETER AdminName
-        Displays only a specific user from the Admin List
-
+        Gets a list of all accessible domains
     .EXAMPLE
-    Get-SEPAdmins -AdminName admin
+        PS C:\PSSymantecSEPM> Get-TDADPolicy
 
-    .EXAMPLE
-    Get-SEPAdmins
+        id                 : XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        name               : Default
+        description        : 
+        createdTime        : 1360247301316
+        enable             : True
+        companyName        : 
+        contactInfo        : 
+        administratorCount : 15
+
+        Gets a list of all accessible domains
 #>
-    [CmdletBinding()]
-    Param (
-        # AdminName
-        [Parameter(
-            ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $true
-        )]
-        [String]
-        [Alias("Admin", "AdminName")]
-        $AdminName
-    )
 
     begin {
         # initialize the configuration
@@ -35,7 +25,7 @@ Function Get-SEPAdmins {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken | Out-Null
         }
-        $URI = $script:BaseURLv1 + "/admin-users"
+        $URI = $script:BaseURLv1 + "/tdad"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
@@ -44,9 +34,7 @@ Function Get-SEPAdmins {
 
     process {
         # URI query strings
-        $QueryStrings = @{
-            domain = $script:configuration.domain
-        }
+        $QueryStrings = @{}
 
         # Construct the URI
         $builder = New-Object System.UriBuilder($URI)
@@ -57,17 +45,18 @@ Function Get-SEPAdmins {
         $builder.Query = $query.ToString()
         $URI = $builder.ToString()
 
+        $params = @{
+            Method  = 'GET'
+            Uri     = $URI
+            headers = $headers
+        }
+    
         # Invoke the request
         # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
         # else we need to use the Skip-Cert function if self-signed certs are being used.
         switch ($PSVersionTable.PSVersion.Major) {
             { $_ -ge 6 } { 
                 try {
-                    $params = @{
-                        Method  = 'GET'
-                        Uri     = $URI
-                        headers = $headers
-                    }
                     if ($script:accessToken.skipCert -eq $true) {
                         $resp = Invoke-RestMethod @params -SkipCertificateCheck
                     } else {
@@ -88,16 +77,10 @@ Function Get-SEPAdmins {
                 } catch {
                     Write-Warning -Message "Error: $_"
                 }
-
             }
         }
 
-        # Process the response
-        if ([string]::IsNullOrEmpty($AdminName)) {
-            return $resp
-        } else {
-            $resp = $resp | Where-Object { $_.loginName -eq $AdminName }
-            return $resp
-        }
+        # return the response
+        return $resp
     }
 }

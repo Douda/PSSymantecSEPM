@@ -1,18 +1,54 @@
-function Get-SEPClientStatus {
+function Get-SEPMCommandStatus {
     <#
     .SYNOPSIS
-        Gets a list and count of the online and offline clients.
+        Get Command Status Details
     .DESCRIPTION
-        Gets a list and count of the online and offline clients.
+        Gets the details of a command status
     .EXAMPLE
-        C:\PSSymantecSEPM> Get-SEPClientStatus
+    PS C:\PSSymantecSEPM> $status = Get-SEPMCommandStatus -Command_ID D17D6DF9877049559910DD7B0306711C
 
-        lastUpdated     clientCountStatsList
-        -----------     --------------------
-        1693910248728   {@{status=ONLINE; clientsCount=212}, @{status=OFFLINE; clientsCount=48}}
+        content          : {@{beginTime=; lastUpdateTime=; computerName=MyWorkstation01; computerIp=192.168.1.1; domainName=Default; currentLoginUserName=localadmin; stateId=0; subStateId=0; subStateDesc=; binaryFileId=; resultInXML=; 
+                            computerId=ABCDEF2837CD5C4FD167AD5E2CB31C71; hardwareKey=ABCDEF2837CD5C4FD167AD5E2CB31C71}}
+        number           : 0
+        size             : 20
+        sort             : {@{direction=ASC; property=Begintime; ascending=True}}
+        numberOfElements : 1
+        firstPage        : True
+        totalPages       : 1
+        lastPage         : True
+        totalElements    : 1
 
-        Gets a list and count of the online and offline clients.
+        PS C:\PSSymantecSEPM> $status.content
+
+        beginTime            : 
+        lastUpdateTime       : 
+        computerName         : MyWorkstation01
+        computerIp           : 192.168.1.1
+        domainName           : Default
+        currentLoginUserName : localadmin
+        stateId              : 0
+        subStateId           : 0
+        subStateDesc         : 
+        binaryFileId         : 
+        resultInXML          : 
+        computerId           : ABCDEF2837CD5C4FD167AD5E2CB31C71
+        hardwareKey          : ABCDEF2837CD5C4FD167AD5E2CB31C71
+
+    Gets the status of a command
+    .PARAMETER Command_ID  
+        The ID of the command to get the status of
 #>
+
+    [CmdletBinding()]
+    param (
+        [Parameter(
+            Mandatory = $true,
+            ValueFromPipelineByPropertyName = $true
+        )]
+        [string]
+        [Alias("ID", "CommandID")]
+        $Command_ID
+    )
 
     begin {
         # initialize the configuration
@@ -20,7 +56,7 @@ function Get-SEPClientStatus {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken | Out-Null
         }
-        $URI = $script:BaseURLv1 + "/stats/client/onlinestatus"
+        $URI = $script:BaseURLv1 + "/command-queue/$command_id"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'

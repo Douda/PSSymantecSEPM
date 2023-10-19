@@ -1,13 +1,17 @@
-function Get-SEPClientThreatStats {
-    <#
+function Get-SEPMReplicationStatus {
+    <# 
     .SYNOPSIS
-        Gets threat statistics
+        Get Replication Status
     .DESCRIPTION
-        Gets threat statistics
+        Get Replication Status
     .EXAMPLE
-        Get-SEPClientThreatStats
+        PS C:\GitHub_Projects\PSSymantecSEPM> Get-SEPMReplicationStatus
 
-        Gets threat statistics
+        replicationStatus
+        -----------------
+        @{siteName=Site Europe; siteLocation=Paris; replicationPartnerStatusList=System.Object[]; id=XXXXXXXXXXXXXXXXXXXXXXXX}
+
+        Get a list of replication status with every remote site
 #>
 
     begin {
@@ -16,7 +20,7 @@ function Get-SEPClientThreatStats {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken | Out-Null
         }
-        $URI = $script:BaseURLv1 + "/stats/threat"
+        $URI = $script:BaseURLv1 + "/replication/status"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
