@@ -14,6 +14,7 @@
 # SEPM Server configuration
 [string] $script:ServerAddress = $null
 [string] $script:BaseURLv1 = $null
+[string] $script:BaseURLv2 = $null
 [bool] $script:SkipCert = $false # Needed for self-signed certificates
 
 # The location of the file that we'll store any settings that can/should roam with the user.
