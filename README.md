@@ -11,12 +11,13 @@ This small project is an attempt to interact with the Symantec Endpoint Protecti
 
 ## Installation
 
-2 ways to install this module :
-- Via [Powershell Gallery](https://www.powershellgallery.com/packages/PSSymantecSEPM/) with `Install-Module PSSymantecSEPM`
-- Build it from sources See [Building your module](##Building-your-module)
+Via [Powershell Gallery](https://www.powershellgallery.com/packages/PSSymantecSEPM/)
+```PowerShell
+Install-Module PSSymantecSEPM
+```
 
 ## How to use it
-- Setup your SEPM & Authentication information
+Setup your SEPM Address & Authentication information
 ```PowerShell
 Set-SepmConfiguration -ServerAddress MySEPMServer -Port 8446
 Set-SEPMAuthentication
@@ -71,8 +72,11 @@ SEP Clients information
 # Get All SEP Clients information
 PS C:\PSSymantecSEPM> $AllSepClients = Get-SEPComputers
 
-# Get SEP clients from specific group (including subgroups)
+# Get SEP clients from specific group (excluding subgroups)
 PS C:\PSSymantecSEPM> $EMEAWorkstations = Get-SEPComputers -GroupName "My Company\EMEA\Workstations"
+
+# Get SEP clients from specific group (including subgroups)
+PS C:\PSSymantecSEPM> $EMEAWorkstations_with_subgroups = Get-SEPComputers -GroupName "My Company\EMEA\Workstations" -IncludeSubGroups
 
 # SEP Online/Offline Clients
 PS C:\PSSymantecSEPM> (Get-SEPClientStatus).clientCountStatsList
@@ -83,7 +87,7 @@ ONLINE          2022
 OFFLINE          930
 
 # SEP Clients version
-PS C:\GitHub_Projects\PSSymantecSEPM> (Get-SEPClientVersion).clientVersionList
+PS C:\PSSymantecSEPM> (Get-SEPClientVersion).clientVersionList
 
 version        clientsCount formattedVersion
 -------        ------------ ----------------
@@ -133,6 +137,7 @@ Policies summary
 ```PowerShell
 # Get All Policies
 PS C:\PSSymantecSEPM> $PoliciesSummary = Get-SEPMPoliciesSummary
+
 # Get specific policy type (here firewall, liveupdate)
 PS C:\PSSymantecSEPM> $FirewallPolicies = Get-SEPMPoliciesSummary -PolicyType fw
 PS C:\PSSymantecSEPM> $LiveUpdatePolicies = Get-SEPMPoliciesSummary -PolicyType lu
@@ -168,21 +173,21 @@ configuration    : @{enforced_rules=System.Object[]; baseline_rules=System.Objec
                     dos=False; antimac_spoofing=False; autoblock=False; autoblock_duration=600; stealth_web=False; antiIP_spoofing=False; hide_os=False; windows_firewall=NO_ACTION; windows_firewall_notification=False; endpoint_notification=; p2p_auth=;    
                     mac=}
 enabled          : True
-desc             : Standard Servers policy
+desc             : Standard Firewall Servers policy
 name             : Servers - Firewall Policy
 lastmodifiedtime : 1692253688318
 
 # IPS Policy
 PS C:\PSSymantecSEPM> Get-SEPMIpsPolicy -PolicyName "Servers - IPS Policy"
 
-sources          : 
-configuration    : 
+sources          : xxx
+configuration    : xxx
 enabled          : True
-desc             : 
+desc             : Standard IPS Servers policy
 name             : Servers - IPS Policy
 lastmodifiedtime : 1697728232567
 
-# List of all policy types available via PowerShell commands
+# List of all policy types available via PowerShell CmdLets
 PS C:\PSSymantecSEPM> Get-Command -Module PSSymantecSEPM | Where-Object { $_.name -like "*Policy*" } | Select Name
 
 Name
