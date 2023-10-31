@@ -18,13 +18,11 @@ function Set-SepmConfiguration {
 #>
     [CmdletBinding(
         PositionalBinding = $false
-        )]
+    )]
     param(
         [string] $ServerAddress,
 
-        [int] $Port,
-
-        [string] $Username
+        [int] $Port
     )
 
     $persistedConfig = Read-SepmConfiguration -Path $script:configurationFilePath
@@ -35,12 +33,10 @@ function Set-SepmConfiguration {
             $value = $PSBoundParameters.$name
             if ($value -is [switch]) { $value = $value.ToBool() }
             $script:configuration.$name = $value
-
             Add-Member -InputObject $persistedConfig -Name $name -Value $value -MemberType NoteProperty -Force
-            
         }
     }
 
     Save-SepmConfiguration -Configuration $persistedConfig -Path $script:configurationFilePath
-    
+
 }
