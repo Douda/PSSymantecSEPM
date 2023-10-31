@@ -38,26 +38,17 @@ function Set-SepmConfiguration {
 
 #>
     [CmdletBinding(
-        PositionalBinding = $false,
-        SupportsShouldProcess)]
+        PositionalBinding = $false
+        )]
     param(
         [string] $ServerAddress,
 
         [int] $Port,
 
-        [string] $Username,
-
-        [switch] $SessionOnly
+        [string] $Username
     )
 
-    $persistedConfig = $null
-    if (-not $SessionOnly) {
-        $persistedConfig = Read-SepmConfiguration -Path $script:configurationFilePath
-    }
-
-    if (-not $PSCmdlet.ShouldProcess('SepmConfiguration', 'Set')) {
-        return
-    }
+    $persistedConfig = Read-SepmConfiguration -Path $script:configurationFilePath
 
     $properties = Get-Member -InputObject $script:configuration -MemberType NoteProperty | Select-Object -ExpandProperty Name
     foreach ($name in $properties) {
@@ -66,13 +57,11 @@ function Set-SepmConfiguration {
             if ($value -is [switch]) { $value = $value.ToBool() }
             $script:configuration.$name = $value
 
-            if (-not $SessionOnly) {
-                Add-Member -InputObject $persistedConfig -Name $name -Value $value -MemberType NoteProperty -Force
-            }
+            Add-Member -InputObject $persistedConfig -Name $name -Value $value -MemberType NoteProperty -Force
+            
         }
     }
 
-    if (-not $SessionOnly) {
-        Save-SepmConfiguration -Configuration $persistedConfig -Path $script:configurationFilePath
-    }
+    Save-SepmConfiguration -Configuration $persistedConfig -Path $script:configurationFilePath
+    
 }
