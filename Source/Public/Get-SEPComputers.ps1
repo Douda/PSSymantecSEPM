@@ -276,5 +276,4 @@ function Get-SEPComputers {
             return $allResults
         }
     }
-        
 }
