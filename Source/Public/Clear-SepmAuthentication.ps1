@@ -16,20 +16,17 @@ function Clear-SEPMAuthentication {
         Please use Reset-SEPMConfiguration to accomplish that.
 #>
 
-
     $script:Credential = $null
     $script:accessToken = $null
 
-    if (-not $SessionOnly) {
-        Remove-Item -Path $script:credentialsFilePath -Force -ErrorAction SilentlyContinue -ErrorVariable ev
-        Remove-Item -Path $script:accessTokenFilePath -Force -ErrorAction SilentlyContinue -ErrorVariable ev
+    Remove-Item -Path $script:credentialsFilePath -Force -ErrorAction SilentlyContinue -ErrorVariable ev
+    Remove-Item -Path $script:accessTokenFilePath -Force -ErrorAction SilentlyContinue -ErrorVariable ev
 
-        if (($null -ne $ev) -and
+    if (($null -ne $ev) -and
             ($ev.Count -gt 0) -and
             ($ev[0].FullyQualifiedErrorId -notlike 'PathNotFound*')) {
-            $message = "Experienced a problem trying to remove the file that persists the Access Token [$script:credentialsFilePath]."
-            Write-Warning -Message $message
-        }
+        $message = "Experienced a problem trying to remove the file that persists the Access Token [$script:credentialsFilePath]."
+        Write-Warning -Message $message
     }
 
     $message = "This has not cleared your configuration settings.  Call Reset-SEPMConfiguration to accomplish that."
