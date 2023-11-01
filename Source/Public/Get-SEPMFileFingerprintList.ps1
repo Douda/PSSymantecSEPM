@@ -21,7 +21,7 @@ function Get-SEPMFileFingerprintList {
 
         Gets the file fingerprint list for a specified Name as a set of hash values
     .EXAMPLE
-        PS C:\GitHub_Projects\PSSymantecSEPM> Get-SEPMFileFingerprintList -FingerprintListID 2A331150CDB44B9A9F1332E27321A1EE
+        PS C:\PSSymantecSEPM> Get-SEPMFileFingerprintList -FingerprintListID 2A331150CDB44B9A9F1332E27321A1EE
 
         id          : 2A331150CDB44B9A9F1332E27321A1EE
         name        : ASD01P0215
