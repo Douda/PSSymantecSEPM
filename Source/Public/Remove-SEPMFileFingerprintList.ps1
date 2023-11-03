@@ -22,17 +22,21 @@ function Remove-SEPMFileFingerprintList {
         Removes the file fingerprint list with the ID "2A331150CDB44B9A9F1332E27321A1EE"
 #>
 
-    [CmdletBinding()]
+    [CmdletBinding(
+        DefaultParameterSetName = 'Name'
+    )]
     param (
         [Parameter(
             ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $true
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'Name'
         )]
         [string]
         $FingerprintListName,
 
         [Parameter(
-            ValueFromPipelineByPropertyName = $true
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'ID'
         )]
         [string]
         $FingerprintListID
@@ -52,95 +56,36 @@ function Remove-SEPMFileFingerprintList {
     }
 
     process {
+        # Get the FingerprintListID if the FingerprintListName is provided
         if ($FingerprintListName) {
-            # Gathers fingerprint list ID from its name
             $URI = $script:BaseURLv1 + "/policy-objects/fingerprints"
-            # URI query strings
-            $QueryStrings = @{
-                name = $FingerprintListName
-            }
-
-            # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
-
-            $params = @{
-                Method  = 'GET'
-                Uri     = $URI
-                headers = $headers
-            }
-    
-            # Invoke the request
-            # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
-            # else we need to use the Skip-Cert function if self-signed certs are being used.
-            try {
-                # Invoke the request params
-                $params = @{
-                    Method  = 'GET'
-                    Uri     = $URI
-                    headers = $headers
-                }
-                if ($script:accessToken.skipCert -eq $true) {
-                    if ($PSVersionTable.PSVersion.Major -lt 6) {
-                        Skip-Cert
-                        $resp = Invoke-RestMethod @params
-                    } else {
-                        $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                    }
-                } else {
-                    $resp = Invoke-RestMethod @params
-                } 
-            } catch {
-                Write-Warning -Message "Error: $_"
-            }
-
-            $FingerprintListID = $resp.id
+            $FingerprintListID = Get-SEPMFileFingerprintList -FingerprintListName $FingerprintListName | Select-Object -ExpandProperty id
         }
 
-        if ($FingerprintListID) {
-            $URI = $script:BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"
-            # URI query strings
-            $QueryStrings = @{
-                id = $FingerprintListID
-            }
+        $URI = $script:BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"
 
-            # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
+        $params = @{
+            Method  = 'DELETE'
+            Uri     = $URI
+            headers = $headers
+        }
 
-            # Invoke the request
-            # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
-            # else we need to use the Skip-Cert function if self-signed certs are being used.
-            try {
-                # Invoke the request params
-                $params = @{
-                    Method  = 'DELETE'
-                    Uri     = $URI
-                    headers = $headers
-                }
-                if ($script:accessToken.skipCert -eq $true) {
-                    if ($PSVersionTable.PSVersion.Major -lt 6) {
-                        Skip-Cert
-                        $resp = Invoke-RestMethod @params
-                    } else {
-                        $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                    }
-                } else {
+        # Invoke the request
+        # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
+        # else we need to use the Skip-Cert function if self-signed certs are being used.
+        try {
+            if ($script:accessToken.skipCert -eq $true) {
+                if ($PSVersionTable.PSVersion.Major -lt 6) {
+                    Skip-Cert
                     $resp = Invoke-RestMethod @params
-                } 
-            } catch {
-                Write-Warning -Message "Error: $_"
-            }
+                } else {
+                    $resp = Invoke-RestMethod @params -SkipCertificateCheck
+                }
+            } else {
+                $resp = Invoke-RestMethod @params
+            } 
+        } catch {
+            Write-Warning -Message "Error: $_"
         }
 
         # return the response
