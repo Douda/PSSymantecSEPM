@@ -1,5 +1,5 @@
-function Start-SEPActiveScan {
-    <# TODO - add help
+function Start-SEPScan {
+    <#
     .SYNOPSIS
         Sends Active Scan command to the specified computer(s) or group(s)
     .DESCRIPTION
@@ -8,29 +8,42 @@ function Start-SEPActiveScan {
         Specifies the name of the computer for which you want to send the command. 
         Accepts pipeline input by Value and ByPropertyName
     .PARAMETER GroupName
-        Specifies the group full path name for which you want to send the command        
+        Specifies the group full path name for which you want to send the command
+    .PARAMETER ActiveScan
+        Specifies the type of scan to send to the endpoint(s)
+        Valid values are ActiveScan and FullScan
+        By default, the ActiveScan switch is used
+    .PARAMETER FullScan
+        Specifies the type of scan to send to the endpoint(s)
+        Valid values are ActiveScan and FullScan
     .EXAMPLE
-        PS C:\PSSymantecSEPM> Start-SEPActiveScan -ComputerName MyComputer01
+        PS C:\PSSymantecSEPM> Start-SEPScan -ComputerName MyComputer01 -ActiveScan
 
         Sends an active scan command to the specified computer MyComputer01
     .EXAMPLE
-        "MyComputer1","MyComputer2" | Start-SEPActiveScan
+        "MyComputer1","MyComputer2" | Start-SEPScan
 
         Sends an active scan command to the specified computers MyComputer1 & MyComputer2 via pipeline
+        By default, the ActiveScan switch is used
     .EXAMPLE
-        Start-SEPActiveScan -GroupName "My Company\EMEA\Workstations"
+        Start-SEPScan -GroupName "My Company\EMEA\Workstations" -fullscan
 
-        Sends an active scan command to all endpoints part of the group "My Company\EMEA\Workstations"
+        Sends a fullscan command to all endpoints part of the group "My Company\EMEA\Workstations"
 #>
     [CmdletBinding(
-        DefaultParameterSetName = 'ComputerName'
+        DefaultParameterSetName = 'ComputerNameActiveScan'
     )]
     Param (
         # ComputerName
         [Parameter(
+            ParameterSetName = 'ComputerNameActiveScan',
             ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $true,
-            ParameterSetName = 'ComputerName'
+            ValueFromPipelineByPropertyName = $true
+        )]
+        [Parameter(
+            ParameterSetName = 'ComputerNameFullScan',
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true
         )]
         [Alias("Hostname", "DeviceName", "Device", "Computer")]
         [String]
@@ -38,12 +51,28 @@ function Start-SEPActiveScan {
 
         # group name
         [Parameter(
-            ValueFromPipelineByPropertyName = $true,
-            ParameterSetName = 'GroupName'
+            ParameterSetName = 'GroupNameActiveScan',
+            ValueFromPipelineByPropertyName = $true
+        )]
+        [Parameter(
+            ParameterSetName = 'GroupNameFullScan',
+            ValueFromPipelineByPropertyName = $true
         )]
         [Alias("Group")]
         [String]
-        $GroupName
+        $GroupName,
+
+        # ActiveScan
+        [Parameter(ParameterSetName = 'ComputerNameActiveScan')]
+        [Parameter(ParameterSetName = 'GroupNameActiveScan')]
+        [switch]
+        $ActiveScan,
+
+        # FullScan
+        [Parameter(ParameterSetName = 'ComputerNameFullScan')]
+        [Parameter(ParameterSetName = 'GroupNameFullScan')]
+        [switch]
+        $FullScan
     )
 
     begin {
@@ -69,7 +98,12 @@ function Start-SEPActiveScan {
                 $ComputerIDList += $ComputerID
             }
 
-            $URI = $script:BaseURLv1 + "/command-queue/activescan"
+            if ($ActiveScan) {
+                $URI = $script:BaseURLv1 + "/command-queue/activescan"
+            }
+            if ($FullScan) {
+                $URI = $script:BaseURLv1 + "/command-queue/fullscan"
+            }
 
             # URI query strings
             $QueryStrings = @{
@@ -181,7 +215,14 @@ function Start-SEPActiveScan {
             #################################################
             # 2. send command to all computers in the group #
             #################################################
-            $URI = $script:BaseURLv1 + "/command-queue/activescan"
+
+            if ($ActiveScan) {
+                $URI = $script:BaseURLv1 + "/command-queue/activescan"
+            }
+            if ($FullScan) {
+                $URI = $script:BaseURLv1 + "/command-queue/fullscan"
+            }
+
             $AllResp = @()
             
             foreach ($id in $allComputers.uniqueId) {
