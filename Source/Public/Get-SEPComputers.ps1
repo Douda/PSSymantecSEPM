@@ -7,7 +7,9 @@ function Get-SEPComputers {
     .PARAMETER ComputerName
         Specifies the name of the computer for which you want to get the information. Supports wildcards
     .PARAMETER GroupName
-        Specifies the group full path name for which you want to get the information.        
+        Specifies the group full path name for which you want to get the information. Supports wildcards
+    .PARAMETER IncludeSubGroups
+        Specifies whether to include subgroups when querying by group name
     .EXAMPLE
         Get-SEPComputers
 
@@ -24,6 +26,10 @@ function Get-SEPComputers {
         Get-SEPComputers -GroupName "My Company\EMEA\Workstations"
 
         Gets computer details for all computers in the specified group MyGroup
+    .EXAMPLE
+        Get-SEPComputers -GroupName "My Company\EMEA\Workstations" -IncludeSubGroups
+
+        Gets computer details for all computers in the specified group MyGroup and its subgroups
 #>
     [CmdletBinding(
         DefaultParameterSetName = 'ComputerName'
@@ -46,7 +52,15 @@ function Get-SEPComputers {
         )]
         [Alias("Group")]
         [String]
-        $GroupName
+        $GroupName,
+
+        # switch parameter to include subgroups
+        [Parameter(
+            ParameterSetName = 'GroupName'
+        )]
+        [switch]
+        $IncludeSubGroups
+
     )
 
     begin {
@@ -189,7 +203,11 @@ function Get-SEPComputers {
             } until ($resp.lastPage -eq $true)
 
             # Filtering
-            $allResults = $allResults | Where-Object { $_.group.name -eq $GroupName }
+            if ($IncludeSubGroups) {
+                $allResults = $allResults | Where-Object { $_.group.name -like "$GroupName*" }
+            } else {
+                $allResults = $allResults | Where-Object { $_.group.name -eq $GroupName }
+            }
 
             # return the response
             return $allResults
@@ -258,5 +276,4 @@ function Get-SEPComputers {
             return $allResults
         }
     }
-        
 }

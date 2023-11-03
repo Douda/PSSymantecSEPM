@@ -6,10 +6,8 @@
     By default, clients with definitions older than 7 days are displayed.
 .NOTES
     Created by: Aurélien BOUMANNE (10192023)
-.LINK
-    Specify a URI to a help page, this will show when Get-Help -Online is used.
 .EXAMPLE
-    .\SepClientOldDefinitions.ps1 -Days 14
+    .\Get-SEPKpiOldDefinitions.ps1 -Days 14
 #>
 
 [CmdletBinding()]
@@ -25,8 +23,8 @@ $Computers = Get-SEPComputers
 $ComputersWithOldDefs = @()
 $format = 'yyMMdd'
 foreach ($Computer in $Computers) {
-    # Parse the date using avDefsetVersion first 6 digits (yyMMdd)
-    if ($Computer.avDefsetVersion.Length -ge 6) {
+    # Parse the date using avDefsetVersion first 6 digits (yyMMdd) if not null or empty
+    if (![String]::IsNullOrEmpty($Computer.avDefsetVersion)) {
         $date = [DateTime]::ParseExact($Computer.avDefsetVersion.Substring(0, 6), $format, $null)
         # if $date is older than $days
         if ($date -lt (Get-Date).AddDays(-$Days)) {

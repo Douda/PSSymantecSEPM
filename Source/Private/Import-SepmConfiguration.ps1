@@ -8,8 +8,6 @@ function Import-SepmConfiguration {
         Loads in the default configuration values, and then updates the individual properties
         with values that may exist in a file.
 
-        The Git repo for this module can be found here: http://aka.ms/PowerShellForGitHub
-
     .PARAMETER Path
         The file that may or may not exist with a serialized version of the configuration
         values for this module.

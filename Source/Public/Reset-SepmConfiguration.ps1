@@ -17,14 +17,6 @@ function Reset-SEPMConfiguration {
         This command will not clear your authentication token.
         Please use Clear-SEPMAuthentication to accomplish that.
 #>
-    [CmdletBinding(SupportsShouldProcess)]
-    param(
-        [switch] $SessionOnly
-    )
-
-    if (-not $PSCmdlet.ShouldProcess('Sepm Configuration', 'Reset')) {
-        return
-    }
 
     $null = Remove-Item -Path $script:configurationFilePath -Force -ErrorAction SilentlyContinue -ErrorVariable ev
 
@@ -32,7 +24,6 @@ function Reset-SEPMConfiguration {
         $message = "Reset was unsuccessful.  Experienced a problem trying to remove the file [$script:configurationFilePath]."
         Write-Warning -Message $message
     }
-    
 
     Initialize-SepmConfiguration
 
