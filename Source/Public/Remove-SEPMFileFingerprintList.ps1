@@ -1,5 +1,5 @@
 function Remove-SEPMFileFingerprintList {
-    <# TODO update help
+    <#
     .SYNOPSIS
         Deletes a file fingerprint list
     .DESCRIPTION
@@ -12,6 +12,10 @@ function Remove-SEPMFileFingerprintList {
         PS C:\PSSymantecSEPM> Remove-SEPMFileFingerprintList -FingerprintListName "Fingerprint list for workstations"
 
         Removes the file fingerprint list with the name "Fingerprint list for workstations"
+    .EXAMPLE
+        PS C:\PSSymantecSEPM> "Fingerprint list for workstations" | Remove-SEPMFileFingerprintList
+
+        Removes the file fingerprint list with the name "Fingerprint list for workstations" via the pipeline
     .EXAMPLE
         PS C:\PSSymantecSEPM> Remove-SEPMFileFingerprintList -FingerprintListID 2A331150CDB44B9A9F1332E27321A1EE
 
