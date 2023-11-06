@@ -79,26 +79,7 @@ function Add-SEPMFileFingerprintList {
             ContentType = 'application/json'
         }
     
-        # Invoke the request
-        # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
-        # else we need to use the Skip-Cert function if self-signed certs are being used.
-        try {
-            # Invoke the request params
-            if ($script:accessToken.skipCert -eq $true) {
-                if ($PSVersionTable.PSVersion.Major -lt 6) {
-                    Skip-Cert
-                    $resp = Invoke-RestMethod @params
-                } else {
-                    $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                }
-            } else {
-                $resp = Invoke-RestMethod @params
-            } 
-        } catch {
-            Write-Warning -Message "Error: $_"
-        }
-        
-        # return the response
+        $resp = Invoke-ABRestMethod -params $params
         return $resp
     }
 }
