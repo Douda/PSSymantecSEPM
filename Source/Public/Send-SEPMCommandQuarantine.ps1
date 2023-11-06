@@ -1,4 +1,4 @@
-function Block-SEPClient {
+function Send-SEPMCommandQuarantine {
     <#
     .SYNOPSIS
         Send a quarantine/unquarantine command to SEP endpoints
@@ -14,13 +14,13 @@ function Block-SEPClient {
     .PARAMETER Unquarantine
         Switch parameter to unquarantine the SEP client
     .EXAMPLE
-        Block-SEPClient -ComputerName "Computer1"
+        Send-SEPMCommandQuarantine -ComputerName "Computer1"
         Sends a command to quarantine Computer1
     .EXAMPLE
-        "Computer1", "Computer2" | Block-SEPClient
+        "Computer1", "Computer2" | Send-SEPMCommandQuarantine
         Sends a command to quarantine Computer1 and Computer2
     .EXAMPLE
-        Block-SEPClient -GroupName "My Company\EMEA\Workstations\Site1"
+        Send-SEPMCommandQuarantine -GroupName "My Company\EMEA\Workstations\Site1"
         Sends a command to quarantine all computers in "My Company\EMEA\Workstations\Site1"
         Does not include subgroups
     #>
