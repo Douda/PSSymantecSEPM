@@ -4,7 +4,7 @@ function Invoke-ABRestMethod {
         Invokes a REST method with a PS version-appropriate method
     .DESCRIPTION
         Invokes a REST method with a PS version-appropriate method
-        Handles the differences between PS versions 5 and 6 for certificate validation skipping
+        Handles the differences between PS versions 5 and 6 for certificate validation s
         Helper function for Invoke-ABRestMethod
     .PARAMETER params
         A hashtable of parameters to pass to the Invoke-RestMethod cmdlet
