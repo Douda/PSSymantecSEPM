@@ -83,34 +83,7 @@ function Get-SEPMExceptionPolicy {
             UseBasicParsing = $true
         }
     
-        # Invoke the request
-        # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
-        # else we need to use the Skip-Cert function if self-signed certs are being used.
-        switch ($PSVersionTable.PSVersion.Major) {
-            { $_ -ge 6 } { 
-                try {
-                    if ($script:accessToken.skipCert -eq $true) {
-                        $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                    } else {
-                        $resp = Invoke-RestMethod @params
-                    }
-                } catch {
-                    Write-Warning -Message "Error: $_"
-                }
-            }
-            default {
-                try {
-                    if ($script:accessToken.skipCert -eq $true) {
-                        Skip-Cert
-                        $resp = Invoke-RestMethod @params
-                    } else {
-                        $resp = Invoke-RestMethod @params
-                    }
-                } catch {
-                    Write-Warning -Message "Error: $_"
-                }
-            }
-        }
+        $resp = Invoke-ABRestMethod -params $params
 
         # JSON response to convert to PSObject
         $resp = $resp | ConvertFrom-Json -AsHashtable -Depth 100

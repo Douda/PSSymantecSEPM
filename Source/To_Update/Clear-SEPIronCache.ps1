@@ -140,32 +140,16 @@ function Clear-SEPIronCache {
                 }
             }
 
-            # Invoke the request
-            # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
-            # else we need to use the Skip-Cert function if self-signed certs are being used.
-            try {
-                # Invoke the request params
-                $params = @{
-                    Method      = 'POST'
-                    Uri         = $URI
-                    headers     = $headers
-                    Body        = $body | ConvertTo-Json
-                    ContentType = 'application/json'
-                }
-                if ($script:accessToken.skipCert -eq $true) {
-                    if ($PSVersionTable.PSVersion.Major -lt 6) {
-                        Skip-Cert
-                        $resp = Invoke-RestMethod @params
-                    } else {
-                        $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                    }
-                } else {
-                    $resp = Invoke-RestMethod @params
-                } 
-                
-            } catch {
-                Write-Warning -Message "Error: $_"
+            # Invoke the request params
+            $params = @{
+                Method      = 'POST'
+                Uri         = $URI
+                headers     = $headers
+                Body        = $body | ConvertTo-Json
+                ContentType = 'application/json'
             }
+
+            $resp = Invoke-ABRestMethod -params $params
 
             # return the response
             return $resp
@@ -191,31 +175,15 @@ function Clear-SEPIronCache {
             $builder.Query = $query.ToString()
             $URI = $builder.ToString()
     
-            # Invoke the request
-            # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
-            # else we need to use the Skip-Cert function if self-signed certs are being used.
-            try {
-                # Invoke the request params
-                $params = @{
-                    Method      = 'POST'
-                    Uri         = $URI
-                    headers     = $headers
-                    ContentType = 'application/json'
-                }
-                if ($script:accessToken.skipCert -eq $true) {
-                    if ($PSVersionTable.PSVersion.Major -lt 6) {
-                        Skip-Cert
-                        $resp = Invoke-RestMethod @params
-                    } else {
-                        $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                    }
-                } else {
-                    $resp = Invoke-RestMethod @params
-                } 
-                
-            } catch {
-                Write-Warning -Message "Error: $_"
+            # Invoke the request params
+            $params = @{
+                Method      = 'POST'
+                Uri         = $URI
+                headers     = $headers
+                ContentType = 'application/json'
             }
+            
+            $resp = Invoke-ABRestMethod -params $params
 
             # return the response
             return $resp

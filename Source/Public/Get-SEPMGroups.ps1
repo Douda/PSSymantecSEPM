@@ -68,16 +68,8 @@ function Get-SEPMGroups {
                     Uri     = $URI
                     headers = $headers
                 }
-                if ($script:accessToken.skipCert -eq $true) {
-                    if ($PSVersionTable.PSVersion.Major -lt 6) {
-                        Skip-Cert
-                        $resp = Invoke-RestMethod @params
-                    } else {
-                        $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                    }
-                } else {
-                    $resp = Invoke-RestMethod @params
-                } 
+                
+                $resp = Invoke-ABRestMethod -params $params
                 
                 # Process the response
                 $allResults += $resp.content

@@ -57,6 +57,7 @@ function Get-SEPFileDetails {
             headers = $headers
         }
     
-        return Invoke-ABRestMethod -params $params
+        $resp = Invoke-ABRestMethod -params $params
+        return $resp
     }
 }

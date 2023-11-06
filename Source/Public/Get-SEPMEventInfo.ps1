@@ -37,101 +37,16 @@ function Get-SEPMEventInfo {
     }
 
     process {
-        $allResults = @()
-
-        if (-not $ComputerName) {
-            $ComputerName = ""
+        # Invoke the request params
+        $params = @{
+            Method  = 'GET'
+            Uri     = $URI
+            headers = $headers
         }
 
-        # URI query strings
-        $QueryStrings = @{
-            pageIndex = 1
-            pageSize  = 100
-        }
-
-        # Construct the URI
-        $builder = New-Object System.UriBuilder($URI)
-        $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-        foreach ($param in $QueryStrings.GetEnumerator()) {
-            $query[$param.Key] = $param.Value
-        }
-        $builder.Query = $query.ToString()
-        $URI = $builder.ToString()
-    
-        # Invoke the request
-        # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
-        # else we need to use the Skip-Cert function if self-signed certs are being used.
-
-        ############################################################################################################
-        # As per documentation https://apidocs.securitycloud.symantec.com/#/doc?id=sepm_events                     #
-        # Pagination is not yet implemented for this API. The response will contain all the events in the system.  #
-        # Commenting pagination code for now.                                                                      #
-        ############################################################################################################
-
-
-        # do {
-        #     try {
-        #         # Invoke the request params
-        #         $params = @{
-        #             Method  = 'GET'
-        #             Uri     = $URI
-        #             headers = $headers
-        #         }
-        #         if ($script:accessToken.skipCert -eq $true) {
-        #             if ($PSVersionTable.PSVersion.Major -lt 6) {
-        #                 Skip-Cert
-        #                 $resp = Invoke-RestMethod @params
-        #             } else {
-        #                 $resp = Invoke-RestMethod @params -SkipCertificateCheck
-        #             }
-        #         } else {
-        #             $resp = Invoke-RestMethod @params
-        #         } 
-                
-        #         # Process the response
-        #         $allResults += $resp.content
-
-        #         # Increment the page index & update URI
-        #         $QueryStrings.pageIndex++
-        #         $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-        #         foreach ($param in $QueryStrings.GetEnumerator()) {
-        #             $query[$param.Key] = $param.Value
-        #         }
-        #         $builder.Query = $query.ToString()
-        #         $URI = $builder.ToString()
-        #     } catch {
-        #         Write-Warning -Message "Error: $_"
-        #     }
-        # } until ($resp.lastPage -eq $true)
-
-        ###################################
-        # Code without pagination for now #
-        ###################################
-        try {
-            # Invoke the request params
-            $params = @{
-                Method  = 'GET'
-                Uri     = $URI
-                headers = $headers
-            }
-            if ($script:accessToken.skipCert -eq $true) {
-                if ($PSVersionTable.PSVersion.Major -lt 6) {
-                    Skip-Cert
-                    $resp = Invoke-RestMethod @params
-                } else {
-                    $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                }
-            } else {
-                $resp = Invoke-RestMethod @params
-            } 
-            
-            # Process the response
-            $allResults += $resp
-        } catch {
-            Write-Warning -Message "Error: $_"
-        }
+        $resp = Invoke-ABRestMethod -params $params
 
         # return the response
-        return $allResults
+        return $resp
     }
 }

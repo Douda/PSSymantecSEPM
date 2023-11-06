@@ -58,40 +58,13 @@ Function Get-SEPMAdmins {
         $builder.Query = $query.ToString()
         $URI = $builder.ToString()
 
-        # Invoke the request
-        # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
-        # else we need to use the Skip-Cert function if self-signed certs are being used.
-        switch ($PSVersionTable.PSVersion.Major) {
-            { $_ -ge 6 } { 
-                try {
-                    $params = @{
-                        Method  = 'GET'
-                        Uri     = $URI
-                        headers = $headers
-                    }
-                    if ($script:accessToken.skipCert -eq $true) {
-                        $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                    } else {
-                        $resp = Invoke-RestMethod @params
-                    }
-                } catch {
-                    Write-Warning -Message "Error: $_"
-                }
-            }
-            default {
-                try {
-                    if ($script:accessToken.skipCert -eq $true) {
-                        Skip-Cert
-                        $resp = Invoke-RestMethod @params
-                    } else {
-                        $resp = Invoke-RestMethod @params
-                    }
-                } catch {
-                    Write-Warning -Message "Error: $_"
-                }
-
-            }
+        $params = @{
+            Method  = 'GET'
+            Uri     = $URI
+            headers = $headers
         }
+        
+        $resp = Invoke-ABRestMethod -params $params
 
         # Process the response
         if ([string]::IsNullOrEmpty($AdminName)) {

@@ -32,27 +32,13 @@ function Confirm-SEPMEventInfo {
     }
 
     process {
-        try {
-            # Invoke the request params
-            $params = @{
-                Method  = 'POST'
-                Uri     = $URI
-                headers = $headers
-            }
-            if ($script:accessToken.skipCert -eq $true) {
-                if ($PSVersionTable.PSVersion.Major -lt 6) {
-                    Skip-Cert
-                    $resp = Invoke-RestMethod @params
-                } else {
-                    $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                }
-            } else {
-                $resp = Invoke-RestMethod @params
-            } 
-            
-        } catch {
-            Write-Warning -Message "Error: $_"
+        $params = @{
+            Method  = 'POST'
+            Uri     = $URI
+            headers = $headers
         }
+        
+        $resp = Invoke-ABRestMethod -params $params
 
         # return the response
         return $resp

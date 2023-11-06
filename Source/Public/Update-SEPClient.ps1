@@ -92,30 +92,14 @@ function Update-SEPClient {
             $builder.Query = $query.ToString()
             $URI = $builder.ToString()
     
-            # Invoke the request
-            # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
-            # else we need to use the Skip-Cert function if self-signed certs are being used.
-            try {
-                # Invoke the request params
-                $params = @{
-                    Method  = 'POST'
-                    Uri     = $URI
-                    headers = $headers
-                }
-                if ($script:accessToken.skipCert -eq $true) {
-                    if ($PSVersionTable.PSVersion.Major -lt 6) {
-                        Skip-Cert
-                        $resp = Invoke-RestMethod @params
-                    } else {
-                        $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                    }
-                } else {
-                    $resp = Invoke-RestMethod @params
-                } 
-                
-            } catch {
-                Write-Warning -Message "Error: $_"
+            # Invoke the request params
+            $params = @{
+                Method  = 'POST'
+                Uri     = $URI
+                headers = $headers
             }
+
+            $resp = Invoke-ABRestMethod -params $params
 
             # return the response
             return $resp
@@ -155,16 +139,8 @@ function Update-SEPClient {
                         Uri     = $URI
                         headers = $headers
                     }
-                    if ($script:accessToken.skipCert -eq $true) {
-                        if ($PSVersionTable.PSVersion.Major -lt 6) {
-                            Skip-Cert
-                            $resp = Invoke-RestMethod @params
-                        } else {
-                            $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                        }
-                    } else {
-                        $resp = Invoke-RestMethod @params
-                    } 
+
+                    $resp = Invoke-ABRestMethod -params $params
                 
                     # Process the response
                     $allComputers += $resp.content
@@ -213,29 +189,13 @@ function Update-SEPClient {
                 $builder.Query = $query.ToString()
                 $URI = $builder.ToString()
         
-                # Send command to all computers in the group
-                try {
-                    # Invoke the request params
-                    $params = @{
-                        Method  = 'POST'
-                        Uri     = $URI
-                        headers = $headers
-                    }
-                    if ($script:accessToken.skipCert -eq $true) {
-                        if ($PSVersionTable.PSVersion.Major -lt 6) {
-                            Skip-Cert
-                            $resp = Invoke-RestMethod @params
-                        } else {
-                            $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                        }
-                    } else {
-                        $resp = Invoke-RestMethod @params
-                    } 
-                    
-                } catch {
-                    Write-Warning -Message "Error: $_"
-                    $AllResp += $_
+                # Send command to each computers in the group
+                $params = @{
+                    Method  = 'POST'
+                    Uri     = $URI
+                    headers = $headers
                 }
+                $resp = Invoke-ABRestMethod -params $params
                 $AllResp += $resp
             }
             
