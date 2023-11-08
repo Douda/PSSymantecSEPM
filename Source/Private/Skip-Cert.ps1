@@ -4,6 +4,9 @@
         This function allows skipping the SSL/TLS Secure channel check in the event that there is not a valid certificate available
     .DESCRIPTION
         This function allows skipping the SSL/TLS Secure channel check in the event that there is not a valid certificate available
+    .NOTES
+        Required for self-signed certificates skipping with Windows Powershell 5.1 and below
+        This function is used internally by the module and should not be called directly
     .PARAMETER
     None
     .EXAMPLE
