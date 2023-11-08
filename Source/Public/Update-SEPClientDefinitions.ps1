@@ -1,4 +1,4 @@
-function Update-SEPClient {
+function Update-SEPClientDefinitions {
     <#
     .SYNOPSIS
         Sends a command from SEPM to SEP endpoints to update content
@@ -11,16 +11,16 @@ function Update-SEPClient {
         The name of the group to send the command to
         cannot be used with ComputerName
     .EXAMPLE
-        Update-SEPClient -ComputerName "Computer1"
+        Update-SEPClientDefinitions -ComputerName "Computer1"
         Sends a command to update content to Computer1
     .EXAMPLE
-        "Computer1", "Computer2" | Update-SEPClient
+        "Computer1", "Computer2" | Update-SEPClientDefinitions
         Sends a command to update content to Computer1 and Computer2
     .EXAMPLE
-        Update-SEPClient -GroupName "My Company\EMEA\Workstations"
+        Update-SEPClientDefinitions -GroupName "My Company\EMEA\Workstations"
         Sends a command to update content to all computers in "My Company\EMEA\Workstations"
     .EXAMPLE
-        Update-SEPClient -GroupName "My Company\EMEA\Workstations" -IncludeSubGroups
+        Update-SEPClientDefinitions -GroupName "My Company\EMEA\Workstations" -IncludeSubGroups
         Sends a command to update content to all computers in "My Company\EMEA\Workstations" and all subgroups
     #>
     
