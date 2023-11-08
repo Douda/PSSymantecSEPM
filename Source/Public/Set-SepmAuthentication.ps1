@@ -12,12 +12,6 @@ function Set-SEPMAuthentication {
         If provided, instead of prompting the user for their API Token, it will be extracted
         from the password field of this credential object.
 
-    .PARAMETER SessionOnly
-        By default, this method will store the provided API Token as a SecureString in a local
-        file so that it can be restored automatically in future PowerShell sessions.  If this
-        switch is provided, the file will not be created/updated and the authentication information
-        will only remain in memory for the duration of this PowerShell session.
-
     .EXAMPLE
         Set-SEPMAuthentication
 
@@ -44,8 +38,7 @@ function Set-SEPMAuthentication {
 
         Changes the API communication port to 8888. Default is 8446.
 #>
-    [CmdletBinding(SupportsShouldProcess)]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUsePSCredentialType", "", Justification = "The System.Management.Automation.Credential() attribute does not appear to work in PowerShell v4 which we need to support.")]
+    [CmdletBinding()]
     param(
         [string] $ServerAddress,
 
@@ -53,10 +46,6 @@ function Set-SEPMAuthentication {
         
         [PSCredential] $Creds
     )
-
-    if (-not $PSCmdlet.ShouldProcess('Sepm Authentication', 'Set')) {
-        return
-    }
 
     if (-not $PSBoundParameters.ContainsKey('Creds')) {
         $message = 'Please provide your Username and Password'
