@@ -29,11 +29,18 @@ function Test-CertificateSelfSigned {
     )
     
     try {
+        # Test the certificate
         Invoke-WebRequest $URI
     } catch {
-        $message = "SSL Certificate test failed.  The certificate for $URI is self-signed."
-        Write-Error -Message $message
+        # Get SEPM server name from URI
+        $uriObject = New-Object System.Uri($URI)
+        $domain = $uriObject.Host
 
+        # Get the error message
+        $message = "SSL Certificate test failed.  The certificate for $domain is self-signed."
+        Write-Warning -Message $message
+
+        # Prompt the user to continue
         $Response = Read-Host -Prompt 'Press enter to ignore this and continue without SSL/TLS secure channel'
         if ($Response -eq "") {
             if ($PSVersionTable.PSVersion.Major -lt 6) {
