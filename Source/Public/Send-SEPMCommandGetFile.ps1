@@ -72,7 +72,9 @@ function Send-SEPMCommandGetFile {
         # The file path of the suspicious file.
         [Parameter()]
         [ValidateScript({
-                if ($_ -notmatch '^.+\\[^\\]+\.[^\\]+$') { throw "The string must be a file path ending with a file name and an extension" }
+                if ($_ -notmatch '^.+\\[^\\]+\.[^\\]+$') { 
+                    throw "The string must be a file path ending with a file name and an extension" 
+                }
                 return $true
             })]
         [Alias("Path")]
