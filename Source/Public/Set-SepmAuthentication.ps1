@@ -50,7 +50,7 @@ function Set-SEPMAuthentication {
     switch ($PSBoundParameters.Keys) {
         'Creds' {
             if ([String]::IsNullOrWhiteSpace($Creds.GetNetworkCredential().Password)) {
-                $message = "Password not provided.  Please provide your Username and Password"
+                $message = "Password not provided.  Provide correct credentials and try again."
                 Write-Error -Message $message
                 throw $message
             }
