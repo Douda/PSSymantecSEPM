@@ -25,9 +25,9 @@ function Set-SEPMAuthentication {
         Allows you to specify your username and password as a PSCredential object
 
     .EXAMPLE
-        Get-Credential | Set-SEPMAuthentication
+        Set-SEPMAuthentication -credential (Get-Credential)
 
-        Prompts the user for username and password and pipes the resulting credential object
+        Prompts the user for username and password, saves them to disk and in the PS Session
 
     .EXAMPLE
         $creds = Get-Credential
@@ -47,33 +47,25 @@ function Set-SEPMAuthentication {
         [PSCredential] $Creds
     )
 
-    if (-not $PSBoundParameters.ContainsKey('Creds')) {
-        $message = 'Please provide your Username and Password'
-        $Creds = Get-Credential -Message $message
+    switch ($PSBoundParameters.Keys) {
+        'Creds' {
+            if ([String]::IsNullOrWhiteSpace($Creds.GetNetworkCredential().Password)) {
+                $message = "Password not provided.  Please provide your Username and Password"
+                Write-Error -Message $message
+                throw $message
+            }
+
+            # Setting script scope variables so that they can be used in other functions
+            $script:Credential = $Creds
+
+            # Saving credentials to disk
+            $Creds | Export-Clixml -Path $script:credentialsFilePath -Force
+        }
+        'ServerAddress' {
+            Set-SepmConfiguration -ServerAddress $ServerAddress
+        }
+        'Port' {
+            Set-SepmConfiguration -Port $Port
+        }
     }
-
-    if ([String]::IsNullOrWhiteSpace($Creds.GetNetworkCredential().Password)) {
-        $message = "Password not provided.  Nothing to do."
-        Write-Error -Message $message
-        throw $message
-    }
-
-    # Setting script scope variables so that they can be used in other functions
-    $script:Credential = $Creds
-
-    if (-not $PSBoundParameters.ContainsKey('ServerAddress')) {
-        $message = 'Please provide your ServerAddress.'
-        $ServerAddress = Read-Host -Prompt "SEPM Server address"
-    }
-
-    # verify if the the $port is not the default one
-    if ($Port -ne 8446) {
-        $message = 'Please provide SEPM API Service port (Default 8446)'
-        $Port = Read-Host -Prompt "SEPM API Service port"
-    }
-
-    Set-SepmConfiguration -ServerAddress $ServerAddress
-    Set-SepmConfiguration -Port $Port
-    $Creds | Export-Clixml -Path $script:credentialsFilePath -Force
-
 }
