@@ -57,9 +57,15 @@ function Get-SEPMAccessToken {
         Write-Warning -Message $message
         throw $message
     }
-    
+
+    # Look for credentials stored in the disk
+    if (Test-Path $script:credentialsFilePath) {
+        $script:Credential = Import-Clixml -Path $script:credentialsFilePath -ErrorAction Ignore
+    }
     if ($null -eq $script:Credential) {
-        $script:Credential = Get-Credential
+        $message = "Credentials not found. Provide credentials :"
+        Write-Warning -Message $message
+        Set-SEPMAuthentication -credential (Get-Credential)
     }
 
     $body = @{
@@ -70,42 +76,16 @@ function Get-SEPMAccessToken {
     }
 
     $URI_Authenticate = $script:BaseURLv1 + '/identity/authenticate'
-    try {
-        Invoke-WebRequest $script:BaseURLv1
-    } catch {
-        'SSL Certificate test failed, skipping certificate validation. Please check your certificate settings and verify this is a legitimate source.'
-        $Response = Read-Host -Prompt 'Please press enter to ignore this and continue without SSL/TLS secure channel'
-        if ($Response -eq "") {
-            if ($PSVersionTable.PSVersion.Major -lt 6) {
-                Skip-Cert
-                $script:SkipCert = $true
-            }
-            if ($PSVersionTable.PSVersion.Major -ge 6) {
-                $script:SkipCert = $true
-            }
-        }
+    Test-CertificateSelfSigned -URI $URI_Authenticate
+
+    $Params = @{
+        Method      = 'POST'
+        Uri         = $URI_Authenticate
+        ContentType = "application/json"
+        Body        = ($body | ConvertTo-Json)
     }
 
-    try {
-        $Params = @{
-            Method      = 'POST'
-            Uri         = $URI_Authenticate
-            ContentType = "application/json"
-            Body        = ($body | ConvertTo-Json)
-        }
-        if ($PSVersionTable.PSVersion.Major -lt 6) {
-            $Response = Invoke-RestMethod @Params
-        }
-        if ($PSVersionTable.PSVersion.Major -ge 6) {
-            if ($script:SkipCert -eq $true) {
-                $Response = Invoke-RestMethod @Params -SkipCertificateCheck
-            } else {
-                $Response = Invoke-RestMethod @Params
-            }
-        }
-    } catch {
-        Get-RestErrorDetails
-    }
+    $Response = Invoke-ABRestMethod -params $Params
 
     # Caches the token in memory and stores token information & expiration in a file on disk 
     $CachedToken = [PSCustomObject]@{
