@@ -18,7 +18,7 @@ function Get-TDADPolicy {
 
         Gets a list of all accessible domains
 #>
-
+    # TODO test this function.
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
