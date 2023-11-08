@@ -9,7 +9,12 @@ function Invoke-ABRestMethod {
     .PARAMETER params
         A hashtable of parameters to pass to the Invoke-RestMethod cmdlet
     .EXAMPLE
-        PS C:\PSSymantecSEPM> Invoke-ABRestMethod -params $params
+        $params = @{
+            Method  = 'POST'
+            Uri     = $URI
+            headers = $headers
+        }
+        Invoke-ABRestMethod -params $params
     #>
     
     
