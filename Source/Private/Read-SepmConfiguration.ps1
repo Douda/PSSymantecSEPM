@@ -6,8 +6,6 @@ function Read-SepmConfiguration {
     .DESCRIPTION
         Loads in the default configuration values and returns the deserialized object.
 
-        The Git repo for this module can be found here: http://aka.ms/PowerShellForGitHub
-
     .PARAMETER Path
         The file that may or may not exist with a serialized version of the configuration
         values for this module.

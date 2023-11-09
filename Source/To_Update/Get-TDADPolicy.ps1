@@ -18,7 +18,7 @@ function Get-TDADPolicy {
 
         Gets a list of all accessible domains
 #>
-
+    # TODO test this function.
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
@@ -51,36 +51,7 @@ function Get-TDADPolicy {
             headers = $headers
         }
     
-        # Invoke the request
-        # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
-        # else we need to use the Skip-Cert function if self-signed certs are being used.
-        switch ($PSVersionTable.PSVersion.Major) {
-            { $_ -ge 6 } { 
-                try {
-                    if ($script:accessToken.skipCert -eq $true) {
-                        $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                    } else {
-                        $resp = Invoke-RestMethod @params
-                    }
-                } catch {
-                    Write-Warning -Message "Error: $_"
-                }
-            }
-            default {
-                try {
-                    if ($script:accessToken.skipCert -eq $true) {
-                        Skip-Cert
-                        $resp = Invoke-RestMethod @params
-                    } else {
-                        $resp = Invoke-RestMethod @params
-                    }
-                } catch {
-                    Write-Warning -Message "Error: $_"
-                }
-            }
-        }
-
-        # return the response
+        $resp = Invoke-ABRestMethod -params $params
         return $resp
     }
 }

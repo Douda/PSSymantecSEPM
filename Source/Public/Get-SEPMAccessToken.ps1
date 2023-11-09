@@ -10,6 +10,8 @@ function Get-SEPMAccessToken {
         If not provided, then will try to use the one already cached in memory.
         If still not found, will look to see if there is a file with the API token stored on disk
         Finally, if there is still no available token :
+            - check if the SEPM server name is configured
+            - check if the credentials are configured or stored on disk
             - query one from the SEPM server
             - store it in memory and on disk
             - return the token
@@ -53,15 +55,27 @@ function Get-SEPMAccessToken {
     # Finally, if there is still no available token, query one from the SEPM server.
     # Then caches the token in memory and stores it in a file on disk as a SecureString
     if ($null -eq $script:configuration.ServerAddress) {
-        $message = "SEPM Server name not found. Use Set-SepmConfiguration to update it and try again"
+        $message = "SEPM Server name not found. Provide server name :"
         Write-Warning -Message $message
-        throw $message
-    }
-    
-    if ($null -eq $script:Credential) {
-        $script:Credential = Get-Credential
+        $ServerAddress = Read-Host -Prompt $message
+        Set-SepmConfiguration -ServerAddress $ServerAddress
     }
 
+    # Look for credentials stored in the disk
+    if (Test-Path $script:credentialsFilePath) {
+        $script:Credential = Import-Clixml -Path $script:credentialsFilePath -ErrorAction Ignore
+    }
+    if ($null -eq $script:Credential) {
+        $message = "Credentials not found. Provide credentials :"
+        Write-Warning -Message $message
+        Set-SEPMAuthentication -credential (Get-Credential)
+    }
+
+    # Test the certificate of the SEPM server
+    $URI_Authenticate = $script:BaseURLv1 + '/identity/authenticate'
+    Test-CertificateSelfSigned -URI $URI_Authenticate
+
+    # Construct the request
     $body = @{
         "username" = $script:Credential.UserName
         "password" = ([System.Net.NetworkCredential]::new("", $script:Credential.Password).Password)
@@ -69,55 +83,32 @@ function Get-SEPMAccessToken {
         "domain"   = $script:configuration.domain
     }
 
-    $URI_Authenticate = $script:BaseURLv1 + '/identity/authenticate'
-    try {
-        Invoke-WebRequest $script:BaseURLv1
-    } catch {
-        'SSL Certificate test failed, skipping certificate validation. Please check your certificate settings and verify this is a legitimate source.'
-        $Response = Read-Host -Prompt 'Please press enter to ignore this and continue without SSL/TLS secure channel'
-        if ($Response -eq "") {
-            if ($PSVersionTable.PSVersion.Major -lt 6) {
-                Skip-Cert
-                $script:SkipCert = $true
-            }
-            if ($PSVersionTable.PSVersion.Major -ge 6) {
-                $script:SkipCert = $true
-            }
-        }
+    $Params = @{
+        Method      = 'POST'
+        Uri         = $URI_Authenticate
+        ContentType = "application/json"
+        Body        = ($body | ConvertTo-Json)
     }
 
-    try {
-        $Params = @{
-            Method      = 'POST'
-            Uri         = $URI_Authenticate
-            ContentType = "application/json"
-            Body        = ($body | ConvertTo-Json)
-        }
-        if ($PSVersionTable.PSVersion.Major -lt 6) {
-            $Response = Invoke-RestMethod @Params
-        }
-        if ($PSVersionTable.PSVersion.Major -ge 6) {
-            if ($script:SkipCert -eq $true) {
-                $Response = Invoke-RestMethod @Params -SkipCertificateCheck
-            } else {
-                $Response = Invoke-RestMethod @Params
-            }
-        }
-    } catch {
-        Get-RestErrorDetails
-    }
+    # Invoke the request and SkipCert if needed
+    $Response = Invoke-ABRestMethod -params $Params
 
-    # Caches the token in memory and stores token information & expiration in a file on disk 
+    # Sort the response
     $CachedToken = [PSCustomObject]@{
         token           = $response.token
         tokenExpiration = (Get-Date).AddSeconds($Response.tokenExpiration)
         SkipCert        = $script:SkipCert
     }
+
+    # Caches the token in memory
     $script:accessToken = $CachedToken
 
+    # Stores it in a file on disk as a SecureString
     if (-not (Test-Path ($Script:accessTokenFilePath | Split-Path))) {
         New-Item -ItemType Directory -Path ($Script:accessTokenFilePath | Split-Path) -Force | Out-Null
     }
     $script:accessToken | Export-Clixml -Path $script:accessTokenFilePath -Force
+
+    # return the token
     return $script:accessToken
 }

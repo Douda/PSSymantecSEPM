@@ -37,14 +37,19 @@ Clear-SEPMAuthentication # clear the authentication
 ```PowerShell
 PS C:\PSSymantecSEPM> Get-Command -Module PSSymantecSEPM | Select-Object -Property Name
 
+Add-SEPMFileFingerprintList
 Clear-SEPMAuthentication
-Get-SEPMAdmins
+Confirm-SEPMEventInfo
 Get-SEPClientDefVersions
+Get-SEPClientInfectedStatus
 Get-SEPClientStatus
 Get-SEPClientVersion
 Get-SEPComputers
+Get-SEPFileDetails
 Get-SEPGUPList
 Get-SEPMAccessToken
+Get-SEPMAdmins
+Get-SEPMCommandStatus
 Get-SEPMDatabaseInfo
 Get-SEPMDomain
 Get-SEPMEventInfo
@@ -58,10 +63,17 @@ Get-SEPMPoliciesSummary
 Get-SEPMReplicationStatus
 Get-SEPMThreatStats
 Get-SEPMVersion
+Get-TDADPolicy
+Remove-SEPMFileFingerprintList
 Reset-SEPMConfiguration
+Send-SEPMCommandGetFile
+Send-SEPMCommandQuarantine
 Set-SEPMAuthentication
-Set-SepmConfiguration
+Set-SEPMConfiguration
 Start-SEPMReplication
+Start-SEPScan
+Update-SEPClient
+Update-SEPMFileFingerprintList
 ```
 
 Every command has a help page, eg. `Get-Help Get-SEPComputers`

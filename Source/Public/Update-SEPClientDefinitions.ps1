@@ -1,49 +1,37 @@
-function Start-SEPScan {
+function Update-SEPClientDefinitions {
     <#
     .SYNOPSIS
-        Sends Active Scan command to the specified computer(s) or group(s)
+        Sends a command from SEPM to SEP endpoints to update content
     .DESCRIPTION
-        Sends a command from SEPM to SEP endpoints to request an active scan on the endpoint(s)
+        Sends a command from SEPM to SEP endpoints to update content
     .PARAMETER ComputerName
-        Specifies the name of the computer for which you want to send the command. 
-        Accepts pipeline input by Value and ByPropertyName
+        The name of the computer to send the command to
+        cannot be used with GroupName
     .PARAMETER GroupName
-        Specifies the group full path name for which you want to send the command
-    .PARAMETER ActiveScan
-        Specifies the type of scan to send to the endpoint(s)
-        Valid values are ActiveScan and FullScan
-        By default, the ActiveScan switch is used
-    .PARAMETER FullScan
-        Specifies the type of scan to send to the endpoint(s)
-        Valid values are ActiveScan and FullScan
+        The name of the group to send the command to
+        cannot be used with ComputerName
     .EXAMPLE
-        PS C:\PSSymantecSEPM> Start-SEPScan -ComputerName MyComputer01 -ActiveScan
-
-        Sends an active scan command to the specified computer MyComputer01
+        Update-SEPClientDefinitions -ComputerName "Computer1"
+        Sends a command to update content to Computer1
     .EXAMPLE
-        "MyComputer1","MyComputer2" | Start-SEPScan
-
-        Sends an active scan command to the specified computers MyComputer1 & MyComputer2 via pipeline
-        By default, the ActiveScan switch is used
+        "Computer1", "Computer2" | Update-SEPClientDefinitions
+        Sends a command to update content to Computer1 and Computer2
     .EXAMPLE
-        Start-SEPScan -GroupName "My Company\EMEA\Workstations" -fullscan
-
-        Sends a fullscan command to all endpoints part of the group "My Company\EMEA\Workstations"
-#>
-    [CmdletBinding(
-        DefaultParameterSetName = 'ComputerNameActiveScan'
-    )]
-    Param (
+        Update-SEPClientDefinitions -GroupName "My Company\EMEA\Workstations"
+        Sends a command to update content to all computers in "My Company\EMEA\Workstations"
+    .EXAMPLE
+        Update-SEPClientDefinitions -GroupName "My Company\EMEA\Workstations" -IncludeSubGroups
+        Sends a command to update content to all computers in "My Company\EMEA\Workstations" and all subgroups
+    #>
+    
+    
+    [CmdletBinding()]
+    param (
         # ComputerName
         [Parameter(
-            ParameterSetName = 'ComputerNameActiveScan',
             ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $true
-        )]
-        [Parameter(
-            ParameterSetName = 'ComputerNameFullScan',
-            ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $true
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'ComputerName'
         )]
         [Alias("Hostname", "DeviceName", "Device", "Computer")]
         [String]
@@ -51,30 +39,21 @@ function Start-SEPScan {
 
         # group name
         [Parameter(
-            ParameterSetName = 'GroupNameActiveScan',
-            ValueFromPipelineByPropertyName = $true
-        )]
-        [Parameter(
-            ParameterSetName = 'GroupNameFullScan',
-            ValueFromPipelineByPropertyName = $true
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'GroupName'
         )]
         [Alias("Group")]
         [String]
         $GroupName,
 
-        # ActiveScan
-        [Parameter(ParameterSetName = 'ComputerNameActiveScan')]
-        [Parameter(ParameterSetName = 'GroupNameActiveScan')]
+        # switch parameter to include subgroups
+        [Parameter(
+            ParameterSetName = 'GroupName'
+        )]
         [switch]
-        $ActiveScan,
-
-        # FullScan
-        [Parameter(ParameterSetName = 'ComputerNameFullScan')]
-        [Parameter(ParameterSetName = 'GroupNameFullScan')]
-        [switch]
-        $FullScan
+        $IncludeSubGroups
     )
-
+    
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
@@ -87,9 +66,8 @@ function Start-SEPScan {
             "Content"       = 'application/json'
         }
     }
-
+    
     process {
-        # If specific computer name(s) are specified
         if ($ComputerName) {
             # Get computer ID(s) from computer name(s)
             $ComputerIDList = @()
@@ -98,12 +76,7 @@ function Start-SEPScan {
                 $ComputerIDList += $ComputerID
             }
 
-            if ($ActiveScan) {
-                $URI = $script:BaseURLv1 + "/command-queue/activescan"
-            }
-            if ($FullScan) {
-                $URI = $script:BaseURLv1 + "/command-queue/fullscan"
-            }
+            $URI = $script:BaseURLv1 + "/command-queue/updatecontent"
 
             # URI query strings
             $QueryStrings = @{
@@ -118,14 +91,14 @@ function Start-SEPScan {
             }
             $builder.Query = $query.ToString()
             $URI = $builder.ToString()
-
+    
             # Invoke the request params
             $params = @{
                 Method  = 'POST'
                 Uri     = $URI
                 headers = $headers
             }
-    
+
             $resp = Invoke-ABRestMethod -params $params
 
             # return the response
@@ -166,7 +139,7 @@ function Start-SEPScan {
                         Uri     = $URI
                         headers = $headers
                     }
-                    
+
                     $resp = Invoke-ABRestMethod -params $params
                 
                     # Process the response
@@ -186,19 +159,19 @@ function Start-SEPScan {
             } until ($resp.lastPage -eq $true)
 
             # filter list by group name
-            $allComputers = $allComputers | Where-Object { $_.group.name -eq $GroupName }
+            # if IncludeSubGroups is specified, then get all computers from subgroups
+            if ($IncludeSubGroups) {
+                # get all subgroups
+                $allComputers = $allComputers | Where-Object { $_.group.name -like "$GroupName*" }
+            } else {
+                $allComputers = $allComputers | Where-Object { $_.group.name -eq $GroupName }
+            }
             
             #################################################
             # 2. send command to all computers in the group #
             #################################################
 
-            if ($ActiveScan) {
-                $URI = $script:BaseURLv1 + "/command-queue/activescan"
-            }
-            if ($FullScan) {
-                $URI = $script:BaseURLv1 + "/command-queue/fullscan"
-            }
-
+            $URI = $script:BaseURLv1 + "/command-queue/updatecontent"
             $AllResp = @()
             
             foreach ($id in $allComputers.uniqueId) {
@@ -216,14 +189,12 @@ function Start-SEPScan {
                 $builder.Query = $query.ToString()
                 $URI = $builder.ToString()
         
-                # Invoke the request params
+                # Send command to each computers in the group
                 $params = @{
                     Method  = 'POST'
                     Uri     = $URI
                     headers = $headers
                 }
-
-                # Send command to each computers in the group
                 $resp = Invoke-ABRestMethod -params $params
                 $AllResp += $resp
             }

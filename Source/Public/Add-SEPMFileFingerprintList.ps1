@@ -20,7 +20,7 @@ function Add-SEPMFileFingerprintList {
     .EXAMPLE
         $DomainId = Get-SEPMDomain | Where-Object { $_.name -eq "Default" }
         $HashList = ls -file C:\Users\$env:USERNAME\Downloads\*.exe | Get-FileHash -algorithm SHA256
-        Add-SEPMFileFingerprintList -name "My Blacklist" -domainId "DA6AEA99A0DEA7F00166056063F81321" -HashType "SHA256" -description "My Blacklist" -hashlist $hashlist.hash
+        Add-SEPMFileFingerprintList -name "My Blacklist" -domainId $domainId -HashType "SHA256" -description "My Blacklist" -hashlist $hashlist.hash
 
         Gets the domain id for the default domain 
         Create a hash list of all the files in the downloads folder of the currently logged in user
@@ -79,26 +79,7 @@ function Add-SEPMFileFingerprintList {
             ContentType = 'application/json'
         }
     
-        # Invoke the request
-        # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
-        # else we need to use the Skip-Cert function if self-signed certs are being used.
-        try {
-            # Invoke the request params
-            if ($script:accessToken.skipCert -eq $true) {
-                if ($PSVersionTable.PSVersion.Major -lt 6) {
-                    Skip-Cert
-                    $resp = Invoke-RestMethod @params
-                } else {
-                    $resp = Invoke-RestMethod @params -SkipCertificateCheck
-                }
-            } else {
-                $resp = Invoke-RestMethod @params
-            } 
-        } catch {
-            Write-Warning -Message "Error: $_"
-        }
-        
-        # return the response
+        $resp = Invoke-ABRestMethod -params $params
         return $resp
     }
 }

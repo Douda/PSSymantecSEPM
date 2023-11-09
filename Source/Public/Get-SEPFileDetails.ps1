@@ -1,23 +1,27 @@
-function Get-SEPClientDefVersions {
+function Get-SEPFileDetails {
     <#
     .SYNOPSIS
-        Gets a list of clients for a group by content version.
+        Gets the details of a binary file, such as the checksum and the file size
     .DESCRIPTION
-        Gets a list of clients for a group by content version.
+        Gets the details of a binary file, such as the checksum and the file size
+    .PARAMETER FileID
+        The ID of the file to get the details of
+        Is a required parameter
+        Can be found in the command ID of the response from Send-SEPMCommandGetFile
     .EXAMPLE
-        PS C:\PSSymantecSEPM> Get-SEPClientDefVersions
+        PS C:\PSSymantecSEPM> Get-SEPFileDetails -FileID 12345678901234567890123456789
 
-        version             clientsCount
-        -------             ------------
-        2023-09-04 rev. 002           15
-        2023-09-03 rev. 002            4
-        2023-09-01 rev. 008            2
-        2023-08-31 rev. 021            2
-        2023-08-31 rev. 002            1
-        2023-08-29 rev. 003            1
-
-        Gets a list of clients grouped by content version.
+        id                               fileSize checksum
+        --                               -------- --------
+        CD02BC8E0A6606D53533F2428BB86D4E  1071101 4BE0BB3B57044CAD186FB59C2B7A13BB
 #>
+
+    [CmdletBinding()]
+    param (
+        [Parameter()]
+        [string]
+        $FileID
+    )
 
     begin {
         # initialize the configuration
@@ -25,7 +29,7 @@ function Get-SEPClientDefVersions {
         if ($test_token -eq $false) {
             Get-SEPMAccessToken | Out-Null
         }
-        $URI = $script:BaseURLv1 + "/stats/client/content"
+        $URI = $script:BaseURLv1 + "/command-queue/file/$FileID/details"
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
@@ -34,7 +38,9 @@ function Get-SEPClientDefVersions {
 
     process {
         # URI query strings
-        $QueryStrings = @{}
+        $QueryStrings = @{
+            file_id = $FileID
+        }
 
         # Construct the URI
         $builder = New-Object System.UriBuilder($URI)

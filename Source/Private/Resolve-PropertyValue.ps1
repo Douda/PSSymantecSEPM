@@ -8,8 +8,6 @@ function Resolve-PropertyValue {
         Returns the requested property from the provided object, if it exists and is a valid
         value.  Otherwise, returns the default value.
 
-        The Git repo for this module can be found here: http://aka.ms/PowerShellForGitHub
-
     .PARAMETER InputObject
         The object to check the value of the requested property.
 
