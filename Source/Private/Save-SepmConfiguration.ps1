@@ -6,8 +6,6 @@ function Save-SepmConfiguration {
     .DESCRIPTION
         Serializes the provided settings object to disk as a JSON file.
 
-        The Git repo for this module can be found here: http://aka.ms/PowerShellForGitHub
-
     .PARAMETER Configuration
         The configuration object to persist to disk.
 
