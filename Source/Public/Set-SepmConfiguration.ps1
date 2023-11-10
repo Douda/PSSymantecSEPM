@@ -39,6 +39,7 @@ function Set-SepmConfiguration {
 
     # $PSBoundParameters is a hashtable of all the parameters that were passed to this function
     # We can use this to determine which properties were passed in and update the configuration object
+    # Allows to easily add new properties by adding a param function without having to update this function
     foreach ($name in $properties) {
         if ($PSBoundParameters.ContainsKey($name)) {
             $value = $PSBoundParameters.$name
