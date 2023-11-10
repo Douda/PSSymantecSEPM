@@ -60,8 +60,8 @@ function Add-SEPMFileFingerprintList {
     }
 
     process {
-
         $URI = $script:BaseURLv1 + "/policy-objects/fingerprints"
+
         # Construct the body & required fields
         $body = @{
             name        = $name

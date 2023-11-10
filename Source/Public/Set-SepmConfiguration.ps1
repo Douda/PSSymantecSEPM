@@ -9,11 +9,17 @@ function Set-SepmConfiguration {
 
     .PARAMETER ServerAddress
         The hostname of the SEPM instance to communicate with. 
-
+    .PARAMETER Port
+        The port number of the SEPM instance to communicate with.
     .EXAMPLE
-        Set-SepmConfiguration ServerAddress "MySEPMServer"
+        Set-SepmConfiguration -ServerAddress "MySEPMServer"
 
         Set the SEPM server address to "MySEPMServer"
+    .EXAMPLE
+        Set-SepmConfiguration -ServerAddress "MySEPMServer" -Port 8446
+
+        Set the SEPM server address to "MySEPMServer" and the port to 8446
+
 
 #>
     [CmdletBinding(
@@ -25,9 +31,15 @@ function Set-SepmConfiguration {
         [int] $Port
     )
 
+    # Load in the persisted configuration object
     $persistedConfig = Read-SepmConfiguration -Path $script:configurationFilePath
 
+    # Update the configuration object with any values that were provided as parameters
     $properties = Get-Member -InputObject $script:configuration -MemberType NoteProperty | Select-Object -ExpandProperty Name
+
+    # $PSBoundParameters is a hashtable of all the parameters that were passed to this function
+    # We can use this to determine which properties were passed in and update the configuration object
+    # Allows to easily add new properties by adding a param function without having to update this function
     foreach ($name in $properties) {
         if ($PSBoundParameters.ContainsKey($name)) {
             $value = $PSBoundParameters.$name
@@ -37,6 +49,7 @@ function Set-SepmConfiguration {
         }
     }
 
+    # Persist the configuration object to disk
     Save-SepmConfiguration -Configuration $persistedConfig -Path $script:configurationFilePath
 
 }

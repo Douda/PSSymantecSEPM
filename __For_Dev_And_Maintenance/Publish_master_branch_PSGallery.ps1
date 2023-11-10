@@ -4,8 +4,9 @@
 
 # Import API Key
 $API_PATH = Split-Path $ModuleDevPath -Parent
-$API_KEY = Import-Clixml -Path "$API_PATH\API_KEY_PS_Gallery.xml" -ErrorAction SilentlyContinue
-if ($null -eq $API_KEY) {
+if (Test-Path "$API_PATH\API_KEY_PS_Gallery.xml") {
+    $API_KEY = Import-Clixml -Path "$API_PATH\API_KEY_PS_Gallery.xml" -ErrorAction SilentlyContinue
+} else {
     $API_KEY = Read-Host -Prompt 'Enter PS Gallery API Key to publish the module'
 }
 
