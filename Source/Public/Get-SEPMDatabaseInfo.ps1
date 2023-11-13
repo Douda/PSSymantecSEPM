@@ -26,23 +26,28 @@ function Get-SEPMDatabaseInfo {
 
         Gets detailed information on the database of the local site 
     #>
-    
-    # initialize the configuration
-    $test_token = Test-SEPMAccessToken
-    if (-not $test_token){
-        Get-SEPMAccessToken | Out-Null
-    }
-    $URI = $script:BaseURLv1 + "/admin/database"
-    $headers = @{
-        "Authorization" = "Bearer " + $script:accessToken.token
-        "Content"       = 'application/json'
-    }
-    $params = @{
-        Method  = 'GET'
-        Uri     = $URI
-        headers = $headers
+    begin {
+        # initialize the configuration
+        $test_token = Test-SEPMAccessToken
+        if (-not $test_token) {
+            Get-SEPMAccessToken | Out-Null
+        }
+        $URI = $script:BaseURLv1 + "/admin/database"
+        $headers = @{
+            "Authorization" = "Bearer " + $script:accessToken.token
+            "Content"       = 'application/json'
+        }
     }
 
-    $resp = Invoke-ABRestMethod -params $params
-    return $resp
+    process {
+        # prepare the parameters
+        $params = @{
+            Method  = 'GET'
+            Uri     = $URI
+            headers = $headers
+        }
+    
+        $resp = Invoke-ABRestMethod -params $params
+        return $resp
+    }
 }

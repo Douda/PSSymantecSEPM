@@ -5,7 +5,7 @@ Function Get-SEPMVersion {
     .DESCRIPTION
         Gets the current version of Symantec Endpoint Protection Manager. This function dot not require authentication.
     .EXAMPLE
-        PS C:\GitHub_Projects\PSSymantecSEPM> Get-SEPMVersion
+        PS C:\PSSymantecSEPM> Get-SEPMVersion
 
         API_SEQUENCE API_VERSION version
         ------------ ----------- -------
@@ -14,27 +14,28 @@ Function Get-SEPMVersion {
         Gets the current version of Symantec Endpoint Protection Manager.
     #>
     
-
-    # initialize the configuration
-    $test_token = Test-SEPMAccessToken
-    if (-not $test_token){
-        Get-SEPMAccessToken | Out-Null
-    }
-    $URI = $script:BaseURLv1 + "/version"
-    $headers = @{
-        "Authorization" = "Bearer " + $script:accessToken.token
-        "Content"       = 'application/json'
-    }
-    $body = @{
-    }
-    $params = @{
-        Method  = 'GET'
-        Uri     = $URI
-        headers = $headers
-        Body    = ($body | ConvertTo-Json)
+    begin {
+        # initialize the configuration
+        $test_token = Test-SEPMAccessToken
+        if (-not $test_token) {
+            Get-SEPMAccessToken | Out-Null
+        }
+        $URI = $script:BaseURLv1 + "/version"
+        $headers = @{
+            "Authorization" = "Bearer " + $script:accessToken.token
+            "Content"       = 'application/json'
+        }
     }
 
-    $resp = Invoke-ABRestMethod -params $params
-
-    return $resp
+    process {
+        # prepare the parameters
+        $params = @{
+            Method  = 'GET'
+            Uri     = $URI
+            headers = $headers
+        }
+    
+        $resp = Invoke-ABRestMethod -params $params
+        return $resp
+    }
 }
