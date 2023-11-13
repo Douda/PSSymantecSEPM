@@ -20,10 +20,10 @@ function Start-SEPMReplication {
         [string]
         $partnerSiteName
 
-        # [bool]
+        # [switch]
         # $logs,
 
-        # [bool]
+        # [switch]
         # $ContentAndPackages
     )
 
@@ -43,9 +43,9 @@ function Start-SEPMReplication {
     process {
         # URI query strings
         $QueryStrings = @{
-            partnerSiteName    = $partnerSiteName
-            logs               = $logs
-            ContentAndPackages = $ContentAndPackages
+            partnerSiteName = $partnerSiteName
+            logs            = $logs
+            content         = $ContentAndPackages
         }
 
         # Construct the URI
