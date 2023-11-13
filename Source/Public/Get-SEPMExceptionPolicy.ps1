@@ -37,7 +37,7 @@ function Get-SEPMExceptionPolicy {
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if ($test_token -eq $false) {
+        if (-not $test_token){
             Get-SEPMAccessToken | Out-Null
         }
         # BaseURL V2
