@@ -37,7 +37,7 @@ function Get-SEPMEventInfo {
     }
 
     process {
-        # Invoke the request params
+        # prepare the parameters
         $params = @{
             Method  = 'GET'
             Uri     = $URI
@@ -45,8 +45,6 @@ function Get-SEPMEventInfo {
         }
 
         $resp = Invoke-ABRestMethod -params $params
-
-        # return the response
         return $resp
     }
 }

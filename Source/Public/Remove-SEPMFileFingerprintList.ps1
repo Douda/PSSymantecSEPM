@@ -48,7 +48,6 @@ function Remove-SEPMFileFingerprintList {
         if (-not $test_token){
             Get-SEPMAccessToken | Out-Null
         }
-        
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
@@ -71,8 +70,6 @@ function Remove-SEPMFileFingerprintList {
         }
 
         $resp = Invoke-ABRestMethod -params $params
-
-        # return the response
         return $resp
     }
 }

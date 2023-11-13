@@ -75,7 +75,6 @@ function Update-SEPMFileFingerprintList {
         if (-not $test_token){
             Get-SEPMAccessToken | Out-Null
         }
-        
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
@@ -83,7 +82,6 @@ function Update-SEPMFileFingerprintList {
     }
 
     process {
-
         # Get the FingerprintListID if the FingerprintListName is provided
         if ($FingerprintListName) {
             $URI = $script:BaseURLv1 + "/policy-objects/fingerprints"
