@@ -1,4 +1,4 @@
-function Clear-SEPIronCache {
+function Send-SEPMCommandClearIronCache {
     <# # TODO update help
     .SYNOPSIS
         Send a quarantine/unquarantine command to SEP endpoints
@@ -14,13 +14,13 @@ function Clear-SEPIronCache {
     .PARAMETER Unquarantine
         Switch parameter to unquarantine the SEP client
     .EXAMPLE
-        Clear-SEPIronCache -ComputerName "Computer1"
+        Send-SEPMCommandClearIronCache -ComputerName "Computer1"
         Sends a command to quarantine Computer1
     .EXAMPLE
-        "Computer1", "Computer2" | Clear-SEPIronCache
+        "Computer1", "Computer2" | Send-SEPMCommandClearIronCache
         Sends a command to quarantine Computer1 and Computer2
     .EXAMPLE
-        Clear-SEPIronCache -GroupName "My Company\EMEA\Workstations\Site1"
+        Send-SEPMCommandClearIronCache -GroupName "My Company\EMEA\Workstations\Site1"
         Sends a command to quarantine all computers in "My Company\EMEA\Workstations\Site1"
         Does not include subgroups
     #>
