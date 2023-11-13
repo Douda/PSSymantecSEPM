@@ -92,13 +92,7 @@ function Get-SEPComputers {
             }
 
             # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
+            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
             do {
                 # Invoke the request params
@@ -115,12 +109,7 @@ function Get-SEPComputers {
 
                 # Increment the page index & update URI
                 $QueryStrings.pageIndex++
-                $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-                foreach ($param in $QueryStrings.GetEnumerator()) {
-                    $query[$param.Key] = $param.Value
-                }
-                $builder.Query = $query.ToString()
-                $URI = $builder.ToString()
+                $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
             } until ($resp.lastPage -eq $true)
 
             # return the response
@@ -141,13 +130,7 @@ function Get-SEPComputers {
             }
 
             # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
+            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
     
             do {
                 # Invoke the request params
@@ -164,12 +147,7 @@ function Get-SEPComputers {
 
                 # Increment the page index & update URI
                 $QueryStrings.pageIndex++
-                $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-                foreach ($param in $QueryStrings.GetEnumerator()) {
-                    $query[$param.Key] = $param.Value
-                }
-                $builder.Query = $query.ToString()
-                $URI = $builder.ToString()
+                $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
             } until ($resp.lastPage -eq $true)
 
             # Filtering
@@ -196,13 +174,7 @@ function Get-SEPComputers {
             }
 
             # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
+            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
     
             do {
                 # Invoke the request params
@@ -219,12 +191,7 @@ function Get-SEPComputers {
 
                 # Increment the page index & update URI
                 $QueryStrings.pageIndex++
-                $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-                foreach ($param in $QueryStrings.GetEnumerator()) {
-                    $query[$param.Key] = $param.Value
-                }
-                $builder.Query = $query.ToString()
-                $URI = $builder.ToString()
+                $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
             } until ($resp.lastPage -eq $true)
 
             # return the response

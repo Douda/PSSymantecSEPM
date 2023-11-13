@@ -43,13 +43,7 @@ function Get-SEPFileDetails {
         }
 
         # Construct the URI
-        $builder = New-Object System.UriBuilder($URI)
-        $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-        foreach ($param in $QueryStrings.GetEnumerator()) {
-            $query[$param.Key] = $param.Value
-        }
-        $builder.Query = $query.ToString()
-        $URI = $builder.ToString()
+        $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
         $params = @{
             Method  = 'GET'

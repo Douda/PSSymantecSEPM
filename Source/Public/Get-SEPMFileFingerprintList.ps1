@@ -73,13 +73,7 @@ function Get-SEPMFileFingerprintList {
             }
 
             # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
+            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
             $params = @{
                 Method  = 'GET'
@@ -92,18 +86,8 @@ function Get-SEPMFileFingerprintList {
 
         if ($FingerprintListID) {
             $URI = $script:BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"
-            # URI query strings
-            $QueryStrings = @{}
-
-            # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
-
+            
+            # prepare the parameters
             $params = @{
                 Method  = 'GET'
                 Uri     = $URI
@@ -113,7 +97,6 @@ function Get-SEPMFileFingerprintList {
             $resp = Invoke-ABRestMethod -params $params
         }
         
-
         # return the response
         return $resp
     }

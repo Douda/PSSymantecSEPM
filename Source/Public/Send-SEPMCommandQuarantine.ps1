@@ -59,7 +59,6 @@ function Send-SEPMCommandQuarantine {
         if (-not $test_token){
             Get-SEPMAccessToken | Out-Null
         }
-        
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
@@ -88,15 +87,9 @@ function Send-SEPMCommandQuarantine {
             }
 
             # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
+            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-            # Invoke the request params
+            # prepare the parameters
             $params = @{
                 Method  = 'POST'
                 Uri     = $URI
@@ -104,8 +97,6 @@ function Send-SEPMCommandQuarantine {
             }
     
             $resp = Invoke-ABRestMethod -params $params
-
-            # return the response
             return $resp
         }
 
@@ -126,25 +117,16 @@ function Send-SEPMCommandQuarantine {
             }
 
             # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
+            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-            # Invoke the request params
+            # prepare the parameters
             $params = @{
                 Method  = 'POST'
                 Uri     = $URI
                 headers = $headers
             }
             
-
             $resp = Invoke-ABRestMethod -params $params
-                
-            # return the response
             return $resp
         }
     }

@@ -5,7 +5,7 @@ function Get-SEPMReplicationStatus {
     .DESCRIPTION
         Get Replication Status
     .EXAMPLE
-        PS C:\GitHub_Projects\PSSymantecSEPM> Get-SEPMReplicationStatus
+        PS C:\PSSymantecSEPM> Get-SEPMReplicationStatus
 
         replicationStatus
         -----------------
@@ -17,7 +17,7 @@ function Get-SEPMReplicationStatus {
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if (-not $test_token){
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
         }
         $URI = $script:BaseURLv1 + "/replication/status"
@@ -28,18 +28,7 @@ function Get-SEPMReplicationStatus {
     }
 
     process {
-        # URI query strings
-        $QueryStrings = @{}
-
-        # Construct the URI
-        $builder = New-Object System.UriBuilder($URI)
-        $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-        foreach ($param in $QueryStrings.GetEnumerator()) {
-            $query[$param.Key] = $param.Value
-        }
-        $builder.Query = $query.ToString()
-        $URI = $builder.ToString()
-
+        # prepare the parameters
         $params = @{
             Method  = 'GET'
             Uri     = $URI
