@@ -58,6 +58,12 @@ function Get-SEPMGroups {
             Uri     = $URI
             headers = $headers
         }
+
+        # QueryString parameters for pagination
+        $QueryStrings = @{
+            pageSize  = 25
+            pageIndex = 1
+        }
     
         # Invoke the request
         do {
