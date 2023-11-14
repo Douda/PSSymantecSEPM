@@ -73,7 +73,7 @@ function Get-SEPMAccessToken {
 
     # Test the certificate of the SEPM server
     $URI_Authenticate = $script:BaseURLv1 + '/identity/authenticate'
-    Test-CertificateSelfSigned -URI $URI_Authenticate
+    Test-SEPMCertificate -URI $URI_Authenticate
 
     # Construct the request
     $body = @{
