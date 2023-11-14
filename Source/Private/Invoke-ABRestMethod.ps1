@@ -5,6 +5,8 @@ function Invoke-ABRestMethod {
     .DESCRIPTION
         Invokes a REST method with a PS version-appropriate method
         Handles the differences between PS versions 5 and 6 for certificate validation skipping
+        Tests the certificate of the server if self signed
+    .NOTES
         Helper function for Invoke-ABRestMethod
     .PARAMETER params
         A hashtable of parameters to pass to the Invoke-RestMethod cmdlet
@@ -27,10 +29,15 @@ function Invoke-ABRestMethod {
         $params
     )
 
+    # Test the certificate if self signed
+    if (-not $script:SkipCert) {
+        Test-SEPMCertificate -URI $params.Uri
+    }
+
     switch ($PSVersionTable.PSVersion.Major) {
         { $_ -ge 6 } { 
             try {
-                if ($script:accessToken.skipCert -eq $true) {
+                if ($script:SkipCert -eq $true) {
                     $resp = Invoke-RestMethod @params -SkipCertificateCheck
                 } else {
                     $resp = Invoke-RestMethod @params
@@ -42,7 +49,7 @@ function Invoke-ABRestMethod {
         }
         default {
             try {
-                if ($script:accessToken.skipCert -eq $true) {
+                if ($script:SkipCert -eq $true) {
                     Skip-Cert
                     $resp = Invoke-RestMethod @params
                 } else {
