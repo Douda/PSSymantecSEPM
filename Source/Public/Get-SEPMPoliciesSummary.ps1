@@ -46,7 +46,9 @@ function Get-SEPMPoliciesSummary {
             'lu', 
             'hi', 
             'adc', 
-            'msl', 
+            'msl', # Currently getting an error when trying to get this policy type
+            # {"errorCode":"400","appErrorCode":"","errorMessage":"The policy type argument is invalid."}
+            # TODO: Investigate this error
             'upgrade'
         )]
         [string]
@@ -78,49 +80,37 @@ function Get-SEPMPoliciesSummary {
 
     process {
         if (-not $PolicyType) {
-            $allResults = @()
-    
             # Invoke the request
-            do {
-                try {
-                    # prepare the parameters
-                    $params = @{
-                        Method  = 'GET'
-                        Uri     = $URI
-                        headers = $headers
-                    }
-
-                    $resp = Invoke-ABRestMethod -params $params
-                    
-                    # Add group FullPath to the response from their Group ID for ease of use
-                    # Parsing every response object
-                    foreach ($policy in $resp.content) {
-                        # Parsing every location this policy is applied to
-                        foreach ($location in $policy.assignedtolocations) {
-                            # Getting the group name from the group ID, and adding it to the response object
-                            $group = $groups | Where-Object { $_.id -match $location.groupid }  | Get-Unique
-                            $location | Add-Member -NotePropertyName "groupNameFullPath" -NotePropertyValue $group.fullPathName
-                        }
-                    }
-                
-                    # Process the response
-                    $allResults += $resp.content
-
-                    # Increment the page index & update URI
-                    $QueryStrings.pageIndex++
-                    $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-                } catch {
-                    Write-Warning -Message "Error: $_"
+            try {
+                # prepare the parameters
+                $params = @{
+                    Method  = 'GET'
+                    Uri     = $URI
+                    headers = $headers
                 }
-            } until ($resp.lastPage -eq $true)
+
+                $resp = Invoke-ABRestMethod -params $params
+                    
+                # Add group FullPath to the response from their Group ID for ease of use
+                # Parsing every response object
+                foreach ($policy in $resp.content) {
+                    # Parsing every location this policy is applied to
+                    foreach ($location in $policy.assignedtolocations) {
+                        # Getting the group name from the group ID, and adding it to the response object
+                        $group = $groups | Where-Object { $_.id -match $location.groupid }  | Get-Unique
+                        $location | Add-Member -NotePropertyName "groupNameFullPath" -NotePropertyValue $group.fullPathName
+                    }
+                }
+            } catch {
+                Write-Warning -Message "Error: $_"
+            }
 
             # return the response
-            return $allResults
+            return $resp.content
         }
 
         if ($PolicyType) {
             $URI = $script:BaseURLv1 + "/policies/summary" + "/" + $PolicyType
-            $allResults = @()
         
             # prepare the parameters
             $params = @{
@@ -130,41 +120,23 @@ function Get-SEPMPoliciesSummary {
             }
     
             # Invoke the request
-            do {
-                try {
-                    # Invoke the request params
-                    $params = @{
-                        Method  = 'GET'
-                        Uri     = $URI
-                        headers = $headers
+            try {
+                $resp = Invoke-ABRestMethod -params $params
+                # Add group FullPath to the response from their Group ID for ease of use
+                # Parsing every response object
+                foreach ($policy in $resp.content) {
+                    # Parsing every location this policy is applied to
+                    foreach ($location in $policy.assignedtolocations) {
+                        # Getting the group name from the group ID, and adding it to the response object
+                        $group = $groups | Where-Object { $_.id -match $location.groupid }  | Get-Unique
+                        $location | Add-Member -NotePropertyName "groupNameFullPath" -NotePropertyValue $group.fullPathName
                     }
-                    
-                    $resp = Invoke-ABRestMethod -params $params
-
-                    # Add group FullPath to the response from their Group ID for ease of use
-                    # Parsing every response object
-                    foreach ($policy in $resp.content) {
-                        # Parsing every location this policy is applied to
-                        foreach ($location in $policy.assignedtolocations) {
-                            # Getting the group name from the group ID, and adding it to the response object
-                            $group = $groups | Where-Object { $_.id -match $location.groupid }  | Get-Unique
-                            $location | Add-Member -NotePropertyName "groupNameFullPath" -NotePropertyValue $group.fullPathName
-                        }
-                    }
-                
-                    # Process the response
-                    $allResults += $resp.content
-
-                    # Increment the page index & update URI
-                    $QueryStrings.pageIndex++
-                    $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-                } catch {
-                    Write-Warning -Message "Error: $_"
                 }
-            } until ($resp.lastPage -eq $true)
-
+            } catch {
+                Write-Warning -Message "Error: $_"
+            }
             # return the response
-            return $allResults
+            return $resp.content
         }
     }
 }
