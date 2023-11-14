@@ -59,17 +59,23 @@ function Get-SEPComputers {
             ParameterSetName = 'GroupName'
         )]
         [switch]
-        $IncludeSubGroups
+        $IncludeSubGroups,
 
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
 
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if ($test_token -eq $false) {
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
         }
-        
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
+        }
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
@@ -92,13 +98,7 @@ function Get-SEPComputers {
             }
 
             # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
+            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
             do {
                 # Invoke the request params
@@ -115,12 +115,7 @@ function Get-SEPComputers {
 
                 # Increment the page index & update URI
                 $QueryStrings.pageIndex++
-                $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-                foreach ($param in $QueryStrings.GetEnumerator()) {
-                    $query[$param.Key] = $param.Value
-                }
-                $builder.Query = $query.ToString()
-                $URI = $builder.ToString()
+                $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
             } until ($resp.lastPage -eq $true)
 
             # return the response
@@ -141,13 +136,7 @@ function Get-SEPComputers {
             }
 
             # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
+            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
     
             do {
                 # Invoke the request params
@@ -164,12 +153,7 @@ function Get-SEPComputers {
 
                 # Increment the page index & update URI
                 $QueryStrings.pageIndex++
-                $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-                foreach ($param in $QueryStrings.GetEnumerator()) {
-                    $query[$param.Key] = $param.Value
-                }
-                $builder.Query = $query.ToString()
-                $URI = $builder.ToString()
+                $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
             } until ($resp.lastPage -eq $true)
 
             # Filtering
@@ -196,13 +180,7 @@ function Get-SEPComputers {
             }
 
             # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
+            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
     
             do {
                 # Invoke the request params
@@ -219,12 +197,7 @@ function Get-SEPComputers {
 
                 # Increment the page index & update URI
                 $QueryStrings.pageIndex++
-                $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-                foreach ($param in $QueryStrings.GetEnumerator()) {
-                    $query[$param.Key] = $param.Value
-                }
-                $builder.Query = $query.ToString()
-                $URI = $builder.ToString()
+                $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
             } until ($resp.lastPage -eq $true)
 
             # return the response

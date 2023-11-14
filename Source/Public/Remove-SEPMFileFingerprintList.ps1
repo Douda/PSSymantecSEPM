@@ -8,6 +8,8 @@ function Remove-SEPMFileFingerprintList {
         The name of the file fingerprint list
     .PARAMETER FingerprintListID
         The ID of the file fingerprint list
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Remove-SEPMFileFingerprintList -FingerprintListName "Fingerprint list for workstations"
 
@@ -39,16 +41,23 @@ function Remove-SEPMFileFingerprintList {
             ParameterSetName = 'ID'
         )]
         [string]
-        $FingerprintListID
+        $FingerprintListID,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
 
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if ($test_token -eq $false) {
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
         }
-        
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
+        }
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
@@ -71,8 +80,6 @@ function Remove-SEPMFileFingerprintList {
         }
 
         $resp = Invoke-ABRestMethod -params $params
-
-        # return the response
         return $resp
     }
 }

@@ -4,6 +4,8 @@ function Get-SEPMThreatStats {
         Gets threat statistics
     .DESCRIPTION
         Gets threat statistics
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMThreatStats
 
@@ -14,11 +16,22 @@ function Get-SEPMThreatStats {
         Gets threat statistics
 #>
 
+    [CmdletBinding()]
+    param (
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
+    )
+
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if ($test_token -eq $false) {
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $URI = $script:BaseURLv1 + "/stats/threat"
         $headers = @{
@@ -28,18 +41,7 @@ function Get-SEPMThreatStats {
     }
 
     process {
-        # URI query strings
-        $QueryStrings = @{}
-
-        # Construct the URI
-        $builder = New-Object System.UriBuilder($URI)
-        $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-        foreach ($param in $QueryStrings.GetEnumerator()) {
-            $query[$param.Key] = $param.Value
-        }
-        $builder.Query = $query.ToString()
-        $URI = $builder.ToString()
-
+        # prepare the parameters
         $params = @{
             Method  = 'GET'
             Uri     = $URI

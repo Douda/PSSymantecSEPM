@@ -16,6 +16,11 @@ function Get-SEPMIpsPolicy {
         Get IPS Policy
     .DESCRIPTION
         Get IPS Policy details
+    .PARAMETER PolicyName
+        The name of the policy to get the details of
+        Is a required parameter
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMIpsPolicy -PolicyName "Intrusion Prevention policy PRODUCTION"
 
@@ -39,14 +44,22 @@ function Get-SEPMIpsPolicy {
         )]
         [Alias("Policy_Name")]
         [String]
-        $PolicyName
+        $PolicyName,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
 
     begin {
-        # initialize the configuration
+                # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if ($test_token -eq $false) {
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $URI = $script:BaseURLv1 + "/policies/ips"
         $headers = @{
@@ -71,18 +84,7 @@ function Get-SEPMIpsPolicy {
         # Updating URI with policy ID
         $URI = $URI + "/" + $policyID
         
-        # URI query strings
-        $QueryStrings = @{}
-
-        # Construct the URI
-        $builder = New-Object System.UriBuilder($URI)
-        $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-        foreach ($param in $QueryStrings.GetEnumerator()) {
-            $query[$param.Key] = $param.Value
-        }
-        $builder.Query = $query.ToString()
-        $URI = $builder.ToString()
-
+        # prepare the parameters
         $params = @{
             Method          = 'GET'
             Uri             = $URI

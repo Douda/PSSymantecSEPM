@@ -1,4 +1,4 @@
-function Clear-SEPIronCache {
+function Send-SEPMCommandClearIronCache {
     <# # TODO update help
     .SYNOPSIS
         Send a quarantine/unquarantine command to SEP endpoints
@@ -13,14 +13,25 @@ function Clear-SEPIronCache {
         Does not include subgroups
     .PARAMETER Unquarantine
         Switch parameter to unquarantine the SEP client
+    .PARAMETER SHA256
+        SHA256 hash of the suspicious file.
+        Cannot be used with MD5 or SHA1
+    .PARAMETER MD5
+        MD5 hash of the suspicious file.
+        Cannot be used with SHA256 or SHA1
+    .PARAMETER SHA1
+        SHA1 hash of the suspicious file.
+        Cannot be used with SHA256 or MD5
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
-        Clear-SEPIronCache -ComputerName "Computer1"
+        Send-SEPMCommandClearIronCache -ComputerName "Computer1"
         Sends a command to quarantine Computer1
     .EXAMPLE
-        "Computer1", "Computer2" | Clear-SEPIronCache
+        "Computer1", "Computer2" | Send-SEPMCommandClearIronCache
         Sends a command to quarantine Computer1 and Computer2
     .EXAMPLE
-        Clear-SEPIronCache -GroupName "My Company\EMEA\Workstations\Site1"
+        Send-SEPMCommandClearIronCache -GroupName "My Company\EMEA\Workstations\Site1"
         Sends a command to quarantine all computers in "My Company\EMEA\Workstations\Site1"
         Does not include subgroups
     #>
@@ -75,14 +86,22 @@ function Clear-SEPIronCache {
                 return $true
             })]
         [string]
-        $SHA1
+        $SHA1,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
     
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if ($test_token -eq $false) {
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         
         $headers = @{

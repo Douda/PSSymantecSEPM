@@ -4,6 +4,8 @@ function Get-SEPMDatabaseInfo {
         Gets the database infromation of local site.
     .DESCRIPTION
         Gets the database infromation of local site
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .INPUTS
         None
     .OUTPUTS
@@ -26,23 +28,39 @@ function Get-SEPMDatabaseInfo {
 
         Gets detailed information on the database of the local site 
     #>
-    
-    # initialize the configuration
-    $test_token = Test-SEPMAccessToken
-    if ($test_token -eq $false) {
-        Get-SEPMAccessToken | Out-Null
-    }
-    $URI = $script:BaseURLv1 + "/admin/database"
-    $headers = @{
-        "Authorization" = "Bearer " + $script:accessToken.token
-        "Content"       = 'application/json'
-    }
-    $params = @{
-        Method  = 'GET'
-        Uri     = $URI
-        headers = $headers
+
+    [CmdletBinding()]
+    param (
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
+    )
+    begin {
+        # initialize the configuration
+        $test_token = Test-SEPMAccessToken
+        if (-not $test_token) {
+            Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
+        }
+        $URI = $script:BaseURLv1 + "/admin/database"
+        $headers = @{
+            "Authorization" = "Bearer " + $script:accessToken.token
+            "Content"       = 'application/json'
+        }
     }
 
-    $resp = Invoke-ABRestMethod -params $params
-    return $resp
+    process {
+        # prepare the parameters
+        $params = @{
+            Method  = 'GET'
+            Uri     = $URI
+            headers = $headers
+        }
+    
+        $resp = Invoke-ABRestMethod -params $params
+        return $resp
+    }
 }

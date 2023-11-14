@@ -17,6 +17,8 @@ function Add-SEPMFileFingerprintList {
     .PARAMETER hashlist
         The hash list to add to the blacklist
         Can be generated using Get-FileHash or takes a string array of hashes
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         $DomainId = Get-SEPMDomain | Where-Object { $_.name -eq "Default" }
         $HashList = ls -file C:\Users\$env:USERNAME\Downloads\*.exe | Get-FileHash -algorithm SHA256
@@ -43,16 +45,23 @@ function Add-SEPMFileFingerprintList {
         [string]$description,
 
         [Parameter()]
-        $hashlist
+        $hashlist,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
 
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if ($test_token -eq $false) {
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
         }
-        
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
+        }
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'

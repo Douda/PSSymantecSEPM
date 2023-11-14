@@ -4,6 +4,8 @@ function Get-SEPMLatestDefinition {
         Get AV Def Latest Info
     .DESCRIPTION
         Gets the latest revision information for antivirus definitions from Symantec Security Response.
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMLatestDefinition
 
@@ -14,11 +16,22 @@ function Get-SEPMLatestDefinition {
         Gets the latest revision information for antivirus definitions from Symantec Security Response.
 #>
 
+    [CmdletBinding()]
+    param (
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
+    )
+
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if ($test_token -eq $false) {
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $URI = $script:BaseURLv1 + "/content/avdef/latest"
         $headers = @{
@@ -28,18 +41,7 @@ function Get-SEPMLatestDefinition {
     }
 
     process {
-        # URI query strings
-        $QueryStrings = @{}
-
-        # Construct the URI
-        $builder = New-Object System.UriBuilder($URI)
-        $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-        foreach ($param in $QueryStrings.GetEnumerator()) {
-            $query[$param.Key] = $param.Value
-        }
-        $builder.Query = $query.ToString()
-        $URI = $builder.ToString()
-
+        # prepare the parameters
         $params = @{
             Method  = 'GET'
             Uri     = $URI

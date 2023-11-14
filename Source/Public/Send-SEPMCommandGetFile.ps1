@@ -17,6 +17,8 @@ function Send-SEPMCommandGetFile {
         Possible values are: FILESYSTEM (default), QUARANTINE, or BOTH. 12.1.x clients only use FILESYSTEM.
     .PARAMETER FilePath
         The file path of the suspicious file.
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Send-SEPMCommandGetFile -ComputerName MyWorkstation01 -SHA256 1234567890123456789012345678901234567890123456789012345678901234 -FilePath C:\Temp\malware.exe -Source BOTH
 
@@ -79,16 +81,23 @@ function Send-SEPMCommandGetFile {
             })]
         [Alias("Path")]
         [string]
-        $FilePath
+        $FilePath,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
     
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if ($test_token -eq $false) {
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
         }
-        
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
+        }
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
@@ -122,16 +131,9 @@ function Send-SEPMCommandGetFile {
         }
 
         # Construct the URI
-        $builder = New-Object System.UriBuilder($URI)
-        $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-        foreach ($param in $QueryStrings.GetEnumerator()) {
-            $query[$param.Key] = $param.Value
-        }
-        $builder.Query = $query.ToString()
-        $URI = $builder.ToString()
+        $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-
-        # Invoke the request params
+        # prepare the parameters
         $params = @{
             Method  = 'POST'
             Uri     = $URI
@@ -139,8 +141,6 @@ function Send-SEPMCommandGetFile {
         }
 
         $resp = Invoke-ABRestMethod -params $params
-
-        # return the response
         return $resp
     }
 }

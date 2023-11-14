@@ -4,6 +4,11 @@ function Get-SEPMFirewallPolicy {
         Get Firewall Policy
     .DESCRIPTION
         Get Firewall Policy details
+    .PARAMETER PolicyName    
+        The name of the policy to get the details of
+        Is a required parameter
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMFirewallPolicy -PolicyName "Standard Servers - Firewall policy"
 
@@ -29,14 +34,22 @@ function Get-SEPMFirewallPolicy {
         )]
         [Alias("Policy_Name")]
         [String]
-        $PolicyName
+        $PolicyName,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
 
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if ($test_token -eq $false) {
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $URI = $script:BaseURLv1 + "/policies/firewall"
         $headers = @{
@@ -61,18 +74,7 @@ function Get-SEPMFirewallPolicy {
         # Updating URI with policy ID
         $URI = $URI + "/" + $policyID
         
-        # URI query strings
-        $QueryStrings = @{}
-
-        # Construct the URI
-        $builder = New-Object System.UriBuilder($URI)
-        $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-        foreach ($param in $QueryStrings.GetEnumerator()) {
-            $query[$param.Key] = $param.Value
-        }
-        $builder.Query = $query.ToString()
-        $URI = $builder.ToString()
-
+        # prepare the parameters
         $params = @{
             Method  = 'GET'
             Uri     = $URI

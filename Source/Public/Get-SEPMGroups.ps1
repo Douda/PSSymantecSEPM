@@ -4,6 +4,8 @@ function Get-SEPMGroups {
         Gets a group list
     .DESCRIPTION
         Gets a group list
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\GitHub_Projects\PSSymantecSEPM> Get-SEPMGroups | Select-Object -First 1 
 
@@ -25,11 +27,22 @@ function Get-SEPMGroups {
         Gets the first group of the list of groups
 #>
 
+    [CmdletBinding()]
+    param (
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
+    )
+
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if ($test_token -eq $false) {
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $URI = $script:BaseURLv1 + "/groups"
         $headers = @{
@@ -39,18 +52,7 @@ function Get-SEPMGroups {
     }
 
     process {
-        # URI query strings
-        $QueryStrings = @{}
-
-        # Construct the URI
-        $builder = New-Object System.UriBuilder($URI)
-        $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-        foreach ($param in $QueryStrings.GetEnumerator()) {
-            $query[$param.Key] = $param.Value
-        }
-        $builder.Query = $query.ToString()
-        $URI = $builder.ToString()
-
+        # prepare the parameters
         $params = @{
             Method  = 'GET'
             Uri     = $URI
@@ -58,8 +60,6 @@ function Get-SEPMGroups {
         }
     
         # Invoke the request
-        # If the version of PowerShell is 6 or greater, then we can use the -SkipCertificateCheck parameter
-        # else we need to use the Skip-Cert function if self-signed certs are being used.
         do {
             try {
                 # Invoke the request params
@@ -76,12 +76,7 @@ function Get-SEPMGroups {
 
                 # Increment the page index & update URI
                 $QueryStrings.pageIndex++
-                $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-                foreach ($param in $QueryStrings.GetEnumerator()) {
-                    $query[$param.Key] = $param.Value
-                }
-                $builder.Query = $query.ToString()
-                $URI = $builder.ToString()
+                $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
             } catch {
                 Write-Warning -Message "Error: $_"
             }

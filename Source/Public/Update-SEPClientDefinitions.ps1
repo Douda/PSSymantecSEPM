@@ -10,6 +10,10 @@ function Update-SEPClientDefinitions {
     .PARAMETER GroupName
         The name of the group to send the command to
         cannot be used with ComputerName
+    .PARAMETER IncludeSubGroups
+        Specifies whether to include subgroups when querying by group name
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         Update-SEPClientDefinitions -ComputerName "Computer1"
         Sends a command to update content to Computer1
@@ -51,16 +55,23 @@ function Update-SEPClientDefinitions {
             ParameterSetName = 'GroupName'
         )]
         [switch]
-        $IncludeSubGroups
+        $IncludeSubGroups,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
     
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if ($test_token -eq $false) {
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
         }
-        
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
+        }
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
@@ -84,15 +95,9 @@ function Update-SEPClientDefinitions {
             }
 
             # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
+            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
     
-            # Invoke the request params
+            # prepare the parameters
             $params = @{
                 Method  = 'POST'
                 Uri     = $URI
@@ -100,8 +105,6 @@ function Update-SEPClientDefinitions {
             }
 
             $resp = Invoke-ABRestMethod -params $params
-
-            # return the response
             return $resp
         }
 
@@ -122,18 +125,12 @@ function Update-SEPClientDefinitions {
             }
 
             # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
+            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
     
             # Get computer list
             do {
                 try {
-                    # Invoke the request params
+                    # prepare the parameters
                     $params = @{
                         Method  = 'GET'
                         Uri     = $URI
@@ -147,12 +144,7 @@ function Update-SEPClientDefinitions {
 
                     # Increment the page index & update URI
                     $QueryStrings.pageIndex++
-                    $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-                    foreach ($param in $QueryStrings.GetEnumerator()) {
-                        $query[$param.Key] = $param.Value
-                    }
-                    $builder.Query = $query.ToString()
-                    $URI = $builder.ToString()
+                    $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
                 } catch {
                     Write-Warning -Message "Error: $_"
                 }
@@ -174,6 +166,7 @@ function Update-SEPClientDefinitions {
             $URI = $script:BaseURLv1 + "/command-queue/updatecontent"
             $AllResp = @()
             
+            # Send command to each computers in the group individually
             foreach ($id in $allComputers.uniqueId) {
                 # URI query strings
                 $QueryStrings = @{
@@ -181,15 +174,9 @@ function Update-SEPClientDefinitions {
                 }
     
                 # Construct the URI
-                $builder = New-Object System.UriBuilder($URI)
-                $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-                foreach ($param in $QueryStrings.GetEnumerator()) {
-                    $query[$param.Key] = $param.Value
-                }
-                $builder.Query = $query.ToString()
-                $URI = $builder.ToString()
+                $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
         
-                # Send command to each computers in the group
+                # prepare the parameters
                 $params = @{
                     Method  = 'POST'
                     Uri     = $URI

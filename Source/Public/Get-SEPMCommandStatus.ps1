@@ -4,6 +4,8 @@ function Get-SEPMCommandStatus {
         Get Command Status Details
     .DESCRIPTION
         Gets the details of a command status
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
     PS C:\PSSymantecSEPM> $status = Get-SEPMCommandStatus -Command_ID D17D6DF9877049559910DD7B0306711C
 
@@ -47,14 +49,22 @@ function Get-SEPMCommandStatus {
         )]
         [string]
         [Alias("ID", "CommandID")]
-        $Command_ID
+        $Command_ID,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
 
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if ($test_token -eq $false) {
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $URI = $script:BaseURLv1 + "/command-queue/$command_id"
         $headers = @{
@@ -64,18 +74,7 @@ function Get-SEPMCommandStatus {
     }
 
     process {
-        # URI query strings
-        $QueryStrings = @{}
-
-        # Construct the URI
-        $builder = New-Object System.UriBuilder($URI)
-        $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-        foreach ($param in $QueryStrings.GetEnumerator()) {
-            $query[$param.Key] = $param.Value
-        }
-        $builder.Query = $query.ToString()
-        $URI = $builder.ToString()
-
+        # prepare the parameters
         $params = @{
             Method  = 'GET'
             Uri     = $URI

@@ -1,9 +1,13 @@
 function Start-SEPMReplication {
     <# TODO update help
     .SYNOPSIS
-        Gets a list of all accessible domains
+        Initiates replication with a remote site
     .DESCRIPTION
-        Gets a list of all accessible domains
+        Initiates replication with a remote site
+    .PARAMETER partnerSiteName
+        The name of the remote site to replicate with
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Start-SEPMReplication -partnerSiteName "Remote site Americas"
 
@@ -18,20 +22,29 @@ function Start-SEPMReplication {
     param (
         [Parameter()]
         [string]
-        $partnerSiteName
+        $partnerSiteName,
 
-        # [bool]
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
+
+        # TODO known bug with SEPM API, these parameters are returning invalid option if not set to false 
+        # [switch]
         # $logs,
 
-        # [bool]
+        # [switch]
         # $ContentAndPackages
     )
 
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if ($test_token -eq $false) {
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $URI = $script:BaseURLv1 + "/replication/replicatenow"
         $headers = @{
@@ -43,20 +56,15 @@ function Start-SEPMReplication {
     process {
         # URI query strings
         $QueryStrings = @{
-            partnerSiteName    = $partnerSiteName
-            logs               = $logs
-            ContentAndPackages = $ContentAndPackages
+            partnerSiteName = $partnerSiteName
+            logs            = $logs
+            content         = $ContentAndPackages
         }
 
         # Construct the URI
-        $builder = New-Object System.UriBuilder($URI)
-        $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-        foreach ($param in $QueryStrings.GetEnumerator()) {
-            $query[$param.Key] = $param.Value
-        }
-        $builder.Query = $query.ToString()
-        $URI = $builder.ToString()
+        $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
+        # prepare the parameters
         $params = @{
             Method  = 'POST'
             Uri     = $URI

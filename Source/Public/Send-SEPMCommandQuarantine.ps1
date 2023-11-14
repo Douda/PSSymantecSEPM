@@ -13,6 +13,8 @@ function Send-SEPMCommandQuarantine {
         Does not include subgroups
     .PARAMETER Unquarantine
         Switch parameter to unquarantine the SEP client
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         Send-SEPMCommandQuarantine -ComputerName "Computer1"
         Sends a command to quarantine Computer1
@@ -50,16 +52,23 @@ function Send-SEPMCommandQuarantine {
         # Unquarantine
         [Parameter()]
         [switch]
-        $Unquarantine
+        $Unquarantine,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
     
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if ($test_token -eq $false) {
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
         }
-        
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
+        }
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
@@ -88,15 +97,9 @@ function Send-SEPMCommandQuarantine {
             }
 
             # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
+            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-            # Invoke the request params
+            # prepare the parameters
             $params = @{
                 Method  = 'POST'
                 Uri     = $URI
@@ -104,8 +107,6 @@ function Send-SEPMCommandQuarantine {
             }
     
             $resp = Invoke-ABRestMethod -params $params
-
-            # return the response
             return $resp
         }
 
@@ -126,25 +127,16 @@ function Send-SEPMCommandQuarantine {
             }
 
             # Construct the URI
-            $builder = New-Object System.UriBuilder($URI)
-            $query = [System.Web.HttpUtility]::ParseQueryString($builder.Query)
-            foreach ($param in $QueryStrings.GetEnumerator()) {
-                $query[$param.Key] = $param.Value
-            }
-            $builder.Query = $query.ToString()
-            $URI = $builder.ToString()
+            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-            # Invoke the request params
+            # prepare the parameters
             $params = @{
                 Method  = 'POST'
                 Uri     = $URI
                 headers = $headers
             }
             
-
             $resp = Invoke-ABRestMethod -params $params
-                
-            # return the response
             return $resp
         }
     }
