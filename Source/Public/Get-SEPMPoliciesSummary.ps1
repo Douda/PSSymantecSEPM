@@ -8,7 +8,9 @@ function Get-SEPMPoliciesSummary {
     .PARAMETER PolicyType
         The policy type for which the summary is to be retrieved. 
         The valid values are hid, exceptions, mem, ntr, av, fw, ips, lu, hi, adc, msl, upgrade.
-
+        If not specified, the summary for all policies is retrieved.
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMPoliciesSummary
 
@@ -48,14 +50,22 @@ function Get-SEPMPoliciesSummary {
             'upgrade'
         )]
         [string]
-        $PolicyType
+        $PolicyType,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
 
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if (-not $test_token){
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $URI = $script:BaseURLv1 + "/policies/summary"
         $headers = @{

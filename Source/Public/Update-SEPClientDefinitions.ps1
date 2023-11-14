@@ -10,6 +10,10 @@ function Update-SEPClientDefinitions {
     .PARAMETER GroupName
         The name of the group to send the command to
         cannot be used with ComputerName
+    .PARAMETER IncludeSubGroups
+        Specifies whether to include subgroups when querying by group name
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         Update-SEPClientDefinitions -ComputerName "Computer1"
         Sends a command to update content to Computer1
@@ -51,14 +55,22 @@ function Update-SEPClientDefinitions {
             ParameterSetName = 'GroupName'
         )]
         [switch]
-        $IncludeSubGroups
+        $IncludeSubGroups,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
     
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if (-not $test_token){
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token

@@ -8,6 +8,8 @@ function Get-SEPMFileFingerprintList {
         The name of the file fingerprint list
     .PARAMETER FingerprintListID
         The ID of the file fingerprint list
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMFileFingerprintList -FingerprintListName "Fingerprint list for workstations"
 
@@ -47,14 +49,22 @@ function Get-SEPMFileFingerprintList {
             ValueFromPipelineByPropertyName = $true
         )]
         [string]
-        $FingerprintListID
+        $FingerprintListID,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
 
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if (-not $test_token){
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         
         $headers = @{

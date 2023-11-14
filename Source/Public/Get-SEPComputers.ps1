@@ -59,8 +59,12 @@ function Get-SEPComputers {
             ParameterSetName = 'GroupName'
         )]
         [switch]
-        $IncludeSubGroups
+        $IncludeSubGroups,
 
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
 
     begin {
@@ -69,7 +73,9 @@ function Get-SEPComputers {
         if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
         }
-        
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
+        }
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'

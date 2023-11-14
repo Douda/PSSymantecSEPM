@@ -4,6 +4,8 @@ function Get-SEPMReplicationStatus {
         Get Replication Status
     .DESCRIPTION
         Get Replication Status
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMReplicationStatus
 
@@ -14,11 +16,22 @@ function Get-SEPMReplicationStatus {
         Get a list of replication status with every remote site
 #>
 
+    [CmdletBinding()]
+    param (
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
+    )
+
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
         if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $URI = $script:BaseURLv1 + "/replication/status"
         $headers = @{

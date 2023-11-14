@@ -4,6 +4,8 @@ function Get-SEPMGroups {
         Gets a group list
     .DESCRIPTION
         Gets a group list
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\GitHub_Projects\PSSymantecSEPM> Get-SEPMGroups | Select-Object -First 1 
 
@@ -25,11 +27,22 @@ function Get-SEPMGroups {
         Gets the first group of the list of groups
 #>
 
+    [CmdletBinding()]
+    param (
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
+    )
+
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if (-not $test_token){
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $URI = $script:BaseURLv1 + "/groups"
         $headers = @{

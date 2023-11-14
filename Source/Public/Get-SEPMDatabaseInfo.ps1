@@ -4,6 +4,8 @@ function Get-SEPMDatabaseInfo {
         Gets the database infromation of local site.
     .DESCRIPTION
         Gets the database infromation of local site
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .INPUTS
         None
     .OUTPUTS
@@ -26,11 +28,22 @@ function Get-SEPMDatabaseInfo {
 
         Gets detailed information on the database of the local site 
     #>
+
+    [CmdletBinding()]
+    param (
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
+    )
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
         if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $URI = $script:BaseURLv1 + "/admin/database"
         $headers = @{

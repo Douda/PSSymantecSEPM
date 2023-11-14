@@ -8,6 +8,8 @@ function Get-SEPFileDetails {
         The ID of the file to get the details of
         Is a required parameter
         Can be found in the command ID of the response from Send-SEPMCommandGetFile
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPFileDetails -FileID 12345678901234567890123456789
 
@@ -20,14 +22,22 @@ function Get-SEPFileDetails {
     param (
         [Parameter()]
         [string]
-        $FileID
+        $FileID,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
 
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if (-not $test_token){
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $URI = $script:BaseURLv1 + "/command-queue/file/$FileID/details"
         $headers = @{

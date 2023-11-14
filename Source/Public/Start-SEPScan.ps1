@@ -16,6 +16,9 @@ function Start-SEPScan {
     .PARAMETER FullScan
         Specifies the type of scan to send to the endpoint(s)
         Valid values are ActiveScan and FullScan
+        By default, the ActiveScan switch is used
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Start-SEPScan -ComputerName MyComputer01 -ActiveScan
 
@@ -72,14 +75,22 @@ function Start-SEPScan {
         [Parameter(ParameterSetName = 'ComputerNameFullScan')]
         [Parameter(ParameterSetName = 'GroupNameFullScan')]
         [switch]
-        $FullScan
+        $FullScan,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
 
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if (-not $test_token){
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token

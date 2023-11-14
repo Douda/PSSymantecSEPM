@@ -13,6 +13,8 @@ function Send-SEPMCommandQuarantine {
         Does not include subgroups
     .PARAMETER Unquarantine
         Switch parameter to unquarantine the SEP client
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         Send-SEPMCommandQuarantine -ComputerName "Computer1"
         Sends a command to quarantine Computer1
@@ -50,14 +52,22 @@ function Send-SEPMCommandQuarantine {
         # Unquarantine
         [Parameter()]
         [switch]
-        $Unquarantine
+        $Unquarantine,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
     
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if (-not $test_token){
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token

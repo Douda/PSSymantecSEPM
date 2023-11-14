@@ -4,6 +4,8 @@ function Get-SEPClientStatus {
         Gets a list and count of the online and offline clients.
     .DESCRIPTION
         Gets a list and count of the online and offline clients.
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         C:\PSSymantecSEPM> Get-SEPClientStatus
 
@@ -13,12 +15,22 @@ function Get-SEPClientStatus {
 
         Gets a list and count of the online and offline clients.
 #>
+    [CmdletBinding()]
+    param (
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
+    )
 
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if (-not $test_token){
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $URI = $script:BaseURLv1 + "/stats/client/onlinestatus"
         $headers = @{

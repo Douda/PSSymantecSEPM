@@ -24,6 +24,8 @@ function Update-SEPMFileFingerprintList {
     .PARAMETER hashlist
         The hash list to add to the fingerprint list
         Can be generated using Get-FileHash or takes a string array of hashes
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         $domainId = Get-SEPMDomain | Where-Object { $_.name -eq "Default" } | Select-Object -ExpandProperty id
         $hashlist = ls -file C:\Users\$env:USERNAME\Downloads\*.exe | Get-FileHash -algorithm SHA256
@@ -66,14 +68,22 @@ function Update-SEPMFileFingerprintList {
             ParameterSetName = 'ID'
         )]
         [string]
-        $FingerprintListID
+        $FingerprintListID,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
 
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if (-not $test_token){
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token

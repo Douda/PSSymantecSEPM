@@ -17,6 +17,8 @@ function Send-SEPMCommandGetFile {
         Possible values are: FILESYSTEM (default), QUARANTINE, or BOTH. 12.1.x clients only use FILESYSTEM.
     .PARAMETER FilePath
         The file path of the suspicious file.
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Send-SEPMCommandGetFile -ComputerName MyWorkstation01 -SHA256 1234567890123456789012345678901234567890123456789012345678901234 -FilePath C:\Temp\malware.exe -Source BOTH
 
@@ -79,14 +81,22 @@ function Send-SEPMCommandGetFile {
             })]
         [Alias("Path")]
         [string]
-        $FilePath
+        $FilePath,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
     
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if (-not $test_token){
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $headers = @{
             "Authorization" = "Bearer " + $script:accessToken.token

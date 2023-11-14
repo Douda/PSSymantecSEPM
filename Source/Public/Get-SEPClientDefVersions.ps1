@@ -4,6 +4,8 @@ function Get-SEPClientDefVersions {
         Gets a list of clients for a group by content version.
     .DESCRIPTION
         Gets a list of clients for a group by content version.
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPClientDefVersions
 
@@ -19,11 +21,22 @@ function Get-SEPClientDefVersions {
         Gets a list of clients grouped by content version.
 #>
 
+    [CmdletBinding()]
+    param (
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
+    )
+
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if (-not $test_token){
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $URI = $script:BaseURLv1 + "/stats/client/content"
         $headers = @{

@@ -4,6 +4,8 @@ function Get-SEPMDomain {
         Gets a list of all accessible domains
     .DESCRIPTION
         Gets a list of all accessible domains
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMDomain
 
@@ -19,11 +21,22 @@ function Get-SEPMDomain {
         Gets a list of all accessible domains
 #>
 
+    [CmdletBinding()]
+    param (
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
+    )
+
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if (-not $test_token){
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $URI = $script:BaseURLv1 + "/domains"
         $headers = @{

@@ -4,6 +4,8 @@ function Get-SEPClientVersion {
         Gets a list and count of clients by client product version.
     .DESCRIPTION
         Gets a list and count of clients by client product version.
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> $SEPversions = Get-SEPClientVersion
         PS C:\PSSymantecSEPM> $SEPversions.clientVersionList
@@ -24,11 +26,22 @@ function Get-SEPClientVersion {
         Gets a list and count of clients by client product version.
 #>
 
+    [CmdletBinding()]
+    param (
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
+    )
+
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if (-not $test_token){
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         $URI = $script:BaseURLv1 + "/stats/client/version"
         $headers = @{

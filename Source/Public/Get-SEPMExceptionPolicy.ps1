@@ -5,6 +5,11 @@ function Get-SEPMExceptionPolicy {
     .DESCRIPTION
         Get Exception Policy details
         Note this is a V2 API call, and replies are originally JSON based
+    .PARAMETER PolicyName    
+        The name of the policy to get the details of
+        Is a required parameter
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMExceptionPolicy -PolicyName "Standard Servers - Exception policy"
 
@@ -31,14 +36,22 @@ function Get-SEPMExceptionPolicy {
         )]
         [Alias("Policy_Name")]
         [String]
-        $PolicyName
+        $PolicyName,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
 
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if (-not $test_token){
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         # BaseURL V2
         $URI = $script:BaseURLv2 + "/policies/exceptions"

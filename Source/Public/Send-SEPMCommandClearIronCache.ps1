@@ -13,6 +13,17 @@ function Send-SEPMCommandClearIronCache {
         Does not include subgroups
     .PARAMETER Unquarantine
         Switch parameter to unquarantine the SEP client
+    .PARAMETER SHA256
+        SHA256 hash of the suspicious file.
+        Cannot be used with MD5 or SHA1
+    .PARAMETER MD5
+        MD5 hash of the suspicious file.
+        Cannot be used with SHA256 or SHA1
+    .PARAMETER SHA1
+        SHA1 hash of the suspicious file.
+        Cannot be used with SHA256 or MD5
+    .PARAMETER SkipCertificateCheck
+        Skip certificate check
     .EXAMPLE
         Send-SEPMCommandClearIronCache -ComputerName "Computer1"
         Sends a command to quarantine Computer1
@@ -75,14 +86,22 @@ function Send-SEPMCommandClearIronCache {
                 return $true
             })]
         [string]
-        $SHA1
+        $SHA1,
+
+        # Skip certificate check
+        [Parameter()]
+        [switch]
+        $SkipCertificateCheck
     )
     
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
-        if (-not $test_token){
+        if (-not $test_token) {
             Get-SEPMAccessToken | Out-Null
+        }
+        if ($SkipCertificateCheck) {
+            $script:SkipCert = $true
         }
         
         $headers = @{
