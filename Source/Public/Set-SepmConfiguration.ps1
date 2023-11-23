@@ -52,4 +52,6 @@ function Set-SepmConfiguration {
     # Persist the configuration object to disk
     Save-SepmConfiguration -Configuration $persistedConfig -Path $script:configurationFilePath
 
+    # Re-initialize the configuration object
+    Initialize-SepmConfiguration
 }
