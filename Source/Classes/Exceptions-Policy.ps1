@@ -710,6 +710,7 @@ class SEPMPolicyExceptionsStructure {
         [string] $rulestate_source = "PSSymantecSEPM",
         [string] $scancategory = "",
         [string] $pathvariable = "",
+        [string] $path = "",
         [Nullable[bool]] $applicationcontrol = $null,
         [Nullable[bool]] $securityrisk = $null,
         [Nullable[bool]] $recursive = $null
@@ -736,6 +737,7 @@ class SEPMPolicyExceptionsStructure {
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($scancategory)) { $HashTable['scancategory'] = $scancategory }
         if (![string]::IsNullOrEmpty($pathvariable)) { $HashTable['pathvariable'] = $pathvariable }
+        if (![string]::IsNullOrEmpty($path)) { $HashTable['path'] = $path }
         if ($null -ne $applicationcontrol) { $HashTable['applicationcontrol'] = $applicationcontrol }
         if ($null -ne $securityrisk) { $HashTable['securityrisk'] = $securityrisk }
         if ($null -ne $recursive) { $HashTable['recursive'] = $recursive }
@@ -767,5 +769,218 @@ class SEPMPolicyExceptionsStructure {
         [hashtable] $tamper_files # Use CreateTamperFilesHashtable method
     ) {
         $this.configuration.tamper_files.Add($tamper_files)
+    }
+
+    # Method to create a dns_and_host_applications hashtable
+    [hashtable] CreateDnsAndHostApplicationsHashtable(
+        [Nullable[bool]] $deleted = $null,
+        [Nullable[bool]] $rulestate_enabled = $null,
+        [string] $rulestate_source = "PSSymantecSEPM",
+        [string] $processfile_sha2 = "",
+        [string] $processfile_md5 = "",
+        [string] $processfile_name = "",
+        [string] $processfile_company = "",
+        [Nullable[Int64]] $processfile_size = $null,
+        [string] $processfile_description = "",
+        [string] $processfile_directory = "",
+        [string] $action = ""
+    ) {
+        # return @{
+        #     deleted     = $deleted
+        #     rulestate   = [PSCustomObject]@{
+        #         enabled = $rulestate_enabled
+        #         source  = $rulestate_source
+        #     }
+        #     processfile = [PSCustomObject]@{
+        #         sha2        = $processfile_sha2
+        #         md5         = $processfile_md5
+        #         name        = $processfile_name
+        #         company     = $processfile_company
+        #         size        = $processfile_size
+        #         description = $processfile_description
+        #         directory   = $processfile_directory
+        #     }
+        #     action      = $action
+        # }
+
+        # Create an empty hashtable
+        $HashTable = @{}
+
+        # Add key/value pairs to the hashtable only if the value is not $null or empty
+        if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
+        if (![string]::IsNullOrEmpty($action)) { $HashTable['action'] = $action }
+
+        # RULESTATE
+        # Create an empty hashtable for 'rulestate'
+        $rulestate = @{}
+
+        # Add 'enabled' to 'rulestate' only if it's not $null
+        if ($null -ne $rulestate_enabled) {
+            $rulestate['enabled'] = $rulestate_enabled
+        }
+
+        # Add 'source' to 'rulestate' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($rulestate_source)) {
+            $rulestate['source'] = $rulestate_source
+        }
+
+        # Add 'rulestate' to the main hashtable only if it's not empty
+        if ($rulestate.Count -gt 0) {
+            $HashTable['rulestate'] = [PSCustomObject]$rulestate
+        }
+
+        # PROCESSFILE
+        # Create an empty hashtable for 'processfile'
+        $processfile = @{}
+
+        # Add 'sha2' to 'processfile' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($processfile_sha2)) {
+            $processfile['sha2'] = $processfile_sha2
+        }
+
+        # Add 'md5' to 'processfile' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($processfile_md5)) {
+            $processfile['md5'] = $processfile_md5
+        }
+
+        # Add 'name' to 'processfile' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($processfile_name)) {
+            $processfile['name'] = $processfile_name
+        }
+
+        # Add 'company' to 'processfile' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($processfile_company)) {
+            $processfile['company'] = $processfile_company
+        }
+
+        # Add 'size' to 'processfile' only if it's not $null or empty
+        if ($null -ne $processfile_size) {
+            $processfile['size'] = $processfile_size
+        }
+
+        # Add 'description' to 'processfile' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($processfile_description)) {
+            $processfile['description'] = $processfile_description
+        }
+
+        # Add 'directory' to 'processfile' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($processfile_directory)) {
+            $processfile['directory'] = $processfile_directory
+        }
+
+        # Add 'processfile' to the main hashtable
+        $HashTable['processfile'] = [PSCustomObject]$processfile
+
+        return $HashTable
+    }
+
+    # Method to add dns_and_host_applications
+    [void] AddDnsAndHostApplications(
+        [hashtable] $dns_and_host_applications # Use CreateDnsAndHostApplicationsHashtable method
+    ) {
+        $this.configuration.dns_and_host_applications.Add($dns_and_host_applications)
+    }
+
+    # Method to create a dns_and_host_denyrules hashtable
+    [hashtable] CreateDnsAndHostDenyrulesHashtable(
+        [Nullable[bool]] $deleted = $null,
+        [Nullable[bool]] $rulestate_enabled = $null,
+        [string] $rulestate_source = "PSSymantecSEPM",
+        [string] $processfile_sha2 = "",
+        [string] $processfile_md5 = "",
+        [string] $processfile_name = "",
+        [string] $processfile_company = "",
+        [Nullable[Int64]] $processfile_size = $null,
+        [string] $processfile_description = "",
+        [string] $processfile_directory = "",
+        [string] $action = ""
+    ) {
+        # return @{
+        #     deleted     = $deleted
+        #     rulestate   = [PSCustomObject]@{
+        #         enabled = $rulestate_enabled
+        #         source  = $rulestate_source
+        #     }
+        #     processfile = [PSCustomObject]@{
+        #         sha2        = $processfile_sha2
+        #         md5         = $processfile_md5
+        #         name        = $processfile_name
+        #         company     = $processfile_company
+        #         size        = $processfile_size
+        #         description = $processfile_description
+        #         directory   = $processfile_directory
+        #     }
+        #     action      = $action
+        # }
+
+        # Create an empty hashtable
+        $HashTable = @{}
+
+        # Add key/value pairs to the hashtable only if the value is not $null or empty
+        if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
+        if (![string]::IsNullOrEmpty($action)) { $HashTable['action'] = $action }
+
+        # RULESTATE
+        # Create an empty hashtable for 'rulestate'
+        $rulestate = @{}
+
+        # Add 'enabled' to 'rulestate' only if it's not $null
+        if ($null -ne $rulestate_enabled) {
+            $rulestate['enabled'] = $rulestate_enabled
+        }
+
+        # Add 'source' to 'rulestate' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($rulestate_source)) {
+            $rulestate['source'] = $rulestate_source
+        }
+
+        # Add 'rulestate' to the main hashtable only if it's not empty
+        if ($rulestate.Count -gt 0) {
+            $HashTable['rulestate'] = [PSCustomObject]$rulestate
+        }
+
+        # PROCESSFILE
+        # Create an empty hashtable for 'processfile'
+        $processfile = @{}
+
+        # Add 'sha2' to 'processfile' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($processfile_sha2)) {
+            $processfile['sha2'] = $processfile_sha2
+        }
+
+        # Add 'md5' to 'processfile' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($processfile_md5)) {
+            $processfile['md5'] = $processfile_md5
+        }
+
+        # Add 'name' to 'processfile' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($processfile_name)) {
+            $processfile['name'] = $processfile_name
+        }
+
+        # Add 'company' to 'processfile' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($processfile_company)) {
+            $processfile['company'] = $processfile_company
+        }
+
+        # Add 'size' to 'processfile' only if it's not $null or empty
+        if ($null -ne $processfile_size) {
+            $processfile['size'] = $processfile_size
+        }
+
+        # Add 'description' to 'processfile' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($processfile_description)) {
+            $processfile['description'] = $processfile_description
+        }
+
+        # Add 'directory' to 'processfile' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($processfile_directory)) {
+            $processfile['directory'] = $processfile_directory
+        }
+
+        # Add 'processfile' to the main hashtable
+        $HashTable['processfile'] = [PSCustomObject]$processfile
+
+        return $HashTable
     }
 }
