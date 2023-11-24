@@ -206,9 +206,20 @@ class SEPMPolicyExceptionsStructure {
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($scancategory)) { $HashTable['scancategory'] = $scancategory }
         if (![string]::IsNullOrEmpty($scantype)) { $HashTable['scantype'] = $scantype }
-        if (![string]::IsNullOrEmpty($pathvariable)) { $HashTable['pathvariable'] = $pathvariable }
-        if (![string]::IsNullOrEmpty($directory)) { $HashTable['directory'] = $directory }
         if ($null -ne $recursive) { $HashTable['recursive'] = $recursive }
+
+        # Add key/value pairs to the hashtable only if the value is not $null or empty or throw an error
+        if (![string]::IsNullOrEmpty($pathvariable)) {
+            $HashTable['pathvariable'] = $pathvariable
+        } else {
+            throw "The 'pathvariable' parameter is mandatory and cannot be $null or empty."
+        }
+
+        if (![string]::IsNullOrEmpty($directory)) {
+            $HashTable['directory'] = $directory
+        } else {
+            throw "The 'directory' parameter is mandatory and cannot be $null or empty."
+        }
 
         # Create an empty hashtable for 'rulestate'
         $rulestate = @{}
@@ -232,7 +243,7 @@ class SEPMPolicyExceptionsStructure {
     }
 
     # Method to add directories
-    [void] AddDirectory(
+    [void] AddConfigurationDirectoriesExceptions(
         [hashtable] $directory # Use CreateDirectoryHashtable method
     ) {
         $this.configuration.directories.Add($directory)
@@ -624,6 +635,202 @@ class SEPMPolicyExceptionsStructure {
     ) {
         $this.configuration.applications_to_monitor.Add($applications_to_monitor)
     }
+
+    # Method to create a mac_files hashtable
+    [hashtable] CreateMacFilesHashtable(
+        [Nullable[bool]] $deleted = $null,
+        [Nullable[bool]] $rulestate_enabled = $null,
+        [string] $rulestate_source = "PSSymantecSEPM",
+        [string] $pathvariable = "",
+        [string] $path = ""
+    ) {
+        # return @{
+        #     deleted     = $deleted
+        #     rulestate   = [PSCustomObject]@{
+        #         enabled = $rulestate_enabled
+        #         source  = $rulestate_source
+        #     }
+        #     pathvariable = $pathvariable
+        #     path        = $path
+        # }
+
+        # Create an empty hashtable
+        $HashTable = @{}
+
+        # Add key/value pairs to the hashtable only if the value is not $null or empty
+        if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
+        if (![string]::IsNullOrEmpty($pathvariable)) { $HashTable['pathvariable'] = $pathvariable }
+        if (![string]::IsNullOrEmpty($path)) { $HashTable['path'] = $path }
+
+        # RULESTATE
+        # Create an empty hashtable for 'rulestate'
+        $rulestate = @{}
+
+        # Add 'enabled' to 'rulestate' only if it's not $null
+        if ($null -ne $rulestate_enabled) {
+            $rulestate['enabled'] = $rulestate_enabled
+        }
+
+        # Add 'source' to 'rulestate' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($rulestate_source)) {
+            $rulestate['source'] = $rulestate_source
+        }
+
+        # Add 'rulestate' to the main hashtable only if it's not empty
+        if ($rulestate.Count -gt 0) {
+            $HashTable['rulestate'] = [PSCustomObject]$rulestate
+        }
+
+        return $HashTable
+    }
+
+    # Method to add mac_files
+    [void] AddMacFiles(
+        [hashtable] $mac_files # Use CreateMacFilesHashtable method
+    ) {
+        $this.configuration.mac.files.Add($mac_files)
+    }
+
+    # Method to create a linux_directories hashtable
+    [hashtable] CreateLinuxDirectoriesHashtable(
+        [Nullable[bool]] $deleted = $null,
+        [Nullable[bool]] $rulestate_enabled = $null,
+        [string] $rulestate_source = "PSSymantecSEPM",
+        [string] $scancategory = "",
+        [string] $pathvariable = "",
+        [string] $directory = "",
+        [Nullable[bool]] $recursive = $null
+    ) {
+        # return @{
+        #     deleted     = $deleted
+        #     rulestate   = [PSCustomObject]@{
+        #         enabled = $rulestate_enabled
+        #         source  = $rulestate_source
+        #     }
+        #     scancategory = $scancategory
+        #     pathvariable = $pathvariable
+        #     directory   = $directory
+        #     recursive   = $recursive
+        # }
+
+        # Create an empty hashtable
+        $HashTable = @{}
+
+        # Add key/value pairs to the hashtable only if the value is not $null or empty
+        if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
+        if (![string]::IsNullOrEmpty($scancategory)) { $HashTable['scancategory'] = $scancategory }
+        if ($null -ne $recursive) { $HashTable['recursive'] = $recursive }
+
+        # Add key/value pairs to the hashtable only if the value is not $null or empty or throw an error
+        if (![string]::IsNullOrEmpty($pathvariable)) {
+            $HashTable['pathvariable'] = $pathvariable
+        } else {
+            throw "The 'pathvariable' parameter is mandatory and cannot be $null or empty."
+        }
+
+        if (![string]::IsNullOrEmpty($directory)) {
+            $HashTable['directory'] = $directory
+        } else {
+            throw "The 'directory' parameter is mandatory and cannot be $null or empty."
+        }
+
+        # RULESTATE
+        # Create an empty hashtable for 'rulestate'
+        $rulestate = @{}
+
+        # Add 'enabled' to 'rulestate' only if it's not $null
+        if ($null -ne $rulestate_enabled) {
+            $rulestate['enabled'] = $rulestate_enabled
+        }
+
+        # Add 'source' to 'rulestate' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($rulestate_source)) {
+            $rulestate['source'] = $rulestate_source
+        }
+
+        # Add 'rulestate' to the main hashtable only if it's not empty
+        if ($rulestate.Count -gt 0) {
+            $HashTable['rulestate'] = [PSCustomObject]$rulestate
+        }
+
+        return $HashTable
+    }
+
+    # Method to add linux_directories
+    [void] AddLinuxDirectories(
+        [hashtable] $linux_directories # Use CreateLinuxDirectoriesHashtable method
+    ) {
+        $this.configuration.linux.directories.Add($linux_directories)
+    }
+
+    # Method to create a linux_extension_list hashtable
+    [hashtable] CreateLinuxExtensionListHashtable(
+        [Nullable[bool]] $deleted = $null,
+        [Nullable[bool]] $rulestate_enabled = $null,
+        [string] $rulestate_source = "PSSymantecSEPM",
+        # $extensions is a PSOBject list
+        [PSObject[]] $extensions = @()
+    ) {
+        # return @{
+        #     deleted     = $deleted
+        #     rulestate   = [PSCustomObject]@{
+        #         enabled = $rulestate_enabled
+        #         source  = $rulestate_source
+        #     }
+        #     extensions  = $extensions
+        # }
+
+        # Create an empty hashtable
+        $HashTable = @{}
+
+        # Add key/value pairs to the hashtable only if the value is not $null or empty
+        if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
+        if (![string]::IsNullOrEmpty($extensions)) { $HashTable['extensions'] = $extensions }
+
+        # Verify if $Extensions is not an empty list
+        if ($extensions.Count -eq 0) {
+            throw "The 'extensions' parameter is mandatory and cannot be an empty list."
+        } else {
+            # Verify if $Extensions is not an empty list
+            foreach ($extension in $extensions) {
+                if ([string]::IsNullOrEmpty($extension)) {
+                    throw "The 'extensions' parameter is mandatory and cannot be an empty list."
+                }
+            }
+        }
+
+        # Add 'extensions' to the main hashtable
+        $HashTable['extensions'] = $extensions
+
+        # RULESTATE
+        # Create an empty hashtable for 'rulestate'
+        $rulestate = @{}
+
+        # Add 'enabled' to 'rulestate' only if it's not $null
+        if ($null -ne $rulestate_enabled) {
+            $rulestate['enabled'] = $rulestate_enabled
+        }
+
+        # Add 'source' to 'rulestate' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($rulestate_source)) {
+            $rulestate['source'] = $rulestate_source
+        }
+
+        # Add 'rulestate' to the main hashtable only if it's not empty
+        if ($rulestate.Count -gt 0) {
+            $HashTable['rulestate'] = [PSCustomObject]$rulestate
+        }
+
+        return $HashTable
+    }
+
+    # Method to add linux_extension_list
+    [void] AddLinuxExtensionList(
+        [hashtable] $linux_extension_list # Use CreateLinuxExtensionListHashtable method
+    ) {
+        $this.configuration.linux.extension_list.Add($linux_extension_list)
+    }
+
 
     # Method to create a knownrisks hashtable
     [hashtable] CreateKnownrisksHashtable(
