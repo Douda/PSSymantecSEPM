@@ -45,39 +45,48 @@ function Update-SEPMExceptionPolicy {
         [switch]
         $DisablePolicy,
 
-        # Exception type
-        [Parameter(
-            Mandatory = $true
-        )]
-        [ValidateSet(
-            'WindowsFileException',
-            'WindowsFolderException'
-        )]
-        [string]
-        $ExceptionType,
+        # WindowsFileException
+        [Parameter(ParameterSetName = 'WindowsFileException')]
+        [switch]
+        $WindowsFileException,
+
+        # WindowsFolderException
+        [Parameter(ParameterSetName = 'WindowsFolderException')]
+        [switch]
+        $WindowsFolderException,
 
         # Sonar
-        [Parameter(ParameterSetName = 'ByFileException')]
+        [Parameter(ParameterSetName = 'WindowsFileException')]
         [switch]
         $Sonar,
 
         # deleted
-        [Parameter(ParameterSetName = 'ByFileException')]
+        [Parameter(ParameterSetName = 'WindowsFileException')]
+        [Parameter(ParameterSetName = 'WindowsFolderException')]
         [switch]
         $DeleteException,
 
         # Looks like this is not used in SEPM
-        # Rulestate_enabled
-        [Parameter(ParameterSetName = 'ByFileException')]
-        [Alias('EnableRuleState')]
-        [bool]$rulestate_enabled,
+        # RulestateEnabled
+        [Parameter(ParameterSetName = 'WindowsFileException')]
+        [Parameter(ParameterSetName = 'WindowsFolderException')]
+        [Alias('EnableRule')]
+        [switch]$RulestateEnabled,
 
-        [Parameter(ParameterSetName = 'ByFileException')]
+        # RulestateDisabled
+        [Parameter(ParameterSetName = 'WindowsFileException')]
+        [Parameter(ParameterSetName = 'WindowsFolderException')]
+        [Alias('DisableRuleState')]
+        [switch]$RulestateDisabled,
+
+        [Parameter(ParameterSetName = 'WindowsFileException')]
+        [Parameter(ParameterSetName = 'WindowsFolderException')]
         [string] 
-        $Rulestate_Source = "PSSymantecSEPM",
+        $RulestateSource = "PSSymantecSEPM",
 
         # Scancategory - requires securityrisk to be set to true
-        [Parameter(ParameterSetName = 'ByFileException')]
+        [Parameter(ParameterSetName = 'WindowsFileException')]
+        [Parameter(ParameterSetName = 'WindowsFolderException')]
         [ValidateSet(
             'AllScans',
             'Auto-Protect',
@@ -87,7 +96,8 @@ function Update-SEPMExceptionPolicy {
         $SecurityRiskCategory,
 
         # Pathvariable
-        [Parameter(ParameterSetName = 'ByFileException')]
+        [Parameter(ParameterSetName = 'WindowsFileException')]
+        [Parameter(ParameterSetName = 'WindowsFolderException')]
         [ValidateSet(
             '[NONE]', 
             '[COMMON_APPDATA]', 
@@ -106,25 +116,38 @@ function Update-SEPMExceptionPolicy {
         $PathVariable = "[NONE]",
 
         # Path
-        [Parameter(ParameterSetName = 'ByFileException')]
+        [Parameter(ParameterSetName = 'WindowsFileException')]
+        [Parameter(ParameterSetName = 'WindowsFolderException')]
         [string] 
         $Path,
 
         # Applicationcontrol
-        [Parameter(ParameterSetName = 'ByFileException')]
+        [Parameter(ParameterSetName = 'WindowsFileException')]
         [switch]
         $ApplicationControl,
 
         # AllScans
-        [Parameter(ParameterSetName = 'ByFileException')]
+        [Parameter(ParameterSetName = 'WindowsFileException')]
         [switch]
         $AllScans,
 
         # Recursive - requires applicationcontrol to be set to true
-        [Parameter(ParameterSetName = 'ByFileException')]
+        [Parameter(ParameterSetName = 'WindowsFileException')]
         [switch]
-        $ExcludeChildProcesses
+        $ExcludeChildProcesses,
+
+        # Recursive 
+        [Parameter(ParameterSetName = 'WindowsFolderException')]
+        [switch]
+        $Recursive,
+
+        # TODO verify values returned by API
+        # ScanType 
+        [Parameter(ParameterSetName = 'WindowsFolderException')]
+        [string]
+        $ScanType
     )
+
     
     begin {
         # initialize the configuration
@@ -140,7 +163,8 @@ function Update-SEPMExceptionPolicy {
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
         }
-        $policies = Get-SEPMPoliciesSummary
+        # TODO uncomment to allow API calls
+        # $policies = Get-SEPMPoliciesSummary
     }
 
     process {
@@ -158,82 +182,140 @@ function Update-SEPMExceptionPolicy {
         # Init
         $ExceptionParams = @{}
 
-        # Check the exception type
-        # Then group parameters in hashtable
-        switch ($ExceptionType) {
-            "WindowsFileException" {
-                # Parse the parameters provided
-                switch ($PSBoundParameters.Keys) {
-                    "Sonar" {
-                        $ExceptionParams.sonar = $true
-                    }
-                    "DeleteException" {
-                        $ExceptionParams.deleted = $true
-                    }
-                    # Looks like this is not used in SEPM
-                    # TODO verify this
-                    "rulestate_enabled" {
-                        $ExceptionParams.rulestate_enabled = $true
-                    }
-                    "Rulestate_Source" {
-                        $ExceptionParams.rulestate_source = $rulestate_source
-                    }
-                    "SecurityRiskCategory" {
-                        $ExceptionParams.securityrisk = $true
-                        $ExceptionParams.scancategory = $SecurityRiskCategory
-                    }
-                    "PathVariable" {
-                        $ExceptionParams.pathvariable = $pathvariable
-                    }
-                    "Path" {
-                        $ExceptionParams.path = $path
-                    }
-                    "ApplicationControl" {
-                        $ExceptionParams.applicationcontrol = $true
-                    }
-                    "ExcludeChildProcesses" {
-                        $ExceptionParams.applicationcontrol = $true
-                        $ExceptionParams.recursive = $true
-                    }
-                    "AllScans" {
-                        $ExceptionParams.securityrisk = $true
-                        $ExceptionParams.sonar = $true
-                        $ExceptionParams.applicationcontrol = $true
-                    }
-                }
+        # Exception types are split in groups via switches
+        # WindowsFileException / WindowsFolderException / etc...
+        # Each switch contains the parameters specific to the exception type
+        # The parameters are parsed and added to the $ExceptionParams hashtable
 
-                # Adding default values if not explicitely provided provided
-                # As $PSBoundParameters.Keys doesn't contain default parameters values
-                if ($pathvariable -eq "[NONE]") {
-                    $ExceptionParams.pathvariable = "[NONE]"
+            
+        # WindowsFileException
+        if ($WindowsFileException) {
+            # Parse the parameters provided
+            switch ($PSBoundParameters.Keys) {
+                "Sonar" {
+                    $ExceptionParams.sonar = $true
                 }
-                if ($RuleState_source -eq "PSSymantecSEPM") {
-                    $ExceptionParams.rulestate_source = "PSSymantecSEPM"
+                "DeleteException" {
+                    $ExceptionParams.deleted = $true
                 }
-
-                # Create the file exception object with CreateFilesHashTable
-                # Method parameters have to be in the same order as in the method definition
-                $FilesHashTable = $PolicyStructure.CreateFilesHashTable(
-                    $ExceptionParams.sonar,
-                    $ExceptionParams.deleted,
-                    $ExceptionParams.rulestate_enabled,
-                    $ExceptionParams.rulestate_source,
-                    $ExceptionParams.scancategory,
-                    $ExceptionParams.pathvariable,
-                    $ExceptionParams.path,
-                    $ExceptionParams.applicationcontrol,
-                    $ExceptionParams.securityrisk,
-                    $ExceptionParams.recursive
-                )
-
-                # Add the file exception parameters to the body structure
-                $PolicyStructure.AddConfigurationFilesExceptions($FilesHashTable)
+                # Looks like this is not used in SEPM
+                # TODO verify this RulestateEnabled / RulestateDisabled
+                "RulestateEnabled" {
+                    $ExceptionParams.RulestateEnabled = $true
+                }
+                "RulestateDisabled" {
+                    $ExceptionParams.RulestateEnabled = $false
+                }
+                "RulestateSource" {
+                    $ExceptionParams.RulestateSource = $RulestateSource
+                }
+                "SecurityRiskCategory" {
+                    $ExceptionParams.securityrisk = $true
+                    $ExceptionParams.scancategory = $SecurityRiskCategory
+                }
+                "PathVariable" {
+                    $ExceptionParams.pathvariable = $pathvariable
+                }
+                "Path" {
+                    $ExceptionParams.path = $path
+                }
+                "ApplicationControl" {
+                    $ExceptionParams.applicationcontrol = $true
+                }
+                "ExcludeChildProcesses" {
+                    $ExceptionParams.applicationcontrol = $true
+                    $ExceptionParams.recursive = $true
+                }
+                "AllScans" {
+                    $ExceptionParams.securityrisk = $true
+                    $ExceptionParams.sonar = $true
+                    $ExceptionParams.applicationcontrol = $true
+                }
             }
-            "WindowsFolderException" {
-                # TODO implement this
-                # TODO add new parameterset for folder exception
+
+            # Adding default values if not explicitely provided provided
+            # As $PSBoundParameters.Keys doesn't contain default parameters values
+            if ($pathvariable -eq "[NONE]") {
+                $ExceptionParams.pathvariable = "[NONE]"
             }
+            if ($RulestateSource -eq "PSSymantecSEPM") {
+                $ExceptionParams.RulestateSource = "PSSymantecSEPM"
+            }
+
+            # Create the file exception object with CreateFilesHashTable
+            # Method parameters have to be in the same order as in the method definition
+            $FilesHashTable = $PolicyStructure.CreateFilesHashTable(
+                $ExceptionParams.sonar,
+                $ExceptionParams.deleted,
+                $ExceptionParams.RulestateEnabled,
+                $ExceptionParams.RulestateSource,
+                $ExceptionParams.scancategory,
+                $ExceptionParams.pathvariable,
+                $ExceptionParams.path,
+                $ExceptionParams.applicationcontrol,
+                $ExceptionParams.securityrisk,
+                $ExceptionParams.recursive
+            )
+
+            # Add the file exception parameters to the body structure
+            $PolicyStructure.AddConfigurationFilesExceptions($FilesHashTable)
         }
+
+        # WindowsFolderException
+        if ($WindowsFolderException) {
+            switch ($PSBoundParameters.Keys) {
+                "DeleteException" {
+                    $ExceptionParams.deleted = $true
+                }
+                "RulestateEnabled" {
+                    $ExceptionParams.RulestateEnabled = $true
+                }
+                "RulestateSource" {
+                    $ExceptionParams.RulestateSource = $RulestateSource
+                }
+                "SecurityRiskCategory" {
+                    $ExceptionParams.scancategory = $SecurityRiskCategory
+                }
+                "ScanType" {
+                    $ExceptionParams.scantype = $ScanType
+                }
+                "PathVariable" {
+                    $ExceptionParams.pathvariable = $pathvariable
+                }
+                "Path" {
+                    $ExceptionParams.directory = $path
+                }
+                "Recursive" {
+                    $ExceptionParams.recursive = $true
+                }
+            }
+
+            # Adding default values if not explicitely provided provided
+            # As $PSBoundParameters.Keys doesn't contain default parameters values
+            if ($pathvariable -eq "[NONE]") {
+                $ExceptionParams.pathvariable = "[NONE]"
+            }
+            if ($RulestateSource -eq "PSSymantecSEPM") {
+                $ExceptionParams.RulestateSource = "PSSymantecSEPM"
+            }
+
+            # Create folder the exception object with CreateDirectoryHashtable
+            # Method parameters have to be in the same order as in the method definition
+            $DirectoryHashTable = $PolicyStructure.CreateDirectoryHashtable(
+                $ExceptionParams.deleted,
+                $ExceptionParams.RulestateEnabled,
+                $ExceptionParams.RulestateSource,
+                $ExceptionParams.scancategory,
+                $ExceptionParams.scanctype,
+                $ExceptionParams.pathvariable,
+                $ExceptionParams.directory,
+                $ExceptionParams.recursive
+            )
+
+            # Add the folder exception parameters to the body structure
+            $PolicyStructure.AddConfigurationDirectoriesExceptions($DirectoryHashTable)
+        }
+
 
         # Verify if updates to the policy are needed
         switch ($psboundparameters.Keys) {
