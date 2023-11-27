@@ -214,6 +214,7 @@ function Update-SEPMExceptionPolicy {
 
         # AllScans
         [Parameter(ParameterSetName = 'WindowsFileException')]
+        [Parameter(ParameterSetName = 'WindowsFolderException')]
         [switch]
         $AllScans,
 
@@ -227,13 +228,17 @@ function Update-SEPMExceptionPolicy {
         [switch]
         $Recursive,
 
-        # TODO verify values returned by API
         # ScanType 
         [Parameter(ParameterSetName = 'WindowsFolderException')]
+        [ValidateSet(
+            'SecurityRisk',
+            'SONAR',
+            'ApplicationControl',
+            'All'
+        )]
         [string]
         $ScanType
     )
-
     
     begin {
         # initialize the configuration
@@ -249,8 +254,7 @@ function Update-SEPMExceptionPolicy {
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
         }
-        # TODO uncomment to allow API calls
-        # $policies = Get-SEPMPoliciesSummary
+        $policies = Get-SEPMPoliciesSummary
     }
 
     process {
@@ -260,10 +264,10 @@ function Update-SEPMExceptionPolicy {
         $URI = $URI + "/" + $PolicyID
 
         # Get the skeleton of the body structure to update the exception policy
-        $PolicyStructure = [SEPMPolicyExceptionsStructure]::new()
+        $ObjBody = [SEPMPolicyExceptionsStructure]::new()
 
         # Update the body structure with the mandatory parameters
-        $PolicyStructure.name = $PolicyName
+        $ObjBody.name = $PolicyName
 
         # Init
         $ExceptionParams = @{}
@@ -279,11 +283,10 @@ function Update-SEPMExceptionPolicy {
         }
 
         # Exception types are split in groups via switches
-        # WindowsFileException / WindowsFolderException / etc...
+        # -WindowsFileException / -WindowsFolderException / etc...
         # Each switch contains the parameters specific to the exception type
         # The parameters are parsed and added to the $ExceptionParams hashtable
 
-            
         # WindowsFileException
         if ($WindowsFileException) {
             # Parse the parameters provided
@@ -329,18 +332,9 @@ function Update-SEPMExceptionPolicy {
                 }
             }
 
-            # Adding default values if not explicitely provided provided
-            # As $PSBoundParameters.Keys doesn't contain default parameters values
-            if ($pathvariable -eq "[NONE]") {
-                $ExceptionParams.pathvariable = "[NONE]"
-            }
-            if ($RulestateSource -eq "PSSymantecSEPM") {
-                $ExceptionParams.RulestateSource = "PSSymantecSEPM"
-            }
-
             # Create the file exception object with CreateFilesHashTable
             # Method parameters have to be in the same order as in the method definition
-            $FilesHashTable = $PolicyStructure.CreateFilesHashTable(
+            $FilesHashTable = $ObjBody.CreateFilesHashTable(
                 $ExceptionParams.sonar,
                 $ExceptionParams.deleted,
                 $ExceptionParams.RulestateEnabled,
@@ -354,7 +348,7 @@ function Update-SEPMExceptionPolicy {
             )
 
             # Add the file exception parameters to the body structure
-            $PolicyStructure.AddConfigurationFilesExceptions($FilesHashTable)
+            $ObjBody.AddConfigurationFilesExceptions($FilesHashTable)
         }
 
         # WindowsFolderException
@@ -397,78 +391,56 @@ function Update-SEPMExceptionPolicy {
 
             # Create folder the exception object with CreateDirectoryHashtable
             # Method parameters have to be in the same order as in the method definition
-            $DirectoryHashTable = $PolicyStructure.CreateDirectoryHashtable(
+            $DirectoryHashTable = $ObjBody.CreateDirectoryHashtable(
                 $ExceptionParams.deleted,
                 $ExceptionParams.RulestateEnabled,
                 $ExceptionParams.RulestateSource,
                 $ExceptionParams.scancategory,
-                $ExceptionParams.scanctype,
+                $ExceptionParams.scantype,
                 $ExceptionParams.pathvariable,
                 $ExceptionParams.directory,
                 $ExceptionParams.recursive
             )
 
             # Add the folder exception parameters to the body structure
-            $PolicyStructure.AddConfigurationDirectoriesExceptions($DirectoryHashTable)
+            $ObjBody.AddConfigurationDirectoriesExceptions($DirectoryHashTable)
         }
-
 
         # Verify if updates to the policy are needed
         switch ($psboundparameters.Keys) {
             "EnablePolicy" {
-                $PolicyStructure.enabled = $true
+                $ObjBody.enabled = $true
             }
             "DisablePolicy" {
-                $PolicyStructure.enabled = $false
+                $ObjBody.enabled = $false
             }
             "Description" {
-                $PolicyStructure.desc = $PolicyDescription
+                $ObjBody.desc = $PolicyDescription
             }
         }
 
         # Optimize the body structure (remove empty properties)
-        $PolicyStructure = Optimize-ExceptionPolicyStructure -obj $PolicyStructure
+        $ObjBody = Optimize-ExceptionPolicyStructure -obj $ObjBody
 
-        # For testing only
-        # TODO remove this
-        $PolicyStructure | ConvertTo-Json -Depth 100 | Out-File .\Data\PolicyStructure.json -Force
+        # TODO For testing only - remove this
+        # $ObjBody | ConvertTo-Json -Depth 100 | Out-File .\Data\PolicyStructure.json -Force
 
-        # TODO remove hardcoded information
-        # Body
-        # $body = @{
-        #     # "desc"          = $PolicyDescription
-        #     "name"          = $PolicyName
-        #     # "enabled" = $Enabled
-        #     "configuration" = @{
-        #         "files" = @(
-        #             @{
-        #                 "sonar"        = $true
-        #                 "pathvariable" = "[NONE]"
-        #                 "path"         = "C:\Temp\Aurelien.exe"
-        #                 "rulestate"    = @{
-        #                     "enabled" = $true
-        #                     "source"  = "PSSymantecSEPM"
-        #                 }
-        #             }
-        #         )
-        #     }
-        # }
+        # TODO uncomment to allow API calls
+        # prepare the parameters
+        $params = @{
+            Method      = 'PATCH'
+            Uri         = $URI
+            headers     = $headers
+            contenttype = 'application/json'
+            Body        = $ObjBody | ConvertTo-Json -Depth 100
+        }
 
-        # # prepare the parameters
-        # $params = @{
-        #     Method      = 'PATCH'
-        #     Uri         = $URI
-        #     headers     = $headers
-        #     contenttype = 'application/json'
-        #     Body        = $body | ConvertTo-Json -Depth 100
-        # }
+        try {
+            $resp = Invoke-ABRestMethod -params $params
+        } catch {
+            Write-Warning -Message "Error: $_"
+        }
 
-        # try {
-        #     $resp = Invoke-ABRestMethod -params $params
-        # } catch {
-        #     Write-Warning -Message "Error: $_"
-        # }
-
-        # return $resp
+        return $resp
     }
 }
