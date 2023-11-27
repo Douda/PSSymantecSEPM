@@ -182,6 +182,16 @@ function Update-SEPMExceptionPolicy {
         # Init
         $ExceptionParams = @{}
 
+        # Common parameters
+        # Adding default values if not explicitely provided provided
+        # As $PSBoundParameters.Keys doesn't contain default parameters values
+        if ($pathvariable -eq "[NONE]") {
+            $ExceptionParams.pathvariable = "[NONE]"
+        }
+        if ($RulestateSource -eq "PSSymantecSEPM") {
+            $ExceptionParams.RulestateSource = "PSSymantecSEPM"
+        }
+
         # Exception types are split in groups via switches
         # WindowsFileException / WindowsFolderException / etc...
         # Each switch contains the parameters specific to the exception type
