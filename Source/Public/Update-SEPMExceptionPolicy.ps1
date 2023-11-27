@@ -1,16 +1,102 @@
 function Update-SEPMExceptionPolicy {
-    <# TODO Update the help information
+    <#
     .SYNOPSIS
-        A short one-line action-based description, e.g. 'Tests if a function is valid'
+        Update a Symantec Endpoint Protection Manager Exception Policy
     .DESCRIPTION
-        A longer description of the function, its purpose, common use cases, etc.
-    .NOTES
-        Information or caveats about the function e.g. 'This function is not supported in Linux'
-    .LINK
-        Specify a URI to a help page, this will show when Get-Help -Online is used.
+        Update a Symantec Endpoint Protection Manager Exception Policy
+    .PARAMETER PolicyName
+        The name of the policy to update
+    .PARAMETER Description
+        The description of the policy
+    .PARAMETER EnablePolicy
+        Enable the policy
+    .PARAMETER DisablePolicy
+        Disable the policy
+    .PARAMETER WindowsFileException
+        Add a Windows File Exception to the policy
+    .PARAMETER WindowsFolderException
+        Add a Windows Folder Exception to the policy
+    .PARAMETER Sonar
+        Add the SONAR type of scan to the exception
+    .PARAMETER DeleteException
+        Delete the exception
+    .PARAMETER RulestateEnabled
+        Enable the rule
+    .PARAMETER RulestateDisabled
+        Disable the rule
+    .PARAMETER RulestateSource
+        Source of the rule
+        Default is the module name : PSSymantecSEPM
+    .PARAMETER SecurityRiskCategory
+        The type of security risk scan to add to the exception
+        Valid values are :
+            AllScans
+            Auto-Protect
+            ScheduledAndOndemand
+    .PARAMETER PathVariable
+        The path variable to use for the exception
+        Valid values are :
+            [NONE]
+            [COMMON_APPDATA]
+            [COMMON_DESKTOPDIRECTORY]
+            [COMMON_DOCUMENTS]
+            [COMMON_PROGRAMS]
+            [COMMON_STARTUP]
+            [PROGRAM_FILES]
+            [PROGRAM_FILES_COMMON]
+            [SYSTEM]
+            [SYSTEM_DRIVE]
+            [USER_PROFILE]
+            [WINDOWS]
+    .PARAMETER Path
+        The path to add to the exception
+    .PARAMETER ApplicationControl
+        Add the Application Control type of scan to the exception
+    .PARAMETER AllScans
+        Add all types of scans to the exception
+        Based on the exception type
+    .PARAMETER ExcludeChildProcesses
+        Exclude child processes from the exception
+        Specific to Application Control type of scan
+        Requires ApplicationControl to be set to true
+    .PARAMETER Recursive
+        Add the recursive option to the exception
     .EXAMPLE
-        Test-MyTestFunction -Verbose
-        Explanation of the function or its result. You can include multiple examples with additional .EXAMPLE lines
+        $params = @{
+            PolicyName = "Workstations Exception Policy"
+            WindowsFileException = $true
+            AllScans = $true
+            PathVariable = "[COMMON_DESKTOPDIRECTORY]"
+            Path = "InternalApplication.exe"
+        }
+        Update-SEPMExceptionPolicy @params
+        (Get-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy").configuration.directories | Where-Object { $_.directory -match "InternalApplication.exe" }
+
+        Using splatting, excludes the InternalApplication.exe file located in the Desktop directory from all types of scans
+        Get-SEPMExceptionPolicy command verifies that the exception has been added to the policy
+    .EXAMPLE
+        Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -Description "Default Workstations policy" -WindowsFileException -AllScans -PathVariable "[COMMON_DESKTOPDIRECTORY]" -Path "InternalApplication.exe"
+
+        Same example without splatting, excludes the InternalApplication.exe file located in the Desktop directory from all types of scans
+    .EXAMPLE
+        $params = @{
+            PolicyName = "Workstations Exception Policy"
+            WindowsFileException = $true
+            Sonar = $true
+            Path = "C:\MyCorp\InternalApplication.exe"
+        }
+        Update-SEPMExceptionPolicy @params
+
+        Using splatting, excludes the InternalApplication.exe file located in the C:\MyCorp directory from the SONAR type of scan
+    .EXAMPLE
+    $params = @{
+        PolicyName = "Workstations Exception Policy"
+        Path = "C:\MyCorp\InternalApplication.exe"
+        DeleteException = $true
+    }
+    Update-SEPMExceptionPolicy @params
+
+    Using splatting, deletes the exception for the InternalApplication.exe file located in the C:\MyCorp directory
     #>
     
     
