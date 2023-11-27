@@ -389,15 +389,10 @@ function Update-SEPMExceptionPolicy {
                 "Recursive" {
                     $ExceptionParams.recursive = $true
                 }
-            }
-
-            # Adding default values if not explicitely provided provided
-            # As $PSBoundParameters.Keys doesn't contain default parameters values
-            if ($pathvariable -eq "[NONE]") {
-                $ExceptionParams.pathvariable = "[NONE]"
-            }
-            if ($RulestateSource -eq "PSSymantecSEPM") {
-                $ExceptionParams.RulestateSource = "PSSymantecSEPM"
+                "AllScans" {
+                    $ExceptionParams.scancategory = "AllScans"
+                    $ExceptionParams.scantype = "All"
+                }
             }
 
             # Create folder the exception object with CreateDirectoryHashtable
