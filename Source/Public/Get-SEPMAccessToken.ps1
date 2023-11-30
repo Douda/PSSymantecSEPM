@@ -54,6 +54,8 @@ function Get-SEPMAccessToken {
         
     # Finally, if there is still no available token, query one from the SEPM server.
     # Then caches the token in memory and stores it in a file on disk as a SecureString
+
+    # Test if the SEPM server name is configured
     if ($null -eq $script:configuration.ServerAddress) {
         $message = "SEPM Server name not found. Provide server name :"
         Write-Warning -Message $message
