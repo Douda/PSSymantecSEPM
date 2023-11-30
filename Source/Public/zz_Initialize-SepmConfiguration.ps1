@@ -55,11 +55,7 @@ function Initialize-SepmConfiguration {
     [CmdletBinding()]
     param()
 
-    # Testing
-    # TODO remove Write-Host
     $script:configuration = Import-SepmConfiguration -Path $script:configurationFilePath
-    # Write-Host "Initialize-SepmConfiguration - called"
-    # Write-Host $script:configuration
     if ($script:configuration) {
         if ($script:configuration.ServerAddress -and $script:configuration.port) {
             $script:BaseURLv1 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
