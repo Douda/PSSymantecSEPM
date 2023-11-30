@@ -51,23 +51,37 @@ function Initialize-SepmConfiguration {
 
     .NOTES
         Internal helper method.  This is actually invoked at the END of this file.
-#>
+    #>
     [CmdletBinding()]
     param()
 
+    # Testing
+    # TODO remove Write-Host
     $script:configuration = Import-SepmConfiguration -Path $script:configurationFilePath
+    # Write-Host "Initialize-SepmConfiguration - called"
+    # Write-Host $script:configuration
     if ($script:configuration) {
-        if ([string]::IsNullOrEmpty($script:configuration.ServerAddress)) {
-            Set-SEPMAuthentication
+        if ($script:configuration.ServerAddress -and $script:configuration.port) {
+            $script:BaseURLv1 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
+            $script:BaseURLv2 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v2"
         }
-        $script:BaseURLv1 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
-        $script:BaseURLv2 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v2"
+    } else {
+        Reset-SEPMConfiguration
     }
     if (Test-Path $script:credentialsFilePath) {
-        $script:Credential = Import-Clixml -Path $script:credentialsFilePath -ErrorAction SilentlyContinue
+        try {
+            $script:Credential = Import-Clixml -Path $script:credentialsFilePath
+        } catch {
+            Write-Verbose "Failed to import credentials from '$script:credentialsFilePath': $_"
+        }
     }
+
     if (Test-Path $script:accessTokenFilePath) {
-        $script:accessToken = Import-Clixml -Path $script:accessTokenFilePath -ErrorAction SilentlyContinue
+        try {
+            $script:accessToken = Import-Clixml -Path $script:accessTokenFilePath -ErrorAction SilentlyContinue
+        } catch {
+            Write-Verbose "Failed to import access token from '$script:accessTokenFilePath': $_"
+        }
     }
     
 }
