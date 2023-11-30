@@ -58,7 +58,7 @@ function Update-SEPMExceptionPolicy {
     .PARAMETER ExcludeChildProcesses
         Exclude child processes from the exception
         Specific to Application Control type of scan
-        Requires ApplicationControl to be set to true
+        Requires ApplicationControl to be explicitly set to true
     .PARAMETER Recursive
         Add the recursive option to the exception
     .EXAMPLE
@@ -260,6 +260,7 @@ function Update-SEPMExceptionPolicy {
     process {
         # Get Policy ID from policy name
         $PolicyID = $policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -ExpandProperty id
+        
         # Update URI with Policy ID
         $URI = $URI + "/" + $PolicyID
 
@@ -425,7 +426,6 @@ function Update-SEPMExceptionPolicy {
         # TODO For testing only - remove this
         # $ObjBody | ConvertTo-Json -Depth 100 | Out-File .\Data\PolicyStructure.json -Force
 
-        # TODO uncomment to allow API calls
         # prepare the parameters
         $params = @{
             Method      = 'PATCH'
