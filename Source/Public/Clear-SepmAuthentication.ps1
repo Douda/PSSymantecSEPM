@@ -15,12 +15,16 @@ function Clear-SEPMAuthentication {
         This command will not clear your configuration settings.
         Please use Reset-SEPMConfiguration to accomplish that.
 #>
+    [CmdletBinding()]
+    param()
 
+    # Clear out Credential and AccessToken variables from memory
     $script:Credential = $null
     $script:accessToken = $null
 
-    Remove-Item -Path $script:credentialsFilePath -Force -ErrorAction SilentlyContinue -ErrorVariable ev
-    Remove-Item -Path $script:accessTokenFilePath -Force -ErrorAction SilentlyContinue -ErrorVariable ev
+    # Remove file that stores the Access Token
+    Remove-Item -Path $script:accessTokenFilePath -ErrorAction SilentlyContinue -Force -ErrorVariable ev
+    Remove-Item -Path $script:credentialsFilePath -ErrorAction SilentlyContinue -Force -ErrorVariable ev
 
     if (($null -ne $ev) -and
             ($ev.Count -gt 0) -and
