@@ -9,6 +9,7 @@ function Initialize-CommonInitSetup {
     $importModulePath = Join-Path -Path $moduleRootPath -ChildPath "Output\PSSymantecSEPM\$MajorMinorPatch\PSSymantecSEPM.psm1"
     $FullSemVer = (dotnet-gitversion | ConvertFrom-Json).FullSemVer
     
+    # TODO add requirement for dotnet-gitversion & Build-Module
     # Build & Import the module
     Build-Module -SourcePath $BuildModuleSourcePath -SemVer $FullSemVer
     Import-Module -Name "$importModulePath" -Force
