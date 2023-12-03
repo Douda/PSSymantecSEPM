@@ -11,7 +11,13 @@ function Initialize-CommonInitSetup {
     
     # TODO add requirement for dotnet-gitversion & Build-Module
     # Build & Import the module
-    Build-Module -SourcePath $BuildModuleSourcePath -SemVer $FullSemVer
+    # Build-Module -SourcePath $BuildModuleSourcePath -SemVer $FullSemVer
+    # Import-Module -Name "$importModulePath" -Force
+
+    # If $ImportModulePath is not found, build the module
+    if (!(Test-Path -Path $ImportModulePath)) {
+        Build-Module -SourcePath $BuildModuleSourcePath -SemVer $FullSemVer
+    }
     Import-Module -Name "$importModulePath" -Force
 }
 
