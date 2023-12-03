@@ -10,7 +10,7 @@ function Initialize-CommonTestSetup {
     $script:originalConfigFile = New-TemporaryFile
     Backup-SepmConfiguration -Path $script:originalConfigFile
 
-    #Backup the user's credentials file before testing
+    # Backup the user's credentials file before testing
     $script:originalCredentialsFile = New-TemporaryFile
     Backup-SepmAuthentication -Path $script:originalCredentialsFile -Credential -Force
 
@@ -18,10 +18,14 @@ function Initialize-CommonTestSetup {
     $script:originalAccessTokenFile = New-TemporaryFile
     Backup-SepmAuthentication -Path $script:originalAccessTokenFile -AccessToken -Force
 
+    # Backup original configuration / credentials file locations
+    $script:originalConfigFilePath = $script:configurationFilePath
+    $script:originalCredentialsFilePath = $script:credentialsFilePath
+    $script:originalAccessTokenFilePath = $script:accessTokenFilePath
+
     # Reset configuration
     Reset-SEPMConfiguration
     Clear-SEPMAuthentication
-
 }
 
 Initialize-CommonTestSetup
