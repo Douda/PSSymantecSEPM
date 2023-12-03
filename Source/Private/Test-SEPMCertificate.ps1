@@ -44,12 +44,13 @@ function Test-SEPMCertificate {
         Write-Warning -Message $message
 
         # Prompt for user input to continue
-        $Response = Read-Host -Prompt 'Press enter to ignore this and continue without SSL/TLS secure channel for this session'
-        if ($Response -eq "") {
-            if ($PSVersionTable.PSVersion.Major -lt 6) {
-                Skip-Cert
-            }
-            $script:SkipCert = $true
+        # TODO addd a remove option for user interaction with -skipcertificationcheck
+        # $Response = Read-Host -Prompt 'Press enter to ignore this and continue without SSL/TLS secure channel for this session'
+        # if ($Response -eq "") {
+        if ($PSVersionTable.PSVersion.Major -lt 6) {
+            Skip-Cert
         }
+        $script:SkipCert = $true
+        # }
     }
 }
