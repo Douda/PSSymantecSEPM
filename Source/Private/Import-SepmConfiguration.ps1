@@ -21,7 +21,7 @@ function Import-SepmConfiguration {
 
     .EXAMPLE
         Import-SepmConfiguration -Path 'c:\foo\config.json'
-
+        
         Creates a new default config object and updates its values with any that are found
         within a deserialized object from the content in $Path.  The configuration object
         is then returned.
