@@ -55,15 +55,16 @@ function Initialize-SepmConfiguration {
     [CmdletBinding()]
     param()
 
+    # Load in the configuration from disk
     $script:configuration = Import-SepmConfiguration -Path $script:configurationFilePath
-    if ($script:configuration) {
-        if ($script:configuration.ServerAddress -and $script:configuration.port) {
-            $script:BaseURLv1 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
-            $script:BaseURLv2 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v2"
-        }
+    if ($script:configuration.ServerAddress -and $script:configuration.port) {
+        $script:BaseURLv1 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
+        $script:BaseURLv2 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v2"
     } else {
         Reset-SEPMConfiguration
     }
+
+    # Load in the credentials from disk
     if (Test-Path $script:credentialsFilePath) {
         try {
             $script:Credential = Import-Clixml -Path $script:credentialsFilePath
@@ -72,6 +73,7 @@ function Initialize-SepmConfiguration {
         }
     }
 
+    # Load in the access token from disk
     if (Test-Path $script:accessTokenFilePath) {
         try {
             $script:accessToken = Import-Clixml -Path $script:accessTokenFilePath -ErrorAction SilentlyContinue
