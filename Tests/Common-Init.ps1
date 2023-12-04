@@ -5,20 +5,14 @@ function Initialize-CommonInitSetup {
     $script:moduleName = 'PSSymantecSEPM'
     $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
     $BuildModuleSourcePath = Join-Path -Path $moduleRootPath -ChildPath "Source\PSSymantecSEPM.psd1"
-    $MajorMinorPatch = dotnet-gitversion | ConvertFrom-Json | Select-Object -Expand MajorMinorPatch
-    $importModulePath = Join-Path -Path $moduleRootPath -ChildPath "Output\PSSymantecSEPM\$MajorMinorPatch\PSSymantecSEPM.psm1"
-    $FullSemVer = (dotnet-gitversion | ConvertFrom-Json).FullSemVer
+    $importModuleFilePath = Join-Path -Path $moduleRootPath -ChildPath "Output\PSSymantecSEPM\0.0.1\PSSymantecSEPM.psm1"
     
-    # TODO add requirement for dotnet-gitversion & Build-Module
-    # Build & Import the module
-    # Build-Module -SourcePath $BuildModuleSourcePath -SemVer $FullSemVer
-    # Import-Module -Name "$importModulePath" -Force
-
-    # If $ImportModulePath is not found, build the module
-    if (!(Test-Path -Path $ImportModulePath)) {
-        Build-Module -SourcePath $BuildModuleSourcePath -SemVer $FullSemVer
+    # If $importModuleFilePath is not found, build the module
+    if (!(Test-Path -Path $importModuleFilePath)) {
+        Build-Module -SourcePath $BuildModuleSourcePath -SemVer 0.0.1
     }
-    Import-Module -Name "$importModulePath" -Force
+    Import-Module -Name "$importModuleFilePath" -Force
+    Write-Host "Module $script:moduleName loaded"
 }
 
 Initialize-CommonInitSetup
