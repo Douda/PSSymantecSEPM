@@ -20,7 +20,7 @@ Describe 'Initialize-SepmConfiguration' {
             . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Common-AfterAll.ps1')
         }
 
-        Context 'Configuration file' {
+        Context 'Configuration files' {
             BeforeAll {
                 # Replace all files with mock files
                 $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.xml'
@@ -46,60 +46,131 @@ Describe 'Initialize-SepmConfiguration' {
                 } | Export-Clixml -Path $script:accessTokenFilePath -Force
             }
 
-            Context 'configuration file contains no data' {
-                BeforeAll {
-                    # Mock Import-SepmConfiguration
-                    Mock Import-SepmConfiguration -ModuleName $script:moduleName { 
-                        return [PSCustomObject]@{
-                            'ServerAddress' = ''
-                            'port'          = '8446'
-                            'domain'        = ''
+            Context 'Config file' {
+                Context 'Configuration file contains no data' {
+                    BeforeAll {
+                        # Mock Import-SepmConfiguration
+                        Mock Import-SepmConfiguration -ModuleName $script:moduleName { 
+                            return [PSCustomObject]@{
+                                'ServerAddress' = ''
+                                'port'          = '8446'
+                                'domain'        = ''
+                            }
                         }
+
+                        # Mock Reset-SEPMConfiguration
+                        Mock Reset-SEPMConfiguration -ModuleName $script:moduleName {}
                     }
 
-                    # Mock Reset-SEPMConfiguration
-                    Mock Reset-SEPMConfiguration -ModuleName $script:moduleName { 
-                        return $null
+                    It 'Should call Reset-SEPMConfiguration' {
+                        # Call the function
+                        Initialize-SepmConfiguration
+
+                        # Assert that Reset-SEPMConfiguration was called exactly once
+                        Assert-MockCalled Reset-SEPMConfiguration -ModuleName $script:moduleName -Times 1 -Exactly
                     }
                 }
 
-                It 'Should call Reset-SEPMConfiguration' {
-                    # Call the function
-                    Initialize-SepmConfiguration
+                Context 'When the configuration file exist' {
+                    BeforeAll {
+                        # Mock Import-SepmConfiguration
+                        Mock Import-SepmConfiguration -ModuleName $script:moduleName { 
+                            return [PSCustomObject]@{
+                                'ServerAddress' = 'FakeServer01'
+                                'port'          = '1234'
+                                'domain'        = ''
+                            }
+                        }
+                    }
 
-                    # Assert that Reset-SEPMConfiguration was called exactly once
-                    Assert-MockCalled Reset-SEPMConfiguration -ModuleName $script:moduleName -Times 1 -Exactly
+                    It 'Test configuration object values' {
+                        # Call the function
+                        Initialize-SepmConfiguration
+    
+                        $script:configuration | Should -Not -BeNullOrEmpty
+                        $script:configuration.ServerAddress | Should -Be 'FakeServer01'
+                        $script:configuration.port | Should -Be '1234'
+                        $script:configuration.domain | Should -Be ''
+                    }
+
+                    It 'Test BaseURL' {
+                        # Call the function
+                        Initialize-SepmConfiguration
+    
+                        $script:BaseURLv1 | Should -Be 'https://FakeServer01:1234/sepm/api/v1'
+                        $script:BaseURLv2 | Should -Be 'https://FakeServer01:1234/sepm/api/v2'
+                    }
                 }
             }
 
-            Context 'When the configuration file exist' {
-                BeforeAll {
-                    # Mock Import-SepmConfiguration
-                    Mock Import-SepmConfiguration -ModuleName $script:moduleName { 
-                        return [PSCustomObject]@{
-                            'ServerAddress' = 'FakeServer01'
-                            'port'          = '1234'
-                            'domain'        = ''
+            Context 'Credential file' {
+                Context 'Credential file exist' {
+                    BeforeAll {
+                        Mock Import-Clixml -ModuleName $script:moduleName -ParameterFilter { $Path -eq $script:credentialsFilePath } { return $creds }
+                    }
+
+                    It 'Should be PSCredential object' {
+                        # Call the function
+                        Initialize-SepmConfiguration
+
+                        $script:Credential | Should -BeOfType [System.Management.Automation.PSCredential]
+                        $script:Credential.UserName | Should -Be 'FakeUser'
+                        $script:Credential.GetNetworkCredential().Password | Should -Be 'FakePassword'
+                    }
+                }
+            
+                Context 'Credential file does not exist' {
+                    BeforeAll {
+                        # Mock Import-Clixml to throw an error
+                        Mock Import-Clixml -ModuleName $script:moduleName -ParameterFilter { $Path -eq $script:credentialsFilePath } { throw 'File not found' }
+                    }
+
+                    It 'Should catch the error and continue' {
+                        # Call the function
+                        Initialize-SepmConfiguration
+
+                        # import-clixml should throw an error, but the function should catch it and continue
+                        { Initialize-SepmConfiguration } | Should -Not -Throw
+                        $script:Credential | Should -BeNullOrEmpty
+                    }
+                }
+            }
+            Context 'Token file' {
+                Context 'Token file exist' {
+                    BeforeAll {
+                        Mock Import-Clixml -ModuleName $script:moduleName -ParameterFilter { $Path -eq $script:accessTokenFilePath } { 
+                            return [PSCustomObject]@{
+                                'token'              = 'FakeToken'
+                                tokenExpiration      = (Get-Date).AddSeconds(3600)
+                                SkipCertificateCheck = $true
+                            }
                         }
+                    }
+
+                    It 'Should be PSCustomObject' {
+                        # Call the function
+                        Initialize-SepmConfiguration
+
+                        $script:accessToken | Should -BeOfType [PSCustomObject]
+                        $script:accessToken.token | Should -Be 'FakeToken'
+                        $script:accessToken.tokenExpiration | Should -BeOfType [DateTime]
+                        $script:accessToken.SkipCertificateCheck | Should -BeOfType [Boolean]
                     }
                 }
 
-                It 'Test configuration object values' {
-                    # Call the function
-                    Initialize-SepmConfiguration
-    
-                    $script:configuration | Should -Not -BeNullOrEmpty
-                    $script:configuration.ServerAddress | Should -Be 'FakeServer01'
-                    $script:configuration.port | Should -Be '1234'
-                    $script:configuration.domain | Should -Be ''
-                }
+                Context 'Token file does not exist' {
+                    BeforeAll {
+                        Mock Import-Clixml -ModuleName $script:moduleName -ParameterFilter { $Path -eq $script:accessTokenFilePath } { throw 'File not found' }
+                    }
 
-                It 'Test BaseURL' {
-                    # Call the function
-                    Initialize-SepmConfiguration
-    
-                    $script:BaseURLv1 | Should -Be 'https://FakeServer01:1234/sepm/api/v1'
-                    $script:BaseURLv2 | Should -Be 'https://FakeServer01:1234/sepm/api/v2'
+                    It 'Should catch the error and continue' {
+                        # Call the function
+                        Initialize-SepmConfiguration
+
+                        # import-clixml should throw an error, but the function should catch it and continue
+                        { Initialize-SepmConfiguration } | Should -Not -Throw
+                        $script:accessToken | Should -BeNullOrEmpty
+                    }
                 }
             }
         }
