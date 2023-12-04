@@ -25,8 +25,6 @@ function Reset-SEPMConfiguration {
         Write-Warning -Message $message
     }
 
-    Initialize-SepmConfiguration
-
     $message = "This has not cleared your authentication token.  Call Clear-SEPMAuthentication to accomplish that."
     Write-Verbose -Message $message
 }
