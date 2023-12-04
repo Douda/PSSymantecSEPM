@@ -12,7 +12,7 @@ function Initialize-CommonInitSetup {
         Build-Module -SourcePath $Build -SemVer 0.0.1
     }
     Import-Module -Name "$import" -Force
-    Write-Host "Module $script:moduleName loaded"
+    # Write-Host "Module $script:moduleName loaded"
 }
 
 Initialize-CommonInitSetup
