@@ -61,6 +61,7 @@ function Initialize-SepmConfiguration {
         $script:BaseURLv1 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
         $script:BaseURLv2 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v2"
     } else {
+        # If no configuration was loaded from disk, or no server address was specified, reset the configuration
         Reset-SEPMConfiguration
     }
 
@@ -69,14 +70,14 @@ function Initialize-SepmConfiguration {
         try {
             $script:Credential = Import-Clixml -Path $script:credentialsFilePath
         } catch {
-            Write-Verbose "Failed to import credentials from '$script:credentialsFilePath': $_"
+            Write-Verbose "No credentials found from '$script:credentialsFilePath': $_"
         }
     }
 
     # Load in the access token from disk
     if (Test-Path $script:accessTokenFilePath) {
         try {
-            $script:accessToken = Import-Clixml -Path $script:accessTokenFilePath -ErrorAction SilentlyContinue
+            $script:accessToken = Import-Clixml -Path $script:accessTokenFilePath
         } catch {
             Write-Verbose "Failed to import access token from '$script:accessTokenFilePath': $_"
         }
