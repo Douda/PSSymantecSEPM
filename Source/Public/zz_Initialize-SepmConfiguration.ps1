@@ -57,11 +57,11 @@ function Initialize-SepmConfiguration {
 
     # Load in the configuration from disk
     $script:configuration = Import-SepmConfiguration -Path $script:configurationFilePath
-    if ($script:configuration) {
-        if ($script:configuration.ServerAddress -and $script:configuration.port) {
-            $script:BaseURLv1 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
-            $script:BaseURLv2 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v2"
-        }
+    if ($script:configuration.ServerAddress -and $script:configuration.port) {
+        $script:BaseURLv1 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
+        $script:BaseURLv2 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v2"
+    } else {
+        Reset-SEPMConfiguration
     }
 
     # Load in the credentials from disk
