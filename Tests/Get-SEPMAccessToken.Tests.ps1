@@ -19,31 +19,8 @@ Describe 'Get-SEPMAccessToken' {
             . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Common-AfterAll.ps1')
         }
 
-        Context 'When the configuration file exist' {
-            BeforeAll {
-                # Replace all files with mock files
-                $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.xml'
-                $script:credentialsFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
-                $script:accessTokenFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
-
-                # Configuration file content
-                [PSCustomObject]@{
-                    'ServerAddress' = 'FakeServer01'
-                    'port'          = '1234'
-                    'domain'        = ''
-                } | Export-Clixml -Path $script:configurationFilePath -Force
-
-                # Credential file content | Fakeuser / FakePassword
-                $creds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList 'FakeUser', (ConvertTo-SecureString -String 'FakePassword' -AsPlainText -Force)
-                $creds | Export-Clixml -Path $script:credentialsFilePath -Force
-
-                # Token file content
-                [PSCustomObject]@{
-                    'token'              = 'FakeToken'
-                    tokenExpiration      = (Get-Date).AddSeconds(3600)
-                    SkipCertificateCheck = $true
-                } | Export-Clixml -Path $script:accessTokenFilePath -Force
-            }
+        Context 'Token context' {
+            BeforeAll {}
             Context 'token provided as parameter' {
                 BeforeAll {
                     Mock Test-SEPMAccessToken -ModuleName $script:moduleName { return $true }
@@ -55,6 +32,7 @@ Describe 'Get-SEPMAccessToken' {
                     }
                     $result = Get-SEPMAccessToken -AccessToken $token
                     $result | Should -Be $token
+                    $script:accessToken | Should -Be $token
                 }
             }
 
