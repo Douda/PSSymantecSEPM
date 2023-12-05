@@ -131,10 +131,16 @@ Describe 'Get-SEPMAccessToken' {
                     $script:BaseURLv2 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v2"
 
                     # Mock Import-Clixml to return the credential file content
-                    # Mock Import-Clixml -ModuleName $script:moduleName -ParameterFilter { $Path -eq $script:credentialsFilePath -and $ErrorAction -eq 'Ignore' } { return $creds }
+                    Mock Import-Clixml -ModuleName $script:moduleName -ParameterFilter { $Path -eq $script:credentialsFilePath } { return $creds }
 
                     # Mock Test-SEPMCertificate to return true for valid certificate
                     Mock Test-SEPMCertificate -ModuleName $script:moduleName -ParameterFilter { $URI -eq $URI_Authenticate } {}
+
+                    # Mock Read-Host to return the server name
+                    Mock Read-Host -ModuleName $script:moduleName -ParameterFilter { $Prompt -eq $message } { return 'FakeReadHostServer01' }
+
+                    # Mock Get-Credential to return the credential object
+                    Mock Get-Credential { return $creds } 
 
                     # Mock Invoke-ABRestMethod to return a valid token
                     Mock Invoke-ABRestMethod -ModuleName $script:moduleName -ParameterFilter { $params -eq $Params } {
@@ -145,25 +151,28 @@ Describe 'Get-SEPMAccessToken' {
                     }
                 }
 
-                Context 'SEPM URL' {
-                    It 'BaseURL Should be configured' {
-                        $script:BaseURLv1 | Should -Be 'https://FakeServer01:1234/sepm/api/v1'
-                        $script:BaseURLv2 | Should -Be 'https://FakeServer01:1234/sepm/api/v2'
-                    }
+                It 'BaseURL Should be configured' {
+                    $script:BaseURLv1 | Should -Be 'https://FakeServer01:1234/sepm/api/v1'
+                    $script:BaseURLv2 | Should -Be 'https://FakeServer01:1234/sepm/api/v2'
+                }
+                
+
+                It 'Returns valid token from SEPM' {
+                    $result = Get-SEPMAccessToken
+                    $result | Should -BeOfType [PSCustomObject]
+                    $result.token | Should -Be 'FakeTokenFromSEPM'
+                    $result.tokenExpiration | Should -BeOfType [datetime]
                 }
 
-                Context 'SEPM query' {
-                    # It 'Invoke-ABRestMethod should be called' {
-                    #     Get-SEPMAccessToken
-                    #     Assert-MockCalled Invoke-ABRestMethod -Times 1 -Exactly
-                    # }
+                It 'Caches the token in memory' {
+                    $result = Get-SEPMAccessToken
+                    $script:accessToken | Should -Be $result
+                }
 
-                    It 'Returns valid token from SEPM' {
-                        $result = Get-SEPMAccessToken
-                        $result | Should -BeOfType [PSCustomObject]
-                        $result.token | Should -Be 'FakeTokenFromSEPM'
-                        $result.tokenExpiration | Should -BeOfType [datetime]
-                    }
+                It 'Stores token in a file on disk as a SecureString' {
+                    Get-SEPMAccessToken
+                    $accessTokenContent = Import-Clixml -Path $script:accessTokenFilePath
+                    $accessTokenContent.token | Should -Be 'FakeTokenFromSEPM'
                 }
             }
         }
