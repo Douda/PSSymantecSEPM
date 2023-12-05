@@ -65,7 +65,7 @@ function Get-SEPMAccessToken {
 
     # Look for credentials stored in the disk
     if (Test-Path $script:credentialsFilePath) {
-        $script:Credential = Import-Clixml -Path $script:credentialsFilePath -ErrorAction Ignore
+        $script:Credential = Import-Clixml -Path $script:credentialsFilePath
     }
     if ($null -eq $script:Credential) {
         $message = "Credentials not found. Provide credentials :"
