@@ -21,30 +21,7 @@ Describe 'Initialize-SepmConfiguration' {
         }
 
         Context 'Configuration files' {
-            BeforeAll {
-                # Replace all files with mock files
-                $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.xml'
-                $script:credentialsFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
-                $script:accessTokenFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
-
-                # Configuration file content
-                [PSCustomObject]@{
-                    'ServerAddress' = 'FakeServer01'
-                    'port'          = '1234'
-                    'domain'        = ''
-                } | Export-Clixml -Path $script:configurationFilePath -Force
-
-                # Credential file content | Fakeuser / FakePassword
-                $creds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList 'FakeUser', (ConvertTo-SecureString -String 'FakePassword' -AsPlainText -Force)
-                $creds | Export-Clixml -Path $script:credentialsFilePath -Force
-
-                # Token file content
-                [PSCustomObject]@{
-                    'token'              = 'FakeToken'
-                    tokenExpiration      = (Get-Date).AddSeconds(3600)
-                    SkipCertificateCheck = $true
-                } | Export-Clixml -Path $script:accessTokenFilePath -Force
-            }
+            BeforeAll {}
 
             Context 'Config file' {
                 Context 'Configuration file contains no data' {
