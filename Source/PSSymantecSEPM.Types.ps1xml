@@ -3,12 +3,13 @@
     <Type>
         <Name>SEP.Computer</Name>
         <Members>
+            <!-- Aliases -->
             <AliasProperty>
                 <Name>ClientVersion</Name>
                 <ReferencedMemberName>agentVersion</ReferencedMemberName>
             </AliasProperty>
             <AliasProperty>
-                <Name>Definitions</Name>
+                <Name>AVDefinitions</Name>
                 <ReferencedMemberName>avDefsetVersion</ReferencedMemberName>
             </AliasProperty>
             <MemberSet>
@@ -18,9 +19,12 @@
                         <Name>DefaultDisplayPropertySet</Name>
                         <ReferencedProperties>
                             <Name>computerName</Name>
+                            <Name>ipAddresses</Name>
                             <Name>ClientVersion</Name>
-                            <Name>Definitions</Name>
+                            <Name>GroupName</Name>
+                            <Name>AVDefinitions</Name>
                             <Name>operatingSystem</Name>
+                            <Name>hardwareKey</Name>
                         </ReferencedProperties>
                     </PropertySet>
                 </Members>
@@ -33,13 +37,19 @@
                     return $computerName
                 </Script>
             </ScriptMethod>
+            <!-- Test ScriptProperty -->
             <ScriptProperty>
-                <!-- Test ScriptProperty -->
                 <Name>AurelienOperatingSystem</Name>
                 <GetScriptBlock>
-                    # Add your script block here
                     $operatingSystem = $this.operatingSystem
                     return $operatingSystem
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>GroupName</Name>
+                <GetScriptBlock>
+                    $group = $this.group.name
+                    return $group
                 </GetScriptBlock>
             </ScriptProperty>
         </Members>
