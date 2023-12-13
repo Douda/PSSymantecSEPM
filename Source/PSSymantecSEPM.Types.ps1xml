@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Types>
+    <Type>
+        <Name>SEP.Computer</Name>
+        <Members>
+            <AliasProperty>
+                <Name>ClientVersion</Name>
+                <ReferencedMemberName>agentVersion</ReferencedMemberName>
+            </AliasProperty>
+            <AliasProperty>
+                <Name>Definitions</Name>
+                <ReferencedMemberName>avDefsetVersion</ReferencedMemberName>
+            </AliasProperty>
+            <MemberSet>
+                <Name>PSStandardMembers</Name>
+                <Members>
+                    <PropertySet>
+                        <Name>DefaultDisplayPropertySet</Name>
+                        <ReferencedProperties>
+                            <Name>computerName</Name>
+                            <Name>ClientVersion</Name>
+                            <Name>Definitions</Name>
+                            <Name>operatingSystem</Name>
+                        </ReferencedProperties>
+                    </PropertySet>
+                </Members>
+            </MemberSet>
+            <!-- Test ScriptMethod -->
+            <ScriptMethod>
+                <Name>GetComputerName</Name>
+                <Script>
+                    $computerName = $this.computerName
+                    return $computerName
+                </Script>
+            </ScriptMethod>
+            <ScriptProperty>
+                <!-- Test ScriptProperty -->
+                <Name>AurelienOperatingSystem</Name>
+                <GetScriptBlock>
+                    # Add your script block here
+                    $operatingSystem = $this.operatingSystem
+                    return $operatingSystem
+                </GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+</Types>
