@@ -49,6 +49,6 @@ function Get-SEPMThreatStats {
         }
     
         $resp = Invoke-ABRestMethod -params $params
-        return $resp
+        return $resp.Stats
     }
 }
