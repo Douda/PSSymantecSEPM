@@ -56,6 +56,12 @@ function Get-SEPGUPList {
         }
     
         $resp = Invoke-ABRestMethod -params $params
+
+        # Add a PSTypeName to the object 
+        $resp | ForEach-Object {
+            $_.PSTypeNames.Insert(0, "SEP.GUPList")
+        }
+
         return $resp
     }
 }

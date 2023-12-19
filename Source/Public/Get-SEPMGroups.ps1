@@ -88,6 +88,11 @@ function Get-SEPMGroups {
             }
         } until ($resp.lastPage -eq $true)
 
+        # Add a PSTypeName to the object
+        $allResults | ForEach-Object {
+            $_.PSObject.TypeNames.Insert(0, 'SEPM.GroupInfo')
+        }
+
         # return the response
         return $allResults
     }

@@ -7,6 +7,9 @@
 ## This function should be private but will stay Public for the moment as it needs to be the last function to be loaded in the module
 ## TODO make this function private
 
+# Update the data types when loading the module
+Update-TypeData -PrependPath (Join-Path -Path $PSScriptRoot -ChildPath 'PSSymantecSEPM.Types.ps1xml')
+
 # The credentials used to authenticate to the SEPM server.
 [PSCredential]   $script:Credential = $null
 [PSCustomObject] $script:accessToken = $null

@@ -82,6 +82,10 @@ function Get-SEPMFirewallPolicy {
         }
     
         $resp = Invoke-ABRestMethod -params $params
+
+        # Add a PSTypeName to the object
+        $resp.PSObject.TypeNames.Insert(0, 'SEPM.FirewallPolicy')
+        
         return $resp
     }
 }

@@ -59,6 +59,12 @@ function Get-SEPClientVersion {
         }
     
         $resp = Invoke-ABRestMethod -params $params
-        return $resp
+
+        # Add a PSTypeName to the object
+        $resp.clientVersionList | ForEach-Object {
+            $_.PSTypeNames.Insert(0, "SEP.clientVersionList")
+        }
+
+        return $resp.clientVersionList
     }
 }

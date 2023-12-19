@@ -48,6 +48,12 @@ function Get-SEPClientStatus {
         }
     
         $resp = Invoke-ABRestMethod -params $params
-        return $resp
+
+        # Add a PSTypeName to the object
+        $resp.clientCountStatsList | ForEach-Object {
+            $_.PSTypeNames.Insert(0, "SEP.clientStatusList")
+        }
+
+        return $resp.clientCountStatsList
     }
 }

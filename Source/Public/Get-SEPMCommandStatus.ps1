@@ -74,14 +74,33 @@ function Get-SEPMCommandStatus {
     }
 
     process {
-        # prepare the parameters
-        $params = @{
-            Method  = 'GET'
-            Uri     = $URI
-            headers = $headers
+        $allResults = @()
+        $QueryStrings = @{}
+
+        do {
+            # prepare the parameters
+            $params = @{
+                Method  = 'GET'
+                Uri     = $URI
+                headers = $headers
+            }
+
+            $resp = Invoke-ABRestMethod -params $params
+
+            # Process the response
+            $allResults += $resp.content
+
+            # Increment the page index & update URI
+            $QueryStrings.pageIndex++
+            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
+
+        } until ($resp.lastPage -eq $true)
+
+        # Add a PSTypeName to the object 
+        $allresults | ForEach-Object {
+            $_.PSTypeNames.Insert(0, "SEPM.CommandStatus")
         }
     
-        $resp = Invoke-ABRestMethod -params $params
-        return $resp
+        return $allResults
     }
 }

@@ -117,14 +117,6 @@ function Get-SEPComputers {
                 $QueryStrings.pageIndex++
                 $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
             } until ($resp.lastPage -eq $true)
-
-            # Add a PSTypeName to the object 
-            $allresults | ForEach-Object {
-                $_.PSTypeNames.Insert(0, "SEP.Computer")
-            }
-
-            # return the response
-            return $allResults
         }
 
         # Using computer name API call then filtering
@@ -167,14 +159,6 @@ function Get-SEPComputers {
             } else {
                 $allResults = $allResults | Where-Object { $_.group.name -eq $GroupName }
             }
-
-            # Add a PSTypeName to the object 
-            $allresults | ForEach-Object {
-                $_.PSTypeNames.Insert(0, "SEP.Computer")
-            }
-
-            # return the response
-            return $allResults
         }
 
         # No parameters
@@ -209,14 +193,14 @@ function Get-SEPComputers {
                 $QueryStrings.pageIndex++
                 $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
             } until ($resp.lastPage -eq $true)
-
-            # Add a PSTypeName to the object 
-            $allresults | ForEach-Object {
-                $_.PSTypeNames.Insert(0, "SEP.Computer")
-            }
-
-            # return the response
-            return $allResults
         }
+
+        # Add a PSTypeName to the object 
+        $allresults | ForEach-Object {
+            $_.PSTypeNames.Insert(0, "SEP.Computer")
+        }
+
+        # return the response
+        return $allResults
     }
 }
