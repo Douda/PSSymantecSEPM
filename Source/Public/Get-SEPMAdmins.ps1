@@ -71,6 +71,12 @@ Function Get-SEPMAdmins {
         
         $resp = Invoke-ABRestMethod -params $params
 
+        
+        # Add a PSTypeName to the object
+        $resp | ForEach-Object {
+            $_.PSTypeNames.Insert(0, "SEP.adminList")
+        }
+
         # Process the response
         if ([string]::IsNullOrEmpty($AdminName)) {
             return $resp

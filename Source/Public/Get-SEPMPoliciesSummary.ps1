@@ -104,9 +104,6 @@ function Get-SEPMPoliciesSummary {
             } catch {
                 Write-Warning -Message "Error: $_"
             }
-
-            # return the response
-            return $resp.content
         }
 
         if ($PolicyType) {
@@ -135,8 +132,13 @@ function Get-SEPMPoliciesSummary {
             } catch {
                 Write-Warning -Message "Error: $_"
             }
+        }
+        # Add a PSTypeName to the object
+        $resp.content | ForEach-Object {
+            $_.PSTypeNames.Insert(0, 'SEPM.PolicySummary')
+        }
+            
             # return the response
             return $resp.content
-        }
     }
 }
