@@ -49,6 +49,18 @@ function Get-SEPMReplicationStatus {
         }
     
         $resp = Invoke-ABRestMethod -params $params
-        return $resp
+
+        # Add a PSTypeName to the object
+        $resp.replicationStatus | ForEach-Object {
+            $_.PSObject.TypeNames.Insert(0, 'SEPM.ReplicationStatus')
+            # Add sub PSTypeName to the object
+            foreach ($partner in $_.replicationPartnerStatusList) {
+                $partner | ForEach-Object {
+                    $_.PSObject.TypeNames.Insert(0, 'SEPM.ReplicationPartnerStatus')
+                }
+            }
+        }
+
+        return $resp.replicationStatus
     }
 }

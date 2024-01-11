@@ -49,6 +49,10 @@ function Get-SEPMLatestDefinition {
         }
     
         $resp = Invoke-ABRestMethod -params $params
+
+        # Add a PSTypeName to the object
+        $resp.PSObject.TypeNames.Insert(0, 'SEPM.LatestDefinitionInfo')
+        
         return $resp
     }
 }

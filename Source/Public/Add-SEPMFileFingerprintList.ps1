@@ -25,7 +25,7 @@ function Add-SEPMFileFingerprintList {
         Add-SEPMFileFingerprintList -name "My Blacklist" -domainId $domainId -HashType "SHA256" -description "My Blacklist" -hashlist $hashlist.hash
 
         Gets the domain id for the default domain 
-        Create a hash list of all the files in the downloads folder of the currently logged in user
+        Create a hash list of all the .exe files in the downloads folder of the currently logged in user
         Adds the hash list as a blacklist to the default domain
 #>
 

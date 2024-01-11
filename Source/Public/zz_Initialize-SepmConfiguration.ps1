@@ -7,6 +7,9 @@
 ## This function should be private but will stay Public for the moment as it needs to be the last function to be loaded in the module
 ## TODO make this function private
 
+# Update the data types when loading the module
+Update-TypeData -PrependPath (Join-Path -Path $PSScriptRoot -ChildPath 'PSSymantecSEPM.Types.ps1xml')
+
 # The credentials used to authenticate to the SEPM server.
 [PSCredential]   $script:Credential = $null
 [PSCustomObject] $script:accessToken = $null
@@ -51,23 +54,36 @@ function Initialize-SepmConfiguration {
 
     .NOTES
         Internal helper method.  This is actually invoked at the END of this file.
-#>
+    #>
     [CmdletBinding()]
     param()
 
+    # Load in the configuration from disk
     $script:configuration = Import-SepmConfiguration -Path $script:configurationFilePath
-    if ($script:configuration) {
-        if ([string]::IsNullOrEmpty($script:configuration.ServerAddress)) {
-            Set-SEPMAuthentication
-        }
+    if ($script:configuration.ServerAddress -and $script:configuration.port) {
         $script:BaseURLv1 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
         $script:BaseURLv2 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v2"
+    } else {
+        # If no configuration was loaded from disk, or no server address was specified, reset the configuration
+        Reset-SEPMConfiguration
     }
+
+    # Load in the credentials from disk
     if (Test-Path $script:credentialsFilePath) {
-        $script:Credential = Import-Clixml -Path $script:credentialsFilePath -ErrorAction SilentlyContinue
+        try {
+            $script:Credential = Import-Clixml -Path $script:credentialsFilePath
+        } catch {
+            Write-Verbose "No credentials found from '$script:credentialsFilePath': $_"
+        }
     }
+
+    # Load in the access token from disk
     if (Test-Path $script:accessTokenFilePath) {
-        $script:accessToken = Import-Clixml -Path $script:accessTokenFilePath -ErrorAction SilentlyContinue
+        try {
+            $script:accessToken = Import-Clixml -Path $script:accessTokenFilePath
+        } catch {
+            Write-Verbose "Failed to import access token from '$script:accessTokenFilePath': $_"
+        }
     }
     
 }

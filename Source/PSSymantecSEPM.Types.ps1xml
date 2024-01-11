@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Types>
+    <Type>
+        <Name>SEP.Computer</Name>
+        <Members>
+            <!-- Aliases -->
+            <!-- <AliasProperty>
+                <Name>ClientVersion</Name>
+                <ReferencedMemberName>agentVersion</ReferencedMemberName>
+            </AliasProperty>
+            <AliasProperty>
+                <Name>AVDefinitions</Name>
+                <ReferencedMemberName>avDefsetVersion</ReferencedMemberName>
+            </AliasProperty> -->
+            <!-- Default data display -->
+            <MemberSet>
+                <Name>PSStandardMembers</Name>
+                <!-- <Members>
+                    <PropertySet>
+                        <Name>DefaultDisplayPropertySet</Name>
+                        <ReferencedProperties>
+                            <Name>computerName</Name>
+                            <Name>ClientVersion</Name>
+                            <Name>GroupName</Name>
+                            <Name>ipAddresses</Name>
+                            <Name>AVDefinitions</Name>
+                            <Name>AVDefinitionsDate</Name>
+                            <Name>operatingSystem</Name>
+                            <Name>hardwareKey</Name>
+                        </ReferencedProperties>
+                    </PropertySet>
+                </Members> -->
+            </MemberSet>
+            <!-- Test ScriptMethod -->
+            <ScriptMethod>
+                <Name>GetComputerName</Name>
+                <Script>
+                    $computerName = $this.computerName
+                    return $computerName
+                </Script>
+            </ScriptMethod>
+            <!-- Test ScriptProperty -->
+            <ScriptProperty>
+                <Name>AVDefinitionsDate</Name>
+                <GetScriptBlock>
+                        $avDefsetVersion = $this.avDefsetVersion
+                        $avDefsetVersionString = $avDefsetVersion.ToString()
+                        $year = 2000 + [int]$avDefsetVersionString.Substring(0, 2)
+                        $month = [int]$avDefsetVersionString.Substring(2, 2)
+                        $day = [int]$avDefsetVersionString.Substring(4, 2)
+                        $date = New-Object DateTime($year, $month, $day)
+                        return $date.Date
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>GroupName</Name>
+                <GetScriptBlock>
+                    $group = $this.group.name
+                    return $group
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>GroupId</Name>
+                <GetScriptBlock>
+                    $groupId = $this.group.id
+                    return $groupId
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>lastDeploymentDate</Name>
+                <GetScriptBlock>
+                    $unixTimestampMilliseconds = $this.lastDeploymentTime
+                    $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                    $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                    return $date
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>creationDate</Name>
+                <GetScriptBlock>
+                    $unixTimestampMilliseconds = $this.creationTime
+                    $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                    $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                    return $date
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>lastUpdateDate</Name>
+                <GetScriptBlock>
+                    $unixTimestampMilliseconds = $this.lastUpdateTime
+                    $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                    $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                    return $date
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>agentTimeStampDate</Name>
+                <GetScriptBlock>
+                    $unixTimestampMilliseconds = $this.agentTimeStamp
+                    $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                    $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                    return $date
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>lastScanDate</Name>
+                <GetScriptBlock>
+                    $unixTimestampMilliseconds = $this.lastScanTime
+                    $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                    $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                    return $date
+                </GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+    <Type>
+        <Name>SEP.GUPList</Name>
+        <Members>
+            <ScriptProperty>
+                <Name>freeDiskGB</Name>
+                <GetScriptBlock>
+                    $freeDiskGB = [math]::Round($this.freeDisk / 1GB, 2)
+                    return $freeDiskGB
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>totalMemGB</Name>
+                <GetScriptBlock>
+                    $totalMemGB = [math]::Round($this.totalMem / 1GB, 3)
+                    return $totalMemGB
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>freeMemGB</Name>
+                <GetScriptBlock>
+                    $freeMemGB = [math]::Round($this.freeMem / 1GB, 3)
+                    return $freeMemGB
+                </GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+    <Type>
+        <Name>SEP.clientDefStatusList</Name>
+        <Members>
+            <ScriptMethod>
+                <Name>GetComputerWithThisDefinition</Name>
+                <Script>
+                    $revisionString = $this.version
+                    $revisionNumbered = $revisionString.Replace("-", "").Replace(" rev. ", "")
+                    $revisionNumbered = $revisionNumbered.Substring(2)
+                    $allComputers = Get-SEPComputers
+                    $computers = $allComputers | Where-Object { $_.avDefsetVersion -eq $revisionNumbered } | Select-Object computerName,ipAddresses,GroupName
+                    return $computers
+                </Script>
+            </ScriptMethod>
+        </Members>
+    </Type>
+    <Type>
+        <Name>SEP.adminList</Name>
+        <Members>
+            <ScriptProperty>
+                <Name>lastLoginDate</Name>
+                <GetScriptBlock>
+                    $unixTimestampMilliseconds = $this.lastLoginTime
+                    $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                    $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                    return $date
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>creationDate</Name>
+                <GetScriptBlock>
+                    $unixTimestampMilliseconds = $this.creationTime
+                    $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                    $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                    return $date
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>lastPasswordChangedDate</Name>
+                <GetScriptBlock>
+                    $unixTimestampMilliseconds = $this.lastPasswordChanged
+                    $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                    $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                    return $date
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>passwordExpiresInDate</Name>
+                <GetScriptBlock>
+                    $durationMilliseconds = $this.passwordExpiresIn
+                    $duration = [TimeSpan]::FromMilliseconds($durationMilliseconds)
+                    $expirationDate = (Get-Date).Add($duration)
+                    return $expirationDate
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>adminTypeName</Name>
+                <GetScriptBlock>
+                switch ($this.adminType) {
+                    1 { return "System administrator" }
+                    2 { return "Domain administrator" }
+                    3 { return "Limited administrator" }
+                }
+                </GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+    <Type>
+        <Name>SEPM.DomainInfo</Name>
+        <Members>
+            <ScriptProperty>
+                <Name>createdTimeDate</Name>
+                <GetScriptBlock>
+                    $unixTimestampMilliseconds = $this.createdTime
+                    $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                    $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                    return $date
+                </GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+    <Type>
+        <Name>SEPM.GroupInfo</Name>
+        <Members>
+            <ScriptProperty>
+                <Name>createdDate</Name>
+                <GetScriptBlock>
+                    $unixTimestampMilliseconds = $this.created
+                    $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                    $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                    return $date
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>lastModifiedDate</Name>
+                <GetScriptBlock>
+                    $unixTimestampMilliseconds = $this.lastModified
+                    if ($unixTimestampMilliseconds -eq 0) {
+                        return $null
+                    }
+                    $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                    $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                    return $date
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>policyDateDate</Name>
+                <GetScriptBlock>
+                    $unixTimestampMilliseconds = $this.policyDate
+                    if ($unixTimestampMilliseconds -eq 0) {
+                        return $null
+                    }
+                    $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                    $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                    return $date
+                </GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+    <Type>
+        <Name>SEPM.PolicySummary</Name>
+        <Members>
+            <ScriptProperty>
+                <Name>lastModifiedDate</Name>
+                <GetScriptBlock>
+                    $unixTimestampMilliseconds = $this.lastmodifiedtime
+                    if ($unixTimestampMilliseconds -eq 0) {
+                        return $null
+                    }
+                    $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                    $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                    return $date
+                </GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+    <Type>
+        <Name>SEPM.ReplicationPartnerStatus</Name>
+        <Members>
+            <ScriptProperty>
+                <Name>lastSuccessfulRunTimeDate</Name>
+                <GetScriptBlock>
+                    $unixTimestampMilliseconds = $this.lastSuccessfulRunTime
+                    if ($unixTimestampMilliseconds -eq 0) {
+                        return $null
+                    }
+                    $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                    $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                    return $date
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>lastRunTimeDate</Name>
+                <GetScriptBlock>
+                    $unixTimestampMilliseconds = $this.lastRunTime
+                    if ($unixTimestampMilliseconds -eq 0) {
+                        return $null
+                    }
+                    $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                    $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                    return $date
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>nextRunTimeDate</Name>
+                <GetScriptBlock>
+                    $unixTimestampMilliseconds = $this.nextRunTime
+                    if ($unixTimestampMilliseconds -eq 0) {
+                        return $null
+                    }
+                    $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                    $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                    return $date
+                </GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+    <Type>
+        <Name>SEPM.ExceptionPolicy</Name>
+        <Members>
+            <ScriptProperty>
+                <Name>lastModifiedTimeDate</Name>
+                <GetScriptBlock>
+                $unixTimestampMilliseconds = $this["lastmodifiedtime"]
+                if ($unixTimestampMilliseconds -eq 0) {
+                    return $null
+                }
+                $unixEpoch = Get-Date -Year 1970 -Month 1 -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+                $date = $unixEpoch.AddMilliseconds($unixTimestampMilliseconds)
+                
+                $this["lastModifiedTimeDate"] = "$date"
+                </GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+</Types>

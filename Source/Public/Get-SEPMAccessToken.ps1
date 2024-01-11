@@ -54,6 +54,8 @@ function Get-SEPMAccessToken {
         
     # Finally, if there is still no available token, query one from the SEPM server.
     # Then caches the token in memory and stores it in a file on disk as a SecureString
+
+    # Test if the SEPM server name is configured
     if ($null -eq $script:configuration.ServerAddress) {
         $message = "SEPM Server name not found. Provide server name :"
         Write-Warning -Message $message
@@ -63,7 +65,7 @@ function Get-SEPMAccessToken {
 
     # Look for credentials stored in the disk
     if (Test-Path $script:credentialsFilePath) {
-        $script:Credential = Import-Clixml -Path $script:credentialsFilePath -ErrorAction Ignore
+        $script:Credential = Import-Clixml -Path $script:credentialsFilePath
     }
     if ($null -eq $script:Credential) {
         $message = "Credentials not found. Provide credentials :"

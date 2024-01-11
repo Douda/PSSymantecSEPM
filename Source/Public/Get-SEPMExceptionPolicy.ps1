@@ -86,9 +86,17 @@ function Get-SEPMExceptionPolicy {
         }
     
         $resp = Invoke-ABRestMethod -params $params
-
+        
         # JSON response to convert to PSObject
         $resp = $resp | ConvertFrom-Json -AsHashtable -Depth 100
+        
+        # Add a PSTypeName to the object
+        $resp.PSObject.TypeNames.Insert(0, 'SEPM.ExceptionPolicy')
+
+        # Access the ScriptProperties of 'SEPM.ExceptionPolicy' to force them to run at least once
+        # This is to ensure that the properties are available when the object is returned
+        # refer to PSType SEPM.ExceptionPolicy for more details
+        $null = $resp.lastModifiedTimeDate
         
         # return the response
         return $resp

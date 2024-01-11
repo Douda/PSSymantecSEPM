@@ -26,7 +26,7 @@ function Set-SEPMAuthentication {
     )
 
     # If no credentials are provided, prompt the user for them
-    if ($Credentials -eq $null) {
+    if ($null -eq $Credentials) {
         $Credentials = Get-Credential
     }
 

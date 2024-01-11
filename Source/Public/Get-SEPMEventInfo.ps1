@@ -58,6 +58,12 @@ function Get-SEPMEventInfo {
         }
 
         $resp = Invoke-ABRestMethod -params $params
-        return $resp
+
+        # Add a PSTypeName to the object
+        $resp.criticalEventsInfoList | ForEach-Object {
+            $_.PSObject.TypeNames.Insert(0, 'SEPM.EventInfo')
+        }
+
+        return $resp.criticalEventsInfoList
     }
 }
