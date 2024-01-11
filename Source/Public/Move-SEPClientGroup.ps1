@@ -22,6 +22,10 @@ function Move-SEPClientGroup {
         "MyComputer1","MyComputer2" | Move-SEPClientGroup -GroupName "My Company\EMEA\Workstations"
 
         Moves the computers MyComputer1 and MyComputer2 to the group My Company\EMEA\Workstations via pipeline
+    .EXAMPLE
+        Move-SEPClientGroup -ComputerName "MyComputer" -GroupName "My Company\EMEA\Workstations" -SkipCertificateCheck
+
+        Moves the computer MyComputer to the group My Company\EMEA\Workstations and skips certificate check
     #>
 
     [CmdletBinding()]
