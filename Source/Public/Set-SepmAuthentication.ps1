@@ -40,6 +40,11 @@ function Set-SEPMAuthentication {
     # Setting script scope variable so that credentials can be used in other functions
     $script:Credential = $Credentials
 
+    # Test if the credential path exists
+    if (-not (Test-Path -Path $script:credentialsFilePath)) {
+        New-Item -Path $script:credentialsFilePath -ItemType File -Force | Out-Null
+    }
+
     # Saving credentials to disk
     $Credentials | Export-Clixml -Path $script:credentialsFilePath -Force
         
