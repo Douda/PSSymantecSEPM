@@ -1,9 +1,10 @@
 function Send-SEPMCommandClearIronCache {
     <# # TODO update help
     .SYNOPSIS
-        Send a quarantine/unquarantine command to SEP endpoints
+        Send a clear IRON cache command to SEP endpoints
     .DESCRIPTION
-        Send a quarantine/unquarantine command to SEP endpoints
+        Send a clear IRON cache command to SEP endpoints
+        This will remove cached information about a specific hash from the SEP client
     .PARAMETER ComputerName
         The name of the computer to send the command to
         Cannot be used with GroupName
@@ -11,8 +12,6 @@ function Send-SEPMCommandClearIronCache {
         The name of the group to send the command to
         Cannot be used with ComputerName
         Does not include subgroups
-    .PARAMETER Unquarantine
-        Switch parameter to unquarantine the SEP client
     .PARAMETER SHA256
         SHA256 hash of the suspicious file.
         Cannot be used with MD5 or SHA1
@@ -26,13 +25,16 @@ function Send-SEPMCommandClearIronCache {
         Skip certificate check
     .EXAMPLE
         Send-SEPMCommandClearIronCache -ComputerName "Computer1"
-        Sends a command to quarantine Computer1
+
+        Sends a clean IRON cache command Computer1
     .EXAMPLE
         "Computer1", "Computer2" | Send-SEPMCommandClearIronCache
-        Sends a command to quarantine Computer1 and Computer2
+
+        Sends a clean IRON cache command Computer1 and Computer2
     .EXAMPLE
         Send-SEPMCommandClearIronCache -GroupName "My Company\EMEA\Workstations\Site1"
-        Sends a command to quarantine all computers in "My Company\EMEA\Workstations\Site1"
+
+        Sends a clean IRON cache command all computers in "My Company\EMEA\Workstations\Site1"
         Does not include subgroups
     #>
     
