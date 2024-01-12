@@ -38,7 +38,6 @@ function Send-SEPMCommandClearIronCache {
         Does not include subgroups
     #>
     
-    #TODO finish function
     [CmdletBinding()]
     param (
         # ComputerName
