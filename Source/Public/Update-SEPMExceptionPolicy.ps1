@@ -55,6 +55,7 @@ function Update-SEPMExceptionPolicy {
     .PARAMETER AllScans
         Add all types of scans to the exception
         Based on the exception type
+        AllScans is default if no scan type is provided
     .PARAMETER ExcludeChildProcesses
         Exclude child processes from the exception
         Specific to Application Control type of scan
@@ -333,6 +334,13 @@ function Update-SEPMExceptionPolicy {
                 }
             }
 
+            # If no scan type is provided, default to AllScans
+            if (-not $ExceptionParams.securityrisk -and -not $ExceptionParams.sonar -and -not $ExceptionParams.applicationcontrol) {
+                $ExceptionParams.securityrisk = $true
+                $ExceptionParams.sonar = $true
+                $ExceptionParams.applicationcontrol = $true
+            }
+
             # Create the file exception object with CreateFilesHashTable
             # Method parameters have to be in the same order as in the method definition
             $FilesHashTable = $ObjBody.CreateFilesHashTable(
@@ -388,6 +396,12 @@ function Update-SEPMExceptionPolicy {
                     $ExceptionParams.scancategory = "AllScans"
                     $ExceptionParams.scantype = "All"
                 }
+            }
+
+            # If no scan type is provided, default to AllScans
+            if (-not $ExceptionParams.scancategory -and -not $ExceptionParams.scantype) {
+                $ExceptionParams.scancategory = "AllScans"
+                $ExceptionParams.scantype = "All"
             }
 
             # Create folder the exception object with CreateDirectoryHashtable
