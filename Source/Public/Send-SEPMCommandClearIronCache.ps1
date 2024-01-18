@@ -1,5 +1,5 @@
 function Send-SEPMCommandClearIronCache {
-    <# # TODO update help
+    <#
     .SYNOPSIS
         Send a clear IRON cache command to SEP endpoints
     .DESCRIPTION
