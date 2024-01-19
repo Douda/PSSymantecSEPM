@@ -226,6 +226,7 @@ function Update-SEPMExceptionPolicy {
 
         # Recursive 
         [Parameter(ParameterSetName = 'WindowsFolderException')]
+        [Alias('IncludeSubFolders')]
         [switch]
         $Recursive,
 
@@ -275,7 +276,7 @@ function Update-SEPMExceptionPolicy {
         $ExceptionParams = @{}
 
         # Common parameters
-        # Adding default values if not explicitely provided provided
+        # Adding default values if not explicitely provided
         # As $PSBoundParameters.Keys doesn't contain default parameters values
         if ($pathvariable -eq "[NONE]") {
             $ExceptionParams.pathvariable = "[NONE]"
@@ -377,7 +378,7 @@ function Update-SEPMExceptionPolicy {
                     if ($ScanType -eq 'SecurityRisk' -or $ScanType -eq 'All') {
                         $ExceptionParams.scancategory = $SecurityRiskCategory
                     } else {
-                        throw "The SecurityRiskCategory parameter can only be used if the ScanType parameter is 'SecurityRisk' or 'All'"
+                        throw "The SecurityRiskCategory parameter can only be used if the ScanType parameter is 'SecurityRisk'"
                     }
                 }
                 "ScanType" {
@@ -404,7 +405,7 @@ function Update-SEPMExceptionPolicy {
                 $ExceptionParams.scantype = "All"
             }
 
-            # Create folder the exception object with CreateDirectoryHashtable
+            # Create folder exception object with CreateDirectoryHashtable
             # Method parameters have to be in the same order as in the method definition
             $DirectoryHashTable = $ObjBody.CreateDirectoryHashtable(
                 $ExceptionParams.deleted,
