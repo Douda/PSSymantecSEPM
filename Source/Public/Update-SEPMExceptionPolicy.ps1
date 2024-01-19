@@ -382,8 +382,8 @@ function Update-SEPMExceptionPolicy {
                     $ExceptionParams.RulestateSource = $RulestateSource
                 }
                 "SecurityRiskCategory" {
-                    # SecurityRiskCategory can only be used if the ScanType parameter is 'SecurityRisk' or 'All'
-                    if ($ScanType -eq 'SecurityRisk' -or $ScanType -eq 'All') {
+                    # SecurityRiskCategory can only be used if the ScanType parameter is 'SecurityRisk'
+                    if ($ScanType -eq 'SecurityRisk') {
                         $ExceptionParams.scancategory = $SecurityRiskCategory
                     } else {
                         throw "The SecurityRiskCategory parameter can only be used if the ScanType parameter is 'SecurityRisk'"
