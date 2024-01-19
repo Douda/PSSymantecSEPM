@@ -60,8 +60,17 @@ function Update-SEPMExceptionPolicy {
         Exclude child processes from the exception
         Specific to Application Control type of scan
         Requires ApplicationControl to be explicitly set to true
-    .PARAMETER Recursive
-        Add the recursive option to the exception
+    .PARAMETER IncludeSubFolders
+        Include subfolders in the exception
+        Specific to Windows Folder Exception
+    .PARAMETER ScanType
+        The type of scan to add to the exception
+        Valid values are :
+            SecurityRisk
+            SONAR
+            ApplicationControl
+            All
+        Default value is All
     .EXAMPLE
         $params = @{
             PolicyName = "Workstations Exception Policy"
@@ -226,9 +235,8 @@ function Update-SEPMExceptionPolicy {
 
         # Recursive 
         [Parameter(ParameterSetName = 'WindowsFolderException')]
-        [Alias('IncludeSubFolders')]
         [switch]
-        $Recursive,
+        $IncludeSubFolders,
 
         # ScanType 
         [Parameter(ParameterSetName = 'WindowsFolderException')]
@@ -390,7 +398,7 @@ function Update-SEPMExceptionPolicy {
                 "Path" {
                     $ExceptionParams.directory = $path
                 }
-                "Recursive" {
+                "IncludeSubFolders" {
                     $ExceptionParams.recursive = $true
                 }
                 "AllScans" {
