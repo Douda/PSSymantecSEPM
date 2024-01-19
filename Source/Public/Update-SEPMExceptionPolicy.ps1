@@ -239,9 +239,9 @@ function Update-SEPMExceptionPolicy {
             'All'
         )]
         [string]
-        $ScanType
+        $ScanType = 'All'
     )
-    
+
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
