@@ -27,6 +27,7 @@ class SEPMPolicyExceptionsStructure {
             }
             linux                      = [object]@{
                 directories    = [System.Collections.Generic.List[object]]::new()
+                # extension_list = [System.Collections.Generic.List[object]]::new()
                 extension_list = [object]::new()
             }
             extension_list             = [object]@{
@@ -692,7 +693,7 @@ class SEPMPolicyExceptionsStructure {
     }
 
     # Method to create a linux_directories hashtable
-    [hashtable] CreateLinuxDirectoriesHashtable(
+    [hashtable] CreateLinuxDirectoryHashtable(
         [Nullable[bool]] $deleted = $null,
         [Nullable[bool]] $rulestate_enabled = $null,
         [string] $rulestate_source = "PSSymantecSEPM",
@@ -757,8 +758,8 @@ class SEPMPolicyExceptionsStructure {
     }
 
     # Method to add linux_directories
-    [void] AddLinuxDirectories(
-        [hashtable] $linux_directories # Use CreateLinuxDirectoriesHashtable method
+    [void] AddLinuxDirectory(
+        [hashtable] $linux_directories # Use CreateLinuxDirectoryHashtable method
     ) {
         $this.configuration.linux.directories.Add($linux_directories)
     }
@@ -769,6 +770,7 @@ class SEPMPolicyExceptionsStructure {
         [Nullable[bool]] $rulestate_enabled = $null,
         [string] $rulestate_source = "PSSymantecSEPM",
         # $extensions is a PSOBject list
+        [string] $scancategory = "",
         [PSObject[]] $extensions = @()
     ) {
         # return @{
@@ -786,6 +788,7 @@ class SEPMPolicyExceptionsStructure {
         # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($extensions)) { $HashTable['extensions'] = $extensions }
+        if (![string]::IsNullOrEmpty($scancategory)) { $HashTable['scancategory'] = $scancategory }
 
         # Verify if $Extensions is not an empty list
         if ($extensions.Count -eq 0) {
@@ -828,7 +831,8 @@ class SEPMPolicyExceptionsStructure {
     [void] AddLinuxExtensionList(
         [hashtable] $linux_extension_list # Use CreateLinuxExtensionListHashtable method
     ) {
-        $this.configuration.linux.extension_list.Add($linux_extension_list)
+        # $this.configuration.linux.extension_list.Add($linux_extension_list)
+        $this.configuration.linux.extension_list = $linux_extension_list
     }
 
 
