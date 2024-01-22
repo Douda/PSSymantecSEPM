@@ -107,6 +107,10 @@ function Update-SEPMExceptionPolicy {
     Update-SEPMExceptionPolicy @params
 
     Using splatting, deletes the exception for the InternalApplication.exe file located in the C:\MyCorp directory
+    # TODO add examples application to monitor
+    # TODO add examples Linux folder exception
+    # TODO add examples Linux extension exception
+    # TODO add examples Mac file exception
     #>
     
     
@@ -167,6 +171,25 @@ function Update-SEPMExceptionPolicy {
         [string[]]
         $LinuxExtensionException,
 
+        # Application to Monitor
+        [Parameter(ParameterSetName = 'ApplicationToMonitorException')]
+        [ValidateNotNullOrEmpty()]
+        [switch]
+        $ApplicationToMonitorException,
+
+        # Application Name
+        [Parameter(ParameterSetName = 'ApplicationToMonitorException', Mandatory = $true)]
+        [Parameter(ParameterSetName = 'WebdomainException', Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $Name,
+
+        # Webdomain
+        [Parameter(ParameterSetName = 'WebdomainException')]
+        [ValidateNotNullOrEmpty()]
+        [switch]
+        $WebdomainException,
+
         # Sonar
         [Parameter(ParameterSetName = 'WindowsFileException')]
         [switch]
@@ -177,6 +200,8 @@ function Update-SEPMExceptionPolicy {
         [Parameter(ParameterSetName = 'WindowsFolderException')]
         [Parameter(ParameterSetName = 'MacFileException')]
         [Parameter(ParameterSetName = 'LinuxFolderException')]
+        [Parameter(ParameterSetName = 'ApplicationToMonitorException')]
+        [Parameter(ParameterSetName = 'WebdomainException')]
         [switch]
         $DeleteException,
 
@@ -208,7 +233,7 @@ function Update-SEPMExceptionPolicy {
         [Parameter(ParameterSetName = 'LinuxExtensionException')]
         [ValidateSet(
             'AllScans',
-            'Auto-Protect',
+            'AutoProtect',
             'ScheduledAndOndemand'
         )]
         [string] 
@@ -607,6 +632,54 @@ function Update-SEPMExceptionPolicy {
 
             # Add the extension exception parameters to the body structure
             $ObjBody.AddLinuxExtensionList($LinuxExtensionHashTable)
+        }
+
+        # ApplicationToMonitorException
+        if ($ApplicationToMonitorException) {
+            switch ($PSBoundParameters.Keys) {
+                "DeleteException" {
+                    $ExceptionParams.deleted = $true
+                }
+                "Name" {
+                    $ExceptionParams.name = $Name
+                }
+            }
+
+            # Create application exception object with CreateApplicationHashtable
+            # Method parameters have to be in the same order as in the method definition
+            $ApplicationHashTable = $ObjBody.CreateApplicationsToMonitorHashtable(
+                $ExceptionParams.deleted,
+                $ExceptionParams.RulestateEnabled,
+                $RulestateSource,
+                $ExceptionParams.name
+            )
+
+            # Add the application exception parameters to the body structure
+            $ObjBody.AddApplicationsToMonitor($ApplicationHashTable)
+        }
+
+        # WebdomainException
+        if ($WebdomainException) {
+            switch ($PSBoundParameters.Keys) {
+                "DeleteException" {
+                    $ExceptionParams.deleted = $true
+                }
+                "Name" {
+                    $ExceptionParams.name = $Name
+                }
+            }
+
+            # Create application exception object with CreateApplicationHashtable
+            # Method parameters have to be in the same order as in the method definition
+            $WebdomainHashTable = $ObjBody.CreateWebdomainsHashtable(
+                $ExceptionParams.deleted,
+                $ExceptionParams.RulestateEnabled,
+                $RulestateSource,
+                $ExceptionParams.name
+            )
+
+            # Add the application exception parameters to the body structure
+            $ObjBody.AddWebdomains($WebdomainHashTable)
         }
 
         # Common parameters
