@@ -8,6 +8,10 @@ function Get-SEPMExceptionPolicy {
     .PARAMETER PolicyName    
         The name of the policy to get the details of
         Is a required parameter
+    .PARAMETER List
+        List a specific exception category
+        Valid values are "files", "directories", "webdomains"
+        # TODO : add all the other exception types in example
     .PARAMETER SkipCertificateCheck
         Skip certificate check
     .EXAMPLE
@@ -23,7 +27,47 @@ function Get-SEPMExceptionPolicy {
         name                           Standard Servers - Exception policy
         lastmodifiedtime               1646398353107
 
-        Shows an example of getting the Exception policy details for the policy named "Standard Servers - Exception policy"
+        Shows an example of getting the Exception policy details for the policy named "Workstations Exception Policy
+    .EXAMPLE
+        PS C:\PSSymantecSEPM> Get-SEPMExceptionPolicy -PolicyName "AB - Testing - API" -List files | Format-Table
+
+        SONAR rulestate.enabled rulestate.source scancategory pathvariable path                                        applicationcontrol securityrisk recursive Platform
+        ----- ----------------- ---------------- ------------ ------------ ----                                        ------------------ ------------ --------- --------
+        False               True PSSymantecSEPM   AutoProtect  [NONE]       C:\Temp\File5.exe                                        False         True     False Windows
+        True                True PSSymantecSEPM   AutoProtect  [NONE]       C:\Temp\File.exe                                          True         True     False Windows
+                            True                               [NONE]       /applications/test/SONAR                                                              Mac
+                            True                               [NONE]       /Applications/test/TestFolder                                                         Mac
+
+        Gets Exception details for the policy named "Workstations Exception Policy" and listing only the files exceptions
+    .EXAMPLE
+        PS C:\PSSymantecSEPM> Get-SEPMExceptionPolicy -PolicyName "AB - Testing - API" -List directories | Format-Table
+
+        rulestate.enabled scancategory scantype           pathvariable directory                                   recursive Platform
+        ----------------- ------------ --------           ------------ ---------                                   --------- --------
+                    True AutoProtect  SecurityRisk       [NONE]       C:\Temp\SecurityRiskAP\                         False Windows
+                    True AllScans     SONAR              [NONE]       C:\Temp\SonarWithSubfolders\                     True Windows
+                    True AllScans     ApplicationControl [NONE]       C:\Temp\AppControlException\                     True Windows
+                    True AllScans     All                [NONE]       C:\Temp\FolderWithSubfoldersAllScans\            True Windows
+                    True AllScans                        [NONE]       /home/user1/ExcludedFolderWithSubfolders         True Linux
+
+        Gets Exception details for the policy named "Workstations Exception Policy" and listing only the directories exceptions
+    .EXAMPLE
+        PS C:\PSSymantecSEPM> Get-SEPMExceptionPolicy -PolicyName "AB - Testing - API" -List webdomains | Format-Table
+
+        rulestate.enabled rulestate.source domain
+        ----------------- ---------------- ------
+                    True PSSymantecSEPM   HTTPS://test.com
+                    True                  HTTP://test.com
+                    True PSSymantecSEPM   HTTP://8.8.8.8
+            
+        Gets Exception details for the policy named "Workstations Exception Policy" and listing only the webdomains exceptions
+    .EXAMPLE
+        PS C:\PSSymantecSEPM> Get-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -List extensions | Format-Table
+
+        rulestate.enabled scancategory extensions.1    extensions.2    Platform
+        ----------------- ------------ ------------    ------------    --------
+                    True AllScans     tmp             extension2      Windows
+                    True AutoProtect  dk.tmp          extension2      Linux
 #>
 
     [CmdletBinding()]
@@ -41,7 +85,13 @@ function Get-SEPMExceptionPolicy {
         # Skip certificate check
         [Parameter()]
         [switch]
-        $SkipCertificateCheck
+        $SkipCertificateCheck,
+
+        # List a specific exception category
+        [Parameter()]
+        [ValidateSet("files", "directories", "webdomains", "extensions")]
+        [String]
+        $List
     )
 
     begin {
@@ -97,8 +147,76 @@ function Get-SEPMExceptionPolicy {
         # This is to ensure that the properties are available when the object is returned
         # refer to PSType SEPM.ExceptionPolicy for more details
         $null = $resp.lastModifiedTimeDate
+
+        # If a specific list is requested, return only that list
+        switch ($List) {
+            "files" {
+                $files = @()
+                # Add the Windows platform to the files
+                foreach ($f in $resp.configuration.files) {
+                    $f["Platform"] = "Windows"
+                    $files += $f
+                }
+
+                # Add the Mac platform to the files
+                foreach ($f in $resp.configuration.mac.files) {
+                    $f["Platform"] = "Mac"
+                    $files += $f
+                }
+
+                # TODO : 01/23/2024 -  Linux file exception is not a supported exception type in SEPM
+                # Add the Linux platform to the files
+                # foreach ($f in $resp.configuration.linux.files) {
+                #     $f["Platform"] = "Linux"
+                #     $files += $f
+                # }
+
+                return $files | ConvertTo-FlatObject
+            }
+            "directories" {
+                $directories = @()
+                # Add the Windows platform to the directories
+                foreach ($d in $resp.configuration.directories) {
+                    $d["Platform"] = "Windows"
+                    $directories += $d
+                }
+
+                # TODO : 01/23/2024 - Mac directory exception is not a supported exception type in SEPM
+                # Add the Mac platform to the directories
+                # foreach ($d in $resp.configuration.mac.directories) {
+                #     $d["Platform"] = "Mac"
+                #     $directories += $d
+                # }
+
+                # Add the Linux platform to the directories
+                foreach ($d in $resp.configuration.linux.directories) {
+                    $d["Platform"] = "Linux"
+                    $directories += $d
+                }
+
+                return $directories | ConvertTo-FlatObject
+            }
+            "webdomains" {
+                return $resp.configuration.webdomains | ConvertTo-FlatObject
+            }
+            "extensions" {
+                $extensions = @()
+                # Add the Windows platform to the extensions
+                foreach ($e in $resp.configuration.extension_list) {
+                    $e["Platform"] = "Windows"
+                    $extensions += $e
+                }
+
+                # Add the Linux platform to the extensions
+                foreach ($e in $resp.configuration.linux.extension_list) {
+                    $e["Platform"] = "Linux"
+                    $extensions += $e
+                }
+
+                return $extensions | ConvertTo-FlatObject
+            }
+            Default { return $resp }
+        }
         
-        # return the response
-        return $resp
     }
 }
