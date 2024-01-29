@@ -103,52 +103,55 @@ function Update-SEPMExceptionPolicy {
         Using splatting, excludes the InternalApplication.exe file located in the C:\MyCorp directory from the SONAR type of scan
     
     .EXAMPLE
-    $params = @{
-        PolicyName = "Workstations Exception Policy"
-        Path = "C:\MyCorp\InternalApplication.exe"
-        DeleteException = $true
-    }
-    Update-SEPMExceptionPolicy @params
+        $params = @{
+            PolicyName = "Workstations Exception Policy"
+            WindowsFileException = $true
+            Path = "C:\MyCorp\InternalApplication.exe"
+            DeleteException = $true
+        }
+        Update-SEPMExceptionPolicy @params
+
+        Using splatting, deletes the exception for the InternalApplication.exe file located in the C:\MyCorp directory
     
     .EXAMPLE
-    Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -Path "C:\MyCorp\InternalApplication.exe" -DeleteException
+        Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -Path "C:\MyCorp\InternalApplication.exe" -DeleteException
 
-    Same example without splatting, deletes the exception for the InternalApplication.exe file located in the C:\MyCorp directory
+        Same example without splatting, deletes the exception for the InternalApplication.exe file located in the C:\MyCorp directory
     
     .EXAMPLE
-    Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -WindowsFileException -Path "C:\Temp\File5.exe" -SecurityRiskCategory AutoProtect
+        Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -WindowsFileException -Path "C:\Temp\File5.exe" -SecurityRiskCategory AutoProtect
 
-    Excludes the File5.exe file located in the C:\Temp directory from the AutoProtect type of scan
+        Excludes the File5.exe file located in the C:\Temp directory from the AutoProtect type of scan
     
     .EXAMPLE
-    Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -WindowsExtensionException extension1, extension2
+        Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -WindowsExtensionException extension1, extension2
 
-    Excludes the extension1 and extension2 extensions from all types of scans
+        Excludes the extension1 and extension2 extensions from all types of scans
     
     .EXAMPLE
-    Update-SEPMExceptionPolicy -PolicyName "Exception policy - Workstations" -LinuxExtensionException extension1, extension2 -SecurityRiskCategory ScheduledAndOndemand
+        Update-SEPMExceptionPolicy -PolicyName "Exception policy - Workstations" -LinuxExtensionException extension1, extension2 -SecurityRiskCategory ScheduledAndOndemand
 
-    Excludes the extension1 and extension2 extensions from the ScheduledAndOndemand type of scan
+        Excludes the extension1 and extension2 extensions from the ScheduledAndOndemand type of scan
     
     .EXAMPLE
-    Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -MacFileException -MacPath "/home/personal/myfile.pdf"
+        Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -MacFileException -MacPath "/home/personal/myfile.pdf"
 
-    Excludes the myfile.pdf file located in the /home/personal directory from all types of scans
+        Excludes the myfile.pdf file located in the /home/personal directory from all types of scans
     
     .EXAMPLE
-    Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -MacFileException -MacPath "/home/personal/myfile.pdf" -DeleteException
+        Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -MacFileException -MacPath "/home/personal/myfile.pdf" -DeleteException
 
-    Deletes the exception for the myfile.pdf file located in the /home/personal directory
-
-    .EXAMPLE
-    Update-SEPMExceptionPolicy -PolicyName "Exception policy - Workstations" -ApplicationToMonitorException -Name "myapp.exe"
-
-    Adds the myapp.exe application to the list of applications to monitor
+        Deletes the exception for the myfile.pdf file located in the /home/personal directory
 
     .EXAMPLE
-    Update-SEPMExceptionPolicy -PolicyName "Exception policy - Workstations" -LinuxFolderException -LinuxPath /home/user/myfolder -SecurityRiskCategory ScheduledAndOndemand 
+        Update-SEPMExceptionPolicy -PolicyName "Exception policy - Workstations" -ApplicationToMonitorException -Name "myapp.exe"
 
-    Adds the /home/user/myfolder folder to the list of folders to exclude from the ScheduledAndOndemand type of scan
+        Adds the myapp.exe application to the list of applications to monitor
+
+    .EXAMPLE
+        Update-SEPMExceptionPolicy -PolicyName "Exception policy - Workstations" -LinuxFolderException -LinuxPath /home/user/myfolder -SecurityRiskCategory ScheduledAndOndemand 
+
+        Adds the /home/user/myfolder folder to the list of folders to exclude from the ScheduledAndOndemand type of scan
     #>
     
     
@@ -169,7 +172,6 @@ function Update-SEPMExceptionPolicy {
 
         # Description
         [Parameter()]
-        # [Alias('PolicyDescription')]
         [String]
         $PolicyDescription,
 
@@ -413,7 +415,7 @@ function Update-SEPMExceptionPolicy {
         # Update URI with Policy ID
         $URI = $URI + "/" + $PolicyID
 
-        # Get the skeleton of the body structure to update the exception policy
+        # Instantiates the skeleton of the body structure to update the exception policy
         $ObjBody = [SEPMPolicyExceptionsStructure]::new()
 
         # Update the body structure with the mandatory parameters
@@ -447,17 +449,6 @@ function Update-SEPMExceptionPolicy {
                 "DeleteException" {
                     $ExceptionParams.deleted = $true
                 }
-                # # Looks like this is not used in SEPM
-                # # TODO verify this RulestateEnabled / RulestateDisabled
-                # "RulestateEnabled" {
-                #     $ExceptionParams.RulestateEnabled = $true
-                # }
-                # "RulestateDisabled" {
-                #     $ExceptionParams.RulestateEnabled = $false
-                # }
-                # "RulestateSource" {
-                #     $ExceptionParams.RulestateSource = $RulestateSource
-                # }
                 "SecurityRiskCategory" {
                     $ExceptionParams.securityrisk = $true
                     $ExceptionParams.scancategory = $SecurityRiskCategory
@@ -514,12 +505,6 @@ function Update-SEPMExceptionPolicy {
                 "DeleteException" {
                     $ExceptionParams.deleted = $true
                 }
-                # "RulestateEnabled" {
-                #     $ExceptionParams.RulestateEnabled = $true
-                # }
-                # "RulestateSource" {
-                #     $ExceptionParams.RulestateSource = $RulestateSource
-                # }
                 "SecurityRiskCategory" {
                     # SecurityRiskCategory can only be used if the ScanType parameter is 'SecurityRisk'
                     if ($ScanType -eq 'SecurityRisk') {
@@ -582,7 +567,6 @@ function Update-SEPMExceptionPolicy {
                     }
                     $ExceptionParams.extensions = $extensionList
                 }
-                # TODO add scan type for WindowsExtensionException
                 "SecurityRiskCategory" {
                     $ExceptionParams.scancategory = $SecurityRiskCategory
                 }
@@ -643,12 +627,6 @@ function Update-SEPMExceptionPolicy {
                 "DeleteException" {
                     $ExceptionParams.deleted = $true
                 }
-                # "RulestateEnabled" {
-                #     $ExceptionParams.RulestateEnabled = $true
-                # }
-                # "RulestateSource" {
-                #     $ExceptionParams.RulestateSource = $RulestateSource
-                # }
                 "SecurityRiskCategory" {
                     $ExceptionParams.securityrisk = $true
                     $ExceptionParams.scancategory = $SecurityRiskCategory
@@ -801,7 +779,7 @@ function Update-SEPMExceptionPolicy {
             $resp = Invoke-ABRestMethod -params $params
         } catch {
             if ($_.Exception.Message -like '*are not allowed in path.*') {
-                Write-Warning -Message "Error: $_. This is linked to a known issue. Requires SEPM 14.3 RU8"
+                Write-Warning -Message "Error: $_. This is linked to a known issue. Fixed in SEPM 14.3 RU8"
             } else {
                 Write-Warning -Message "Error: $_"
             }
