@@ -228,16 +228,7 @@ function Add-SEPMWindowsFileException {
             Body        = $Policy.ObjBody | ConvertTo-Json -Depth 100
         }
 
-        try {
-            $resp = Invoke-ABRestMethod -params $params
-        } catch {
-            if ($_.Exception.Message -like '*are not allowed in path.*') {
-                Write-Warning -Message "Error: $_. This is linked to a known issue. Fixed in SEPM 14.3 RU8"
-            } else {
-                Write-Warning -Message "Error: $_"
-            }
-        }
+        $resp = Invoke-ABRestMethod -params $params
         return $resp
     }
-    
 }
