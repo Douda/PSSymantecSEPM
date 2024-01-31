@@ -29,15 +29,7 @@ class SEPMPolicyExceptionsStructure {
                 directories    = [System.Collections.Generic.List[object]]::new()
                 extension_list = [object]::new()
             }
-            extension_list             = [object]@{
-                deleted      = $null
-                rulestate    = [object]@{
-                    enabled = $null
-                    source  = $null
-                }
-                scancategory = $null
-                extensions   = [System.Collections.Generic.List[object]]::new()
-            }
+            extension_list             = [object]::new()
             knownrisks                 = [System.Collections.Generic.List[object]]::new()
             tamper_files               = [System.Collections.Generic.List[object]]::new()
             dns_and_host_applications  = [System.Collections.Generic.List[object]]::new()
@@ -247,6 +239,76 @@ class SEPMPolicyExceptionsStructure {
         [hashtable] $directory # Use CreateDirectoryHashtable method
     ) {
         $this.configuration.directories.Add($directory)
+    }
+
+    # Method to create extensions hashtable
+    [hashtable] CreateExtensionListHashtable(
+        [Nullable[bool]] $deleted = $null,
+        [Nullable[bool]] $rulestate_enabled = $null,
+        [string] $rulestate_source = "PSSymantecSEPM",
+        # $extensions is a PSOBject list
+        [string] $scancategory = "",
+        [PSObject[]] $extensions = @()
+    ) {
+        # return @{
+        #     deleted     = $deleted
+        #     rulestate   = [PSCustomObject]@{
+        #         enabled = $rulestate_enabled
+        #         source  = $rulestate_source
+        #     }
+        #     extensions  = $extensions
+        # }
+
+        # Create an empty hashtable
+        $HashTable = @{}
+
+        # Add key/value pairs to the hashtable only if the value is not $null or empty
+        if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
+        if (![string]::IsNullOrEmpty($extensions)) { $HashTable['extensions'] = $extensions }
+        if (![string]::IsNullOrEmpty($scancategory)) { $HashTable['scancategory'] = $scancategory }
+
+        # Verify if $Extensions is not an empty list
+        if ($extensions.Count -eq 0) {
+            throw "The 'extensions' parameter is mandatory and cannot be an empty list."
+        } else {
+            # Verify if $Extensions is not an empty list
+            foreach ($extension in $extensions) {
+                if ([string]::IsNullOrEmpty($extension)) {
+                    throw "The 'extensions' parameter is mandatory and cannot be an empty list."
+                }
+            }
+        }
+
+        # Add 'extensions' to the main hashtable
+        $HashTable['extensions'] = $extensions
+
+        # RULESTATE
+        # Create an empty hashtable for 'rulestate'
+        $rulestate = @{}
+
+        # Add 'enabled' to 'rulestate' only if it's not $null
+        if ($null -ne $rulestate_enabled) {
+            $rulestate['enabled'] = $rulestate_enabled
+        }
+
+        # Add 'source' to 'rulestate' only if it's not $null or empty
+        if (![string]::IsNullOrEmpty($rulestate_source)) {
+            $rulestate['source'] = $rulestate_source
+        }
+
+        # Add 'rulestate' to the main hashtable only if it's not empty
+        if ($rulestate.Count -gt 0) {
+            $HashTable['rulestate'] = [PSCustomObject]$rulestate
+        }
+
+        return $HashTable
+    }
+
+    # Method to add extensions
+    [void] AddExtensionsList(
+        [hashtable] $extensions # Use CreateExtensionListHashtable method
+    ) {
+        $this.configuration.extension_list = $extensions
     }
     
     # Method to create a webdomains hashtable
@@ -692,7 +754,7 @@ class SEPMPolicyExceptionsStructure {
     }
 
     # Method to create a linux_directories hashtable
-    [hashtable] CreateLinuxDirectoriesHashtable(
+    [hashtable] CreateLinuxDirectoryHashtable(
         [Nullable[bool]] $deleted = $null,
         [Nullable[bool]] $rulestate_enabled = $null,
         [string] $rulestate_source = "PSSymantecSEPM",
@@ -757,8 +819,8 @@ class SEPMPolicyExceptionsStructure {
     }
 
     # Method to add linux_directories
-    [void] AddLinuxDirectories(
-        [hashtable] $linux_directories # Use CreateLinuxDirectoriesHashtable method
+    [void] AddLinuxDirectory(
+        [hashtable] $linux_directories # Use CreateLinuxDirectoryHashtable method
     ) {
         $this.configuration.linux.directories.Add($linux_directories)
     }
@@ -769,6 +831,7 @@ class SEPMPolicyExceptionsStructure {
         [Nullable[bool]] $rulestate_enabled = $null,
         [string] $rulestate_source = "PSSymantecSEPM",
         # $extensions is a PSOBject list
+        [string] $scancategory = "",
         [PSObject[]] $extensions = @()
     ) {
         # return @{
@@ -786,6 +849,7 @@ class SEPMPolicyExceptionsStructure {
         # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($extensions)) { $HashTable['extensions'] = $extensions }
+        if (![string]::IsNullOrEmpty($scancategory)) { $HashTable['scancategory'] = $scancategory }
 
         # Verify if $Extensions is not an empty list
         if ($extensions.Count -eq 0) {
@@ -828,7 +892,8 @@ class SEPMPolicyExceptionsStructure {
     [void] AddLinuxExtensionList(
         [hashtable] $linux_extension_list # Use CreateLinuxExtensionListHashtable method
     ) {
-        $this.configuration.linux.extension_list.Add($linux_extension_list)
+        # $this.configuration.linux.extension_list.Add($linux_extension_list)
+        $this.configuration.linux.extension_list = $linux_extension_list
     }
 
 

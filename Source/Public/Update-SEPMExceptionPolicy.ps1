@@ -55,12 +55,23 @@ function Update-SEPMExceptionPolicy {
     .PARAMETER AllScans
         Add all types of scans to the exception
         Based on the exception type
+        AllScans is default if no scan type is provided
     .PARAMETER ExcludeChildProcesses
         Exclude child processes from the exception
         Specific to Application Control type of scan
         Requires ApplicationControl to be explicitly set to true
-    .PARAMETER Recursive
-        Add the recursive option to the exception
+    .PARAMETER IncludeSubFolders
+        Include subfolders in the exception
+        Specific to Windows Folder Exception
+    .PARAMETER ScanType
+        The type of scan to add to the exception
+        Valid values are :
+            SecurityRisk
+            SONAR
+            ApplicationControl
+            All
+        Default value is All
+    
     .EXAMPLE
         $params = @{
             PolicyName = "Workstations Exception Policy"
@@ -74,10 +85,12 @@ function Update-SEPMExceptionPolicy {
 
         Using splatting, excludes the InternalApplication.exe file located in the Desktop directory from all types of scans
         Get-SEPMExceptionPolicy command verifies that the exception has been added to the policy
+    
     .EXAMPLE
         Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -Description "Default Workstations policy" -WindowsFileException -AllScans -PathVariable "[COMMON_DESKTOPDIRECTORY]" -Path "InternalApplication.exe"
 
         Same example without splatting, excludes the InternalApplication.exe file located in the Desktop directory from all types of scans
+    
     .EXAMPLE
         $params = @{
             PolicyName = "Workstations Exception Policy"
@@ -88,15 +101,57 @@ function Update-SEPMExceptionPolicy {
         Update-SEPMExceptionPolicy @params
 
         Using splatting, excludes the InternalApplication.exe file located in the C:\MyCorp directory from the SONAR type of scan
+    
     .EXAMPLE
-    $params = @{
-        PolicyName = "Workstations Exception Policy"
-        Path = "C:\MyCorp\InternalApplication.exe"
-        DeleteException = $true
-    }
-    Update-SEPMExceptionPolicy @params
+        $params = @{
+            PolicyName = "Workstations Exception Policy"
+            WindowsFileException = $true
+            Path = "C:\MyCorp\InternalApplication.exe"
+            DeleteException = $true
+        }
+        Update-SEPMExceptionPolicy @params
 
-    Using splatting, deletes the exception for the InternalApplication.exe file located in the C:\MyCorp directory
+        Using splatting, deletes the exception for the InternalApplication.exe file located in the C:\MyCorp directory
+    
+    .EXAMPLE
+        Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -Path "C:\MyCorp\InternalApplication.exe" -DeleteException
+
+        Same example without splatting, deletes the exception for the InternalApplication.exe file located in the C:\MyCorp directory
+    
+    .EXAMPLE
+        Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -WindowsFileException -Path "C:\Temp\File5.exe" -SecurityRiskCategory AutoProtect
+
+        Excludes the File5.exe file located in the C:\Temp directory from the AutoProtect type of scan
+    
+    .EXAMPLE
+        Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -WindowsExtensionException extension1, extension2
+
+        Excludes the extension1 and extension2 extensions from all types of scans
+    
+    .EXAMPLE
+        Update-SEPMExceptionPolicy -PolicyName "Exception policy - Workstations" -LinuxExtensionException extension1, extension2 -SecurityRiskCategory ScheduledAndOndemand
+
+        Excludes the extension1 and extension2 extensions from the ScheduledAndOndemand type of scan
+    
+    .EXAMPLE
+        Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -MacFileException -MacPath "/home/personal/myfile.pdf"
+
+        Excludes the myfile.pdf file located in the /home/personal directory from all types of scans
+    
+    .EXAMPLE
+        Update-SEPMExceptionPolicy -PolicyName "Workstations Exception Policy" -MacFileException -MacPath "/home/personal/myfile.pdf" -DeleteException
+
+        Deletes the exception for the myfile.pdf file located in the /home/personal directory
+
+    .EXAMPLE
+        Update-SEPMExceptionPolicy -PolicyName "Exception policy - Workstations" -ApplicationToMonitorException -Name "myapp.exe"
+
+        Adds the myapp.exe application to the list of applications to monitor
+
+    .EXAMPLE
+        Update-SEPMExceptionPolicy -PolicyName "Exception policy - Workstations" -LinuxFolderException -LinuxPath /home/user/myfolder -SecurityRiskCategory ScheduledAndOndemand 
+
+        Adds the /home/user/myfolder folder to the list of folders to exclude from the ScheduledAndOndemand type of scan
     #>
     
     
@@ -117,7 +172,6 @@ function Update-SEPMExceptionPolicy {
 
         # Description
         [Parameter()]
-        # [Alias('PolicyDescription')]
         [String]
         $PolicyDescription,
 
@@ -141,6 +195,47 @@ function Update-SEPMExceptionPolicy {
         [switch]
         $WindowsFolderException,
 
+        # Windows Extension Exception
+        [Parameter(ParameterSetName = 'WindowsExtensionException')]
+        [ValidateNotNullOrEmpty()]
+        [string[]]
+        $WindowsExtensionException,
+
+        # Mac File Exception
+        [Parameter(ParameterSetName = 'MacFileException')]
+        [switch]
+        $MacFileException,
+
+        # Linux Folder Exception
+        [Parameter(ParameterSetName = 'LinuxFolderException')]
+        [switch]
+        $LinuxFolderException,
+
+        # Linux Extension Exception
+        [Parameter(ParameterSetName = 'LinuxExtensionException')]
+        [ValidateNotNullOrEmpty()]
+        [string[]]
+        $LinuxExtensionException,
+
+        # Application to Monitor
+        [Parameter(ParameterSetName = 'ApplicationToMonitorException')]
+        [ValidateNotNullOrEmpty()]
+        [switch]
+        $ApplicationToMonitorException,
+
+        # Application Name
+        [Parameter(ParameterSetName = 'ApplicationToMonitorException', Mandatory = $true)]
+        [Parameter(ParameterSetName = 'WebdomainException', Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $Name,
+
+        # Webdomain
+        [Parameter(ParameterSetName = 'WebdomainException')]
+        [ValidateNotNullOrEmpty()]
+        [switch]
+        $WebdomainException,
+
         # Sonar
         [Parameter(ParameterSetName = 'WindowsFileException')]
         [switch]
@@ -149,33 +244,45 @@ function Update-SEPMExceptionPolicy {
         # deleted
         [Parameter(ParameterSetName = 'WindowsFileException')]
         [Parameter(ParameterSetName = 'WindowsFolderException')]
+        [Parameter(ParameterSetName = 'WindowsExtensionException')]
+        [Parameter(ParameterSetName = 'MacFileException')]
+        [Parameter(ParameterSetName = 'LinuxFolderException')]
+        [Parameter(ParameterSetName = 'LinuxExtensionException')]
+        [Parameter(ParameterSetName = 'ApplicationToMonitorException')]
+        [Parameter(ParameterSetName = 'WebdomainException')]
         [switch]
         $DeleteException,
 
         # Looks like this is not used in SEPM
-        # RulestateEnabled
-        [Parameter(ParameterSetName = 'WindowsFileException')]
-        [Parameter(ParameterSetName = 'WindowsFolderException')]
-        [Alias('EnableRule')]
-        [switch]$RulestateEnabled,
+        # # RulestateEnabled
+        # [Parameter(ParameterSetName = 'WindowsFileException')]
+        # [Parameter(ParameterSetName = 'WindowsFolderException')]
+        # [Parameter(ParameterSetName = 'MacFileException')]
+        # [Alias('EnableRule')]
+        # [switch]$RulestateEnabled,
 
-        # RulestateDisabled
-        [Parameter(ParameterSetName = 'WindowsFileException')]
-        [Parameter(ParameterSetName = 'WindowsFolderException')]
-        [Alias('DisableRuleState')]
-        [switch]$RulestateDisabled,
+        # # RulestateDisabled
+        # [Parameter(ParameterSetName = 'WindowsFileException')]
+        # [Parameter(ParameterSetName = 'WindowsFolderException')]
+        # [Parameter(ParameterSetName = 'MacFileException')]
+        # [Alias('DisableRuleState')]
+        # [switch]$RulestateDisabled,
 
-        [Parameter(ParameterSetName = 'WindowsFileException')]
-        [Parameter(ParameterSetName = 'WindowsFolderException')]
-        [string] 
-        $RulestateSource = "PSSymantecSEPM",
+        # [Parameter(ParameterSetName = 'WindowsFileException')]
+        # [Parameter(ParameterSetName = 'WindowsFolderException')]
+        # [Parameter(ParameterSetName = 'MacFileException')]
+        # [string] 
+        # $RulestateSource = "PSSymantecSEPM",
 
         # Scancategory - requires securityrisk to be set to true
         [Parameter(ParameterSetName = 'WindowsFileException')]
         [Parameter(ParameterSetName = 'WindowsFolderException')]
+        [Parameter(ParameterSetName = 'LinuxFolderException')]
+        [Parameter(ParameterSetName = 'LinuxExtensionException')]
+        [Parameter(ParameterSetName = 'WindowsExtensionException')]
         [ValidateSet(
             'AllScans',
-            'Auto-Protect',
+            'AutoProtect',
             'ScheduledAndOndemand'
         )]
         [string] 
@@ -198,14 +305,54 @@ function Update-SEPMExceptionPolicy {
             '[USER_PROFILE]', 
             '[WINDOWS]'
         )]
+        [Alias('WindowsPathVariable')]
         [string] 
         $PathVariable = "[NONE]",
 
+        # Mac Pathvariable
+        [Parameter(ParameterSetName = 'MacFileException')]
+        [ValidateSet(
+            '[NONE]', 
+            '[HOME]', 
+            '[APPLICATION]', 
+            '[LIBRARY ]'
+        )]
+        [string]
+        $MacPathVariable = "[NONE]",
+
+        # Linux Pathvariable
+        [Parameter(ParameterSetName = 'LinuxFolderException')]
+        [ValidateSet(
+            '[NONE]', 
+            '[HOME]', 
+            '[ROOT]', 
+            '[BIN]', 
+            '[ETC]', 
+            '[USR]', 
+            '[OPT]'
+        )]
+        [string]
+        $LinuxPathVariable = "[NONE]",
+
         # Path
-        [Parameter(ParameterSetName = 'WindowsFileException')]
-        [Parameter(ParameterSetName = 'WindowsFolderException')]
+        [Parameter(ParameterSetName = 'WindowsFileException', Mandatory = $true)]
+        [Parameter(ParameterSetName = 'WindowsFolderException', Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('WindowsPath')]
         [string] 
         $Path,
+
+        # Mac Path
+        [Parameter(ParameterSetName = 'MacFileException', Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $MacPath,
+
+        # Linux Path
+        [Parameter(ParameterSetName = 'LinuxFolderException', Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $LinuxPath,
 
         # Applicationcontrol
         [Parameter(ParameterSetName = 'WindowsFileException')]
@@ -225,8 +372,9 @@ function Update-SEPMExceptionPolicy {
 
         # Recursive 
         [Parameter(ParameterSetName = 'WindowsFolderException')]
+        [Parameter(ParameterSetName = 'LinuxFolderException')]
         [switch]
-        $Recursive,
+        $IncludeSubFolders,
 
         # ScanType 
         [Parameter(ParameterSetName = 'WindowsFolderException')]
@@ -237,9 +385,9 @@ function Update-SEPMExceptionPolicy {
             'All'
         )]
         [string]
-        $ScanType
+        $ScanType = 'All'
     )
-    
+
     begin {
         # initialize the configuration
         $test_token = Test-SEPMAccessToken
@@ -255,6 +403,9 @@ function Update-SEPMExceptionPolicy {
             "Content"       = 'application/json'
         }
         $policies = Get-SEPMPoliciesSummary
+
+        # hardcode the RulestateSource to the module name
+        $RulestateSource = "PSSymantecSEPM"
     }
 
     process {
@@ -264,7 +415,7 @@ function Update-SEPMExceptionPolicy {
         # Update URI with Policy ID
         $URI = $URI + "/" + $PolicyID
 
-        # Get the skeleton of the body structure to update the exception policy
+        # Instantiates the skeleton of the body structure to update the exception policy
         $ObjBody = [SEPMPolicyExceptionsStructure]::new()
 
         # Update the body structure with the mandatory parameters
@@ -274,7 +425,7 @@ function Update-SEPMExceptionPolicy {
         $ExceptionParams = @{}
 
         # Common parameters
-        # Adding default values if not explicitely provided provided
+        # Adding default values if not explicitely provided
         # As $PSBoundParameters.Keys doesn't contain default parameters values
         if ($pathvariable -eq "[NONE]") {
             $ExceptionParams.pathvariable = "[NONE]"
@@ -298,17 +449,6 @@ function Update-SEPMExceptionPolicy {
                 "DeleteException" {
                     $ExceptionParams.deleted = $true
                 }
-                # Looks like this is not used in SEPM
-                # TODO verify this RulestateEnabled / RulestateDisabled
-                "RulestateEnabled" {
-                    $ExceptionParams.RulestateEnabled = $true
-                }
-                "RulestateDisabled" {
-                    $ExceptionParams.RulestateEnabled = $false
-                }
-                "RulestateSource" {
-                    $ExceptionParams.RulestateSource = $RulestateSource
-                }
                 "SecurityRiskCategory" {
                     $ExceptionParams.securityrisk = $true
                     $ExceptionParams.scancategory = $SecurityRiskCategory
@@ -331,6 +471,13 @@ function Update-SEPMExceptionPolicy {
                     $ExceptionParams.sonar = $true
                     $ExceptionParams.applicationcontrol = $true
                 }
+            }
+
+            # If no scan type is provided, default to AllScans
+            if (-not $ExceptionParams.securityrisk -and -not $ExceptionParams.sonar -and -not $ExceptionParams.applicationcontrol) {
+                $ExceptionParams.securityrisk = $true
+                $ExceptionParams.sonar = $true
+                $ExceptionParams.applicationcontrol = $true
             }
 
             # Create the file exception object with CreateFilesHashTable
@@ -358,18 +505,12 @@ function Update-SEPMExceptionPolicy {
                 "DeleteException" {
                     $ExceptionParams.deleted = $true
                 }
-                "RulestateEnabled" {
-                    $ExceptionParams.RulestateEnabled = $true
-                }
-                "RulestateSource" {
-                    $ExceptionParams.RulestateSource = $RulestateSource
-                }
                 "SecurityRiskCategory" {
-                    # SecurityRiskCategory can only be used if the ScanType parameter is 'SecurityRisk' or 'All'
-                    if ($ScanType -eq 'SecurityRisk' -or $ScanType -eq 'All') {
+                    # SecurityRiskCategory can only be used if the ScanType parameter is 'SecurityRisk'
+                    if ($ScanType -eq 'SecurityRisk') {
                         $ExceptionParams.scancategory = $SecurityRiskCategory
                     } else {
-                        throw "The SecurityRiskCategory parameter can only be used if the ScanType parameter is 'SecurityRisk' or 'All'"
+                        throw "The SecurityRiskCategory parameter can only be used if the ScanType parameter is 'SecurityRisk'"
                     }
                 }
                 "ScanType" {
@@ -381,7 +522,7 @@ function Update-SEPMExceptionPolicy {
                 "Path" {
                     $ExceptionParams.directory = $path
                 }
-                "Recursive" {
+                "IncludeSubFolders" {
                     $ExceptionParams.recursive = $true
                 }
                 "AllScans" {
@@ -390,7 +531,13 @@ function Update-SEPMExceptionPolicy {
                 }
             }
 
-            # Create folder the exception object with CreateDirectoryHashtable
+            # If no scan type is provided, default to AllScans
+            if (-not $ExceptionParams.scancategory -and -not $ExceptionParams.scantype) {
+                $ExceptionParams.scancategory = "AllScans"
+                $ExceptionParams.scantype = "All"
+            }
+
+            # Create folder exception object with CreateDirectoryHashtable
             # Method parameters have to be in the same order as in the method definition
             $DirectoryHashTable = $ObjBody.CreateDirectoryHashtable(
                 $ExceptionParams.deleted,
@@ -407,6 +554,198 @@ function Update-SEPMExceptionPolicy {
             $ObjBody.AddConfigurationDirectoriesExceptions($DirectoryHashTable)
         }
 
+        # WindowsExtensionException
+        if ($WindowsExtensionException) {
+            switch ($PSBoundParameters.Keys) {
+                "DeleteException" {
+                    $ExceptionParams.deleted = $true
+                }
+                "WindowsExtensionException" {
+                    $extensionList = @()
+                    foreach ($extension in $WindowsExtensionException) {
+                        $extensionList += $extension
+                    }
+                    $ExceptionParams.extensions = $extensionList
+                }
+                "SecurityRiskCategory" {
+                    $ExceptionParams.scancategory = $SecurityRiskCategory
+                }
+            }
+
+            # If no scan type is provided, default to AllScans
+            if (-not $ExceptionParams.scancategory) {
+                $ExceptionParams.scancategory = "AllScans"
+            }
+
+            # Create extension exception object with CreateExtensionHashtable
+            # Method parameters have to be in the same order as in the method definition
+            $ExtensionHashTable = $ObjBody.CreateExtensionListHashtable(
+                $ExceptionParams.deleted,
+                $ExceptionParams.RulestateEnabled,
+                $RulestateSource,
+                $ExceptionParams.scancategory,
+                $ExceptionParams.extensions
+            )
+
+            # Add the extension exception parameters to the body structure
+            $ObjBody.AddExtensionsList($ExtensionHashTable)
+        }
+
+        # MacFileException
+        if ($MacFileException) {
+            # TODO update mac for SONAR and SecurityRisk both in function and class
+            # Exception GUI shows SONAR & SecurityRisk as options but not the API
+            switch ($PSBoundParameters.Keys) {
+                "DeleteException" {
+                    $ExceptionParams.deleted = $true
+                }
+                "MacPathVariable" {
+                    $ExceptionParams.pathvariable = $MacPathVariable
+                }
+                "MacPath" {
+                    $ExceptionParams.path = $MacPath
+                }
+            }
+
+            # Create the file exception object with CreateFilesHashTable
+            # Method parameters have to be in the same order as in the method definition
+            $MacFilesHashTable = $ObjBody.CreateMacFilesHashtable(
+                $ExceptionParams.deleted,
+                $ExceptionParams.RulestateEnabled,
+                $RulestateSource,
+                $ExceptionParams.pathvariable,
+                $ExceptionParams.path
+            )
+
+            # Add the file exception parameters to the body structure
+            $ObjBody.AddMacFiles($MacFilesHashTable)
+        }
+
+        # LinuxFolderException
+        if ($LinuxFolderException) {
+            switch ($PSBoundParameters.Keys) {
+                "DeleteException" {
+                    $ExceptionParams.deleted = $true
+                }
+                "SecurityRiskCategory" {
+                    $ExceptionParams.securityrisk = $true
+                    $ExceptionParams.scancategory = $SecurityRiskCategory
+                }
+                "LinuxPathVariable" {
+                    $ExceptionParams.pathvariable = $LinuxPathVariable
+                }
+                "LinuxPath" {
+                    $ExceptionParams.directory = $LinuxPath
+                }
+                "IncludeSubFolders" {
+                    $ExceptionParams.recursive = $true
+                }
+                
+            }
+
+            # Create folder exception object with CreateDirectoryHashtable
+            # Method parameters have to be in the same order as in the method definition
+            $LinuxDirectoryHashTable = $ObjBody.CreateLinuxDirectoryHashtable(
+                $ExceptionParams.deleted,
+                $ExceptionParams.RulestateEnabled,
+                $RulestateSource,
+                $ExceptionParams.scancategory,
+                $ExceptionParams.pathvariable,
+                $ExceptionParams.directory,
+                $ExceptionParams.recursive
+            )
+
+            # Add the folder exception parameters to the body structure
+            $ObjBody.AddLinuxDirectory($LinuxDirectoryHashTable)
+        }
+
+        # LinuxExtensionException
+        if ($LinuxExtensionException) {
+            switch ($PSBoundParameters.Keys) {
+                "DeleteException" {
+                    $ExceptionParams.deleted = $true
+                }
+                "LinuxExtensionException" {
+                    $extensionList = @()
+                    foreach ($extension in $LinuxExtensionException) {
+                        $extensionList += $extension
+                    }
+                    $ExceptionParams.extensions = $extensionList
+                }
+                # TODO add scan type for LinuxExtensionException
+                "SecurityRiskCategory" {
+                    $ExceptionParams.scancategory = $SecurityRiskCategory
+                }
+            }
+
+            # If no scan type is provided, default to AllScans
+            if (-not $ExceptionParams.scancategory) {
+                $ExceptionParams.scancategory = "AllScans"
+            }
+
+            # Create extension exception object with CreateExtensionHashtable
+            # Method parameters have to be in the same order as in the method definition
+            $LinuxExtensionHashTable = $ObjBody.CreateLinuxExtensionListHashtable(
+                $ExceptionParams.deleted,
+                $ExceptionParams.RulestateEnabled,
+                $RulestateSource,
+                $ExceptionParams.scancategory,
+                $ExceptionParams.extensions
+            )
+
+            # Add the extension exception parameters to the body structure
+            $ObjBody.AddLinuxExtensionList($LinuxExtensionHashTable)
+        }
+
+        # ApplicationToMonitorException
+        if ($ApplicationToMonitorException) {
+            switch ($PSBoundParameters.Keys) {
+                "DeleteException" {
+                    $ExceptionParams.deleted = $true
+                }
+                "Name" {
+                    $ExceptionParams.name = $Name
+                }
+            }
+
+            # Create application exception object with CreateApplicationHashtable
+            # Method parameters have to be in the same order as in the method definition
+            $ApplicationHashTable = $ObjBody.CreateApplicationsToMonitorHashtable(
+                $ExceptionParams.deleted,
+                $ExceptionParams.RulestateEnabled,
+                $RulestateSource,
+                $ExceptionParams.name
+            )
+
+            # Add the application exception parameters to the body structure
+            $ObjBody.AddApplicationsToMonitor($ApplicationHashTable)
+        }
+
+        # WebdomainException
+        if ($WebdomainException) {
+            switch ($PSBoundParameters.Keys) {
+                "DeleteException" {
+                    $ExceptionParams.deleted = $true
+                }
+                "Name" {
+                    $ExceptionParams.name = $Name
+                }
+            }
+
+            # Create application exception object with CreateApplicationHashtable
+            # Method parameters have to be in the same order as in the method definition
+            $WebdomainHashTable = $ObjBody.CreateWebdomainsHashtable(
+                $ExceptionParams.deleted,
+                $ExceptionParams.RulestateEnabled,
+                $RulestateSource,
+                $ExceptionParams.name
+            )
+
+            # Add the application exception parameters to the body structure
+            $ObjBody.AddWebdomains($WebdomainHashTable)
+        }
+
+        # Common parameters
         # Verify if updates to the policy are needed
         switch ($psboundparameters.Keys) {
             "EnablePolicy" {
@@ -418,6 +757,7 @@ function Update-SEPMExceptionPolicy {
             "Description" {
                 $ObjBody.desc = $PolicyDescription
             }
+
         }
 
         # Optimize the body structure (remove empty properties)
@@ -435,12 +775,7 @@ function Update-SEPMExceptionPolicy {
             Body        = $ObjBody | ConvertTo-Json -Depth 100
         }
 
-        try {
-            $resp = Invoke-ABRestMethod -params $params
-        } catch {
-            Write-Warning -Message "Error: $_"
-        }
-
+        $resp = Invoke-ABRestMethod -params $params
         return $resp
     }
 }
