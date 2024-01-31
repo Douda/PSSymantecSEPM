@@ -38,6 +38,10 @@ Clear-SEPMAuthentication # clear the authentication
 PS C:\PSSymantecSEPM> Get-Command -Module PSSymantecSEPM | Select-Object -Property Name
 
 Add-SEPMFileFingerprintList
+Add-SEPMMacFileException
+Add-SEPMWindowsExtensionException
+Add-SEPMWindowsFileException
+Add-SEPMWindowsFolderException
 Clear-SEPMAuthentication
 Confirm-SEPMEventInfo
 Get-SEPClientDefVersions
@@ -64,7 +68,11 @@ Get-SEPMReplicationStatus
 Get-SEPMThreatStats
 Get-SEPMVersion
 Get-TDADPolicy
+Move-SEPClientGroup
 Remove-SEPMFileFingerprintList
+Remove-SEPMWindowsExtensionException
+Remove-SEPMWindowsFileException
+Remove-SEPMWindowsFolderException
 Reset-SEPMConfiguration
 Send-SEPMCommandGetFile
 Send-SEPMCommandQuarantine
@@ -110,6 +118,15 @@ version        clientsCount formattedVersion
 14.2.3335.1000            1 14.2.3 (14.2 RU3 MP3) build 1000
 14.3.510.0000            12 14.3 (14.3) build 0000
 14.3.558.0000            10 14.3 (14.3) build 0000
+```
+
+Move SEP Clients to a new group
+```PowerShell
+# Move a specific machine to a group
+PS C:\PSSymantecSEPM> Move-SEPClientGroup -ComputerName "MyComputer" -GroupName  "My Company\EMEA\Workstations"
+
+# Move multiple machines to a group via pipeline
+PS C:\PSSymantecSEPM> "MyComputer1","MyComputer2" | Move-SEPClientGroup -GroupName "My Company\EMEA\Workstations"
 ```
 
 Virus Definitions
