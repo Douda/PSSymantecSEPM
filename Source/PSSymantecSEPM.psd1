@@ -31,7 +31,7 @@
     Description       = 'Common set of tools to interact with Symantec Endpoint Protection Manager (SEPM) product'
 
     # Minimum version of the PowerShell engine required by this module
-    # PowerShellVersion = ''
+    PowerShellVersion    = '5.1'
 
     # Name of the PowerShell host required by this module
     # PowerShellHostName = ''
@@ -58,7 +58,7 @@
     # ScriptsToProcess = @()
 
     # Type files (.ps1xml) to be loaded when importing this module
-    TypesToProcess    = 'PSSymantecSEPM.Types.ps1xml'
+    TypesToProcess       = 'PSSymantecSEPM.Types.ps1xml'
 
     # Format files (.ps1xml) to be loaded when importing this module
     # FormatsToProcess = @()
@@ -67,16 +67,16 @@
     # NestedModules = @()
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport = @()
+    FunctionsToExport    = @()
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-    CmdletsToExport   = @()
+    CmdletsToExport      = @()
 
     # Variables to export from this module
-    VariablesToExport = '*'
+    VariablesToExport    = '*'
 
     # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-    AliasesToExport   = @()
+    AliasesToExport      = @()
 
     # DSC resources to export from this module
     # DscResourcesToExport = @()
@@ -88,12 +88,12 @@
     # FileList = @()
 
     # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
-    PrivateData       = @{
+    PrivateData          = @{
 
         PSData = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
-            # Tags = @()
+            # Tags                     = @("Symantec", "SEP", "SEPM", "Endpoint Protection")
 
             # A URL to the license for this module.
             LicenseUri               = 'https://github.com/Douda/PSSymantecSEPM/blob/main/LICENSE'
@@ -121,10 +121,10 @@
     } # End of PrivateData hashtable
 
     # HelpInfo URI of this module
-    # HelpInfoURI = ''
+    HelpInfoURI          = 'https://github.com/Douda/PSSymantecSEPM'
 
     # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
-    # DefaultCommandPrefix = ''
+    # DefaultCommandPrefix = 'AB'
 
 }
 
