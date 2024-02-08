@@ -129,6 +129,19 @@ PS C:\PSSymantecSEPM> Move-SEPClientGroup -ComputerName "MyComputer" -GroupName 
 PS C:\PSSymantecSEPM> "MyComputer1","MyComputer2" | Move-SEPClientGroup -GroupName "My Company\EMEA\Workstations"
 ```
 
+Update Exceptions policies
+```PowerShell
+# Add a new file exception to a policy
+# By default, the exception type is for every technologies (AutoProtect, SONAR, Application & Device Control)
+PS C:\PSSymantecSEPM> Add-SEPMWindowsFileException -PolicyName "Workstations Exception policy" -Path "C:\Program Files\MyApp\MyApp.exe"
+
+# Folder exception
+PS C:\PSSymantecSEPM> Add-SEPMWindowsFolderException -PolicyName "Workstations Exception policy" -Path "C:\Program Files\MyApp\"
+
+# Folder exception with subfolders
+PS C:\PSSymantecSEPM> Add-SEPMWindowsFolderException -PolicyName "Workstations Exception policy" -Path "C:\Program Files\MyApp\" -IncludeSubFolders
+```
+
 Virus Definitions
 ```PowerShell
 # SEP Virus Definitions
