@@ -6,9 +6,9 @@
 # -----------------------------------------------------------------------------
 
 @{
-    Path                     = "PSSymantecSEPM.psd1"
-    VersionedOutputDirectory = $true
-    CopyDirectories          = @(
+    Path                       = "PSSymantecSEPM.psd1"
+    UnversionedOutputDirectory = $true
+    CopyDirectories            = @(
         'en-US'
     )
 }
