@@ -7,5 +7,5 @@ $FullSemVer = dotnet-gitversion | ConvertFrom-Json | Select-Object -Expand FullS
 $ImportModulePath = $ModuleDevPath + "\Output\PSSymantecSEPM\PSSymantecSEPM.psm1"
 
 # Build Module
-Build-Module -SourcePath $BuildModuleSourcePath -SemVer $FullSemVer -UnversionedOutputDirectory
+Build-Module -SourcePath $BuildModuleSourcePath -SemVer $FullSemVer
 Import-Module -Name "$ImportModulePath" -Force
