@@ -36,53 +36,32 @@ Clear-SEPMAuthentication # clear the authentication
 ## List of commands
 ```PowerShell
 PS C:\PSSymantecSEPM> Get-Command -Module PSSymantecSEPM | Select-Object -Property Name
-
-Add-SEPMFileFingerprintList
-Add-SEPMMacFileException
-Add-SEPMWindowsExtensionException
-Add-SEPMWindowsFileException
-Add-SEPMWindowsFolderException
-Clear-SEPMAuthentication
-Confirm-SEPMEventInfo
-Get-SEPClientDefVersions
-Get-SEPClientInfectedStatus
-Get-SEPClientStatus
-Get-SEPClientVersion
-Get-SEPComputers
-Get-SEPFileDetails
-Get-SEPGUPList
-Get-SEPMAccessToken
-Get-SEPMAdmins
-Get-SEPMCommandStatus
-Get-SEPMDatabaseInfo
-Get-SEPMDomain
-Get-SEPMEventInfo
-Get-SEPMExceptionPolicy
-Get-SEPMFileFingerprintList
-Get-SEPMFirewallPolicy
-Get-SEPMGroups
-Get-SEPMIpsPolicy
-Get-SEPMLatestDefinition
-Get-SEPMPoliciesSummary
-Get-SEPMReplicationStatus
-Get-SEPMThreatStats
-Get-SEPMVersion
-Get-TDADPolicy
-Move-SEPClientGroup
-Remove-SEPMFileFingerprintList
-Remove-SEPMWindowsExtensionException
-Remove-SEPMWindowsFileException
-Remove-SEPMWindowsFolderException
-Reset-SEPMConfiguration
-Send-SEPMCommandGetFile
-Send-SEPMCommandQuarantine
-Set-SEPMAuthentication
-Set-SEPMConfiguration
-Start-SEPMReplication
-Start-SEPScan
-Update-SEPClient
-Update-SEPMFileFingerprintList
 ```
+| List                              | List                                 |
+| --------------------------------- | ------------------------------------ |
+| Add-SEPMFileFingerprintList       | Get-SEPClientDefVersions             |
+| Add-SEPMMacFileException          | Get-SEPClientInfectedStatus          |
+| Add-SEPMWindowsExtensionException | Get-SEPClientStatus                  |
+| Add-SEPMWindowsFileException      | Get-SEPClientVersion                 |
+| Add-SEPMWindowsFolderException    | Get-SEPComputers                     |
+| Clear-SEPMAuthentication          | Get-SEPFileDetails                   |
+| Confirm-SEPMEventInfo             | Get-SEPGUPList                       |
+| Get-SEPMAccessToken               | Get-SEPMAdmins                       |
+| Get-SEPMCommandStatus             | Get-SEPMDatabaseInfo                 |
+| Get-SEPMDomain                    | Get-SEPMEventInfo                    |
+| Get-SEPMExceptionPolicy           | Get-SEPMFileFingerprintList          |
+| Get-SEPMFirewallPolicy            | Get-SEPMGroups                       |
+| Get-SEPMIpsPolicy                 | Get-SEPMLatestDefinition             |
+| Get-SEPMPoliciesSummary           | Get-SEPMReplicationStatus            |
+| Get-SEPMThreatStats               | Get-SEPMVersion                      |
+| Get-TDADPolicy                    | Move-SEPClientGroup                  |
+| Remove-SEPMFileFingerprintList    | Remove-SEPMWindowsExtensionException |
+| Remove-SEPMWindowsFileException   | Remove-SEPMWindowsFolderException    |
+| Reset-SEPMConfiguration           | Send-SEPMCommandGetFile              |
+| Send-SEPMCommandQuarantine        | Set-SEPMAuthentication               |
+| Set-SEPMConfiguration             | Start-SEPMReplication                |
+| Start-SEPScan                     | Update-SEPClient                     |
+| Update-SEPMFileFingerprintList    |                                      |
 
 Every command has a help page, eg. `Get-Help Get-SEPComputers`
 
@@ -127,6 +106,19 @@ PS C:\PSSymantecSEPM> Move-SEPClientGroup -ComputerName "MyComputer" -GroupName 
 
 # Move multiple machines to a group via pipeline
 PS C:\PSSymantecSEPM> "MyComputer1","MyComputer2" | Move-SEPClientGroup -GroupName "My Company\EMEA\Workstations"
+```
+
+Update Exceptions policies
+```PowerShell
+# Add a new file exception to a policy
+# By default, the exception type is for every technologies (AutoProtect, SONAR, Application & Device Control)
+PS C:\PSSymantecSEPM> Add-SEPMWindowsFileException -PolicyName "Workstations Exception policy" -Path "C:\Program Files\MyApp\MyApp.exe"
+
+# Folder exception
+PS C:\PSSymantecSEPM> Add-SEPMWindowsFolderException -PolicyName "Workstations Exception policy" -Path "C:\Program Files\MyApp\"
+
+# Folder exception with subfolders
+PS C:\PSSymantecSEPM> Add-SEPMWindowsFolderException -PolicyName "Workstations Exception policy" -Path "C:\Program Files\MyApp\" -IncludeSubFolders
 ```
 
 Virus Definitions
