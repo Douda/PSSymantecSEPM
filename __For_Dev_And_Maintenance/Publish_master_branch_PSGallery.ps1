@@ -11,5 +11,5 @@ if (Test-Path "$API_PATH\API_KEY_PS_Gallery.xml") {
 }
 
 # Publish Module
-$MajorMinorPatch = dotnet-gitversion | ConvertFrom-Json | Select-Object -Expand MajorMinorPatch
-Publish-Module -Path "$ModuleDevPath\Output\PSSymantecSEPM\$MajorMinorPatch\" -NuGetApiKey $API_KEY -Verbose
+# $MajorMinorPatch = dotnet-gitversion | ConvertFrom-Json | Select-Object -Expand MajorMinorPatch
+Publish-Module -Path "$ModuleDevPath\Output\PSSymantecSEPM\" -NuGetApiKey $API_KEY -Verbose
