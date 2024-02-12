@@ -36,53 +36,32 @@ Clear-SEPMAuthentication # clear the authentication
 ## List of commands
 ```PowerShell
 PS C:\PSSymantecSEPM> Get-Command -Module PSSymantecSEPM | Select-Object -Property Name
-
-Add-SEPMFileFingerprintList
-Add-SEPMMacFileException
-Add-SEPMWindowsExtensionException
-Add-SEPMWindowsFileException
-Add-SEPMWindowsFolderException
-Clear-SEPMAuthentication
-Confirm-SEPMEventInfo
-Get-SEPClientDefVersions
-Get-SEPClientInfectedStatus
-Get-SEPClientStatus
-Get-SEPClientVersion
-Get-SEPComputers
-Get-SEPFileDetails
-Get-SEPGUPList
-Get-SEPMAccessToken
-Get-SEPMAdmins
-Get-SEPMCommandStatus
-Get-SEPMDatabaseInfo
-Get-SEPMDomain
-Get-SEPMEventInfo
-Get-SEPMExceptionPolicy
-Get-SEPMFileFingerprintList
-Get-SEPMFirewallPolicy
-Get-SEPMGroups
-Get-SEPMIpsPolicy
-Get-SEPMLatestDefinition
-Get-SEPMPoliciesSummary
-Get-SEPMReplicationStatus
-Get-SEPMThreatStats
-Get-SEPMVersion
-Get-TDADPolicy
-Move-SEPClientGroup
-Remove-SEPMFileFingerprintList
-Remove-SEPMWindowsExtensionException
-Remove-SEPMWindowsFileException
-Remove-SEPMWindowsFolderException
-Reset-SEPMConfiguration
-Send-SEPMCommandGetFile
-Send-SEPMCommandQuarantine
-Set-SEPMAuthentication
-Set-SEPMConfiguration
-Start-SEPMReplication
-Start-SEPScan
-Update-SEPClient
-Update-SEPMFileFingerprintList
 ```
+| List                              | List                                 |
+| --------------------------------- | ------------------------------------ |
+| Add-SEPMFileFingerprintList       | Get-SEPClientDefVersions             |
+| Add-SEPMMacFileException          | Get-SEPClientInfectedStatus          |
+| Add-SEPMWindowsExtensionException | Get-SEPClientStatus                  |
+| Add-SEPMWindowsFileException      | Get-SEPClientVersion                 |
+| Add-SEPMWindowsFolderException    | Get-SEPComputers                     |
+| Clear-SEPMAuthentication          | Get-SEPFileDetails                   |
+| Confirm-SEPMEventInfo             | Get-SEPGUPList                       |
+| Get-SEPMAccessToken               | Get-SEPMAdmins                       |
+| Get-SEPMCommandStatus             | Get-SEPMDatabaseInfo                 |
+| Get-SEPMDomain                    | Get-SEPMEventInfo                    |
+| Get-SEPMExceptionPolicy           | Get-SEPMFileFingerprintList          |
+| Get-SEPMFirewallPolicy            | Get-SEPMGroups                       |
+| Get-SEPMIpsPolicy                 | Get-SEPMLatestDefinition             |
+| Get-SEPMPoliciesSummary           | Get-SEPMReplicationStatus            |
+| Get-SEPMThreatStats               | Get-SEPMVersion                      |
+| Get-TDADPolicy                    | Move-SEPClientGroup                  |
+| Remove-SEPMFileFingerprintList    | Remove-SEPMWindowsExtensionException |
+| Remove-SEPMWindowsFileException   | Remove-SEPMWindowsFolderException    |
+| Reset-SEPMConfiguration           | Send-SEPMCommandGetFile              |
+| Send-SEPMCommandQuarantine        | Set-SEPMAuthentication               |
+| Set-SEPMConfiguration             | Start-SEPMReplication                |
+| Start-SEPScan                     | Update-SEPClient                     |
+| Update-SEPMFileFingerprintList    |                                      |
 
 Every command has a help page, eg. `Get-Help Get-SEPComputers`
 
