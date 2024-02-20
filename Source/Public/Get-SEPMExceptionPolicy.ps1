@@ -89,7 +89,7 @@ function Get-SEPMExceptionPolicy {
 
         # List a specific exception category
         [Parameter()]
-        [ValidateSet("files", "directories", "webdomains", "extensions")]
+        [ValidateSet("files", "directories", "webdomains", "extensions", "tamper")]
         [String]
         $List
     )
@@ -214,6 +214,9 @@ function Get-SEPMExceptionPolicy {
                 }
 
                 return $extensions | ConvertTo-FlatObject
+            }
+            "tamper" {
+                return $resp.configuration.tamper_files | ConvertTo-FlatObject
             }
             Default { return $resp }
         }
