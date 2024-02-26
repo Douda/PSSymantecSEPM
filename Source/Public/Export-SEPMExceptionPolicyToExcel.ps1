@@ -61,11 +61,33 @@ function Export-SEPMExceptionPolicyToExcel {
             throw $message
         }
 
-        # Extract the categories from the exception policy
-        $Files = $ExceptionPolicy.configuration.files
-        $Folders = $ExceptionPolicy.configuration.directories
+        # Add the categories to the PSObject
+        $ExceptionCategory = [PSCustomObject]@{
+            Files           = $ExceptionPolicy.configuration.files
+            Folders         = $ExceptionPolicy.configuration.directories
+            Certificates    = $ExceptionPolicy.configuration.certificates
+            Tamper_files    = $ExceptionPolicy.configuration.tamper_files
+            Webdomain       = $ExceptionPolicy.configuration.webdomains
+            Mac             = $ExceptionPolicy.configuration.mac.files
+            Linux           = $ExceptionPolicy.configuration.linux.directories
+            Linux_Extension = $ExceptionPolicy.configuration.linux.extension_list
+            KnownRisks      = $ExceptionPolicy.configuration.knownrisks
+        }
 
-        # Excel export parameters
+        # Define the properties to export
+        $Props = [PSCustomObject]@{
+            Files           = @("scancategory", "pathvariable", "path", "SONAR", "applicationcontrol", "securityrisk", "recursive")
+            Folders         = @("scancategory", "scantype", "pathvariable", "directory", "recursive")
+            Certificates    = @("*")
+            Tamper_files    = @("pathvariable", "path")
+            Webdomain       = @("domain")
+            Mac             = @("pathvariable", "path")
+            Linux           = @("scancategory", "pathvariable", "directory", "recursive")
+            Linux_Extension = @("*")
+            KnownRisks      = @("threat.id", "threat.name", "action")
+        }
+
+        # Define Excel export parameters
         $excel_params = @{
             ClearSheet   = $true
             BoldTopRow   = $true
@@ -74,13 +96,23 @@ function Export-SEPMExceptionPolicyToExcel {
             AutoFilter   = $true
         }
 
-        # Define the properties to export
-        $filesProperties = @("SONAR", "scancategory", "pathvariable", "path", "applicationcontrol", "securityrisk", "recursive")
-        $foldersProperties = @("scancategory", "scantype", "pathvariable", "directory", "recursive")
-
         # Export the data to Excel
-        $Files | ConvertTo-FlatObject | Select-Object -Property $filesProperties | Export-Excel -Path $Path -WorksheetName "Files" @excel_params
-        $Folders | ConvertTo-FlatObject | Select-Object -Property $foldersProperties | Export-Excel -Path $Path -WorksheetName "Folders" @excel_params
-        
+        foreach ($category in $ExceptionCategory.PSObject.Properties.Name) {
+            # Only export the category if it has data
+            if ($ExceptionCategory.$category) {
+                # Special case for Extensions. Split in an array of objects for correct formating
+                if ($category -eq "Linux_Extension") {
+                    $Extensions = @()
+                    foreach ($line in $ExceptionCategory.Linux_Extension.extensions) {
+                        $obj = New-Object -TypeName PSObject
+                        $obj | Add-Member -MemberType NoteProperty -Name Extensions -Value $line
+                        $Extensions += $obj
+                    }
+                    $Extensions | Select-Object -Property $Props.$category | Export-Excel -Path $Path -WorksheetName $category @excel_params
+                    continue
+                }
+                $ExceptionCategory.$category | ConvertTo-FlatObject | Select-Object -Property $Props.$category | Export-Excel -Path $Path -WorksheetName $category @excel_params
+            }
+        }
     }
 }
