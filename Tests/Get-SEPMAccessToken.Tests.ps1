@@ -104,21 +104,15 @@ Describe 'Get-SEPMAccessToken' {
                         'domain'        = ''
                     }
 
+                    # Credential loaded in memory
+                    $script:Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList 'FakeUser', (ConvertTo-SecureString -String 'FakePassword' -AsPlainText -Force)
+
                     # SEPM URL
                     $script:BaseURLv1 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
                     $script:BaseURLv2 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v2"
 
-                    # Mock Import-Clixml to return the credential file content
-                    Mock Import-Clixml -ModuleName $script:moduleName -ParameterFilter { $Path -eq $script:credentialsFilePath } { return $creds }
-
                     # Mock Test-SEPMCertificate to return true for valid certificate
                     Mock Test-SEPMCertificate -ModuleName $script:moduleName -ParameterFilter { $URI -eq $URI_Authenticate } {}
-
-                    # Mock Read-Host to return the server name
-                    Mock Read-Host -ModuleName $script:moduleName -ParameterFilter { $Prompt -eq $message } { return 'FakeReadHostServer01' }
-
-                    # Mock Get-Credential to return the credential object
-                    Mock Get-Credential { return $creds } 
 
                     # Mock Invoke-ABRestMethod to return a valid token
                     Mock Invoke-ABRestMethod -ModuleName $script:moduleName -ParameterFilter { $params -eq $Params } {
