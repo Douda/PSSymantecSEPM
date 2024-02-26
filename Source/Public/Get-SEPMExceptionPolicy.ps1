@@ -220,6 +220,5 @@ function Get-SEPMExceptionPolicy {
             }
             Default { return $resp }
         }
-        
     }
 }
