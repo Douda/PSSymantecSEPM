@@ -3,7 +3,7 @@ function Initialize-CommonInitSetup {
 
     # init
     $script:moduleName = 'PSSymantecSEPM'
-    $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
+    $moduleRootPath = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent)
     $Build = Join-Path -Path $moduleRootPath -ChildPath "Source\PSSymantecSEPM.psd1"
     $import = Join-Path -Path $moduleRootPath -ChildPath "Output\PSSymantecSEPM\PSSymantecSEPM.psm1"
     
