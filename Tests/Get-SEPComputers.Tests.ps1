@@ -5,8 +5,6 @@ param()
 $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
 . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-Init.ps1')
 
-
-
 Describe 'Get-SEPComputers' {
     InModuleScope PSSymantecSEPM { 
         BeforeAll {
@@ -237,7 +235,7 @@ Describe 'Get-SEPComputers' {
         Context 'GroupName parameter' {
             BeforeAll {
                 # Mock Invoke-ABRestMethod to return a valid response
-                # 2 pages / 105 computers / only 5 from the group "My Company\\MyGroup"
+                # 2 pages / 20+ computers / 2 specific groups
                 $script:callCount = 0
                 Mock Invoke-ABRestMethod -ModuleName $script:moduleName -ParameterFilter {
                     $params.Uri -eq $URI -and $params.Method -eq 'GET'
@@ -252,7 +250,9 @@ Describe 'Get-SEPComputers' {
                         }
                     } else {
                         return [PSCustomObject]@{
-                            content   = (1..100 | ForEach-Object { New-DummyDataSEPComputers })
+                            content   = (1..5 | ForEach-Object { New-DummyDataSEPComputers -GroupName "My Company\\MyGroup" }) + 
+                                        (1..5 | ForEach-Object { New-DummyDataSEPComputers -GroupName "My Company\\MyGroup\\Subgroup" }) +
+                                        (1..8 | ForEach-Object { New-DummyDataSEPComputers })
                             firstPage = $true
                             lastPage  = $false
                         }
@@ -268,8 +268,8 @@ Describe 'Get-SEPComputers' {
             It 'Should contain subgroups' {
                 $result = Get-SEPComputers -GroupName "My Company\\MyGroup" -IncludeSubGroups
                 $result | Should -Not -BeNullOrEmpty
-                $result.group.name | Where-Object { $_ -eq "My Company\\MyGroup" } | Get-Unique | Should -Not -BeNullOrEmpty
-                $result.group.name | Where-Object { $_ -eq "My Company\\MyGroup\\Subgroup" } | Get-Unique | Should -Not -BeNullOrEmpty
+                $result.group.name | Where-Object { $_ -eq "My Company\\MyGroup" } | Should -Not -BeNullOrEmpty
+                $result.group.name | Where-Object { $_ -eq "My Company\\MyGroup\\Subgroup" } | Should -Not -BeNullOrEmpty
             }
 
             It 'Should have the expected type' {
