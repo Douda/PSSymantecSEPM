@@ -67,7 +67,7 @@ Describe 'Initialize-SepmConfiguration' {
                         Initialize-SepmConfiguration
 
                         # Assert that Reset-SEPMConfiguration was called exactly once
-                        Assert-MockCalled Reset-SEPMConfiguration -ModuleName $script:moduleName -Times 1 -Exactly
+                        Should -Invoke Reset-SEPMConfiguration -ModuleName $script:moduleName -Times 1 -Exactly
                     }
                 }
 
@@ -109,7 +109,7 @@ Describe 'Initialize-SepmConfiguration' {
                         Mock Import-Clixml -ModuleName $script:moduleName -ParameterFilter { $Path -eq $script:credentialsFilePath } { return $creds }
                     }
 
-                    It 'Should be PSCredential object' {
+                    It 'Should have credentials loaded in memory' {
                         # Call the function
                         Initialize-SepmConfiguration
 
@@ -131,7 +131,7 @@ Describe 'Initialize-SepmConfiguration' {
                         }
                     }
 
-                    It 'Should be PSCustomObject' {
+                    It 'Should have token loaded in memory' {
                         # Call the function
                         Initialize-SepmConfiguration
 
