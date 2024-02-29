@@ -3,20 +3,20 @@ param()
 
 # Build & Load the module
 $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-. (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Common-Init.ps1')
+. (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-Init.ps1')
 
 Describe 'Get-SEPMAccessToken' {
     InModuleScope PSSymantecSEPM { 
         BeforeAll {
             # This is common test code setup logic for all Pester test files
             $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Common-BeforeAll.ps1')
+            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-BeforeAll.ps1')
         }
 
         AfterAll {
             # This is common test code teardown logic for all Pester test files
             $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Common-AfterAll.ps1')
+            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-AfterAll.ps1')
         }
 
         Context 'Token context' {

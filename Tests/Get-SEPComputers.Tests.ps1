@@ -3,7 +3,7 @@ param()
 
 # Build & Load the module
 $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-. (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Common-Init.ps1')
+. (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-Init.ps1')
 
 
 
@@ -12,10 +12,10 @@ Describe 'Get-SEPComputers' {
         BeforeAll {
             # This is common test code setup logic for all Pester test files
             $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Common-BeforeAll.ps1')
+            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-BeforeAll.ps1')
 
             # Load Pester test environment setup
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Common-TestEnvironmentSetup.ps1')
+            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-TestEnvironmentSetup.ps1')
 
             function New-DummyDataSEPComputers {
                 <#
@@ -157,7 +157,7 @@ Describe 'Get-SEPComputers' {
         AfterAll {
             # This is common test code teardown logic for all Pester test files
             $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Common-AfterAll.ps1')
+            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-AfterAll.ps1')
         }
 
         Context 'No parameters' {
