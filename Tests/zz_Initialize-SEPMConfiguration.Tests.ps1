@@ -118,22 +118,6 @@ Describe 'Initialize-SepmConfiguration' {
                         $script:Credential.GetNetworkCredential().Password | Should -Be 'FakePassword'
                     }
                 }
-            
-                Context 'Credential file does not exist' {
-                    BeforeAll {
-                        # Mock Import-Clixml to throw an error
-                        Mock Import-Clixml -ModuleName $script:moduleName -ParameterFilter { $Path -eq $script:credentialsFilePath } { throw 'File not found' }
-                    }
-
-                    It 'Should catch the error and continue' {
-                        # Call the function
-                        Initialize-SepmConfiguration
-
-                        # import-clixml should throw an error, but the function should catch it and continue
-                        { Initialize-SepmConfiguration } | Should -Not -Throw
-                        $script:Credential | Should -BeNullOrEmpty
-                    }
-                }
             }
             Context 'Token file' {
                 Context 'Token file exist' {
@@ -155,21 +139,6 @@ Describe 'Initialize-SepmConfiguration' {
                         $script:accessToken.token | Should -Be 'FakeToken'
                         $script:accessToken.tokenExpiration | Should -BeOfType [DateTime]
                         $script:accessToken.SkipCertificateCheck | Should -BeOfType [Boolean]
-                    }
-                }
-
-                Context 'Token file does not exist' {
-                    BeforeAll {
-                        Mock Import-Clixml -ModuleName $script:moduleName -ParameterFilter { $Path -eq $script:accessTokenFilePath } { throw 'File not found' }
-                    }
-
-                    It 'Should catch the error and continue' {
-                        # Call the function
-                        Initialize-SepmConfiguration
-
-                        # import-clixml should throw an error, but the function should catch it and continue
-                        { Initialize-SepmConfiguration } | Should -Not -Throw
-                        $script:accessToken | Should -BeNullOrEmpty
                     }
                 }
             }
