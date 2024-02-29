@@ -105,6 +105,9 @@ function Get-SEPComputers {
             }
 
             $allResults = (Invoke-ABRestMethod -params $params).content
+
+            # Filtering
+            $allResults = $allResults | Where-Object { $_.computerName -like $ComputerName }
         }
 
         # Using computer name API call then filtering
