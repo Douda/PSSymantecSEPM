@@ -146,7 +146,7 @@ Describe 'Get-SEPComputers' {
                 lastPage  = $true
             }
 
-            # Mock Invoke-ABRestMethod to return a valid response with only one page
+            # Mock Invoke-ABRestMethod to return a valid response with only one page / 5 computers
             Mock Invoke-ABRestMethod -ModuleName $script:moduleName -ParameterFilter {
                 $params.Uri -eq $URI -and $params.Method -eq 'GET'
             } { 
@@ -162,28 +162,20 @@ Describe 'Get-SEPComputers' {
 
         Context 'No parameters' {
             BeforeAll {}
-            Context 'Without pagination' {
-                BeforeAll {
-                    # Mock Invoke-ABRestMethod to return a valid response with only one page / 5 computers
-                    Mock Invoke-ABRestMethod -ModuleName $script:moduleName -ParameterFilter {
-                        $params.Uri -eq $URI -and $params.Method -eq 'GET'
-                    } { 
-                        return $script:APIResponseLastPage
-                    }
-                }
-                It 'Should return exactly one page of computers' {
-                    $result = Get-SEPComputers
-                    $result | Should -Not -BeNullOrEmpty
-                    $result.count | Should -Be 5
-                    # Only one API call
-                    Should -Invoke Invoke-ABRestMethod -Exactly 1 -Scope It
-                }
 
-                It 'Should have the expected type' {
-                    $result = Get-SEPComputers
-                    $result[0].PSObject.TypeNames[0] | Should -Be 'SEP.Computer'
-                }
+            It 'Should return exactly one page of computers' {
+                $result = Get-SEPComputers
+                $result | Should -Not -BeNullOrEmpty
+                $result.count | Should -Be 5
+                # Only one API call
+                Should -Invoke Invoke-ABRestMethod -Exactly 1 -Scope It
             }
+
+            It 'Should have the expected type' {
+                $result = Get-SEPComputers
+                $result[0].PSObject.TypeNames[0] | Should -Be 'SEP.Computer'
+            }
+            
 
             Context 'With pagination' {
                 BeforeAll {
@@ -207,22 +199,18 @@ Describe 'Get-SEPComputers' {
                     # Exactly two API calls
                     Should -Invoke Invoke-ABRestMethod -Exactly 2 -Scope It
                 }
-
-                It 'Should have the expected type' {
-                    $result = Get-SEPComputers
-                    $result[0].PSObject.TypeNames[0] | Should -Be 'SEP.Computer'
-                }
             }
         }
 
         Context 'ComputerName parameter' {
             BeforeAll {
-                # Mock Invoke-ABRestMethod to return a valid response with only one computer called "MyComputer"
+                # Mock Invoke-ABRestMethod to return a valid response with computers, including one called "MyComputer"
                 Mock Invoke-ABRestMethod -ModuleName $script:moduleName -ParameterFilter {
                     $params.Uri -eq $URI -and $params.Method -eq 'GET'
                 } { 
                     return [PSCustomObject]@{
-                        content   = (New-DummyDataSEPComputers -ComputerName "MyComputer")
+                        content   = (, @(New-DummyDataSEPComputers -ComputerName "MyComputer")) + # Create an array with one computer
+                                    (1..4 | ForEach-Object { New-DummyDataSEPComputers })
                         firstPage = $true
                         lastPage  = $true
                     }
@@ -257,7 +245,8 @@ Describe 'Get-SEPComputers' {
                     $script:callCount++
                     if ($script:callCount -ge 2) {
                         return [PSCustomObject]@{
-                            content   = (1..5 | ForEach-Object { New-DummyDataSEPComputers -GroupName "My Company\\MyGroup" })
+                            content   = (1..5 | ForEach-Object { New-DummyDataSEPComputers -GroupName "My Company\\MyGroup" }) + 
+                                        (1..5 | ForEach-Object { New-DummyDataSEPComputers -GroupName "My Company\\MyGroup\\Subgroup" })
                             firstPage = $false
                             lastPage  = $true
                         }
@@ -273,7 +262,14 @@ Describe 'Get-SEPComputers' {
             It 'Should contain only computers from the group "My Company\\MyGroup"' {
                 $result = Get-SEPComputers -GroupName "My Company\\MyGroup"
                 $result | Should -Not -BeNullOrEmpty
-                $result | Should -HaveCount 5
+                $result.group.name | Get-Unique | Should -Be "My Company\\MyGroup"
+            }
+
+            It 'Should contain subgroups' {
+                $result = Get-SEPComputers -GroupName "My Company\\MyGroup" -IncludeSubGroups
+                $result | Should -Not -BeNullOrEmpty
+                $result.group.name | Where-Object { $_ -eq "My Company\\MyGroup" } | Get-Unique | Should -Not -BeNullOrEmpty
+                $result.group.name | Where-Object { $_ -eq "My Company\\MyGroup\\Subgroup" } | Get-Unique | Should -Not -BeNullOrEmpty
             }
 
             It 'Should have the expected type' {
