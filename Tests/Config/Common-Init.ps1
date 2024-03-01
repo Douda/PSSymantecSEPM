@@ -4,17 +4,19 @@ function Initialize-CommonInitSetup {
     # init
     $script:moduleName = 'PSSymantecSEPM'
     $moduleRootPath = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent)
-    $Build = Join-Path -Path $moduleRootPath -ChildPath "Source\PSSymantecSEPM.psd1"
-    $import = Join-Path -Path $moduleRootPath -ChildPath "Output\PSSymantecSEPM\PSSymantecSEPM.psm1"
+    $ModuleManifestFilePath = Join-Path -Path $moduleRootPath -ChildPath "Source\PSSymantecSEPM.psd1"
+    $ModuleFilePath = Join-Path -Path $moduleRootPath -ChildPath "Output\PSSymantecSEPM\PSSymantecSEPM.psm1"
     
-    # If module isn't present on the disk, build it with hardcoded version 0.0.1
-    # if (!(Test-Path -Path $import)) {
-    # TODO add Test-Path condition once the code is ready for release
-    Build-Module -SourcePath $Build -SemVer 0.0.1
-    # }
+    # Build & Load the module
+    if (-not (Get-Module -ListAvailable -Name "ModuleBuilder")) {
+        Write-Host "ModuleBuilder Module missing. Installing..."
+        Install-Module -Name ModuleBuilder -Scope CurrentUser
+    } else {
+        Build-Module -SourcePath $ModuleManifestFilePath -SemVer 0.0.1
+    }
     
-    Import-Module -Name "$import" -Force
-    # Write-Host "Module $script:moduleName loaded"
+    Import-Module -Name "$ModuleFilePath" -Force
+    Write-Verbose "Module $script:moduleName loaded" -Verbose
 }
 
 Initialize-CommonInitSetup
