@@ -36,6 +36,7 @@ Describe 'Initialize-PolicyExceptionStructure' {
             $result.ObjBody.PSobject.TypeNames[0] | Should -Be "SEPMPolicyExceptionsStructure"
             $result.ObjBody.name | Should -Be "policy fw 1"
             $result.PolicyID | Should -Not -BeNullOrEmpty
-        }
+        } 
+        
     }
 }
