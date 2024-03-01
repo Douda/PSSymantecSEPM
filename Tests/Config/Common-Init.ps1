@@ -9,7 +9,7 @@ function Initialize-CommonInitSetup {
     
     # Build & Load the module
     if (-not (Get-Module -ListAvailable -Name "ModuleBuilder")) {
-        Write-Host "ModuleBuilder Module missing. Installing..."
+        Write-Verbose "ModuleBuilder Module missing. Installing..." -Verbose
         Install-Module -Name ModuleBuilder -Scope CurrentUser
     } else {
         Build-Module -SourcePath $ModuleManifestFilePath -SemVer 0.0.1
