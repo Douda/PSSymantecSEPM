@@ -12,13 +12,8 @@
 			"nonFreePackages": "true"
 		}
 	},
-	"onCreateCommand": [
-		"sudo chsh vscode -s \"$(which pwsh)\""
-	],
-	// "postCreateCommand": "sudo chsh vscode -s \"$(which pwsh)\"",
-	// Create postCreateCommand as an object to run 2 commands
 	"postCreateCommand": [
-		"Install-Module -Name ModuleBuilder -Force"
+		"sudo chsh vscode -s \"$(which pwsh)\" && Install-Module -Name ModuleBuilder -Force"
 	],
 	// Configure tool-specific properties.
 	"customizations": {
