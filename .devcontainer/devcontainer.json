@@ -3,15 +3,16 @@
 {
 	"name": "PowerShell",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/powershell:lts-debian-11",
-	"features": {
-		"ghcr.io/devcontainers/features/common-utils:2": {
-			"installZsh": "true",
-			"username": "vscode",
-			"upgradePackages": "false",
-			"nonFreePackages": "true"
-		}
-	},
+	// "image": "mcr.microsoft.com/powershell:lts-debian-11",
+	// "features": {
+	// 	"ghcr.io/devcontainers/features/common-utils:2": {
+	// 		"installZsh": "true",
+	// 		"username": "vscode",
+	// 		"upgradePackages": "false",
+	// 		"nonFreePackages": "true"
+	// 	}
+	// },
+	"dockerFile": "Dockerfile",
 	"postCreateCommand": [
 		"sudo chsh vscode -s \"$(which pwsh)\" && Install-Module -Name ModuleBuilder -Force"
 	],
@@ -21,18 +22,32 @@
 		"vscode": {
 			// Set *default* container specific settings.json values on container create.
 			"settings": {
-				"terminal.integrated.defaultProfile.linux": "pwsh"
+				"terminal.integrated.defaultProfile.linux": "pwsh",
+				"powerShellUniversal.serverPath": "/home/Universal"
 			},
 			
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
-				"ms-vscode.powershell"
+				"ms-vscode.powershell",
+				"ironmansoftware.powershell-universal",
+				"tylerleonhardt.vscode-inline-values-powershell",
+				"ironmansoftware.powershellprotools"
 			]
 		}
-	}
+	},
+	"containerEnv": {
+		"Data__RepositoryPath": "${containerWorkspaceFolder}"
+	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
+	"forwardPorts": [
+		5000
+	],
+	"portsAttributes": {
+		"5000": {
+			"label": "PowershellUniversal"
+		}
+	}
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
