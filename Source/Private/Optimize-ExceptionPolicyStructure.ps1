@@ -1,4 +1,21 @@
 function Optimize-ExceptionPolicyStructure {
+    <#
+    .SYNOPSIS
+        This function is used to optimize the structure of the exception policy object.
+    .DESCRIPTION
+        This function is used to optimize the structure of the exception policy object.
+        It will remove empty properties and nested objects that are empty.
+    .PARAMETER obj
+        The object to optimize
+        
+    .EXAMPLE
+        Optimize-ExceptionPolicyStructure -obj $exceptionPolicy
+    .OUTPUTS
+        System.Management.Automation.PSCustomObject
+
+    #>
+    
+    
 
     [CmdletBinding()]
     param (
@@ -12,6 +29,7 @@ function Optimize-ExceptionPolicyStructure {
 
     process {
         # convert the object to a PSCustomObject (trick to convert custom class to PSCustomObject)
+        # There might be cleaner ways to do this
         $obj = $obj | ConvertTo-Json -Depth 100 | ConvertFrom-Json -Depth 100
 
         # Listing all properties of the object
