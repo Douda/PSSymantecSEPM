@@ -24,6 +24,9 @@ RUN $ErrorActionPreference='Stop'; $ProgressPreference = 'silentlyContinue';\
     Install-PSUServer @psuParams -Path $env:PSUPATH; \
     chmod +x $env:PSUPATH/Universal.Server; \
     New-Item -ItemType Directory $env:PSUDATAPATH; \
+    [hashtable]$mbParams = if ($env:PSUMODULEVERSION -and $env:PSUMODULEVERSION -ne 'latest') { @{Version = $env:PSUMODULEVERSION}} else {@{}}; \
+    "Installing ModuleBuilder Module " + $env:PSUMODULEVERSION; \
+    Install-Module @mbParams -Name ModuleBuilder -Force; \
     usermod --shell /usr/bin/pwsh root;
 
 ENV Data__RepositoryPath=$PSUDATAPATH/Repository
