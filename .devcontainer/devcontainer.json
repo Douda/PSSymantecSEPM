@@ -12,7 +12,14 @@
 			"nonFreePackages": "true"
 		}
 	},
-	"postCreateCommand": "sudo chsh vscode -s \"$(which pwsh)\"",
+	"onCreateCommand": [
+		"sudo chsh vscode -s \"$(which pwsh)\""
+	],
+	// "postCreateCommand": "sudo chsh vscode -s \"$(which pwsh)\"",
+	// Create postCreateCommand as an object to run 2 commands
+	"postCreateCommand": [
+		"Install-Module -Name ModuleBuilder -Force"
+	],
 	// Configure tool-specific properties.
 	"customizations": {
 		// Configure properties specific to VS Code.
@@ -21,14 +28,17 @@
 			"settings": {
 				"terminal.integrated.defaultProfile.linux": "pwsh"
 			},
+			
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
 				"ms-vscode.powershell"
 			]
 		}
 	}
+
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
+
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
 }
