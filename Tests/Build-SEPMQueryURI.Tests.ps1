@@ -5,6 +5,8 @@ param()
 $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
 . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-Init.ps1')
 
+# Test git update
+
 Describe 'Build-SEPMQueryURI' {
     InModuleScope PSSymantecSEPM { 
         BeforeAll {
