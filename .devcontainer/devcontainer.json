@@ -3,6 +3,10 @@
 {
 	"name": "PowerShell",
 	"dockerFile": "dockerfile",
+	//  Features can be installed by adding the feature name and version to the features object.
+	"features": {
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+	},
 	// Configure tool-specific properties.
 	"customizations": {
 		// Configure properties specific to VS Code.
@@ -10,7 +14,8 @@
 			// Set *default* container specific settings.json values on container create.
 			"settings": {
 				"terminal.integrated.shell.windows": "/bin/pwsh",
-				"terminal.integrated.defaultProfile.linux": "pwsh"
+				"terminal.integrated.defaultProfile.linux": "pwsh",
+				"powershell.powerShellDefaultVersion": "PowerShell"
 			},
 			
 			// Add the IDs of extensions you want installed when the container is created.
