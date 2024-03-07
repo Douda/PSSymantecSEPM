@@ -4,9 +4,9 @@
 	"name": "PowerShell",
 	"dockerFile": "dockerfile",
 	//  Features can be installed by adding the feature name and version to the features object.
-	"features": {
-		"ghcr.io/devcontainers/features/github-cli:1": {}
-	},
+	// "features": {
+	// 	"ghcr.io/devcontainers/features/github-cli:1": {}
+	// },
 	// Configure tool-specific properties.
 	"customizations": {
 		// Configure properties specific to VS Code.
