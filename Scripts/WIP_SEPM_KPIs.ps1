@@ -35,6 +35,7 @@ param (
 # Patch Management Compliance
 # Policy Compliance / Violations
 # Audit Log
+# Other ideas?
 
 # Total number of clients
 $Computers = Get-SEPComputers
