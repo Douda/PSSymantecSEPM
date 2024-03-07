@@ -3,6 +3,7 @@
 {
 	"name": "PowerShell",
 	"dockerFile": "dockerfile",
+	"workspaceFolder": "/app/PSSymantecSEPM",
 	//  Features can be installed by adding the feature name and version to the features object.
 	// "features": {
 	// 	"ghcr.io/devcontainers/features/github-cli:1": {}
