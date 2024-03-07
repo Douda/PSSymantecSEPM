@@ -27,5 +27,5 @@
 		}
 	},
 	// build & load PSSymantecSEPM module
-	"postAttachCommand": "/usr/bin/pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -Command './__For_Dev_And_Maintenance/Build_and_load_module.ps1'"
+	// "postAttachCommand": "/usr/bin/pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -Command './__For_Dev_And_Maintenance/Build_and_load_module.ps1'"
 }

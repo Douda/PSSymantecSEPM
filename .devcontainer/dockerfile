@@ -14,5 +14,6 @@ RUN export PATH="$PATH:/root/.dotnet/tools"
 # Install Powershell Modules
 SHELL ["/usr/bin/pwsh", "-c"]
 RUN $ErrorActionPreference='Stop'; Install-Module -Name Pester, InvokeBuild, ModuleBuilder, PlatyPS, PSScriptAnalyzer -Force
+RUN /usr/bin/pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -Command './__For_Dev_And_Maintenance/Build_and_load_module.ps1'
 
 CMD [ "pwsh" ]
