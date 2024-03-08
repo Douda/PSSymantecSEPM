@@ -19,8 +19,8 @@
 			},
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
-				"ms-vscode.powershell",
-				"justin-grote.powershell-extension-pack"
+				"ms-vscode.powershell"
+				// "justin-grote.powershell-extension-pack"
 			]
 		}
 	}
