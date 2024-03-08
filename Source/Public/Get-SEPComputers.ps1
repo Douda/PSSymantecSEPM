@@ -91,32 +91,23 @@ function Get-SEPComputers {
 
             # URI query strings
             $QueryStrings = @{
-                sort         = "COMPUTER_NAME"
-                pageIndex    = 1
-                pageSize     = 100
                 computerName = $ComputerName
             }
 
             # Construct the URI
             $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-            do {
-                # Invoke the request params
-                $params = @{
-                    Method  = 'GET'
-                    Uri     = $URI
-                    headers = $headers
-                }
+            # Invoke the request params
+            $params = @{
+                Method  = 'GET'
+                Uri     = $URI
+                headers = $headers
+            }
 
-                $resp = Invoke-ABRestMethod -params $params
-                
-                # Process the response
-                $allResults += $resp.content
+            $allResults = (Invoke-ABRestMethod -params $params).content
 
-                # Increment the page index & update URI
-                $QueryStrings.pageIndex++
-                $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-            } until ($resp.lastPage -eq $true)
+            # Filtering
+            $allResults = $allResults | Where-Object { $_.computerName -like $ComputerName }
         }
 
         # Using computer name API call then filtering

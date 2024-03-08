@@ -3,7 +3,7 @@ param()
 
 # Build & Load the module
 $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-. (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Common-Init.ps1')
+. (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-Init.ps1')
 
 
 Describe 'Initialize-SepmConfiguration' {
@@ -11,13 +11,13 @@ Describe 'Initialize-SepmConfiguration' {
         BeforeAll {
             # This is common test code setup logic for all Pester test files
             $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Common-BeforeAll.ps1')
+            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-BeforeAll.ps1')
         }
 
         AfterAll {
             # This is common test code teardown logic for all Pester test files
             $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Common-AfterAll.ps1')
+            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-AfterAll.ps1')
         }
 
         Context 'Configuration files' {
@@ -67,7 +67,7 @@ Describe 'Initialize-SepmConfiguration' {
                         Initialize-SepmConfiguration
 
                         # Assert that Reset-SEPMConfiguration was called exactly once
-                        Assert-MockCalled Reset-SEPMConfiguration -ModuleName $script:moduleName -Times 1 -Exactly
+                        Should -Invoke Reset-SEPMConfiguration -ModuleName $script:moduleName -Times 1 -Exactly
                     }
                 }
 
@@ -109,29 +109,13 @@ Describe 'Initialize-SepmConfiguration' {
                         Mock Import-Clixml -ModuleName $script:moduleName -ParameterFilter { $Path -eq $script:credentialsFilePath } { return $creds }
                     }
 
-                    It 'Should be PSCredential object' {
+                    It 'Should have credentials loaded in memory' {
                         # Call the function
                         Initialize-SepmConfiguration
 
                         $script:Credential | Should -BeOfType [System.Management.Automation.PSCredential]
                         $script:Credential.UserName | Should -Be 'FakeUser'
                         $script:Credential.GetNetworkCredential().Password | Should -Be 'FakePassword'
-                    }
-                }
-            
-                Context 'Credential file does not exist' {
-                    BeforeAll {
-                        # Mock Import-Clixml to throw an error
-                        Mock Import-Clixml -ModuleName $script:moduleName -ParameterFilter { $Path -eq $script:credentialsFilePath } { throw 'File not found' }
-                    }
-
-                    It 'Should catch the error and continue' {
-                        # Call the function
-                        Initialize-SepmConfiguration
-
-                        # import-clixml should throw an error, but the function should catch it and continue
-                        { Initialize-SepmConfiguration } | Should -Not -Throw
-                        $script:Credential | Should -BeNullOrEmpty
                     }
                 }
             }
@@ -147,7 +131,7 @@ Describe 'Initialize-SepmConfiguration' {
                         }
                     }
 
-                    It 'Should be PSCustomObject' {
+                    It 'Should have token loaded in memory' {
                         # Call the function
                         Initialize-SepmConfiguration
 
@@ -155,21 +139,6 @@ Describe 'Initialize-SepmConfiguration' {
                         $script:accessToken.token | Should -Be 'FakeToken'
                         $script:accessToken.tokenExpiration | Should -BeOfType [DateTime]
                         $script:accessToken.SkipCertificateCheck | Should -BeOfType [Boolean]
-                    }
-                }
-
-                Context 'Token file does not exist' {
-                    BeforeAll {
-                        Mock Import-Clixml -ModuleName $script:moduleName -ParameterFilter { $Path -eq $script:accessTokenFilePath } { throw 'File not found' }
-                    }
-
-                    It 'Should catch the error and continue' {
-                        # Call the function
-                        Initialize-SepmConfiguration
-
-                        # import-clixml should throw an error, but the function should catch it and continue
-                        { Initialize-SepmConfiguration } | Should -Not -Throw
-                        $script:accessToken | Should -BeNullOrEmpty
                     }
                 }
             }

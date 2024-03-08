@@ -2,7 +2,7 @@ function Add-SEPMMacFileException {
 
     <# TODO update help
     .SYNOPSIS
-        Add a Windows File Exception to a Symantec Endpoint Protection Manager Policy
+        Add a Mac File Exception to a Symantec Endpoint Protection Manager Policy
     .DESCRIPTION
         Add a Windows File Exception to a Symantec Endpoint Protection Manager Policy
     .PARAMETER PolicyName
@@ -19,17 +19,8 @@ function Add-SEPMMacFileException {
             AllScans
             AutoProtect
             ScheduledAndOndemand
-    .PARAMETER ApplicationControl
-        Add the exception to the Application Control exclusions
-    .PARAMETER ExcludeChildProcesses
-        Exclude child processes from the Application Control exclusions
-        Requires ApplicationControl to be set to true
     .PARAMETER SkipCertificateCheck
         Skip the certificate check when connecting to the SEPM
-    .PARAMETER AllScans
-        Add the exception to all scan types
-        Equivalent to setting Sonar, SecurityRiskCategory and ApplicationControl to true
-        If no scan type is provided, default to AllScans
     .EXAMPLE
         Add-SEPMMacFileException -PolicyName "Workstations Default Exception Policy" -Path "C:\Temp\file1.exe" -Sonar
 
@@ -91,7 +82,6 @@ function Add-SEPMMacFileException {
             '[APPLICATION]', 
             '[LIBRARY ]'
         )]
-        [Alias('WindowsPathVariable')]
         [string] 
         $PathVariable = "[NONE]",
 
@@ -99,7 +89,6 @@ function Add-SEPMMacFileException {
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern("^/([^/ ]+(/|$))+[^/ ]+\.[^/ ]+$")]
-        [Alias('MacPath')]
         [string] 
         $Path,
 

@@ -1,0 +1,9 @@
+# ignore the build folder
+Output/
+Data/
+Aurelien/
+# Ignore source folder as it will be pulled from repo
+Source/
+Scripts/
+Tests/
+__For_Dev_And_Maintenance/
