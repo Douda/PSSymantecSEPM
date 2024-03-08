@@ -19,7 +19,14 @@
 			},
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
-				"ms-vscode.powershell"
+				"ms-vscode.powershell",
+				"pspester.pester-test",
+				"HSSE-Development.gitversionview",
+				"mhutchie.git-graph",
+				"oderwat.indent-rainbow",
+				"TylerLeonhardt.vscode-inline-values-powershell",
+				"Gruntfuggly.todo-tree",
+				"vscode-icons-team.vscode-icons"
 				// "justin-grote.powershell-extension-pack"
 			]
 		}
