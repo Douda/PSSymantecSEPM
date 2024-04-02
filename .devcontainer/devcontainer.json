@@ -8,7 +8,6 @@
 	//  Features can be installed by adding the feature name and version to the features object.
 	// "features": {},
 	"workspaceFolder": "/workspace/PSSymantecSEPM",
-	"postCreateCommand": "git checkout develop",
 	// Configure tool-specific properties.
 	"customizations": {
 		// Configure properties specific to VS Code.
