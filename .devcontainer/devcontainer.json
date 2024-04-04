@@ -26,7 +26,8 @@
 				"oderwat.indent-rainbow",
 				"TylerLeonhardt.vscode-inline-values-powershell",
 				"Gruntfuggly.todo-tree",
-				"vscode-icons-team.vscode-icons"
+				"vscode-icons-team.vscode-icons",
+				"Postman.postman-for-vscode"
 				// "justin-grote.powershell-extension-pack"
 			]
 		}
