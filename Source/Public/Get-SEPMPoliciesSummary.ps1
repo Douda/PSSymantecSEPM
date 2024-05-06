@@ -79,66 +79,41 @@ function Get-SEPMPoliciesSummary {
     }
 
     process {
-        if (-not $PolicyType) {
-            # Invoke the request
-            try {
-                # prepare the parameters
-                $params = @{
-                    Method  = 'GET'
-                    Uri     = $URI
-                    headers = $headers
-                }
-
-                $resp = Invoke-ABRestMethod -params $params
-                    
-                # Add group FullPath to the response from their Group ID for ease of use
-                # Parsing every response object
-                foreach ($policy in $resp.content) {
-                    # Parsing every location this policy is applied to
-                    foreach ($location in $policy.assignedtolocations) {
-                        # Getting the group name from the group ID, and adding it to the response object
-                        $group = $groups | Where-Object { $_.id -match $location.groupid }  | Get-Unique
-                        $location | Add-Member -NotePropertyName "groupNameFullPath" -NotePropertyValue $group.fullPathName
-                    }
-                }
-            } catch {
-                Write-Warning -Message "Error: $_"
-            }
-        }
-
         if ($PolicyType) {
             $URI = $script:BaseURLv1 + "/policies/summary" + "/" + $PolicyType
-        
-            # prepare the parameters
-            $params = @{
-                Method  = 'GET'
-                Uri     = $URI
-                headers = $headers
-            }
-    
-            # Invoke the request
-            try {
-                $resp = Invoke-ABRestMethod -params $params
-                # Add group FullPath to the response from their Group ID for ease of use
-                # Parsing every response object
-                foreach ($policy in $resp.content) {
-                    # Parsing every location this policy is applied to
-                    foreach ($location in $policy.assignedtolocations) {
-                        # Getting the group name from the group ID, and adding it to the response object
-                        $group = $groups | Where-Object { $_.id -match $location.groupid }  | Get-Unique
-                        $location | Add-Member -NotePropertyName "groupNameFullPath" -NotePropertyValue $group.fullPathName
-                    }
-                }
-            } catch {
-                Write-Warning -Message "Error: $_"
-            }
         }
+
+        # prepare the parameters
+        $params = @{
+            Method  = 'GET'
+            Uri     = $URI
+            headers = $headers
+        }
+
+        # Invoke the request
+        try {
+            $resp = Invoke-ABRestMethod -params $params
+            # Add group FullPath to the response from their Group ID for ease of use
+            # Parsing every response object
+            foreach ($policy in $resp.content) {
+                # Parsing every location this policy is applied to
+                foreach ($location in $policy.assignedtolocations) {
+                    # Getting the group name from the group ID, and adding it to the response object
+                    $group = $groups | Where-Object { $_.id -match $location.groupid } | Get-Unique
+                    $location | Add-Member -NotePropertyName "groupNameFullPath" -NotePropertyValue $group.fullPathName
+                }
+            }
+        } catch {
+            Write-Warning -Message "Error: $_"
+        }
+        
+
         # Add a PSTypeName to the object
         $resp.content | ForEach-Object {
             $_.PSTypeNames.Insert(0, 'SEPM.PolicySummary')
         }
             
-            # return the response
-            return $resp.content
+        # return the response
+        return $resp.content
     }
 }
