@@ -24,17 +24,26 @@ function Get-SEPMFirewallPolicy {
         Shows an example of getting the firewall policy details for the policy named "Standard Servers - Firewall policy"
 #>
 
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'PolicyName')]
     Param (
         # PolicyName
         [Parameter(
             ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true,
-            Mandatory = $true
+            ParameterSetName = 'PolicyName'
         )]
         [Alias("Policy_Name")]
         [String]
         $PolicyName,
+
+        # Policy ID
+        [Parameter(
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'PolicyID'
+        )]
+        [Alias("Policy_ID")]
+        [String]
+        $PolicyID,
 
         # Skip certificate check
         [Parameter()]
@@ -56,19 +65,22 @@ function Get-SEPMFirewallPolicy {
             "Authorization" = "Bearer " + $script:accessToken.token
             "Content"       = 'application/json'
         }
-        # Stores the policy summary for all policies only once
-        $policies = Get-SEPMPoliciesSummary
+        
     }
 
     process {
-        # Get Policy ID from policy name
-        $policyID = $policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -ExpandProperty id
-        $policy_type = $policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -ExpandProperty policytype
 
-        if ($policy_type -ne "fw") {
-            $message = "policy type is not of type FIREWALL or does not exist - Please verify the policy name"
-            Write-Error -Message $message
-            throw $message
+        if ($PolicyName) {
+            # Get Policy ID from policy name
+            $policies = Get-SEPMPoliciesSummary
+            $policyID = $policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -ExpandProperty id
+            $policy_type = $policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -ExpandProperty policytype
+
+            if ($policy_type -ne "fw") {
+                $message = "policy type is not of type FIREWALL or does not exist - Please verify the policy name"
+                Write-Error -Message $message
+                throw $message
+            }
         }
 
         # Updating URI with policy ID
@@ -80,8 +92,12 @@ function Get-SEPMFirewallPolicy {
             Uri     = $URI
             headers = $headers
         }
-    
-        $resp = Invoke-ABRestMethod -params $params
+
+        try {
+            $resp = Invoke-ABRestMethod -params $params
+        } catch {
+            Write-Warning -Message "Error: $_"
+        }
 
         # Add a PSTypeName to the object
         $resp.PSObject.TypeNames.Insert(0, 'SEPM.FirewallPolicy')
