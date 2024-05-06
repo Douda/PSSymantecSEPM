@@ -5,7 +5,7 @@ RUN apt-get update && \
 
 # Clone the repo
 WORKDIR /workspace
-RUN git clone https://github.com/Douda/PSSymantecSEPM
+RUN git clone -b develop https://github.com/Douda/PSSymantecSEPM
 
 # GitVersion
 WORKDIR /tmp
@@ -19,7 +19,7 @@ RUN rm -rf /tmp/*
 SHELL ["/usr/bin/pwsh", "-c"]
 
 # Install Powershell Modules
-RUN $ErrorActionPreference='Stop'; Install-Module -Name Pester, InvokeBuild, ModuleBuilder, PlatyPS, PSScriptAnalyzer, PSReadLine -Force
+RUN $ErrorActionPreference='Stop'; Install-Module -Name Pester, InvokeBuild,  ModuleBuilder, PlatyPS, PSScriptAnalyzer, PSReadLine -Force
 
 # Import custom Powershell profile
 # https://api.github.com/gists/6fcbb253abcfec1df62bfc38667738f7
