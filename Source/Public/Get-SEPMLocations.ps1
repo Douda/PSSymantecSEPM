@@ -19,13 +19,13 @@ function Get-SEPMLocations {
 
         Gets the list of location names and their IDs for the specified group
     .EXAMPLE
-        PS C:\PSSymantecSEPM> Get-SEPMLocations -GroupID "XXXXXXXX" | Select-Object -First 1
+        PS C:\PSSymantecSEPM> Get-SEPMGroups | Select-Object -ExpandProperty id | Get-SEPMLocations
 
         name                  id
         ----                  --
         Default               33CE4894AC1485D12E3AAC763CF9A71B
 
-        Gets the first location of the list of locations for the specified group
+        Gets the list of location names and their IDs for all groups from the list of groups via pipeline
 #>
 
     [CmdletBinding()]
