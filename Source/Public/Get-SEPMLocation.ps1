@@ -1,4 +1,4 @@
-function Get-SEPMLocations {
+function Get-SEPMLocation {
     <# TODO update help for Location
     .SYNOPSIS
         Gets a list of locations for a specific group
@@ -18,7 +18,7 @@ function Get-SEPMLocations {
             groupId
             groupFullPathName
     .EXAMPLE
-        PS C:\PSSymantecSEPM> Get-SEPMLocations -GroupID "XXXXXXXX"
+        PS C:\PSSymantecSEPM> Get-SEPMLocation -GroupID "XXXXXXXX"
 
         name                  id
         ----                  --
@@ -28,7 +28,7 @@ function Get-SEPMLocations {
 
         Gets the list of location names and their IDs for the specified group
     .EXAMPLE
-        PS C:\PSSymantecSEPM> Get-SEPMGroups | Get-SEPMLocations | ft
+        PS C:\PSSymantecSEPM> Get-SEPMGroups | Get-SEPMLocation | ft
 
         locationName          locationId                       groupName                      groupId                          groupFullPathName
         ------------          ----------                       ---------                      -------                          -----------------
@@ -111,6 +111,11 @@ function Get-SEPMLocations {
                 groupId           = $groupInfo.id
                 groupFullPathName = $groupInfo.fullPathName
             }
+        }
+
+        # Add a PSTypeName to the object
+        $locationList | ForEach-Object {
+            $_.PSObject.TypeNames.Insert(0, 'SEPM.GroupLocationInfo')
         }
 
         # return the response
