@@ -8,6 +8,15 @@ function Get-SEPMLocations {
         Skip certificate check
     .PARAMETER GroupID
         Mandatory parameter for the group ID
+    .INPUTS
+        System.String
+    .OUTPUTS
+        System.Object with the following properties:
+            locationName
+            locationId
+            groupName
+            groupId
+            groupFullPathName
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMLocations -GroupID "XXXXXXXX"
 
