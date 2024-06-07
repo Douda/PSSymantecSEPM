@@ -28,7 +28,7 @@ function Get-SEPMLocations {
 
         Gets the list of location names and their IDs for the specified group
     .EXAMPLE
-        PS C:\PSSymantecSEPM> Get-SEPMGroups | Select-Object -ExpandProperty id | Get-SEPMLocations | ft
+        PS C:\PSSymantecSEPM> Get-SEPMGroups | Get-SEPMLocations | ft
 
         locationName          locationId                       groupName                      groupId                          groupFullPathName
         ------------          ----------                       ---------                      -------                          -----------------
@@ -50,7 +50,8 @@ function Get-SEPMLocations {
         # GroupID
         [Parameter(
             Mandatory = $true,
-            ValueFromPipeline = $true
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true
         )]
         [String]
         $GroupID
