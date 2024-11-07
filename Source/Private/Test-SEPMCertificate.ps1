@@ -30,7 +30,7 @@ function Test-SEPMCertificate {
     
     try {
         # Test the certificate
-        Invoke-WebRequest $URI -AllowUnencryptedAuthentication
+        Invoke-WebRequest $URI #-AllowUnencryptedAuthentication
 
         # If no error, then the certificate is valid 
         $script:SkipCert = $false
