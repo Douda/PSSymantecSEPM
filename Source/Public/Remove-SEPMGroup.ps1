@@ -34,14 +34,9 @@ function Remove-SEPMGroup {
 
         # group name
         [Parameter(
-            ValueFromPipelineByPropertyName = $true
+            ValueFromPipelineByPropertyName = $true,
+            Mandatory = $true
         )]
-        [ValidateScript({
-                if ([string]::IsNullOrEmpty($ParentGroup)) {
-                    throw "The -GroupName parameter requires the -ParentGroup parameter to be set."
-                }
-                return $true
-            })]
         [Alias("Group")]
         [String]
         $GroupName,

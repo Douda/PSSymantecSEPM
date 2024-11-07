@@ -14,21 +14,37 @@ function Get-SEPMPoliciesSummary {
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMPoliciesSummary
 
-        content          :  {@{sources=System.Object[]; enabled=True; desc=Created automatically during product  ...}}
-        size             : 136
-        number           : 0
-        sort             :
-        numberOfElements : 136
-        totalElements    : 136
-        totalPages       : 1
-        lastPage         : True
-        firstPage        : True
-
         Get policy statistics for all policies and its assigned groups
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMPoliciesSummary -PolicyType fw
 
         Get policy statistics for firewall policies and its assigned groups
+    .EXAMPLE
+        PS C:\PSSymantecSEPM> $csvPoliciesSummary =  Get-SEPMPoliciesSummary | Select-Object -ExcludeProperty sources
+        PS C:\PSSymantecSEPM> $csvPoliciesSummary | ConvertTo-FlatObject | Export-Csv C:\temp\test.csv
+        PS C:\PSSymantecSEPM> $csvPoliciesSummary[0]
+
+        enabled                                 : True
+        desc                                    : 
+        name                                    : Custom AV policy
+        lastmodifiedtime                        : 1720096619241
+        id                                      : DFDDEFB3AC1E4AEE7D3F8CC3968XXXXX
+        domainid                                : 8D9FCF73C0A890F810856CF40E9XXXXX
+        policytype                              : av
+        subtype                                 : 
+        assignedtocloudgroups                   : 
+        assignedtolocations.1.groupId           : 4F492FD6AC15B5D55CA866FE6C3XXXXX
+        assignedtolocations.1.defaultLocationId : FE77AFA8AC15B5D5607B79FDE94XXXXX
+        assignedtolocations.1.locationIds.1     : FE77AFA8AC15B5D5607B79FDE94XXXXX
+        assignedtolocations.1.groupNameFullPath : My Company\Workstations\Tamper\Block and do not log
+        assignedtolocations.2.groupId           : BF9A0D8CAC15B5D534DB17F34E5XXXXX
+        assignedtolocations.2.defaultLocationId : 39F318ABAC15B5D559E1014F7B0XXXXX
+        assignedtolocations.2.locationIds.1     : 39F318ABAC15B5D559E1014F7B0XXXXX
+        assignedtolocations.2.groupNameFullPath : My Company\Workstations\Tamper\Block and Log
+        lastModifiedDate                        : 04/07/2023 12:36:59
+
+        Export the list of all policies, its assigned groups, locations and other details to a CSV file
+        Excludes the sources property from the output as it's empty by default
 #>
 
     [CmdletBinding()]

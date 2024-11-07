@@ -37,6 +37,7 @@ function Move-SEPClientGroup {
 
         # ComputerName
         [Parameter(
+            Mandatory = $true,
             ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true
         )]
@@ -46,7 +47,7 @@ function Move-SEPClientGroup {
 
         # group name
         [Parameter(
-            ValueFromPipelineByPropertyName = $true
+            Mandatory = $true
         )]
         [Alias("Group")]
         [String]
@@ -115,7 +116,18 @@ function Move-SEPClientGroup {
             Write-Warning -Message "Error: $_"
         }
 
+        $fullResponse = [PSCustomObject]@{
+            computerName        = $ComputerName
+            computerHardwareKey = $hardwareKey
+            targetGroup         = $GroupName
+            responseCode        = $resp.responseCode
+            responseMessage     = $resp.responseMessage
+        }
+
+        # Add a PSTypeName to the object
+        $fullResponse.PSObject.TypeNames.Insert(0, 'SEPM.MoveClientGroupResponse')
+
         # return the response
-        return $resp
+        return $fullResponse
     }
 }

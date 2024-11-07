@@ -256,6 +256,12 @@
                     return $date
                 </GetScriptBlock>
             </ScriptProperty>
+            <ScriptProperty>
+                <Name>GroupId</Name>
+                <GetScriptBlock>
+                    return $this.id
+                </GetScriptBlock>
+            </ScriptProperty>
         </Members>
     </Type>
     <Type>

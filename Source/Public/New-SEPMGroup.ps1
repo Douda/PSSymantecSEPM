@@ -1,4 +1,4 @@
-function Add-SEPMGroup {
+function New-SEPMGroup {
     <#
     .SYNOPSIS
         Creates a new SEPM group
@@ -16,11 +16,11 @@ function Add-SEPMGroup {
     .PARAMETER SkipCertificateCheck
         Skip certificate check
     .EXAMPLE
-        Add-SEPMGroup -GroupName "Win7" -ParentGroup "My Company\EMEA\Workstations"
+        New-SEPMGroup -GroupName "Win7" -ParentGroup "My Company\EMEA\Workstations"
 
         Creates a new group Win7 under the group My Company\EMEA\Workstations
     .EXAMPLE
-        Add-SEPMGroup -GroupName "Win 10" -ParentGroup "My Company\EMEA\Workstations" -EnabledInheritance
+        New-SEPMGroup -GroupName "Win 10" -ParentGroup "My Company\EMEA\Workstations" -EnabledInheritance
 
         Creates a new group Win 10 under the group My Company\EMEA\Workstations and enables inheritance
     #>
@@ -36,12 +36,6 @@ function Add-SEPMGroup {
         [Parameter(
             ValueFromPipelineByPropertyName = $true
         )]
-        [ValidateScript({
-                if ([string]::IsNullOrEmpty($ParentGroup)) {
-                    throw "The -GroupName parameter requires the -ParentGroup parameter to be set."
-                }
-                return $true
-            })]
         [Alias("Group")]
         [String]
         $GroupName,
