@@ -27,30 +27,31 @@ function Test-SEPMCertificate {
         [string]
         $URI
     )
-    
-    try {
-        # Test the certificate
-        Invoke-WebRequest $URI # -AllowUnencryptedAuthentication
 
-        # If no error, then the certificate is valid 
-        $script:SkipCert = $false
-    } catch {
-        if ($_.Exception.HttpRequestError -eq "SecureConnectionError") {
-            # Get SEPM server name from URI
-            $ServerName = (New-Object System.Uri($URI)).Host
+    # TODO completely removed certificate test check to bypass self signed issues
+    # try {
+    #     # Test the certificate
+    #     Invoke-WebRequest $URI # -AllowUnencryptedAuthentication
 
-            # Get the error message
-            $message = "SSL Certificate test failed.  The certificate for $ServerName is likely self-signed."
-            Write-Warning -Message $message
+    #     # If no error, then the certificate is valid 
+    #     $script:SkipCert = $false
+    # } catch {
+    #     if ($_.Exception.HttpRequestError -eq "SecureConnectionError") {
+    #         # Get SEPM server name from URI
+    #         $ServerName = (New-Object System.Uri($URI)).Host
 
-            # Prompt for user input to continue
-            # TODO add a remove option for user interaction with -skipcertificationcheck
-            if ($PSVersionTable.PSVersion.Major -lt 6) {
-                Skip-Cert
-            }
-            $script:SkipCert = $true
-        } else {
-            throw $_
-        }
-    }
+    #         # Get the error message
+    #         $message = "SSL Certificate test failed.  The certificate for $ServerName is likely self-signed."
+    #         Write-Warning -Message $message
+
+    #         # Prompt for user input to continue
+    #         # TODO add a remove option for user interaction with -skipcertificationcheck
+    #         if ($PSVersionTable.PSVersion.Major -lt 6) {
+    #             Skip-Cert
+    #         }
+    #         $script:SkipCert = $true
+    #     } else {
+    #         throw $_
+    #     }
+    # }
 }
