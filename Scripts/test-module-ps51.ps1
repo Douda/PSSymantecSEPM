@@ -1,16 +1,28 @@
 ﻿# Test PSSymantecSEPM on PS 5.1
-# Run via: powershell -ExecutionPolicy Bypass -File C:\Users\douda\Desktop\Shared\test-module.ps1
+# Requires SEPM server running on localhost:8446
+# Usage: powershell -ExecutionPolicy Bypass -File <path>
+# SEPM credentials can be set via env: $env:SEPM_USER, $env:SEPM_PASS
+
+param(
+    [string]$SepmServer = "127.0.0.1",
+    [string]$SepmPort = "8446",
+    [string]$SepmUser = $env:SEPM_USER,
+    [string]$SepmPass = $env:SEPM_PASS
+)
 
 $ErrorActionPreference = "Continue"
 Write-Host "=== PS 5.1 Module Test ===" -ForegroundColor Cyan
 
-Import-Module "C:\Users\douda\Desktop\Shared\PSSymantecSEPM\PSSymantecSEPM.psm1" -Force
+Import-Module "$PSScriptRoot\PSSymantecSEPM\PSSymantecSEPM.psm1" -Force
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
 
-Set-SepmConfiguration -ServerAddress 127.0.0.1 -Port 8446
+Set-SepmConfiguration -ServerAddress $SepmServer -Port $SepmPort
 
-$secpass = ConvertTo-SecureString "Aurelien1!" -AsPlainText -Force
-$cred = New-Object System.Management.Automation.PSCredential("admin", $secpass)
+if (-not $SepmUser) { $SepmUser = Read-Host "SEPM username" }
+if (-not $SepmPass) { $SepmPass = Read-Host "SEPM password" -AsSecureString } else {
+    $SepmPass = ConvertTo-SecureString $SepmPass -AsPlainText -Force
+}
+$cred = New-Object System.Management.Automation.PSCredential($SepmUser, $SepmPass)
 Set-SEPMAuthentication -Credentials $cred
 
 $m = Get-Module PSSymantecSEPM
