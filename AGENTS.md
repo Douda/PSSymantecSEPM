@@ -134,8 +134,12 @@ Invoke-Pester ./Tests -Output Detailed
 Invoke-Pester ./Tests/Build-SEPMQueryURI.Tests.ps1 -Output Detailed
 
 # Configure & auth against local VM
-Set-SepmConfiguration -ServerAddress "127.0.0.1" -Port 8446
+Set-SepmConfiguration -ServerAddress "host.docker.internal" -Port 8446
 Set-SEPMAuthentication
+
+# SkipCert must be set INSIDE module scope (Test-SEPMCertificate is disabled)
+$mod = Get-Module PSSymantecSEPM; & $mod { $script:SkipCert = $true }
+
 Get-SEPMAccessToken
 
 # Quick smoke test
