@@ -210,3 +210,17 @@ python3 Scripts/invoke-winrm.py 'C:\Users\<username>\Desktop\Shared\test-module.
 - `ModuleBuilder` assembles split source into a single `.psm1`. Always rebuild after adding new source files.
 - The `zz_` prefix convention ensures init runs last.
 - `RequiredModules.psd1` lists build/test dependencies.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues, using the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+All five canonical labels use their defaults (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context — one `CONTEXT.md` at the repo root, one `docs/adr/` directory. See `docs/agents/domain.md`.
