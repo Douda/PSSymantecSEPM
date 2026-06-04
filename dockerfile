@@ -20,6 +20,7 @@ SHELL ["/usr/bin/pwsh", "-c"]
 RUN $ErrorActionPreference = 'Stop'; \
     $modules = @( \
         'ModuleBuilder', \
+        'Configuration', \
         'Pester', \
         'PSScriptAnalyzer', \
         'PlatyPS' \
