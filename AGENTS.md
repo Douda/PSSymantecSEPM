@@ -115,6 +115,35 @@ Linux Host (Omarchy/Arch)        Docker container: omarchy-windows
 - Shared volume: `/home/douda/Windows/` ↔ `C:\Shared\` in VM
 - Docker compose: `~/.config/windows/docker-compose.yml`
 
+## Fresh VM Setup
+
+When setting up a new Windows VM for development, run one script once.
+
+### On the host (before starting devcontainer)
+
+```bash
+export WINRM_USER=douda
+export WINRM_PASS=aurelien
+```
+
+### In the Windows VM (run as Administrator once)
+
+Copy `Scripts/setup-vm.ps1` to the shared volume, then:
+```powershell
+C:\Users\<user>\Desktop\Shared\setup-vm.ps1 -RemoteUser <username>
+```
+
+This single script does:
+- Enables WinRM, sets it to auto-start
+- Configures Basic auth, firewall rules (5985/5986)
+- Adds the user to Remote Management Users + Administrators
+- Creates a self-signed SSL cert with Server Authentication EKU
+- Creates an HTTPS WinRM listener on port 5986
+- Restarts WinRM and prints verification status
+
+No other manual steps needed. After this, the VM is reachable from the devcontainer
+via `python3 Scripts/invoke-winrm.py`.
+
 ## Local Commands
 
 ```powershell
