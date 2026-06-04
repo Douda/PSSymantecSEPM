@@ -1,0 +1,595 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "SEPM IDENTITY API",
+    "version": "v1",
+    "description": "Self-contained OpenAPI 2.0 specification for SEPM identity endpoints."
+  },
+  "basePath": "/sepm/api/v1",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/api/v1/identity/authenticate": {
+      "post": {
+        "tags": [
+          "production"
+        ],
+        "summary": "Authenticates and returns an access token for a valid user.",
+        "description": "",
+        "operationId": "Authenticate User",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "The credentials used to log on to Symantec Endpoint Protection Manager.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserCredential"
+            }
+          },
+          {
+            "name": "getBanner",
+            "in": "query",
+            "description": "Displays a logon banner, if configured. The possible values are TRUE or FALSE.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "appName",
+            "in": "query",
+            "description": "Specify an application name to receive a token unique for that app",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/groups_HttpServletRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/identity_UserToken"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        }
+      }
+    },
+    "/api/v1/identity/logout": {
+      "post": {
+        "tags": [
+          "production"
+        ],
+        "summary": "Logs off the user that is associated with a specified token.",
+        "description": "",
+        "operationId": "Logout",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/groups_HttpServletRequest"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Log off is successful."
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "BufferedReader": {
+      "type": "object"
+    },
+    "Enumeration": {
+      "type": "object"
+    },
+    "Locale": {
+      "type": "object",
+      "properties": {
+        "country": {
+          "type": "string"
+        },
+        "displayCountry": {
+          "type": "string"
+        },
+        "displayLanguage": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "displayScript": {
+          "type": "string"
+        },
+        "displayVariant": {
+          "type": "string"
+        },
+        "extensionKeys": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "iso3Country": {
+          "type": "string"
+        },
+        "iso3Language": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "script": {
+          "type": "string"
+        },
+        "unicodeLocaleAttributes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "unicodeLocaleKeys": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "variant": {
+          "type": "string"
+        }
+      }
+    },
+    "Principal": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "StringBuffer": {
+      "type": "object"
+    },
+    "UserCredential": {
+      "type": "object",
+      "required": [
+        "domain",
+        "password",
+        "username"
+      ],
+      "properties": {
+        "username": {
+          "type": "string",
+          "description": "The username used to log on to Symantec Endpoint Protection Manager."
+        },
+        "password": {
+          "type": "string",
+          "description": "The encrypted password to use with the username."
+        },
+        "domain": {
+          "type": "string",
+          "description": "The Symantec Endpoint Protection Manager domain to which the username logs on."
+        }
+      }
+    },
+    "UserRole": {
+      "type": "object",
+      "required": [
+        "bitMask",
+        "title"
+      ],
+      "properties": {
+        "bitMask": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The user role mask for the web user interface. Possible values are 8 for system administrator, 4 for domain administrator, and 2 for limited administrator."
+        },
+        "title": {
+          "type": "string",
+          "description": "The user's title."
+        }
+      },
+      "description": "User role model for the webUI login"
+    },
+    "groups_Cookie": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "maxAge": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "path": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean",
+          "default": false
+        },
+        "version": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "groups_HttpServletRequest": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string"
+        },
+        "userPrincipal": {
+          "$ref": "#/definitions/Principal"
+        },
+        "session": {
+          "$ref": "#/definitions/groups_HttpSession"
+        },
+        "headerNames": {
+          "$ref": "#/definitions/Enumeration"
+        },
+        "pathTranslated": {
+          "type": "string"
+        },
+        "remoteUser": {
+          "type": "string"
+        },
+        "requestURL": {
+          "$ref": "#/definitions/StringBuffer"
+        },
+        "authType": {
+          "type": "string"
+        },
+        "contextPath": {
+          "type": "string"
+        },
+        "servletPath": {
+          "type": "string"
+        },
+        "pathInfo": {
+          "type": "string"
+        },
+        "requestURI": {
+          "type": "string"
+        },
+        "queryString": {
+          "type": "string"
+        },
+        "cookies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/groups_Cookie"
+          }
+        },
+        "requestedSessionIdFromCookie": {
+          "type": "boolean",
+          "default": false
+        },
+        "requestedSessionIdFromURL": {
+          "type": "boolean",
+          "default": false
+        },
+        "requestedSessionIdValid": {
+          "type": "boolean",
+          "default": false
+        },
+        "requestedSessionIdFromUrl": {
+          "type": "boolean",
+          "default": false
+        },
+        "requestedSessionId": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "inputStream": {
+          "$ref": "#/definitions/groups_ServletInputStream"
+        },
+        "contentLength": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "attributeNames": {
+          "$ref": "#/definitions/Enumeration"
+        },
+        "parameterMap": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "localPort": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "localName": {
+          "type": "string"
+        },
+        "reader": {
+          "$ref": "#/definitions/BufferedReader"
+        },
+        "secure": {
+          "type": "boolean",
+          "default": false
+        },
+        "remoteHost": {
+          "type": "string"
+        },
+        "localAddr": {
+          "type": "string"
+        },
+        "serverPort": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "locales": {
+          "$ref": "#/definitions/Enumeration"
+        },
+        "remoteAddr": {
+          "type": "string"
+        },
+        "serverName": {
+          "type": "string"
+        },
+        "remotePort": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "parameterNames": {
+          "$ref": "#/definitions/Enumeration"
+        },
+        "characterEncoding": {
+          "type": "string"
+        }
+      }
+    },
+    "groups_HttpSession": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "creationTime": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "attributeNames": {
+          "$ref": "#/definitions/Enumeration"
+        },
+        "new": {
+          "type": "boolean",
+          "default": false
+        },
+        "servletContext": {
+          "$ref": "#/definitions/groups_ServletContext"
+        },
+        "sessionContext": {
+          "$ref": "#/definitions/groups_HttpSessionContext"
+        },
+        "lastAccessedTime": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "valueNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "maxInactiveInterval": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "groups_HttpSessionContext": {
+      "type": "object",
+      "properties": {
+        "ids": {
+          "$ref": "#/definitions/Enumeration"
+        }
+      }
+    },
+    "groups_ServletContext": {
+      "type": "object",
+      "properties": {
+        "majorVersion": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "minorVersion": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "attributeNames": {
+          "$ref": "#/definitions/Enumeration"
+        },
+        "servlets": {
+          "$ref": "#/definitions/Enumeration"
+        },
+        "servletNames": {
+          "$ref": "#/definitions/Enumeration"
+        },
+        "serverInfo": {
+          "type": "string"
+        },
+        "initParameterNames": {
+          "$ref": "#/definitions/Enumeration"
+        },
+        "contextPath": {
+          "type": "string"
+        },
+        "servletContextName": {
+          "type": "string"
+        }
+      }
+    },
+    "groups_ServletInputStream": {
+      "type": "object"
+    },
+    "identity_UserPermission": {
+      "type": "object",
+      "properties": {
+        "reportingRights": {
+          "type": "boolean",
+          "description": "Specifies whether or not the user has reporting rights.",
+          "default": false
+        },
+        "groupRights": {
+          "type": "boolean",
+          "description": "Specifies whether or not the user has group rights.",
+          "default": false
+        },
+        "siteRights": {
+          "type": "boolean",
+          "description": "Specifies whether or not the user has site rights.",
+          "default": false
+        },
+        "remoteCommandRights": {
+          "type": "boolean",
+          "description": "Specifies whether or not the user has the rights to send commands to clients.",
+          "default": false
+        },
+        "policyRights": {
+          "type": "boolean",
+          "description": "Specifies whether or not the user has policy rights.",
+          "default": false
+        }
+      }
+    },
+    "identity_UserToken": {
+      "type": "object",
+      "required": [
+        "adminId",
+        "token"
+      ],
+      "properties": {
+        "username": {
+          "type": "string",
+          "description": "The username used to log on to Symantec Endpoint Protection Manager."
+        },
+        "getfullName": {
+          "type": "string",
+          "description": "The user's fullname."
+        },
+        "domain": {
+          "type": "string",
+          "description": "The Symantec Endpoint Protection Manager domain to which the username logs on."
+        },
+        "token": {
+          "type": "string",
+          "description": "The access token associated with the user."
+        },
+        "tokenExpiration": {
+          "type": "integer",
+          "format": "int64",
+          "description": "The access token expiration value in seconds."
+        },
+        "refreshToken": {
+          "type": "string",
+          "description": "The user's refresh token."
+        },
+        "refreshTokenExpiration": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Refresh token expiration value in seconds."
+        },
+        "role": {
+          "description": "The user role object.",
+          "$ref": "#/definitions/UserRole"
+        },
+        "adminId": {
+          "type": "string",
+          "description": "The user's Id."
+        },
+        "clientId": {
+          "type": "string",
+          "description": "The client id associated with the application."
+        },
+        "clientSecret": {
+          "type": "string",
+          "description": "The client secret associated with the application."
+        },
+        "permissionSet": {
+          "description": "The user permission object.",
+          "$ref": "#/definitions/identity_UserPermission"
+        },
+        "bannerTitle": {
+          "type": "string",
+          "description": "The banner title associated with the domain."
+        },
+        "bannerText": {
+          "type": "string",
+          "description": "The banner text associated with the domain."
+        },
+        "domainid": {
+          "type": "string",
+          "description": "The Id of the domain."
+        },
+        "serverTime": {
+          "type": "integer",
+          "format": "int64",
+          "description": "The Server Time."
+        }
+      }
+    }
+  }
+}

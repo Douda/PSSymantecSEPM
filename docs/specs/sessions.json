@@ -1,0 +1,154 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "SEPM SESSIONS API",
+    "version": "v1",
+    "description": "Self-contained OpenAPI 2.0 specification for SEPM sessions endpoints."
+  },
+  "basePath": "/sepm/api/v1",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/api/v1/sessions/currentuser": {
+      "get": {
+        "description": "",
+        "operationId": "Get Current User Token",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/administrators_UserToken"
+            }
+          }
+        },
+        "summary": "Gets the current usertoken object",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "UserRole": {
+      "type": "object",
+      "required": [
+        "bitMask",
+        "title"
+      ],
+      "properties": {
+        "bitMask": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The user role mask for the web user interface. Possible values are 8 for system administrator, 4 for domain administrator, and 2 for limited administrator."
+        },
+        "title": {
+          "type": "string",
+          "description": "The user's title."
+        }
+      },
+      "description": "User role model for the webUI login"
+    },
+    "administrators_UserPermission": {
+      "type": "object",
+      "properties": {
+        "groupRights": {
+          "description": "Specifies whether or not the user has group rights.",
+          "type": "boolean"
+        },
+        "policyRights": {
+          "description": "Specifies whether or not the user has policy rights.",
+          "type": "boolean"
+        },
+        "remoteCommandRights": {
+          "description": "Specifies whether or not the user has the rights to send commands to clients.",
+          "type": "boolean"
+        },
+        "reportingRights": {
+          "description": "Specifies whether or not the user has reporting rights.",
+          "type": "boolean"
+        },
+        "siteRights": {
+          "description": "Specifies whether or not the user has site rights.",
+          "type": "boolean"
+        }
+      }
+    },
+    "administrators_UserToken": {
+      "type": "object",
+      "required": [
+        "adminId",
+        "token"
+      ],
+      "properties": {
+        "adminId": {
+          "description": "The user's Id.",
+          "type": "string"
+        },
+        "bannerText": {
+          "description": "The banner text associated with the domain.",
+          "type": "string"
+        },
+        "bannerTitle": {
+          "description": "The banner title associated with the domain.",
+          "type": "string"
+        },
+        "clientId": {
+          "description": "The client id associated with the application.",
+          "type": "string"
+        },
+        "clientSecret": {
+          "description": "The client secret associated with the application.",
+          "type": "string"
+        },
+        "domain": {
+          "description": "The Symantec Endpoint Protection Manager domain to which the username logs on.",
+          "type": "string"
+        },
+        "domainid": {
+          "description": "The Id of the domain.",
+          "type": "string"
+        },
+        "fullname": {
+          "description": "The user's fullname.",
+          "type": "string"
+        },
+        "permissionSet": {
+          "$ref": "#/definitions/administrators_UserPermission",
+          "description": "The user permission object."
+        },
+        "refreshToken": {
+          "description": "The user's refresh token.",
+          "type": "string"
+        },
+        "refreshTokenExpiration": {
+          "description": "Refresh token expiration value in seconds.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "role": {
+          "$ref": "#/definitions/UserRole",
+          "description": "The user role object."
+        },
+        "serverTime": {
+          "description": "The Server Time.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "token": {
+          "description": "The access token associated with the user.",
+          "type": "string"
+        },
+        "tokenExpiration": {
+          "description": "The access token expiration value in seconds.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "username": {
+          "description": "The username used to log on to Symantec Endpoint Protection Manager.",
+          "type": "string"
+        }
+      }
+    }
+  }
+}
