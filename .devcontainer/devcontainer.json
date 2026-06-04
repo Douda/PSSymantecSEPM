@@ -45,6 +45,8 @@
 	],
 	"containerEnv": {
 		"SEPM_SERVER": "${localEnv:SEPM_SERVER:host.docker.internal}",
-		"SEPM_PORT": "${localEnv:SEPM_PORT:8446}"
+		"SEPM_PORT": "${localEnv:SEPM_PORT:8446}",
+		"WINRM_USER": "${localEnv:WINRM_USER:}",
+		"WINRM_PASS": "${localEnv:WINRM_PASS:}"
 	}
 }

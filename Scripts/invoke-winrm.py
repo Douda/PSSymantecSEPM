@@ -1,19 +1,33 @@
 #!/usr/bin/env python3
 """Run a PowerShell .ps1 script on the Windows VM via WinRM SSL transport.
 
-Usage: python3 Scripts/invoke-winrm.py <path-to-ps1-on-vm>
-Example: python3 Scripts/invoke-winrm.py 'C:\\Users\\douda\\Desktop\\Shared\\test-module.ps1'
+Credentials are read from environment variables:
+    WINRM_HOST   (default: 172.17.0.1)
+    WINRM_PORT   (default: 5986)
+    WINRM_USER   (required)
+    WINRM_PASS   (required)
+
+Usage:
+    WINRM_USER=douda WINRM_PASS=aurelien python3 Scripts/invoke-winrm.py <vm-script-path>
 """
-import sys, winrm
 
-HOST = '172.17.0.1'
-PORT = 5986
-USER = 'douda'
-PASS = 'aurelien'
+import os, sys, winrm
 
-script_path = sys.argv[1] if len(sys.argv) > 1 else r'C:\Users\douda\Desktop\Shared\test-module.ps1'
+HOST = os.environ.get('WINRM_HOST', '172.17.0.1')
+PORT = int(os.environ.get('WINRM_PORT', '5986'))
+USER = os.environ.get('WINRM_USER', '')
+PASS = os.environ.get('WINRM_PASS', '')
+
+if not USER or not PASS:
+    print("Set WINRM_USER and WINRM_PASS environment variables.", file=sys.stderr)
+    sys.exit(1)
+
+script_path = sys.argv[1] if len(sys.argv) > 1 else None
+if not script_path:
+    print(f"Usage: WINRM_USER=... WINRM_PASS=... {sys.argv[0]} <path-to-ps1-on-vm>", file=sys.stderr)
+    sys.exit(1)
+
 cmd = f'powershell -ExecutionPolicy Bypass -File "{script_path}"'
-
 s = winrm.Session(f'{HOST}:{PORT}', auth=(USER, PASS), transport='ssl', server_cert_validation='ignore')
 r = s.run_cmd(cmd)
 print(r.std_out.decode())

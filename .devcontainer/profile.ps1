@@ -25,14 +25,13 @@ function Build-ModuleLocal {
 function Invoke-WindowsVM {
     <#
     .SYNOPSIS
-        Run a PowerShell command on the Windows VM via WinRM (SSL transport).
-        Requires pywinrm (Python). VM must have WinRM enabled.
+        Run a command on the Windows VM via WinRM SSL.
+        Requires WINRM_USER and WINRM_PASS env vars (set in devcontainer.json).
     .EXAMPLE
-        Invoke-WindowsVM -Command "Get-Service WinRM"
         Invoke-WindowsVM -Command '$PSVersionTable.PSVersion'
+        Invoke-WindowsVM -Command 'Get-Service WinRM'
     #>
     param([string]$Command)
-    $escaped = $Command -replace "'", "\"'\"" -replace '"', '\"'
-    $script = "import winrm; s = winrm.Session('172.17.0.1:5986', auth=('douda', 'aurelien'), transport='ssl', server_cert_validation='ignore'); r = s.run_ps('$escaped'); [print(l.decode().strip()) for l in [r.std_out, r.std_err] if l]"
-    python3 -c $script 2>$null
+    $escaped = $Command -replace "'", "''"
+    python3 Scripts/invoke-winrm.py "$escaped" --inline 2>$null
 }

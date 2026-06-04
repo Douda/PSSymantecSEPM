@@ -1,18 +1,33 @@
 ﻿<#
 .SYNOPSIS
     One-shot Windows VM setup for PSSymantecSEPM development.
-    Enables WinRM, configures firewall, certs, and remote access.
-    Run ONCE as Administrator on a fresh Windows VM.
-    Run from: C:\Users\<user>\Desktop\Shared\setup-vm.ps1
+    Enables WinRM, configures firewall, certs, and remote management access.
+
+.DESCRIPTION
+    Run ONCE as Administrator on a fresh Windows VM to prepare it for
+    remote PowerShell development from a Linux devcontainer.
+
+.PARAMETER RemoteUser
+    The Windows user account to grant WinRM access to.
+    Defaults to the current user ($env:USERNAME).
+
+.EXAMPLE
+    .\setup-vm.ps1
+    .\setup-vm.ps1 -RemoteUser "devuser"
 #>
+
+[CmdletBinding()]
+param(
+    [string]$RemoteUser = $env:USERNAME
+)
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $ErrorActionPreference = "Stop"
-$vmUser = "douda"
 
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host "  PSSymantecSEPM VM Setup" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
+Write-Host "  Remote user: $RemoteUser" -ForegroundColor Gray
 Write-Host ""
 
 # ── 1. Enable WinRM ──
@@ -33,10 +48,25 @@ New-NetFirewallRule -Name "WinRM HTTPS" -Protocol TCP -LocalPort 5986 -Direction
 Write-Host "  Done." -ForegroundColor Green
 
 # ── 3. Add user to WinRM groups ──
-Write-Host "[3/5] Adding $vmUser to remote management groups..." -ForegroundColor Yellow
-try { Add-LocalGroupMember -Group "Remote Management Users" -Member $vmUser -ErrorAction Stop } catch { Write-Host "  (already in group or skipped)" -ForegroundColor Gray }
-try { Add-LocalGroupMember -Group "Administrators" -Member $vmUser -ErrorAction Stop } catch { Write-Host "  (already in group or skipped)" -ForegroundColor Gray }
-Write-Host "  Done." -ForegroundColor Green
+Write-Host "[3/5] Adding '$RemoteUser' to remote management groups..." -ForegroundColor Yellow
+$added = $false
+try {
+    Add-LocalGroupMember -Group "Remote Management Users" -Member $RemoteUser -ErrorAction Stop
+    $added = $true
+} catch {
+    Write-Host "  Remote Management Users: already present or skipped" -ForegroundColor Gray
+}
+try {
+    Add-LocalGroupMember -Group "Administrators" -Member $RemoteUser -ErrorAction Stop
+    $added = $true
+} catch {
+    Write-Host "  Administrators: already present or skipped" -ForegroundColor Gray
+}
+if ($added) {
+    Write-Host "  Done." -ForegroundColor Green
+} else {
+    Write-Host "  No new memberships needed." -ForegroundColor Green
+}
 
 # ── 4. Create HTTPS listener with self-signed cert ──
 Write-Host "[4/5] Creating WinRM HTTPS listener..." -ForegroundColor Yellow
@@ -65,10 +95,10 @@ Write-Host ""
 
 $svc = Get-Service WinRM
 Write-Host "WinRM Service: $($svc.Status)"
-Write-Host "Listeners: $(winrm enumerate winrm/config/listener | Select-String Transport | ForEach-Object { $_.Line.Trim() })"
+Write-Host "Listeners:"
+winrm enumerate winrm/config/listener | Select-String "Transport =|Port =" | ForEach-Object { "  $($_.Line.Trim())" }
 
 Write-Host ""
 Write-Host "=== SETUP COMPLETE ===" -ForegroundColor Green
 Write-Host ""
-Write-Host "Next: install Symantec SEPM, then from devcontainer:" -ForegroundColor White
-Write-Host "  python3 Scripts/invoke-winrm.py 'C:\...\Shared\test-module.ps1'" -ForegroundColor Gray
+Write-Host "The VM is now ready for remote PowerShell access." -ForegroundColor White
