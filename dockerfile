@@ -13,6 +13,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy PowerShell profile (must come before SHELL switch for COPY to work)
 COPY .devcontainer/profile.ps1 /root/.config/powershell/Microsoft.PowerShell_profile.ps1
 
+# Install Python + pywinrm for WinRM/PS 5.1 testing
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip3 install --break-system-packages pywinrm
+
 # Switch to PowerShell for module installation
 SHELL ["/usr/bin/pwsh", "-c"]
 
