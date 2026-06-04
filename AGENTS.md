@@ -145,9 +145,21 @@ Get-SEPMAccessToken
 # Quick smoke test
 Get-SEPMVersion
 Get-SEPComputers
+
+# PS 5.1 testing (via WinRM SSL transport)
+cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM  # deploy to shared volume
+python3 Scripts/invoke-winrm.py 'C:\Users\douda\Desktop\Shared\test-module.ps1'
 ```
 
 ## Agent Notes
+
+### WinRM (PS 5.1 testing)
+- WinRM is enabled on the Windows VM with HTTP (5985) and HTTPS (5986) listeners.
+- HTTPS listener is broken (pywinrm/PSWSMan get ConnectionReset over HTTPS) — use **SSL transport** instead.
+- Python `pywinrm` with `transport='ssl'` on port 5986 works. Pre-installed in the devcontainer image.
+- Execution policy is Restricted in WinRM sessions — always pass `-ExecutionPolicy Bypass`.
+- Module files must be deployed to shared volume (`C:\Users\douda\Desktop\Shared\`) before testing.
+- Helper scripts at `Scripts/test-module-ps51.ps1` and `Scripts/invoke-winrm.py`.
 
 ### Encoding
 - **Windows PowerShell 5.1 requires UTF-8 with BOM.** Files written to the shared volume (`/home/douda/Windows/`) that are meant to run on the Windows VM must have a UTF-8 BOM prefix (`\xef\xbb\xbf`). Without it, Unicode characters get mangled and the parser breaks on special characters.
