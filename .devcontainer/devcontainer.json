@@ -40,8 +40,11 @@
 		}
 	},
 	"remoteUser": "root",
+	"runArgs": [
+		"--add-host", "host.docker.internal:host-gateway"
+	],
 	"containerEnv": {
-		"SEPM_SERVER": "${localEnv:SEPM_SERVER:}",
+		"SEPM_SERVER": "${localEnv:SEPM_SERVER:host.docker.internal}",
 		"SEPM_PORT": "${localEnv:SEPM_PORT:8446}"
 	}
 }
