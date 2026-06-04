@@ -1,31 +1,64 @@
-FROM mcr.microsoft.com/powershell:latest as build
-RUN apt-get update && \
-    apt-get -y install git && \
-    apt-get install wget
+# PSSymantecSEPM Development Container
+# Uses PowerShell 7+ with dev tools pre-installed
+FROM mcr.microsoft.com/powershell:latest
 
-# Clone the repo
-WORKDIR /workspace
-RUN git clone -b develop https://github.com/Douda/PSSymantecSEPM
+# Install system tools useful for API debugging and development
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    jq \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-# GitVersion
-WORKDIR /tmp
-RUN wget https://github.com/GitTools/GitVersion/releases/download/5.12.0/gitversion-linux-x64-5.12.0.tar.gz
-RUN tar -xvf gitversion-linux-x64-5.12.0.tar.gz
-RUN mv gitversion /usr/local/bin
-RUN chmod +x /usr/local/bin/gitversion
-RUN rm -rf /tmp/*
-
-# Switch to Powershell Shell
+# Switch to PowerShell for module installation
 SHELL ["/usr/bin/pwsh", "-c"]
 
-# Install Powershell Modules
-RUN $ErrorActionPreference='Stop'; Install-Module -Name Pester, InvokeBuild,  ModuleBuilder, PlatyPS, PSScriptAnalyzer, PSReadLine -Force
+# Install required PowerShell modules for development
+RUN $ErrorActionPreference = 'Stop'; \
+    $modules = @( \
+        'ModuleBuilder', \
+        'Pester', \
+        'PSScriptAnalyzer', \
+        'PlatyPS' \
+    ); \
+    foreach ($m in $modules) { \
+        Write-Host "Installing $m..." -ForegroundColor Green; \
+        Install-Module -Name $m -Scope AllUsers -Force -AllowClobber; \
+    }
 
-# Import custom Powershell profile
-# https://api.github.com/gists/6fcbb253abcfec1df62bfc38667738f7
-RUN $ErrorActionPreference='Stop';if (!(Test-Path -Path $PROFILE)) { New-Item -ItemType File -Path $PROFILE -Force }; $gist = Invoke-RestMethod "https://api.github.com/gists/6fcbb253abcfec1df62bfc38667738f7" -ErrorAction Stop; $gistProfile = $gist.Files.'profile.ps1'.Content; Set-Content -Path $profile.CurrentUserAllHosts -Value $gistProfile
+# Create a minimal PowerShell profile with useful defaults
+RUN $profileDir = Split-Path -Path $PROFILE -Parent; \
+    if (!(Test-Path $profileDir)) { New-Item -ItemType Directory -Path $profileDir -Force | Out-Null }; \
+    @'
+# PSSymantecSEPM dev profile
+$MaximumFunctionCount = 4096
 
-# Set the working directory to the cloned repo
-WORKDIR /workspace/PSSymantecSEPM
+# Pretty prompt showing module source path
+function prompt {
+    $repo = "$PWD"
+    if (Test-Path "$repo/Source/PSSymantecSEPM.psd1") {
+        "SEPM [$repo]`n$('>' * ($nestedPromptLevel + 1)) "
+    } else {
+        "PS $PWD$('>' * ($nestedPromptLevel + 1)) "
+    }
+}
 
-CMD [ "pwsh" ]
+# Quick helper to build and import the module
+function Build-ModuleLocal {
+    param([string]$SemVer = "0.0.1")
+    $src = "$PWD/Source/PSSymantecSEPM.psd1"
+    if (!(Test-Path $src)) { Write-Error "Run this from the repo root"; return }
+    Build-Module -SourcePath $src -SemVer $SemVer
+    $mod = Get-ChildItem -Path "$PWD/Output/PSSymantecSEPM" -Directory | Sort-Object Name -Descending | Select-Object -First 1
+    if ($mod) {
+        Import-Module "$($mod.FullName)/PSSymantecSEPM.psm1" -Force
+        Write-Host "Module loaded from $($mod.FullName)" -ForegroundColor Green
+    }
+}
+'@ | Set-Content -Path $PROFILE -Force
+
+# Set working directory (will be overridden by devcontainer mount)
+WORKDIR /workspace
+
+# Default to a login shell so the profile loads
+CMD [ "pwsh", "-Login" ]

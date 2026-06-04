@@ -1,9 +1,27 @@
-# ignore the build folder
+# Dev container: source is mounted at runtime, so exclude from build context
+.git/
+.gitattributes
+.gitignore
+.gitmodules
+
+# Build output
 Output/
 Data/
+
+# Local config / personal
 Aurelien/
-# Ignore source folder as it will be pulled from repo
-Source/
-Scripts/
-Tests/
 __For_Dev_And_Maintenance/
+thunder-tests/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE (container has its own)
+.vscode/
+
+# No need for the legacy build tools
+gitversion.exe
+dotnet-gitversion.exe
