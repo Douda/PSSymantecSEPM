@@ -5,8 +5,7 @@
 	},
 	"workspaceFolder": "/workspace",
 	"mounts": [
-		// Mount nuget/psmodule cache so packages survive container rebuilds
-		"source=${env:HOME}${env:USERPROFILE}/.cache/powershell-modules,target=/root/.local/share/powershell/Modules,type=bind"
+		"source=${localEnv:HOME}/.cache/powershell-modules,target=/root/.local/share/powershell/Modules,type=bind"
 	],
 	"postCreateCommand": "pwsh -NoProfile -Command 'if (Test-Path /workspace/Source/PSSymantecSEPM.psd1) { Build-Module -SourcePath /workspace/Source/PSSymantecSEPM.psd1 -SemVer 0.0.1 -OutputDirectory /workspace/Output; Write-Host \"Module built.\" -ForegroundColor Green } else { Write-Warning \"Source manifest not found at /workspace/Source\" }'",
 	"customizations": {
