@@ -8,7 +8,7 @@ Credentials are read from environment variables:
     WINRM_PASS   (required)
 
 Usage:
-    WINRM_USER=douda WINRM_PASS=aurelien python3 Scripts/invoke-winrm.py <vm-script-path>
+    WINRM_USER=<username> WINRM_PASS=<password> python3 Scripts/invoke-winrm.py <vm-script-path>
 """
 
 import os, sys, winrm

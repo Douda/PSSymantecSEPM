@@ -122,8 +122,8 @@ When setting up a new Windows VM for development, run one script once.
 ### On the host (before starting devcontainer)
 
 ```bash
-export WINRM_USER=douda
-export WINRM_PASS=aurelien
+export WINRM_USER=<username>
+export WINRM_PASS=<password>
 ```
 
 ### In the Windows VM (run as Administrator once)
@@ -177,9 +177,9 @@ Get-SEPComputers
 
 # PS 5.1 testing (via WinRM SSL transport)
 # Set env vars on your host before opening the devcontainer:
-#   export WINRM_USER=douda WINRM_PASS=aurelien
+#   export WINRM_USER=<username> WINRM_PASS=<password>
 cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM  # deploy to shared volume
-python3 Scripts/invoke-winrm.py 'C:\Users\douda\Desktop\Shared\test-module.ps1'
+python3 Scripts/invoke-winrm.py 'C:\Users\<username>\Desktop\Shared\test-module.ps1'
 ```
 
 ## Agent Notes

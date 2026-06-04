@@ -10,3 +10,4 @@ thunder-tests/
 # VS Code user-specific files (not shared)
 .vscode/*.code-snippets
 # Keep settings.json and launch.json — they're shared config
+Windows/
