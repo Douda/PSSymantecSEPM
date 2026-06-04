@@ -1,0 +1,1230 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "This page documents the REST APIs that perform Symantec Endpoint Protection Manager operations.",
+    "title": "Symantec Endpoint Protection Manager API Reference",
+    "version": "v1"
+  },
+  "basePath": "/sepm/api/v1",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/api/v1/policies/exceptions": {
+      "post": {
+        "description": "",
+        "operationId": "Create Policy",
+        "parameters": [
+          {
+            "description": "The exceptions policy to be created.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyExceptionsConfigurationExceptionsLockedOptions"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Creates a new exceptions policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/exceptions/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the exceptions policy to get.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/PolicyExceptionsConfigurationExceptionsLockedOptions"
+            }
+          }
+        },
+        "summary": "Get the exceptions policy for specified policy id. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "put": {
+        "description": "",
+        "operationId": "Edit Policy",
+        "parameters": [
+          {
+            "description": "The exceptions policy to be modified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyExceptionsConfigurationExceptionsLockedOptions"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the exceptions policy to edit.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Modify existing policy values with PUT request. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "operationId": "deletePolicy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the Exceptions policy to delete.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Deletes an existing Exceptions policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "patch": {
+        "description": "",
+        "operationId": "Update Policy",
+        "parameters": [
+          {
+            "description": "The exceptions policy to be modified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyExceptionsConfigurationExceptionsLockedOptions"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the exceptions policy to update.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Update exceptions policies by patch. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v2/policies/exceptions": {
+      "post": {
+        "description": "",
+        "operationId": "Create Policy",
+        "parameters": [
+          {
+            "description": "The exceptions policy to be created.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyExceptionsConfigurationV2ExceptionsLockedOptions"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Creates a new exceptions policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v2/policies/exceptions/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the exceptions policy to get.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/PolicyExceptionsConfigurationV2ExceptionsLockedOptions"
+            }
+          }
+        },
+        "summary": "Get the exceptions policy for specified policy id. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "put": {
+        "description": "",
+        "operationId": "Edit Policy",
+        "parameters": [
+          {
+            "description": "The exceptions policy to be modified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyExceptionsConfigurationV2ExceptionsLockedOptions"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the exceptions policy to edit.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Modify existing policy values with PUT request. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "operationId": "Delete Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the Exceptions policy to delete.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Deletes an existing Exceptions policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "patch": {
+        "description": "",
+        "operationId": "Update Policy",
+        "parameters": [
+          {
+            "description": "The exceptions policy to be modified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyExceptionsConfigurationV2ExceptionsLockedOptions"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the exceptions policy to update.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Update exceptions policies by patch. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "ExceptionThreat": {
+      "type": "object",
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "description": "Id of the threat.",
+          "type": "string"
+        },
+        "name": {
+          "description": "The threat name.",
+          "type": "string"
+        }
+      }
+    },
+    "ExceptionsApplicationToMonitor": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "The process to detect.",
+          "type": "string"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        }
+      }
+    },
+    "ExceptionsConfiguration": {
+      "type": "object",
+      "properties": {
+        "applications": {
+          "description": "Applications at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleApplication"
+          },
+          "type": "array"
+        },
+        "applications_to_monitor": {
+          "description": "Monitored applicaitons at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsApplicationToMonitor"
+          },
+          "type": "array"
+        },
+        "blacklistrules": {
+          "description": "Blacklists at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleBlacklist"
+          },
+          "type": "array"
+        },
+        "certificates": {
+          "description": "Certificates at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleCertificate"
+          },
+          "type": "array"
+        },
+        "directories": {
+          "description": "Directories on wins platform at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleDirectory"
+          },
+          "type": "array"
+        },
+        "dns_and_host_applications": {
+          "description": "Dns and host applications at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleApplication"
+          },
+          "type": "array"
+        },
+        "dns_and_host_blacklistrules": {
+          "description": "Dns and host blacklists at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleDnsHostBlacklist"
+          },
+          "type": "array"
+        },
+        "extension_list": {
+          "$ref": "#/definitions/ExceptionsRuleExtensionList",
+          "description": "Extension on windows platforms at the exceptions policy"
+        },
+        "files": {
+          "description": "Files on windows platform at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleFile"
+          },
+          "type": "array"
+        },
+        "knownrisks": {
+          "description": "Known risks at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleKnownRisk"
+          },
+          "type": "array"
+        },
+        "linux": {
+          "$ref": "#/definitions/ExceptionsLinuxConfiguration",
+          "description": "Linux configuration at the exceptions policy"
+        },
+        "mac": {
+          "$ref": "#/definitions/ExceptionsMacConfiguration",
+          "description": "Mac files at the exceptions policy"
+        },
+        "non_pe_rules": {
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleNonPEFile"
+          },
+          "type": "array"
+        },
+        "tamper_files": {
+          "description": "Tamper files at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleFile"
+          },
+          "type": "array"
+        },
+        "webdomains": {
+          "description": "Trusted web domains at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleDomain"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "ExceptionsConfigurationV2": {
+      "type": "object",
+      "properties": {
+        "applications": {
+          "description": "Applications at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleApplication"
+          },
+          "type": "array"
+        },
+        "applications_to_monitor": {
+          "description": "Monitored applicaitons at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsApplicationToMonitor"
+          },
+          "type": "array"
+        },
+        "certificates": {
+          "description": "Certificates at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleCertificate"
+          },
+          "type": "array"
+        },
+        "denylistrules": {
+          "description": "Denylists at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleBlacklist"
+          },
+          "type": "array"
+        },
+        "directories": {
+          "description": "Directories on wins platform at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleDirectory"
+          },
+          "type": "array"
+        },
+        "dns_and_host_applications": {
+          "description": "Dns and host applications at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleApplication"
+          },
+          "type": "array"
+        },
+        "dns_and_host_denylistrules": {
+          "description": "Dns and host denylists at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleDnsHostBlacklist"
+          },
+          "type": "array"
+        },
+        "extension_list": {
+          "$ref": "#/definitions/ExceptionsRuleExtensionList",
+          "description": "Extension on windows platforms at the exceptions policy"
+        },
+        "files": {
+          "description": "Files on windows platform at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleFile"
+          },
+          "type": "array"
+        },
+        "knownrisks": {
+          "description": "Known risks at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleKnownRisk"
+          },
+          "type": "array"
+        },
+        "linux": {
+          "$ref": "#/definitions/ExceptionsLinuxConfiguration",
+          "description": "Linux configuration at the exceptions policy"
+        },
+        "mac": {
+          "$ref": "#/definitions/ExceptionsMacConfiguration",
+          "description": "Mac files at the exceptions policy"
+        },
+        "non_pe_rules": {
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleNonPEFile"
+          },
+          "type": "array"
+        },
+        "tamper_files": {
+          "description": "Tamper files at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleFile"
+          },
+          "type": "array"
+        },
+        "webdomains": {
+          "description": "Trusted web domains at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleDomain"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "ExceptionsFile": {
+      "type": "object",
+      "required": [
+        "sha2"
+      ],
+      "properties": {
+        "company": {
+          "description": "Optional attribute identifying the process.  The name of the company that published the object.",
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "directory": {
+          "description": "Optional attribute identifying the process.  The directory where the object was originally found.",
+          "type": "string"
+        },
+        "md5": {
+          "pattern": "(^[0-9a-fA-F]{32}$)",
+          "type": "string"
+        },
+        "name": {
+          "description": "Optional attribute identifying the process.  The name of the file object; for example, iexplore.exe",
+          "type": "string"
+        },
+        "sha2": {
+          "description": "The SHA-256, SHA-1, or MD5 checksum of the object content.",
+          "pattern": "(^[0-9a-fA-F]{64}$)|(^[0-9a-fA-F]{40}$)|(^[0-9a-fA-F]{32}$)",
+          "type": "string"
+        },
+        "size": {
+          "description": "Optional attribute identifying the process.  The size of the object, in bytes; for example, 69472.",
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      }
+    },
+    "ExceptionsFingerprint": {
+      "type": "object",
+      "required": [
+        "algorithm",
+        "value"
+      ],
+      "properties": {
+        "algorithm": {
+          "description": "The algorithm used to create the fingerprint.  SHA-1 support only for SAEPv1 for certificate thumbprint.",
+          "enum": [
+            "SHA1",
+            "SHA2"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "description": "The hash of the object content.",
+          "pattern": "^[0-9a-fA-F]*$",
+          "type": "string"
+        }
+      }
+    },
+    "ExceptionsLinuxConfiguration": {
+      "type": "object",
+      "properties": {
+        "directories": {
+          "description": "Directories on Linux platforms at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleLinuxDirectory"
+          },
+          "type": "array"
+        },
+        "extension_list": {
+          "$ref": "#/definitions/ExceptionsRuleExtensionList",
+          "description": "Extension on Linux platforms at the exceptions policy"
+        }
+      }
+    },
+    "ExceptionsLockedOptions": {
+      "type": "object",
+      "properties": {
+        "application": {
+          "type": "boolean"
+        },
+        "certificate": {
+          "type": "boolean"
+        },
+        "dnshostfile": {
+          "type": "boolean"
+        },
+        "domain": {
+          "type": "boolean"
+        },
+        "extension": {
+          "type": "boolean"
+        },
+        "file": {
+          "type": "boolean"
+        },
+        "knownrisk": {
+          "type": "boolean"
+        },
+        "securityrisk": {
+          "type": "boolean"
+        },
+        "sonar": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ExceptionsMacConfiguration": {
+      "type": "object",
+      "properties": {
+        "files": {
+          "description": "Files on mac platforms at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleMacFile"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "ExceptionsRuleApplication": {
+      "type": "object",
+      "required": [
+        "processfile"
+      ],
+      "properties": {
+        "action": {
+          "description": "The action of the threat in exceptions policy.",
+          "enum": [
+            "IGNORE",
+            "LOG_ONLY",
+            "QUARANTINE",
+            "BLOCK"
+          ],
+          "type": "string"
+        },
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "processfile": {
+          "$ref": "#/definitions/ExceptionsFile",
+          "description": "The process to ignore"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        }
+      }
+    },
+    "ExceptionsRuleBlacklist": {
+      "type": "object",
+      "required": [
+        "action",
+        "processfile"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action to take on the process",
+          "enum": [
+            "BLOCK",
+            "QUARANTINE",
+            "REMOVE"
+          ],
+          "type": "string"
+        },
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "processfile": {
+          "$ref": "#/definitions/ExceptionsFile",
+          "description": "The process to block, delete or quarantine"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        }
+      }
+    },
+    "ExceptionsRuleCertificate": {
+      "type": "object",
+      "required": [
+        "signature_fingerprint"
+      ],
+      "properties": {
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        },
+        "signature_company_name": {
+          "description": "The company name on the certificate",
+          "type": "string"
+        },
+        "signature_fingerprint": {
+          "$ref": "#/definitions/ExceptionsFingerprint",
+          "description": "Hash of the digital certificate"
+        },
+        "signature_fingerprints": {
+          "description": "List of hash of the digital certificates [Only supported with V2 APIs]. If SHA1 is provided here, `signature_fingerprint`'s value will be ignored",
+          "items": {
+            "$ref": "#/definitions/ExceptionsFingerprint"
+          },
+          "type": "array"
+        },
+        "signature_issuer": {
+          "description": "he issuer of the object signature",
+          "type": "string"
+        }
+      }
+    },
+    "ExceptionsRuleDirectory": {
+      "type": "object",
+      "required": [
+        "directory",
+        "pathvariable"
+      ],
+      "properties": {
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "directory": {
+          "description": "Folder name",
+          "type": "string"
+        },
+        "pathvariable": {
+          "description": "A prefix variable indicates a well-known Windows folder",
+          "enum": [
+            "NONE",
+            "COMMON_APPDATA",
+            "COMMON_DESKTOPDIRECTORY",
+            "COMMON_DOCUMENTS",
+            "COMMON_PROGRAMS",
+            "COMMON_STARTUP",
+            "PROGRAM_FILES",
+            "PROGRAM_FILES_COMMON",
+            "SYSTEM",
+            "SYSTEM_DRIVE",
+            "USER_PROFILE",
+            "WINDOWS"
+          ],
+          "type": "string"
+        },
+        "recursive": {
+          "description": "Indicates whether sub-folders are also excluded",
+          "type": "boolean"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        },
+        "scancategory": {
+          "description": "Type of security risk scan",
+          "enum": [
+            "GESC_AP",
+            "GESC_MANUAL",
+            "GESC_ALL"
+          ],
+          "type": "string"
+        },
+        "scantype": {
+          "description": "Type of scan that exclude the folder",
+          "enum": [
+            "GEPT_RISK",
+            "GEPT_SECURITY_RISK",
+            "GEPT_HPP",
+            "GEPT_ADC",
+            "ALL"
+          ],
+          "type": "string"
+        }
+      }
+    },
+    "ExceptionsRuleDnsHostBlacklist": {
+      "type": "object",
+      "required": [
+        "action",
+        "processfile"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action to take on the process",
+          "enum": [
+            "BLOCK",
+            "PROMPT"
+          ],
+          "type": "string"
+        },
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "processfile": {
+          "$ref": "#/definitions/ExceptionsFile",
+          "description": "The process to block or prompt"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        }
+      }
+    },
+    "ExceptionsRuleDomain": {
+      "type": "object",
+      "required": [
+        "domain"
+      ],
+      "properties": {
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "domain": {
+          "description": "The URL domain extracted from the URL; for example, www.files.com or an ip address.  Domain names can include wildcards.",
+          "type": "string"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        }
+      }
+    },
+    "ExceptionsRuleExtensionList": {
+      "type": "object",
+      "required": [
+        "extensions"
+      ],
+      "properties": {
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "extensions": {
+          "description": "The extensions.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        },
+        "scancategory": {
+          "description": "The scan category.",
+          "enum": [
+            "GESC_AP",
+            "GESC_MANUAL",
+            "GESC_ALL"
+          ],
+          "type": "string"
+        }
+      }
+    },
+    "ExceptionsRuleFile": {
+      "type": "object",
+      "required": [
+        "path",
+        "pathvariable"
+      ],
+      "properties": {
+        "SONAR": {
+          "type": "boolean"
+        },
+        "applicationcontrol": {
+          "description": "Exclude this file from application control",
+          "type": "boolean"
+        },
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "path": {
+          "description": "The path to the object.  Relative path if pathvariable is defined.  Full path if pathvariable is [NONE] or not specified",
+          "type": "string"
+        },
+        "pathvariable": {
+          "description": "A prefix variable indicates a well-known Windows folder",
+          "enum": [
+            "NONE",
+            "COMMON_APPDATA",
+            "COMMON_DESKTOPDIRECTORY",
+            "COMMON_DOCUMENTS",
+            "COMMON_PROGRAMS",
+            "COMMON_STARTUP",
+            "PROGRAM_FILES",
+            "PROGRAM_FILES_COMMON",
+            "SYSTEM",
+            "SYSTEM_DRIVE",
+            "USER_PROFILE",
+            "WINDOWS"
+          ],
+          "type": "string"
+        },
+        "recursive": {
+          "description": "Exclude child processes",
+          "type": "boolean"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        },
+        "scancategory": {
+          "description": "Type of security risk scan",
+          "enum": [
+            "GESC_AP",
+            "GESC_MANUAL",
+            "GESC_ALL"
+          ],
+          "type": "string"
+        },
+        "securityrisk": {
+          "description": "Exclude this file from security risk",
+          "type": "boolean"
+        },
+        "sonar": {
+          "description": "Exclude this file from SONAR",
+          "type": "boolean"
+        }
+      }
+    },
+    "ExceptionsRuleKnownRisk": {
+      "type": "object",
+      "required": [
+        "threat"
+      ],
+      "properties": {
+        "action": {
+          "description": "The action of the threat in exceptions policy.",
+          "enum": [
+            "IGNORE",
+            "LOG_ONLY",
+            "QUARANTINE",
+            "BLOCK"
+          ],
+          "type": "string"
+        },
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        },
+        "threat": {
+          "$ref": "#/definitions/ExceptionThreat",
+          "description": "The threat in exceptions policy."
+        }
+      }
+    },
+    "ExceptionsRuleLinuxDirectory": {
+      "type": "object",
+      "required": [
+        "directory",
+        "pathvariable"
+      ],
+      "properties": {
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "directory": {
+          "description": "Folder name",
+          "type": "string"
+        },
+        "pathvariable": {
+          "description": "A prefix variable indicates a well-known Linux folder",
+          "enum": [
+            "NONE",
+            "HOME",
+            "ROOT",
+            "BIN",
+            "ETC",
+            "USR",
+            "OPT"
+          ],
+          "type": "string"
+        },
+        "recursive": {
+          "description": "Indicates whether sub-folders are also excluded",
+          "type": "boolean"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        },
+        "scancategory": {
+          "description": "Type of security risk scan",
+          "enum": [
+            "GESC_AP",
+            "GESC_MANUAL",
+            "GESC_ALL"
+          ],
+          "type": "string"
+        }
+      }
+    },
+    "ExceptionsRuleMacFile": {
+      "type": "object",
+      "required": [
+        "path",
+        "pathvariable"
+      ],
+      "properties": {
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "path": {
+          "description": "The path to the object.  Relative path if pathvariable is defined.  Full path if pathvariable is [NONE] or not specified",
+          "type": "string"
+        },
+        "pathvariable": {
+          "description": "A prefix variable indicates a well-known Mac folder",
+          "enum": [
+            "NONE",
+            "HOME",
+            "APPLICATION",
+            "LIBRARY"
+          ],
+          "type": "string"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        }
+      }
+    },
+    "ExceptionsRuleNonPEFile": {
+      "type": "object",
+      "required": [
+        "file"
+      ],
+      "properties": {
+        "action": {
+          "enum": [
+            "IGNORE",
+            "LOG_ONLY",
+            "QUARANTINE",
+            "BLOCK"
+          ],
+          "type": "string"
+        },
+        "actor": {
+          "$ref": "#/definitions/ExceptionsFile"
+        },
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "file": {
+          "$ref": "#/definitions/ExceptionsFile"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        }
+      }
+    },
+    "ExceptionsRuleState": {
+      "type": "object",
+      "required": [
+        "source"
+      ],
+      "properties": {
+        "enabled": {
+          "description": "Ability to disable a rule temporarily from enforcement without deleting it",
+          "type": "boolean"
+        },
+        "source": {
+          "description": "Which 3rd-party management system was the source of the rule; ex, SEP, ATP",
+          "type": "string"
+        }
+      }
+    },
+    "PepExceptionElement": {
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "description": "The path of the process to protect. Wildcards are permitted.",
+          "maxLength": 512,
+          "minLength": 2,
+          "type": "string"
+        },
+        "techniqueoverrides": {
+          "description": "Technique override for a specific path.",
+          "items": {
+            "$ref": "#/definitions/PepThreatRuleElement"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "PolicyExceptionsConfigurationExceptionsLockedOptions": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "configuration": {
+          "$ref": "#/definitions/ExceptionsConfiguration",
+          "description": "Configuration"
+        },
+        "desc": {
+          "description": "The policy description.",
+          "maxLength": 1024,
+          "minLength": 1,
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Indicates whether the policy is enabled or not.",
+          "type": "boolean"
+        },
+        "lastmodifiedtime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lockedoptions": {
+          "$ref": "#/definitions/ExceptionsLockedOptions",
+          "description": "Option names to be locked"
+        },
+        "name": {
+          "description": "The policy name.",
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[^/\\\\*?<>|:\"]*$",
+          "type": "string"
+        },
+        "sources": {
+          "description": "A list of data objects provided by the policy source, which includes the ID, the name and the version.",
+          "items": {
+            "$ref": "#/definitions/Sources"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "PolicyExceptionsConfigurationV2ExceptionsLockedOptions": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "configuration": {
+          "$ref": "#/definitions/ExceptionsConfigurationV2",
+          "description": "Configuration"
+        },
+        "desc": {
+          "description": "The policy description.",
+          "maxLength": 1024,
+          "minLength": 1,
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Indicates whether the policy is enabled or not.",
+          "type": "boolean"
+        },
+        "lastmodifiedtime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lockedoptions": {
+          "$ref": "#/definitions/ExceptionsLockedOptions",
+          "description": "Option names to be locked"
+        },
+        "name": {
+          "description": "The policy name.",
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[^/\\\\*?<>|:\"]*$",
+          "type": "string"
+        },
+        "sources": {
+          "description": "A list of data objects provided by the policy source, which includes the ID, the name and the version.",
+          "items": {
+            "$ref": "#/definitions/Sources"
+          },
+          "type": "array"
+        }
+      }
+    }
+  }
+}

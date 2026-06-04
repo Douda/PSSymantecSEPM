@@ -1,0 +1,431 @@
+{
+  "basePath": "/sepm/api/v1",
+  "definitions": {
+    "Domain": {
+      "type": "object",
+      "properties": {
+        "administratorCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "companyName": {
+          "type": "string"
+        },
+        "contactInfo": {
+          "type": "string"
+        },
+        "createdTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "description": {
+          "type": "string"
+        },
+        "enable": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "DomainAddEditTO": {
+      "type": "object",
+      "required": [
+        "allowNeverExpiresPasswords",
+        "allowUsersToSaveCredentials",
+        "deleteOldClients",
+        "deleteOldClientsDays",
+        "deleteOldVDIClients",
+        "deleteOldVDIClientsDays",
+        "showBanner"
+      ],
+      "properties": {
+        "administratorCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "allowNeverExpiresPasswords": {
+          "description": "Specifies whether or not to allow passwords in the Symantec Endpoint Protection Manager domain to never expire.",
+          "type": "boolean"
+        },
+        "allowUsersToSaveCredentials": {
+          "description": "Specifies whether or not to allow the user to save credentials when logging on to Symantec Endpoint Protection Manager.",
+          "type": "boolean"
+        },
+        "bannerText": {
+          "description": "The banner's message.",
+          "type": "string"
+        },
+        "bannerTitle": {
+          "description": "The banner's title.",
+          "type": "string"
+        },
+        "companyName": {
+          "type": "string"
+        },
+        "contactInfo": {
+          "type": "string"
+        },
+        "createdTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "deleteOldClients": {
+          "description": "Specifies whether or not to delete clients that have not been connected to Symantec Endpoint Protection Manager for a specified number of days.",
+          "type": "boolean"
+        },
+        "deleteOldClientsDays": {
+          "description": "The number of days after which Symantec Endpoint Protection Manager deletes clients that have not connected.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "deleteOldVDIClients": {
+          "description": "Specifies whether or not to delete virtual desktop infrastructure (VDI) clients that have not been connected to Symantec Endpoint Protection Manager for a specified number of days.",
+          "type": "boolean"
+        },
+        "deleteOldVDIClientsDays": {
+          "description": "The number of days after which Symantec Endpoint Protection Manager deletes virtual desktop infrastructure (VDI) clients that have not connected.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "description": {
+          "type": "string"
+        },
+        "enable": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "showBanner": {
+          "description": "Specifies whether or not to show a logon banner when an administrator logs on to this domain.",
+          "type": "boolean"
+        }
+      }
+    },
+    "DomainEntry": {
+      "type": "object",
+      "required": [
+        "allowNeverExpiringPasswords",
+        "allowSavingCredentials",
+        "deleteIdleClients",
+        "deleteIdleNpvdiClients",
+        "displayLogonBanner",
+        "domainId",
+        "domainName",
+        "maxClientIdleTimeInDays",
+        "maxNpvdiClientIdleTimeInDays"
+      ],
+      "properties": {
+        "allowNeverExpiringPasswords": {
+          "description": "Specifies whether or not to allow passwords in the Symantec Endpoint Protection Manager domain to never expire.",
+          "type": "boolean"
+        },
+        "allowSavingCredentials": {
+          "description": "Specifies whether or not to allow the user to save credentials when logging on to Symantec Endpoint Protection Manager.",
+          "type": "boolean"
+        },
+        "companyName": {
+          "description": "The Symantec Endpoint Protection Manager domain's company name.",
+          "maxLength": 1024,
+          "minLength": 0,
+          "type": "string"
+        },
+        "contactList": {
+          "description": "The contact list for the Symantec Endpoint Protection Manager domain. This list can include the phone number, name, or email.",
+          "maxLength": 2048,
+          "minLength": 0,
+          "type": "string"
+        },
+        "deleteIdleClients": {
+          "description": "Specifies whether or not to delete clients that have not connected to Symantec Endpoint Protection Manager for a specified number of days.",
+          "type": "boolean"
+        },
+        "deleteIdleNpvdiClients": {
+          "description": "Specifies whether or not to delete virtual desktop infrastructure (VDI) clients that have not connected to Symantec Endpoint Protection Manager for a specified number of days.",
+          "type": "boolean"
+        },
+        "displayLogonBanner": {
+          "description": "Specifies whether or not to show a logon banner when an administrator logs on to this domain.",
+          "type": "boolean"
+        },
+        "domainId": {
+          "description": "The Symantec Endpoint Protection Manager domain's ID, which is a GUID.",
+          "pattern": "^$|^[a-fA-F0-9]{32}$",
+          "type": "string"
+        },
+        "domainName": {
+          "description": "The Symantec Endpoint Protection Manager domain's name.",
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^[^\"\\\\/\\[\\]:;|=,\\+\\*?<>\\s]+$",
+          "type": "string"
+        },
+        "logonBannerText": {
+          "description": "The banner's message.",
+          "maxLength": 2048,
+          "minLength": 0,
+          "pattern": "^$|^[^<>&=\\[\\]{}\"\\\\]+$",
+          "type": "string"
+        },
+        "logonBannerTitle": {
+          "description": "The banner's title.",
+          "maxLength": 256,
+          "minLength": 0,
+          "pattern": "^$|^[^<>&=\\[\\]{}\"\\\\\\r\\n\\t]+$",
+          "type": "string"
+        },
+        "maxClientIdleTimeInDays": {
+          "description": "The number of days after which Symantec Endpoint Protection Manager deletes clients that have not connected.",
+          "format": "int32",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "maxNpvdiClientIdleTimeInDays": {
+          "description": "The number of days after which Symantec Endpoint Protection Manager deletes virtual desktop infrastructure (VDI) clients that have not connected.",
+          "format": "int32",
+          "minimum": 1,
+          "type": "integer"
+        }
+      }
+    },
+    "NameValueTO": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "host": "",
+  "info": {
+    "description": "This page documents the REST APIs that perform Symantec Endpoint Protection Manager operations.",
+    "title": "Symantec Endpoint Protection Manager API Reference",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/domains": {
+      "get": {
+        "description": "",
+        "operationId": "Get Domains",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/Domain"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "summary": "Gets a list of all accessible domains.",
+        "tags": [
+          "production"
+        ]
+      },
+      "post": {
+        "description": "",
+        "operationId": "Add Domain",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/DomainEntry"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/DomainAddEditTO"
+            }
+          }
+        },
+        "summary": "Creates a new domain.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/domains/analytics": {
+      "get": {
+        "description": "",
+        "operationId": "Get Analytics Domain",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/DomainAddEditTO"
+            }
+          }
+        },
+        "summary": "Gets the details for the analytics domain.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/domains/name/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Domain Name",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/NameValueTO"
+              },
+              "type": "array"
+            }
+          }
+        },
+        "summary": "Gets the domain name for the specified domain ID.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/domains/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Domain",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/DomainAddEditTO"
+            }
+          }
+        },
+        "summary": "Gets the details for a specified domain.",
+        "tags": [
+          "production"
+        ]
+      },
+      "post": {
+        "description": "",
+        "operationId": "Update Domain Enabled Status",
+        "parameters": [
+          {
+            "name": "action",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Updates the status of a specified domain as enabled or disabled.",
+        "tags": [
+          "production"
+        ]
+      },
+      "put": {
+        "description": "",
+        "operationId": "Update Domain",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/DomainEntry"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/DomainAddEditTO"
+            }
+          }
+        },
+        "summary": "Updates an existing domain's information.",
+        "tags": [
+          "production"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "operationId": "Delete Domain",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Deletes a specified domain.",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "schemes": [
+    "https"
+  ],
+  "swagger": "2.0",
+  "tags": [
+    {
+      "name": "production"
+    }
+  ]
+}

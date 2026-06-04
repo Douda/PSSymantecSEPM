@@ -1,0 +1,2112 @@
+{
+  "basePath": "/sepm/api/v1",
+  "definitions": {
+    "AdminAccountCreationPayload": {
+      "type": "object",
+      "required": [
+        "domain_id",
+        "email_address",
+        "first_name",
+        "last_name",
+        "pin"
+      ],
+      "properties": {
+        "domain_id": {
+          "type": "string"
+        },
+        "email_address": {
+          "type": "string"
+        },
+        "first_name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[\\p{L}0-9 _-]+$",
+          "type": "string"
+        },
+        "last_name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[\\p{L}0-9 _-]+$",
+          "type": "string"
+        },
+        "pin": {
+          "maxLength": 6,
+          "minLength": 6,
+          "pattern": "^[0-9]+$",
+          "type": "string"
+        }
+      }
+    },
+    "Annotation": {
+      "type": "object"
+    },
+    "AssetSyncResetStatus": {
+      "type": "object",
+      "properties": {
+        "job_execution_time": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "job_request_time": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "job_status": {
+          "type": "string"
+        }
+      }
+    },
+    "AsyncContext": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/ServletRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/ServletResponse"
+        },
+        "timeout": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "BufferedReader": {
+      "type": "object"
+    },
+    "CdmRegistrationTaskStatusSummary": {
+      "type": "object",
+      "properties": {
+        "enrollable": {
+          "type": "boolean"
+        },
+        "eula_accepted": {
+          "type": "boolean"
+        },
+        "first_failing_time": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "last_run": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "result_code": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "result_code_desc": {
+          "type": "string"
+        },
+        "tenant_provision_start_time": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "ClassLoader": {
+      "type": "object",
+      "properties": {
+        "definedPackages": {
+          "items": {
+            "$ref": "#/definitions/Package"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "parent": {
+          "$ref": "#/definitions/ClassLoader"
+        },
+        "registeredAsParallelCapable": {
+          "type": "boolean"
+        },
+        "unnamedModule": {
+          "$ref": "#/definitions/Module"
+        }
+      }
+    },
+    "CloudAccountVerificationPayload": {
+      "type": "object",
+      "required": [
+        "email_address",
+        "first_name",
+        "last_name"
+      ],
+      "properties": {
+        "email_address": {
+          "type": "string"
+        },
+        "first_name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[\\p{L}0-9 _-]+$",
+          "type": "string"
+        },
+        "last_name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[\\p{L}0-9 _-]+$",
+          "type": "string"
+        }
+      }
+    },
+    "Cookie": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "httpOnly": {
+          "type": "boolean"
+        },
+        "maxAge": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "string"
+        },
+        "version": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "EPMPUserCredential": {
+      "type": "object",
+      "required": [
+        "clientID",
+        "clientId",
+        "clientSecret",
+        "epmpCustomerId",
+        "epmpDomainId"
+      ],
+      "properties": {
+        "clientID": {
+          "description": "epmp email id",
+          "type": "string"
+        },
+        "clientId": {
+          "type": "string"
+        },
+        "clientSecret": {
+          "description": "epmp customer encrypted password",
+          "type": "string"
+        },
+        "epmpCustomerId": {
+          "description": "epmp customer id",
+          "maxLength": 255,
+          "minLength": 1,
+          "type": "string"
+        },
+        "epmpDomainId": {
+          "description": "epmp domain id",
+          "maxLength": 255,
+          "minLength": 1,
+          "type": "string"
+        },
+        "masterSiteId": {
+          "type": "string"
+        }
+      }
+    },
+    "EnrollmentStatus": {
+      "type": "object",
+      "properties": {
+        "enrollment_state": {
+          "description": "0: Unenrolled, 1: Enrolled, 2: Unenrollment Failed",
+          "format": "int32",
+          "type": "integer"
+        },
+        "enrollment_time": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "epmp_customer_id": {
+          "type": "string"
+        },
+        "epmp_domain_id": {
+          "type": "string"
+        },
+        "is_master": {
+          "type": "boolean"
+        },
+        "is_master_site": {
+          "type": "boolean"
+        },
+        "masterSite": {
+          "type": "boolean"
+        },
+        "master_site_id": {
+          "type": "string"
+        }
+      }
+    },
+    "Enumeration": {
+      "type": "object"
+    },
+    "EnumerationLocale": {
+      "type": "object"
+    },
+    "EnumerationServlet": {
+      "type": "object"
+    },
+    "EnumerationString": {
+      "type": "object"
+    },
+    "EpmpFeatureStateTO": {
+      "type": "object",
+      "properties": {
+        "feature": {
+          "type": "string"
+        },
+        "state": {
+          "type": "boolean"
+        }
+      }
+    },
+    "FilterRegistration": {
+      "type": "object",
+      "properties": {
+        "className": {
+          "type": "string"
+        },
+        "initParameters": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "name": {
+          "type": "string"
+        },
+        "servletNameMappings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "urlPatternMappings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "HttpServletMapping": {
+      "type": "object",
+      "properties": {
+        "mappingMatch": {
+          "enum": [
+            "CONTEXT_ROOT",
+            "DEFAULT",
+            "EXACT",
+            "EXTENSION",
+            "PATH"
+          ],
+          "type": "string"
+        },
+        "matchValue": {
+          "type": "string"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "servletName": {
+          "type": "string"
+        }
+      }
+    },
+    "HttpServletRequest": {
+      "type": "object",
+      "properties": {
+        "asyncContext": {
+          "$ref": "#/definitions/AsyncContext"
+        },
+        "asyncStarted": {
+          "type": "boolean"
+        },
+        "asyncSupported": {
+          "type": "boolean"
+        },
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "authType": {
+          "type": "string"
+        },
+        "characterEncoding": {
+          "type": "string"
+        },
+        "contentLength": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "contentLengthLong": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "contextPath": {
+          "type": "string"
+        },
+        "cookies": {
+          "items": {
+            "$ref": "#/definitions/Cookie"
+          },
+          "type": "array"
+        },
+        "dispatcherType": {
+          "enum": [
+            "FORWARD",
+            "INCLUDE",
+            "REQUEST",
+            "ASYNC",
+            "ERROR"
+          ],
+          "type": "string"
+        },
+        "headerNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "httpServletMapping": {
+          "$ref": "#/definitions/HttpServletMapping"
+        },
+        "inputStream": {
+          "$ref": "#/definitions/ServletInputStream"
+        },
+        "localAddr": {
+          "type": "string"
+        },
+        "localName": {
+          "type": "string"
+        },
+        "localPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "locales": {
+          "$ref": "#/definitions/EnumerationLocale"
+        },
+        "method": {
+          "type": "string"
+        },
+        "parameterMap": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        "parameterNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "parts": {
+          "items": {
+            "$ref": "#/definitions/Part"
+          },
+          "type": "array"
+        },
+        "pathInfo": {
+          "type": "string"
+        },
+        "pathTranslated": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "queryString": {
+          "type": "string"
+        },
+        "reader": {
+          "$ref": "#/definitions/BufferedReader"
+        },
+        "remoteAddr": {
+          "type": "string"
+        },
+        "remoteHost": {
+          "type": "string"
+        },
+        "remotePort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "remoteUser": {
+          "type": "string"
+        },
+        "requestURI": {
+          "type": "string"
+        },
+        "requestURL": {
+          "$ref": "#/definitions/StringBuffer"
+        },
+        "requestedSessionId": {
+          "type": "string"
+        },
+        "requestedSessionIdFromCookie": {
+          "type": "boolean"
+        },
+        "requestedSessionIdFromURL": {
+          "type": "boolean"
+        },
+        "requestedSessionIdFromUrl": {
+          "type": "boolean"
+        },
+        "requestedSessionIdValid": {
+          "type": "boolean"
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        },
+        "serverName": {
+          "type": "string"
+        },
+        "serverPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "servletContext": {
+          "$ref": "#/definitions/ServletContext"
+        },
+        "servletPath": {
+          "type": "string"
+        },
+        "session": {
+          "$ref": "#/definitions/HttpSession"
+        },
+        "trailerFields": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "trailerFieldsReady": {
+          "type": "boolean"
+        },
+        "userPrincipal": {
+          "$ref": "#/definitions/Principal"
+        }
+      }
+    },
+    "HttpServletResponse": {
+      "type": "object",
+      "properties": {
+        "bufferSize": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "characterEncoding": {
+          "type": "string"
+        },
+        "committed": {
+          "type": "boolean"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "headerNames": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "outputStream": {
+          "$ref": "#/definitions/ServletOutputStream"
+        },
+        "status": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "trailerFields": {
+          "$ref": "#/definitions/SupplierMapStringString"
+        },
+        "writer": {
+          "$ref": "#/definitions/PrintWriter"
+        }
+      }
+    },
+    "HttpSession": {
+      "type": "object",
+      "properties": {
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "creationTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lastAccessedTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "maxInactiveInterval": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "new": {
+          "type": "boolean"
+        },
+        "servletContext": {
+          "$ref": "#/definitions/ServletContext"
+        },
+        "sessionContext": {
+          "$ref": "#/definitions/HttpSessionContext"
+        },
+        "valueNames": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "HttpSessionContext": {
+      "type": "object",
+      "properties": {
+        "ids": {
+          "$ref": "#/definitions/EnumerationString"
+        }
+      }
+    },
+    "HubAgentStatus": {
+      "type": "object",
+      "properties": {
+        "agent_name": {
+          "type": "string"
+        },
+        "install_status": {
+          "type": "string"
+        },
+        "install_status_msg": {
+          "type": "string"
+        },
+        "last_error_code": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "last_error_msg": {
+          "type": "string"
+        },
+        "last_runtime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "last_status_code": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "server_id": {
+          "type": "string"
+        },
+        "server_name": {
+          "type": "string"
+        },
+        "version_build": {
+          "type": "string"
+        }
+      }
+    },
+    "InputStream": {
+      "type": "object"
+    },
+    "JspConfigDescriptor": {
+      "type": "object",
+      "properties": {
+        "jspPropertyGroups": {
+          "items": {
+            "$ref": "#/definitions/JspPropertyGroupDescriptor"
+          },
+          "type": "array"
+        },
+        "taglibs": {
+          "items": {
+            "$ref": "#/definitions/TaglibDescriptor"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "JspPropertyGroupDescriptor": {
+      "type": "object",
+      "properties": {
+        "buffer": {
+          "type": "string"
+        },
+        "defaultContentType": {
+          "type": "string"
+        },
+        "deferredSyntaxAllowedAsLiteral": {
+          "type": "string"
+        },
+        "elIgnored": {
+          "type": "string"
+        },
+        "errorOnUndeclaredNamespace": {
+          "type": "string"
+        },
+        "includeCodas": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "includePreludes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "isXml": {
+          "type": "string"
+        },
+        "pageEncoding": {
+          "type": "string"
+        },
+        "scriptingInvalid": {
+          "type": "string"
+        },
+        "trimDirectiveWhitespaces": {
+          "type": "string"
+        },
+        "urlPatterns": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "Locale": {
+      "type": "object",
+      "properties": {
+        "country": {
+          "type": "string"
+        },
+        "displayCountry": {
+          "type": "string"
+        },
+        "displayLanguage": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "displayScript": {
+          "type": "string"
+        },
+        "displayVariant": {
+          "type": "string"
+        },
+        "extensionKeys": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "iso3Country": {
+          "type": "string"
+        },
+        "iso3Language": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "script": {
+          "type": "string"
+        },
+        "unicodeLocaleAttributes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "unicodeLocaleKeys": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "variant": {
+          "type": "string"
+        }
+      }
+    },
+    "Module": {
+      "type": "object",
+      "properties": {
+        "annotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "classLoader": {
+          "$ref": "#/definitions/ClassLoader"
+        },
+        "declaredAnnotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "descriptor": {
+          "$ref": "#/definitions/ModuleDescriptor"
+        },
+        "layer": {
+          "$ref": "#/definitions/ModuleLayer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "named": {
+          "type": "boolean"
+        },
+        "packages": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        }
+      }
+    },
+    "ModuleDescriptor": {
+      "type": "object",
+      "properties": {
+        "automatic": {
+          "type": "boolean"
+        },
+        "open": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ModuleLayer": {
+      "type": "object"
+    },
+    "Package": {
+      "type": "object",
+      "properties": {
+        "annotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "declaredAnnotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "implementationTitle": {
+          "type": "string"
+        },
+        "implementationVendor": {
+          "type": "string"
+        },
+        "implementationVersion": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sealed": {
+          "type": "boolean"
+        },
+        "specificationTitle": {
+          "type": "string"
+        },
+        "specificationVendor": {
+          "type": "string"
+        },
+        "specificationVersion": {
+          "type": "string"
+        }
+      }
+    },
+    "Part": {
+      "type": "object",
+      "properties": {
+        "contentType": {
+          "type": "string"
+        },
+        "headerNames": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "inputStream": {
+          "$ref": "#/definitions/InputStream"
+        },
+        "name": {
+          "type": "string"
+        },
+        "size": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "submittedFileName": {
+          "type": "string"
+        }
+      }
+    },
+    "Principal": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "PrintWriter": {
+      "type": "object"
+    },
+    "ServletContext": {
+      "type": "object",
+      "properties": {
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "classLoader": {
+          "$ref": "#/definitions/ClassLoader"
+        },
+        "contextPath": {
+          "type": "string"
+        },
+        "defaultSessionTrackingModes": {
+          "items": {
+            "enum": [
+              "COOKIE",
+              "URL",
+              "SSL"
+            ],
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "effectiveMajorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "effectiveMinorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "effectiveSessionTrackingModes": {
+          "items": {
+            "enum": [
+              "COOKIE",
+              "URL",
+              "SSL"
+            ],
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "filterRegistrations": {
+          "additionalProperties": {
+            "$ref": "#/definitions/FilterRegistration"
+          },
+          "type": "object"
+        },
+        "initParameterNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "jspConfigDescriptor": {
+          "$ref": "#/definitions/JspConfigDescriptor"
+        },
+        "majorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "minorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "requestCharacterEncoding": {
+          "type": "string"
+        },
+        "responseCharacterEncoding": {
+          "type": "string"
+        },
+        "serverInfo": {
+          "type": "string"
+        },
+        "servletContextName": {
+          "type": "string"
+        },
+        "servletNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "servletRegistrations": {
+          "additionalProperties": {
+            "$ref": "#/definitions/ServletRegistration"
+          },
+          "type": "object"
+        },
+        "servlets": {
+          "$ref": "#/definitions/EnumerationServlet"
+        },
+        "sessionCookieConfig": {
+          "$ref": "#/definitions/SessionCookieConfig"
+        },
+        "sessionTimeout": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "virtualServerName": {
+          "type": "string"
+        }
+      }
+    },
+    "ServletInputStream": {
+      "type": "object",
+      "properties": {
+        "finished": {
+          "type": "boolean"
+        },
+        "ready": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ServletOutputStream": {
+      "type": "object",
+      "properties": {
+        "ready": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ServletRegistration": {
+      "type": "object",
+      "properties": {
+        "className": {
+          "type": "string"
+        },
+        "initParameters": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "mappings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "runAsRole": {
+          "type": "string"
+        }
+      }
+    },
+    "ServletRequest": {
+      "type": "object",
+      "properties": {
+        "asyncContext": {
+          "$ref": "#/definitions/AsyncContext"
+        },
+        "asyncStarted": {
+          "type": "boolean"
+        },
+        "asyncSupported": {
+          "type": "boolean"
+        },
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "characterEncoding": {
+          "type": "string"
+        },
+        "contentLength": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "contentLengthLong": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "dispatcherType": {
+          "enum": [
+            "FORWARD",
+            "INCLUDE",
+            "REQUEST",
+            "ASYNC",
+            "ERROR"
+          ],
+          "type": "string"
+        },
+        "inputStream": {
+          "$ref": "#/definitions/ServletInputStream"
+        },
+        "localAddr": {
+          "type": "string"
+        },
+        "localName": {
+          "type": "string"
+        },
+        "localPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "locales": {
+          "$ref": "#/definitions/EnumerationLocale"
+        },
+        "parameterMap": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        "parameterNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "reader": {
+          "$ref": "#/definitions/BufferedReader"
+        },
+        "remoteAddr": {
+          "type": "string"
+        },
+        "remoteHost": {
+          "type": "string"
+        },
+        "remotePort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        },
+        "serverName": {
+          "type": "string"
+        },
+        "serverPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "servletContext": {
+          "$ref": "#/definitions/ServletContext"
+        }
+      }
+    },
+    "ServletResponse": {
+      "type": "object",
+      "properties": {
+        "bufferSize": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "characterEncoding": {
+          "type": "string"
+        },
+        "committed": {
+          "type": "boolean"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "outputStream": {
+          "$ref": "#/definitions/ServletOutputStream"
+        },
+        "writer": {
+          "$ref": "#/definitions/PrintWriter"
+        }
+      }
+    },
+    "SessionCookieConfig": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "httpOnly": {
+          "type": "boolean"
+        },
+        "maxAge": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        }
+      }
+    },
+    "StringBuffer": {
+      "type": "object"
+    },
+    "Supplier": {
+      "type": "object"
+    },
+    "SupplierMapStringString": {
+      "type": "object"
+    },
+    "TaglibDescriptor": {
+      "type": "object",
+      "properties": {
+        "taglibLocation": {
+          "type": "string"
+        },
+        "taglibURI": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "host": "",
+  "info": {
+    "description": "This page documents the REST APIs that perform Symantec Endpoint Protection Manager operations.",
+    "title": "Symantec Endpoint Protection Manager API Reference",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/cloud/epmp/account/admin": {
+      "post": {
+        "description": "",
+        "operationId": "Create CDM Admin Account",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "description": "Cloud account verification payload.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminAccountCreationPayload"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Web service is processed successfully, result is returned",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Create CDM admin account upon successful PIN validation",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/account/email": {
+      "post": {
+        "description": "",
+        "operationId": "Verify Cloud Account Email",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "description": "Cloud account verification payload.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CloudAccountVerificationPayload"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Web service is processed successfully, result is returned",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "verify cloud account email",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/asset_sync_reset": {
+      "post": {
+        "description": "",
+        "operationId": "Reset Hub Asset Sync Marker",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletResponse"
+            }
+          },
+          {
+            "name": "delay_seconds",
+            "in": "query",
+            "description": "Seconds to delay the HUB asset marker reset job.",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Request to schedule a job to reset HUB service asset sync marker.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/asset_sync_reset/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Reset Hub Asset Sync Marker Job Status",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The job guid for which the status is needed.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/AssetSyncResetStatus"
+            }
+          }
+        },
+        "summary": "Gets the status of the HUB asset sync reset job.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/cloud_enrollment": {
+      "get": {
+        "description": "",
+        "operationId": "Get Cloud Enrollment",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "name": "x-epmp-client-id",
+            "in": "header",
+            "description": "EPMP Client ID",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "x-epmp-client-secret",
+            "in": "header",
+            "description": "EPMP Client Secret",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "x-epmp-customer-id",
+            "in": "header",
+            "description": "EPMP Customer ID",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "x-epmp-domain-id",
+            "in": "header",
+            "description": "EPMP Domain ID",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Retrieve the Cloud's domain enrollment status. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/cloud_test_connections": {
+      "get": {
+        "description": "",
+        "operationId": "Test Cloud Connections",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "name": "x-epmp-client-id",
+            "in": "header",
+            "description": "EPMP Client ID",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "x-epmp-client-secret",
+            "in": "header",
+            "description": "EPMP Client Secret",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "x-epmp-customer-id",
+            "in": "header",
+            "description": "EPMP Customer ID",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "x-epmp-domain-id",
+            "in": "header",
+            "description": "EPMP Domain ID",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "summary": "Test Cloud Connections. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/enableAutoPolicySync": {
+      "post": {
+        "description": "",
+        "operationId": "Enable Auto Policy Sync",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Web service is processed successfully, result is returned",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "enable auto policy sync flag",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/enroll": {
+      "get": {
+        "description": "",
+        "operationId": "Get Enrollment Status",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "name": "domainid",
+            "in": "query",
+            "description": "The ID of the domain for which you want to check the enrollment status.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/EnrollmentStatus"
+            }
+          }
+        },
+        "summary": "Gets the enrollment status.",
+        "tags": [
+          "production"
+        ]
+      },
+      "post": {
+        "description": "",
+        "operationId": "Do Cloud Enroll",
+        "parameters": [
+          {
+            "description": "The enrollment details to register in the cloud.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/EPMPUserCredential"
+            }
+          },
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "name": "domainid",
+            "in": "query",
+            "description": "The ID of the domain that you want to enroll.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "summary": "Enrolls Symantec Cloud Bridge with the cloud.",
+        "tags": [
+          "production"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "operationId": "Do Cloud UnEnroll",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "name": "domainid",
+            "in": "query",
+            "description": "Un-Enrollment based on domain",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Un-Enroll Symantec DHub with cloud. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/features": {
+      "get": {
+        "description": "",
+        "operationId": "Get Features State",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "name": "domainid",
+            "in": "query",
+            "description": "The domain ID to retrieve the cloud states for",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieved cloud feature state",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/EpmpFeatureStateTO"
+              },
+              "type": "array"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "403": {
+            "description": "The resource requested was not authorized"
+          },
+          "404": {
+            "description": "The resource requested was not found"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Retrieve cloud features state",
+        "tags": [
+          "production"
+        ]
+      },
+      "put": {
+        "description": "",
+        "operationId": "Update Features State",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "description": "The list feature's state to update.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/EpmpFeatureStateTO"
+              },
+              "type": "array"
+            }
+          },
+          {
+            "name": "domainid",
+            "in": "query",
+            "description": "The domain ID to update the cloud states for",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cloud features state updated successfully",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "403": {
+            "description": "The resource requested was not authorized"
+          },
+          "404": {
+            "description": "The resource requested was not found"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Update cloud features state",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/heatmap": {
+      "get": {
+        "description": "",
+        "operationId": "Get Domain Heatmap SVG",
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result."
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "410": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Get heat map for the calling admin's domain",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/hubstatus": {
+      "get": {
+        "description": "",
+        "operationId": "Get Hub Status",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "description": "Language for status message",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get reporting hub's status",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/isEnrolled": {
+      "get": {
+        "description": "",
+        "operationId": "Is Enrolled",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "name": "domainid",
+            "in": "query",
+            "description": "The domain ID to check if enrolled",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Web service is processed successfully, result is returned",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Check if the hub on the specified server is reporting hub",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/light_registration": {
+      "get": {
+        "description": "",
+        "operationId": "Get Light Registration Info",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "name": "domainid",
+            "in": "query",
+            "description": "The ID of the domain that you want to query, empty for any domain.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Web service is processed successfully, result is returned",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "404": {
+            "description": "The resource requested was not found"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Fetches light registration info",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/light_registration/status": {
+      "get": {
+        "description": "",
+        "operationId": "Get CDM Registration Task Status",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletResponse"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/CdmRegistrationTaskStatusSummary"
+            }
+          }
+        },
+        "summary": "Get CDM light registration task status.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/restart-bridge-uploader-service": {
+      "post": {
+        "description": "",
+        "operationId": "Restart Bridge Uploader Service",
+        "responses": {
+          "200": {
+            "description": "Web service is processed successfully, result is returned",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Restart Bridge Uploader Service",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/shouldHubRun": {
+      "get": {
+        "operationId": "Should Hub Run",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "name": "serverName",
+            "in": "query",
+            "description": "SEPM Server Name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/shouldHubRunByServerId": {
+      "get": {
+        "operationId": "Should Hub Run By Server ID",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "name": "serverId",
+            "in": "query",
+            "description": "SEPM Server Id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/cloud/epmp/tenant": {
+      "post": {
+        "description": "",
+        "operationId": "Provision Cloud Tenant",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "summary": "Initiate cloud tenant provisioning.",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "schemes": [
+    "https"
+  ],
+  "swagger": "2.0",
+  "tags": [
+    {
+      "name": "production"
+    }
+  ]
+}

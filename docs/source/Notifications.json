@@ -1,0 +1,138 @@
+{
+  "basePath": "/sepm/api/v1",
+  "definitions": {
+    "Notification": {
+      "type": "object",
+      "required": [
+        "hyperlink",
+        "message",
+        "name",
+        "subject"
+      ],
+      "properties": {
+        "hyperlink": {
+          "description": "The event notification Link.",
+          "maxLength": 512,
+          "minLength": 1,
+          "type": "string"
+        },
+        "message": {
+          "description": "The event notification message.",
+          "maxLength": 32767,
+          "minLength": 1,
+          "type": "string"
+        },
+        "name": {
+          "description": "The event notification Name.",
+          "maxLength": 255,
+          "minLength": 1,
+          "type": "string"
+        },
+        "subject": {
+          "description": "The event notification Subject.",
+          "maxLength": 255,
+          "minLength": 1,
+          "type": "string"
+        }
+      }
+    }
+  },
+  "host": "",
+  "info": {
+    "description": "This page documents the REST APIs that perform Symantec Endpoint Protection Manager operations.",
+    "title": "Symantec Endpoint Protection Manager API Reference",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/events/notifications": {
+      "post": {
+        "description": "",
+        "operationId": "Post External Notification",
+        "parameters": [
+          {
+            "description": "The external Notification to be added.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Notification"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result."
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Posts an External Notification.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/events/notifications/{id}/report": {
+      "get": {
+        "description": "",
+        "operationId": "Get Notification Report",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "description": "The format of request report, it only support html for now",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the notification",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result."
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets notification report html specified by its ID, it respects the type parameter and ignore the accept header",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "schemes": [
+    "https"
+  ],
+  "swagger": "2.0",
+  "tags": [
+    {
+      "name": "production"
+    }
+  ]
+}

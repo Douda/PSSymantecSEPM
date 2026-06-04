@@ -1,0 +1,58 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "This page documents the REST APIs that perform Symantec Endpoint Protection Manager operations.",
+    "title": "Symantec Endpoint Protection Manager API Reference",
+    "version": "v1"
+  },
+  "basePath": "/sepm/api/v1",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/api/v1/policies/licensing": {
+      "post": {
+        "description": "",
+        "operationId": "Create Policy",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/LicensingPolicyPayload"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Creates a new SAEP licensing setting. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "LicensingPolicyPayload": {
+      "type": "object",
+      "required": [
+        "certificate",
+        "signed_payload"
+      ],
+      "properties": {
+        "certificate": {
+          "description": "The signed licensing policy content",
+          "type": "string"
+        },
+        "signed_payload": {
+          "description": "The signed licensing policy content",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

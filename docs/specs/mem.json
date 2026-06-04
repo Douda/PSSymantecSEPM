@@ -1,0 +1,314 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "This page documents the REST APIs that perform Symantec Endpoint Protection Manager operations.",
+    "title": "Symantec Endpoint Protection Manager API Reference",
+    "version": "v1"
+  },
+  "basePath": "/sepm/api/v1",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/api/v1/policies/mem": {
+      "post": {
+        "description": "",
+        "operationId": "Create Policy",
+        "parameters": [
+          {
+            "description": "The Memory Exploit Mitigation policy to be created.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyMemConfigurationMemLockedOptions"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Web service is processed successfully and resource is created"
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "404": {
+            "description": "The resource reguested was not found"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Creates a new Memory Exploit Mitigation policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/mem/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the MEM policy to get.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Web service is processed successfully, result is returned",
+            "schema": {
+              "$ref": "#/definitions/PolicyMemConfigurationMemLockedOptions"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "404": {
+            "description": "The resource reguested was not found"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Get Mem Policy payload for specified policy id. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "put": {
+        "description": "",
+        "operationId": "Edit Policy",
+        "parameters": [
+          {
+            "description": "The Memory Exploit Mitigation policy to be midified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyMemConfigurationMemLockedOptions"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the MEM policy to edit.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Web service is processed successfully and policy is updated",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "404": {
+            "description": "The resource reguested was not found"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Modify existing policy values. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "operationId": "Delete Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the MEM policy to delete.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Delete operation success. If the resource did not exist prior to the call, 204 is still returned."
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "404": {
+            "description": "The resource reguested was not found"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Deletes an existing MEM policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "patch": {
+        "description": "",
+        "operationId": "Update Policy",
+        "parameters": [
+          {
+            "description": "The Memory Exploit Mitigation policy to be midified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyMemConfigurationMemLockedOptions"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the MEM policy to update.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Web service is processed successfully and policy is updated",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "404": {
+            "description": "The resource reguested was not found"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Update policies by patch. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "MemConfiguration": {
+      "type": "object",
+      "properties": {
+        "customrules": {
+          "description": "Administrator defined application to protect. If an application is listed here without techniques, it is added to the coverage using the global technique state.",
+          "items": {
+            "$ref": "#/definitions/PepExceptionElement"
+          },
+          "type": "array"
+        },
+        "defaultruleoverrides": {
+          "description": "Overrides to the default rules. If an application is listed here without technique, it is completely disabled.",
+          "items": {
+            "$ref": "#/definitions/PepExceptionElement"
+          },
+          "type": "array"
+        },
+        "disabledefaultrules": {
+          "description": "Disables all default rules.",
+          "type": "boolean"
+        },
+        "enableadvanced": {
+          "description": "Enables the advanced policy in addition to the basic one for Memory Exploit Mitigation.",
+          "type": "boolean"
+        },
+        "enabled": {
+          "description": "Enables the basic policy for Memory Exploit Mitigation.",
+          "type": "boolean"
+        },
+        "enablejavaprotection": {
+          "description": "Enable Java Security Manager Protection.",
+          "type": "boolean"
+        },
+        "globalauditmodeoverride": {
+          "description": "Put all techniques into audit mode, even future techniques",
+          "type": "boolean"
+        },
+        "globaltechniqueoverrides": {
+          "description": "Global setting for the technique",
+          "items": {
+            "$ref": "#/definitions/PepThreatRuleElement"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "MemLockedOptions": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PolicyMemConfigurationMemLockedOptions": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "configuration": {
+          "$ref": "#/definitions/MemConfiguration",
+          "description": "Configuration"
+        },
+        "desc": {
+          "description": "The policy description.",
+          "maxLength": 1024,
+          "minLength": 1,
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Indicates whether the policy is enabled or not.",
+          "type": "boolean"
+        },
+        "lastmodifiedtime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lockedoptions": {
+          "$ref": "#/definitions/MemLockedOptions",
+          "description": "Option names to be locked"
+        },
+        "name": {
+          "description": "The policy name.",
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[^/\\\\*?<>|:\"]*$",
+          "type": "string"
+        },
+        "sources": {
+          "description": "A list of data objects provided by the policy source, which includes the ID, the name and the version.",
+          "items": {
+            "$ref": "#/definitions/Sources"
+          },
+          "type": "array"
+        }
+      }
+    }
+  }
+}
