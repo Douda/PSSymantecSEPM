@@ -4,7 +4,7 @@
 		"dockerfile": "../dockerfile"
 	},
 	"workspaceFolder": "/workspaces/PSSymantecSEPM",
-	"postCreateCommand": "pwsh -NoProfile -Command 'if (Test-Path /workspaces/PSSymantecSEPM/Source/PSSymantecSEPM.psd1) { Build-Module -SourcePath /workspaces/PSSymantecSEPM/Source/PSSymantecSEPM.psd1 -SemVer 0.0.1 -OutputDirectory /workspaces/PSSymantecSEPM/Output; Write-Host \"Module built.\" -ForegroundColor Green } else { Write-Warning \"Source manifest not found.\" }'",
+	"postCreateCommand": "pwsh -NoProfile -Command 'if (Test-Path /workspaces/PSSymantecSEPM/Source/PSSymantecSEPM.psd1) { Import-Module ModuleBuilder -Force; Build-Module -SourcePath /workspaces/PSSymantecSEPM/Source/PSSymantecSEPM.psd1 -SemVer 0.0.1 -OutputDirectory /workspaces/PSSymantecSEPM/Output; Write-Host \"Module built.\" -ForegroundColor Green } else { Write-Warning \"Source manifest not found.\" }'",
 	"customizations": {
 		"vscode": {
 			"settings": {
