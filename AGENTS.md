@@ -1,5 +1,7 @@
 # PSSymantecSEPM — Agent Context
 
+<!-- Sandcastle autonomous workflow configured -->
+
 PowerShell module wrapping the Symantec Endpoint Protection Manager (SEPM) REST API.
 Target environment: SEPM 14.3 (Windows VM running via dockur/windows in Docker).
 
