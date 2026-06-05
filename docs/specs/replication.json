@@ -1,0 +1,1180 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "SEPM REPLICATION API",
+    "version": "v1",
+    "description": "Self-contained OpenAPI 2.0 specification for SEPM replication endpoints."
+  },
+  "basePath": "/sepm/api/v1",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/api/v1/replication/is_replicated": {
+      "get": {
+        "description": "",
+        "operationId": "Is Site Has Replication Partner",
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Check whether site has replication partner.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/replication/replicatenow": {
+      "post": {
+        "description": "",
+        "operationId": "Replicate Now",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/blacklist_HttpServletRequest"
+            }
+          },
+          {
+            "name": "content",
+            "in": "query",
+            "description": "Replicate Content And Packages.",
+            "required": true,
+            "type": "boolean"
+          },
+          {
+            "name": "logs",
+            "in": "query",
+            "description": "Replicate Logs",
+            "required": true,
+            "type": "boolean"
+          },
+          {
+            "name": "partnerSiteName",
+            "in": "query",
+            "description": "Replication partner site name.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/ReplicationAllStatus"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Initiates a replication for the specified replication partner. A domain administrator or system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/replication/status": {
+      "get": {
+        "description": "",
+        "operationId": "Get Replication Status",
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/ReplicationStatusResponse"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets replication status.",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "Annotation": {
+      "type": "object"
+    },
+    "AsyncContext": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/ServletRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/ServletResponse"
+        },
+        "timeout": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "BufferedReader": {
+      "type": "object"
+    },
+    "ClassLoader": {
+      "type": "object",
+      "properties": {
+        "definedPackages": {
+          "items": {
+            "$ref": "#/definitions/Package"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "parent": {
+          "$ref": "#/definitions/ClassLoader"
+        },
+        "registeredAsParallelCapable": {
+          "type": "boolean"
+        },
+        "unnamedModule": {
+          "$ref": "#/definitions/Module"
+        }
+      }
+    },
+    "EnumerationLocale": {
+      "type": "object"
+    },
+    "EnumerationServlet": {
+      "type": "object"
+    },
+    "EnumerationString": {
+      "type": "object"
+    },
+    "FilterRegistration": {
+      "type": "object",
+      "properties": {
+        "className": {
+          "type": "string"
+        },
+        "initParameters": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "name": {
+          "type": "string"
+        },
+        "servletNameMappings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "urlPatternMappings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "HttpServletMapping": {
+      "type": "object",
+      "properties": {
+        "mappingMatch": {
+          "enum": [
+            "CONTEXT_ROOT",
+            "DEFAULT",
+            "EXACT",
+            "EXTENSION",
+            "PATH"
+          ],
+          "type": "string"
+        },
+        "matchValue": {
+          "type": "string"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "servletName": {
+          "type": "string"
+        }
+      }
+    },
+    "InputStream": {
+      "type": "object"
+    },
+    "JspConfigDescriptor": {
+      "type": "object",
+      "properties": {
+        "jspPropertyGroups": {
+          "items": {
+            "$ref": "#/definitions/JspPropertyGroupDescriptor"
+          },
+          "type": "array"
+        },
+        "taglibs": {
+          "items": {
+            "$ref": "#/definitions/TaglibDescriptor"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "JspPropertyGroupDescriptor": {
+      "type": "object",
+      "properties": {
+        "buffer": {
+          "type": "string"
+        },
+        "defaultContentType": {
+          "type": "string"
+        },
+        "deferredSyntaxAllowedAsLiteral": {
+          "type": "string"
+        },
+        "elIgnored": {
+          "type": "string"
+        },
+        "errorOnUndeclaredNamespace": {
+          "type": "string"
+        },
+        "includeCodas": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "includePreludes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "isXml": {
+          "type": "string"
+        },
+        "pageEncoding": {
+          "type": "string"
+        },
+        "scriptingInvalid": {
+          "type": "string"
+        },
+        "trimDirectiveWhitespaces": {
+          "type": "string"
+        },
+        "urlPatterns": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "Locale": {
+      "type": "object",
+      "properties": {
+        "country": {
+          "type": "string"
+        },
+        "displayCountry": {
+          "type": "string"
+        },
+        "displayLanguage": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "displayScript": {
+          "type": "string"
+        },
+        "displayVariant": {
+          "type": "string"
+        },
+        "extensionKeys": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "iso3Country": {
+          "type": "string"
+        },
+        "iso3Language": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "script": {
+          "type": "string"
+        },
+        "unicodeLocaleAttributes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "unicodeLocaleKeys": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "variant": {
+          "type": "string"
+        }
+      }
+    },
+    "Module": {
+      "type": "object",
+      "properties": {
+        "annotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "classLoader": {
+          "$ref": "#/definitions/ClassLoader"
+        },
+        "declaredAnnotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "descriptor": {
+          "$ref": "#/definitions/ModuleDescriptor"
+        },
+        "layer": {
+          "$ref": "#/definitions/ModuleLayer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "named": {
+          "type": "boolean"
+        },
+        "packages": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        }
+      }
+    },
+    "ModuleDescriptor": {
+      "type": "object",
+      "properties": {
+        "automatic": {
+          "type": "boolean"
+        },
+        "open": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ModuleLayer": {
+      "type": "object"
+    },
+    "Package": {
+      "type": "object",
+      "properties": {
+        "annotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "declaredAnnotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "implementationTitle": {
+          "type": "string"
+        },
+        "implementationVendor": {
+          "type": "string"
+        },
+        "implementationVersion": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sealed": {
+          "type": "boolean"
+        },
+        "specificationTitle": {
+          "type": "string"
+        },
+        "specificationVendor": {
+          "type": "string"
+        },
+        "specificationVersion": {
+          "type": "string"
+        }
+      }
+    },
+    "Part": {
+      "type": "object",
+      "properties": {
+        "contentType": {
+          "type": "string"
+        },
+        "headerNames": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "inputStream": {
+          "$ref": "#/definitions/InputStream"
+        },
+        "name": {
+          "type": "string"
+        },
+        "size": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "submittedFileName": {
+          "type": "string"
+        }
+      }
+    },
+    "Principal": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "PrintWriter": {
+      "type": "object"
+    },
+    "ReplicationAllStatus": {
+      "type": "object",
+      "required": [
+        "code"
+      ],
+      "properties": {
+        "code": {
+          "description": "The replication all status.",
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "ReplicationPartnerStatus": {
+      "type": "object",
+      "required": [
+        "id",
+        "lastRunTime",
+        "lastSuccessfulRunTime",
+        "location",
+        "name",
+        "nextRunTime",
+        "status_code"
+      ],
+      "properties": {
+        "id": {
+          "description": "Replication partner id",
+          "type": "string"
+        },
+        "lastRunTime": {
+          "description": "The last time that the replication ran.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "lastSuccessfulRunTime": {
+          "description": "The last time that the replication ran and succeeded.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "location": {
+          "description": "The geographical location of the replication site. Currently, this always displays NA.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Replication partner status",
+          "type": "string"
+        },
+        "nextRunTime": {
+          "description": "The next time that the replication is scheduled to run.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "status_code": {
+          "description": "The replication status. Possible values include SUCCEEDED, CONNECTING, AUTHENTICATING, SUBMITTING, PROCESSING, CANCELED, NEVER_REPLICATED, and FAILED_CONNECT.",
+          "type": "string"
+        }
+      }
+    },
+    "ReplicationStatus": {
+      "type": "object",
+      "required": [
+        "id",
+        "replicationPartnerStatusList",
+        "siteLocation",
+        "siteName"
+      ],
+      "properties": {
+        "id": {
+          "description": "The local site id of the replication partner.",
+          "type": "string"
+        },
+        "replicationPartnerStatusList": {
+          "description": "List of statuses for all replication partners.",
+          "items": {
+            "$ref": "#/definitions/ReplicationPartnerStatus"
+          },
+          "type": "array"
+        },
+        "siteLocation": {
+          "description": "The geographical location of the local replication site. Currently, this always displays NA.",
+          "type": "string"
+        },
+        "siteName": {
+          "description": "The local site name of the replication partner.",
+          "type": "string"
+        }
+      }
+    },
+    "ReplicationStatusResponse": {
+      "type": "object",
+      "properties": {
+        "replicationStatus": {
+          "$ref": "#/definitions/ReplicationStatus"
+        }
+      }
+    },
+    "ServletRegistration": {
+      "type": "object",
+      "properties": {
+        "className": {
+          "type": "string"
+        },
+        "initParameters": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "mappings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "runAsRole": {
+          "type": "string"
+        }
+      }
+    },
+    "ServletRequest": {
+      "type": "object",
+      "properties": {
+        "asyncContext": {
+          "$ref": "#/definitions/AsyncContext"
+        },
+        "asyncStarted": {
+          "type": "boolean"
+        },
+        "asyncSupported": {
+          "type": "boolean"
+        },
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "characterEncoding": {
+          "type": "string"
+        },
+        "contentLength": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "contentLengthLong": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "dispatcherType": {
+          "enum": [
+            "FORWARD",
+            "INCLUDE",
+            "REQUEST",
+            "ASYNC",
+            "ERROR"
+          ],
+          "type": "string"
+        },
+        "inputStream": {
+          "$ref": "#/definitions/blacklist_ServletInputStream"
+        },
+        "localAddr": {
+          "type": "string"
+        },
+        "localName": {
+          "type": "string"
+        },
+        "localPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "locales": {
+          "$ref": "#/definitions/EnumerationLocale"
+        },
+        "parameterMap": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        "parameterNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "reader": {
+          "$ref": "#/definitions/BufferedReader"
+        },
+        "remoteAddr": {
+          "type": "string"
+        },
+        "remoteHost": {
+          "type": "string"
+        },
+        "remotePort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        },
+        "serverName": {
+          "type": "string"
+        },
+        "serverPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "servletContext": {
+          "$ref": "#/definitions/blacklist_ServletContext"
+        }
+      }
+    },
+    "ServletResponse": {
+      "type": "object",
+      "properties": {
+        "bufferSize": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "characterEncoding": {
+          "type": "string"
+        },
+        "committed": {
+          "type": "boolean"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "outputStream": {
+          "$ref": "#/definitions/blacklist_ServletOutputStream"
+        },
+        "writer": {
+          "$ref": "#/definitions/PrintWriter"
+        }
+      }
+    },
+    "SessionCookieConfig": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "httpOnly": {
+          "type": "boolean"
+        },
+        "maxAge": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        }
+      }
+    },
+    "StringBuffer": {
+      "type": "object"
+    },
+    "TaglibDescriptor": {
+      "type": "object",
+      "properties": {
+        "taglibLocation": {
+          "type": "string"
+        },
+        "taglibURI": {
+          "type": "string"
+        }
+      }
+    },
+    "blacklist_Cookie": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "httpOnly": {
+          "type": "boolean"
+        },
+        "maxAge": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "string"
+        },
+        "version": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "blacklist_HttpServletRequest": {
+      "type": "object",
+      "properties": {
+        "asyncContext": {
+          "$ref": "#/definitions/AsyncContext"
+        },
+        "asyncStarted": {
+          "type": "boolean"
+        },
+        "asyncSupported": {
+          "type": "boolean"
+        },
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "authType": {
+          "type": "string"
+        },
+        "characterEncoding": {
+          "type": "string"
+        },
+        "contentLength": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "contentLengthLong": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "contextPath": {
+          "type": "string"
+        },
+        "cookies": {
+          "items": {
+            "$ref": "#/definitions/blacklist_Cookie"
+          },
+          "type": "array"
+        },
+        "dispatcherType": {
+          "enum": [
+            "FORWARD",
+            "INCLUDE",
+            "REQUEST",
+            "ASYNC",
+            "ERROR"
+          ],
+          "type": "string"
+        },
+        "headerNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "httpServletMapping": {
+          "$ref": "#/definitions/HttpServletMapping"
+        },
+        "inputStream": {
+          "$ref": "#/definitions/blacklist_ServletInputStream"
+        },
+        "localAddr": {
+          "type": "string"
+        },
+        "localName": {
+          "type": "string"
+        },
+        "localPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "locales": {
+          "$ref": "#/definitions/EnumerationLocale"
+        },
+        "method": {
+          "type": "string"
+        },
+        "parameterMap": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        "parameterNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "parts": {
+          "items": {
+            "$ref": "#/definitions/Part"
+          },
+          "type": "array"
+        },
+        "pathInfo": {
+          "type": "string"
+        },
+        "pathTranslated": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "queryString": {
+          "type": "string"
+        },
+        "reader": {
+          "$ref": "#/definitions/BufferedReader"
+        },
+        "remoteAddr": {
+          "type": "string"
+        },
+        "remoteHost": {
+          "type": "string"
+        },
+        "remotePort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "remoteUser": {
+          "type": "string"
+        },
+        "requestURI": {
+          "type": "string"
+        },
+        "requestURL": {
+          "$ref": "#/definitions/StringBuffer"
+        },
+        "requestedSessionId": {
+          "type": "string"
+        },
+        "requestedSessionIdFromCookie": {
+          "type": "boolean"
+        },
+        "requestedSessionIdFromURL": {
+          "type": "boolean"
+        },
+        "requestedSessionIdFromUrl": {
+          "type": "boolean"
+        },
+        "requestedSessionIdValid": {
+          "type": "boolean"
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        },
+        "serverName": {
+          "type": "string"
+        },
+        "serverPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "servletContext": {
+          "$ref": "#/definitions/blacklist_ServletContext"
+        },
+        "servletPath": {
+          "type": "string"
+        },
+        "session": {
+          "$ref": "#/definitions/blacklist_HttpSession"
+        },
+        "trailerFields": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "trailerFieldsReady": {
+          "type": "boolean"
+        },
+        "userPrincipal": {
+          "$ref": "#/definitions/Principal"
+        }
+      }
+    },
+    "blacklist_HttpSession": {
+      "type": "object",
+      "properties": {
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "creationTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lastAccessedTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "maxInactiveInterval": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "new": {
+          "type": "boolean"
+        },
+        "servletContext": {
+          "$ref": "#/definitions/blacklist_ServletContext"
+        },
+        "sessionContext": {
+          "$ref": "#/definitions/blacklist_HttpSessionContext"
+        },
+        "valueNames": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "blacklist_HttpSessionContext": {
+      "type": "object",
+      "properties": {
+        "ids": {
+          "$ref": "#/definitions/EnumerationString"
+        }
+      }
+    },
+    "blacklist_ServletContext": {
+      "type": "object",
+      "properties": {
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "classLoader": {
+          "$ref": "#/definitions/ClassLoader"
+        },
+        "contextPath": {
+          "type": "string"
+        },
+        "defaultSessionTrackingModes": {
+          "items": {
+            "enum": [
+              "COOKIE",
+              "URL",
+              "SSL"
+            ],
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "effectiveMajorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "effectiveMinorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "effectiveSessionTrackingModes": {
+          "items": {
+            "enum": [
+              "COOKIE",
+              "URL",
+              "SSL"
+            ],
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "filterRegistrations": {
+          "additionalProperties": {
+            "$ref": "#/definitions/FilterRegistration"
+          },
+          "type": "object"
+        },
+        "initParameterNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "jspConfigDescriptor": {
+          "$ref": "#/definitions/JspConfigDescriptor"
+        },
+        "majorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "minorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "requestCharacterEncoding": {
+          "type": "string"
+        },
+        "responseCharacterEncoding": {
+          "type": "string"
+        },
+        "serverInfo": {
+          "type": "string"
+        },
+        "servletContextName": {
+          "type": "string"
+        },
+        "servletNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "servletRegistrations": {
+          "additionalProperties": {
+            "$ref": "#/definitions/ServletRegistration"
+          },
+          "type": "object"
+        },
+        "servlets": {
+          "$ref": "#/definitions/EnumerationServlet"
+        },
+        "sessionCookieConfig": {
+          "$ref": "#/definitions/SessionCookieConfig"
+        },
+        "sessionTimeout": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "virtualServerName": {
+          "type": "string"
+        }
+      }
+    },
+    "blacklist_ServletInputStream": {
+      "type": "object",
+      "properties": {
+        "finished": {
+          "type": "boolean"
+        },
+        "ready": {
+          "type": "boolean"
+        }
+      }
+    },
+    "blacklist_ServletOutputStream": {
+      "type": "object",
+      "properties": {
+        "ready": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

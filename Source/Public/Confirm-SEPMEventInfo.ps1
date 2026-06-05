@@ -7,8 +7,6 @@ function Confirm-SEPMEventInfo {
         A system administrator account is required for this REST API.
     .PARAMETER EventID
         The event ID to acknowledge.
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> $SEPMEvents = Confirm-SEPMEventInfo -eventID 30D8A67F0A6606220DEB5989DC3FAC50
 #>
@@ -19,35 +17,20 @@ function Confirm-SEPMEventInfo {
             Mandatory = $true
         )]
         [string]
-        $EventID,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $EventID
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/events/acknowledge/$eventID"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/events/acknowledge/$eventID"
+
     }
 
     process {
         $params = @{
+            Session = $session
             Method  = 'POST'
             Uri     = $URI
-            headers = $headers
         }
         
         $resp = Invoke-ABRestMethod -params $params

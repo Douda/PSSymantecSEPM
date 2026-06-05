@@ -1,0 +1,327 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "This page documents the REST APIs that perform Symantec Endpoint Protection Manager operations.",
+    "version": "v1",
+    "title": "Symantec Endpoint Protection Manager API Reference"
+  },
+  "tags": [
+    {
+      "name": "production"
+    }
+  ],
+  "paths": {
+    "/api/v1/events/acknowledge/risks/{eventID}": {
+      "post": {
+        "description": "",
+        "operationId": "Acknowledgement of Specified Risk Log Event",
+        "parameters": [
+          {
+            "name": "eventID",
+            "in": "path",
+            "description": "The event ID to acknowledge.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result."
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Acknowledges a specified event for a given risk log event ID.  The event must be from a command scan.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/events/acknowledge/{eventID}": {
+      "post": {
+        "description": "",
+        "operationId": "Acknowledgement of Specified Log Event",
+        "parameters": [
+          {
+            "name": "eventID",
+            "in": "path",
+            "description": "The event ID to acknowledge.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result."
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Acknowledges a specified event for a given event ID.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/events/critical": {
+      "get": {
+        "description": "",
+        "operationId": "Get Critical Events Info",
+        "parameters": [
+          {
+            "name": "includeAcknowledged",
+            "in": "query",
+            "description": "True return all acknowledged and non acknowledged critcial events, otherwise return only non acknowledged events.",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "description": "The index page used for returned results. Not currently used.",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "The number of results returned for each page. Not currently used.",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "description": "The source from which to get information. Not currently used.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/CriticalEventsResponse"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets information related to critical events.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/events/notifications": {
+      "post": {
+        "description": "",
+        "operationId": "Add an External Notification",
+        "parameters": [
+          {
+            "description": "The external Notification to be added.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Notification"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result."
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Posts an External Notification.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/events/notifications/{id}/report": {
+      "get": {
+        "description": "",
+        "operationId": "Retrieve a Notification Report",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "description": "The format of the request report (HTML is supported for now).",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the notification.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result."
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets notification report HTML specified by its ID. It respects the type parameter and ignores the accept header.",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "CriticalEventsInfo": {
+      "type": "object",
+      "required": [
+        "acknowledged",
+        "eventDateTime",
+        "eventId",
+        "message",
+        "subject"
+      ],
+      "properties": {
+        "acknowledged": {
+          "description": "Specifies whether or not the notification has been acknowledged.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "eventDateTime": {
+          "description": "The notification's time.",
+          "type": "string"
+        },
+        "eventId": {
+          "description": "The notification's ID.",
+          "type": "string"
+        },
+        "message": {
+          "description": "The notification's message.",
+          "type": "string"
+        },
+        "subject": {
+          "description": "The notification's subject.",
+          "type": "string"
+        }
+      }
+    },
+    "CriticalEventsResponse": {
+      "type": "object",
+      "required": [
+        "criticalEventsInfoList",
+        "lastUpdated",
+        "totalUnacknowledgedMessages"
+      ],
+      "properties": {
+        "criticalEventsInfoList": {
+          "description": "The list of unacknowledged notifications.",
+          "items": {
+            "$ref": "#/definitions/CriticalEventsInfo"
+          },
+          "type": "array"
+        },
+        "lastUpdated": {
+          "description": "The last time the client updated its critical event status.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "totalUnacknowledgedMessages": {
+          "description": "The number of unacknowledged notifications.",
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "Notification": {
+      "type": "object",
+      "required": [
+        "hyperlink",
+        "message",
+        "name",
+        "subject"
+      ],
+      "properties": {
+        "hyperlink": {
+          "description": "The event notification Link.",
+          "maxLength": 512,
+          "minLength": 1,
+          "type": "string"
+        },
+        "message": {
+          "description": "The event notification message.",
+          "maxLength": 32767,
+          "minLength": 1,
+          "type": "string"
+        },
+        "name": {
+          "description": "The event notification Name.",
+          "maxLength": 255,
+          "minLength": 1,
+          "type": "string"
+        },
+        "subject": {
+          "description": "The event notification Subject.",
+          "maxLength": 255,
+          "minLength": 1,
+          "type": "string"
+        }
+      }
+    }
+  }
+}

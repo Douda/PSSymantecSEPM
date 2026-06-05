@@ -1,0 +1,1610 @@
+{
+  "basePath": "/sepm/api/v1",
+  "definitions": {
+    "Annotation": {
+      "type": "object"
+    },
+    "AsyncContext": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/ServletRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/ServletResponse"
+        },
+        "timeout": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "BlacklistPayload": {
+      "type": "object",
+      "required": [
+        "data",
+        "description",
+        "domainId",
+        "hashType",
+        "name"
+      ],
+      "properties": {
+        "data": {
+          "description": "The blacklist file's data. For v1, it is a list of String representing hash values. For v2, it is a list of map from hash type to hash value.",
+          "example": "V1: [\"d41d8cd98f00b204e9800998ecf8427e\",\"93b885adfe0da089cdf634904fd59f71\"], V2:[{MD5: \"d41d8cd98f00b204e9800998ecf8427e\"}, {SHA256: \"4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a\"},{MD5: \"93b885adfe0da089cdf634904fd59f71\", SHA256: \"6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d\"}]",
+          "items": {
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "description": {
+          "description": "The blacklist file's description.",
+          "type": "string"
+        },
+        "domainId": {
+          "description": "The domain ID to which the blacklist file is applied.",
+          "type": "string"
+        },
+        "hashType": {
+          "description": "Only for V1, The blacklist file's hash type. Possible values are MD5 or SHA256.",
+          "pattern": "(?i)^MD5|SHA256$",
+          "type": "string"
+        },
+        "name": {
+          "description": "The fingerprint list name. This field is required at fingerprint list creation, but when the fingerprint list is updated, this field is not required.",
+          "maxLength": 255,
+          "minLength": 0,
+          "pattern": "^[^/\\\\*?<>|:\"]*$",
+          "type": "string"
+        }
+      }
+    },
+    "BlacklistPayloadMapStringString": {
+      "type": "object",
+      "required": [
+        "data",
+        "description",
+        "domainId",
+        "hashType",
+        "name"
+      ],
+      "properties": {
+        "data": {
+          "description": "The blacklist file's data. For v1, it is a list of String representing hash values. For v2, it is a list of map from hash type to hash value.",
+          "example": "V1: [\"d41d8cd98f00b204e9800998ecf8427e\",\"93b885adfe0da089cdf634904fd59f71\"], V2:[{MD5: \"d41d8cd98f00b204e9800998ecf8427e\"}, {SHA256: \"4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a\"},{MD5: \"93b885adfe0da089cdf634904fd59f71\", SHA256: \"6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d\"}]",
+          "items": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "description": {
+          "description": "The blacklist file's description.",
+          "type": "string"
+        },
+        "domainId": {
+          "description": "The domain ID to which the blacklist file is applied.",
+          "type": "string"
+        },
+        "hashType": {
+          "description": "Only for V1, The blacklist file's hash type. Possible values are MD5 or SHA256.",
+          "pattern": "(?i)^MD5|SHA256$",
+          "type": "string"
+        },
+        "name": {
+          "description": "The fingerprint list name. This field is required at fingerprint list creation, but when the fingerprint list is updated, this field is not required.",
+          "maxLength": 255,
+          "minLength": 0,
+          "pattern": "^[^/\\\\*?<>|:\"]*$",
+          "type": "string"
+        }
+      }
+    },
+    "BlacklistPayloadString": {
+      "type": "object",
+      "required": [
+        "data",
+        "description",
+        "domainId",
+        "hashType",
+        "name"
+      ],
+      "properties": {
+        "data": {
+          "description": "The blacklist file's data. For v1, it is a list of String representing hash values. For v2, it is a list of map from hash type to hash value.",
+          "example": "V1: [\"d41d8cd98f00b204e9800998ecf8427e\",\"93b885adfe0da089cdf634904fd59f71\"], V2:[{MD5: \"d41d8cd98f00b204e9800998ecf8427e\"}, {SHA256: \"4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a\"},{MD5: \"93b885adfe0da089cdf634904fd59f71\", SHA256: \"6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d\"}]",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "description": {
+          "description": "The blacklist file's description.",
+          "type": "string"
+        },
+        "domainId": {
+          "description": "The domain ID to which the blacklist file is applied.",
+          "type": "string"
+        },
+        "hashType": {
+          "description": "Only for V1, The blacklist file's hash type. Possible values are MD5 or SHA256.",
+          "pattern": "(?i)^MD5|SHA256$",
+          "type": "string"
+        },
+        "name": {
+          "description": "The fingerprint list name. This field is required at fingerprint list creation, but when the fingerprint list is updated, this field is not required.",
+          "maxLength": 255,
+          "minLength": 0,
+          "pattern": "^[^/\\\\*?<>|:\"]*$",
+          "type": "string"
+        }
+      }
+    },
+    "BufferedReader": {
+      "type": "object"
+    },
+    "ClassLoader": {
+      "type": "object",
+      "properties": {
+        "definedPackages": {
+          "items": {
+            "$ref": "#/definitions/Package"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "parent": {
+          "$ref": "#/definitions/ClassLoader"
+        },
+        "registeredAsParallelCapable": {
+          "type": "boolean"
+        },
+        "unnamedModule": {
+          "$ref": "#/definitions/Module"
+        }
+      }
+    },
+    "Cookie": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "httpOnly": {
+          "type": "boolean"
+        },
+        "maxAge": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "string"
+        },
+        "version": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "Enumeration": {
+      "type": "object"
+    },
+    "EnumerationLocale": {
+      "type": "object"
+    },
+    "EnumerationServlet": {
+      "type": "object"
+    },
+    "EnumerationString": {
+      "type": "object"
+    },
+    "FilterRegistration": {
+      "type": "object",
+      "properties": {
+        "className": {
+          "type": "string"
+        },
+        "initParameters": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "name": {
+          "type": "string"
+        },
+        "servletNameMappings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "urlPatternMappings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "FingerPrintList": {
+      "type": "object",
+      "required": [
+        "data",
+        "description",
+        "groupIds",
+        "hashType",
+        "id",
+        "name",
+        "source"
+      ],
+      "properties": {
+        "data": {
+          "description": "The fingerprint list data.",
+          "items": {
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "description": {
+          "description": "The fingerprint list description.",
+          "type": "string"
+        },
+        "groupIds": {
+          "description": "A list of groups that use this fingerprint list.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "hashType": {
+          "description": "Only for V1, the fingerprint list hash type. Possible values are MD5 or SHA256.",
+          "type": "string"
+        },
+        "id": {
+          "description": "The fingerprint list ID.",
+          "type": "string"
+        },
+        "name": {
+          "description": "The fingerprint list name.",
+          "type": "string"
+        },
+        "source": {
+          "description": "The fingerprint list source. Possible values are CONSOLE, COMMAND, DELTATOOL, and WEBSERVICE.",
+          "type": "string"
+        }
+      }
+    },
+    "HttpServletMapping": {
+      "type": "object",
+      "properties": {
+        "mappingMatch": {
+          "enum": [
+            "CONTEXT_ROOT",
+            "DEFAULT",
+            "EXACT",
+            "EXTENSION",
+            "PATH"
+          ],
+          "type": "string"
+        },
+        "matchValue": {
+          "type": "string"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "servletName": {
+          "type": "string"
+        }
+      }
+    },
+    "HttpServletRequest": {
+      "type": "object",
+      "properties": {
+        "asyncContext": {
+          "$ref": "#/definitions/AsyncContext"
+        },
+        "asyncStarted": {
+          "type": "boolean"
+        },
+        "asyncSupported": {
+          "type": "boolean"
+        },
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "authType": {
+          "type": "string"
+        },
+        "characterEncoding": {
+          "type": "string"
+        },
+        "contentLength": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "contentLengthLong": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "contextPath": {
+          "type": "string"
+        },
+        "cookies": {
+          "items": {
+            "$ref": "#/definitions/Cookie"
+          },
+          "type": "array"
+        },
+        "dispatcherType": {
+          "enum": [
+            "FORWARD",
+            "INCLUDE",
+            "REQUEST",
+            "ASYNC",
+            "ERROR"
+          ],
+          "type": "string"
+        },
+        "headerNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "httpServletMapping": {
+          "$ref": "#/definitions/HttpServletMapping"
+        },
+        "inputStream": {
+          "$ref": "#/definitions/ServletInputStream"
+        },
+        "localAddr": {
+          "type": "string"
+        },
+        "localName": {
+          "type": "string"
+        },
+        "localPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "locales": {
+          "$ref": "#/definitions/EnumerationLocale"
+        },
+        "method": {
+          "type": "string"
+        },
+        "parameterMap": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        "parameterNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "parts": {
+          "items": {
+            "$ref": "#/definitions/Part"
+          },
+          "type": "array"
+        },
+        "pathInfo": {
+          "type": "string"
+        },
+        "pathTranslated": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "queryString": {
+          "type": "string"
+        },
+        "reader": {
+          "$ref": "#/definitions/BufferedReader"
+        },
+        "remoteAddr": {
+          "type": "string"
+        },
+        "remoteHost": {
+          "type": "string"
+        },
+        "remotePort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "remoteUser": {
+          "type": "string"
+        },
+        "requestURI": {
+          "type": "string"
+        },
+        "requestURL": {
+          "$ref": "#/definitions/StringBuffer"
+        },
+        "requestedSessionId": {
+          "type": "string"
+        },
+        "requestedSessionIdFromCookie": {
+          "type": "boolean"
+        },
+        "requestedSessionIdFromURL": {
+          "type": "boolean"
+        },
+        "requestedSessionIdFromUrl": {
+          "type": "boolean"
+        },
+        "requestedSessionIdValid": {
+          "type": "boolean"
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        },
+        "serverName": {
+          "type": "string"
+        },
+        "serverPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "servletContext": {
+          "$ref": "#/definitions/ServletContext"
+        },
+        "servletPath": {
+          "type": "string"
+        },
+        "session": {
+          "$ref": "#/definitions/HttpSession"
+        },
+        "trailerFields": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "trailerFieldsReady": {
+          "type": "boolean"
+        },
+        "userPrincipal": {
+          "$ref": "#/definitions/Principal"
+        }
+      }
+    },
+    "HttpSession": {
+      "type": "object",
+      "properties": {
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "creationTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lastAccessedTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "maxInactiveInterval": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "new": {
+          "type": "boolean"
+        },
+        "servletContext": {
+          "$ref": "#/definitions/ServletContext"
+        },
+        "sessionContext": {
+          "$ref": "#/definitions/HttpSessionContext"
+        },
+        "valueNames": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "HttpSessionContext": {
+      "type": "object",
+      "properties": {
+        "ids": {
+          "$ref": "#/definitions/EnumerationString"
+        }
+      }
+    },
+    "InputStream": {
+      "type": "object"
+    },
+    "JspConfigDescriptor": {
+      "type": "object",
+      "properties": {
+        "jspPropertyGroups": {
+          "items": {
+            "$ref": "#/definitions/JspPropertyGroupDescriptor"
+          },
+          "type": "array"
+        },
+        "taglibs": {
+          "items": {
+            "$ref": "#/definitions/TaglibDescriptor"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "JspPropertyGroupDescriptor": {
+      "type": "object",
+      "properties": {
+        "buffer": {
+          "type": "string"
+        },
+        "defaultContentType": {
+          "type": "string"
+        },
+        "deferredSyntaxAllowedAsLiteral": {
+          "type": "string"
+        },
+        "elIgnored": {
+          "type": "string"
+        },
+        "errorOnUndeclaredNamespace": {
+          "type": "string"
+        },
+        "includeCodas": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "includePreludes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "isXml": {
+          "type": "string"
+        },
+        "pageEncoding": {
+          "type": "string"
+        },
+        "scriptingInvalid": {
+          "type": "string"
+        },
+        "trimDirectiveWhitespaces": {
+          "type": "string"
+        },
+        "urlPatterns": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "Locale": {
+      "type": "object",
+      "properties": {
+        "country": {
+          "type": "string"
+        },
+        "displayCountry": {
+          "type": "string"
+        },
+        "displayLanguage": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "displayScript": {
+          "type": "string"
+        },
+        "displayVariant": {
+          "type": "string"
+        },
+        "extensionKeys": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "iso3Country": {
+          "type": "string"
+        },
+        "iso3Language": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "script": {
+          "type": "string"
+        },
+        "unicodeLocaleAttributes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "unicodeLocaleKeys": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "variant": {
+          "type": "string"
+        }
+      }
+    },
+    "Module": {
+      "type": "object",
+      "properties": {
+        "annotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "classLoader": {
+          "$ref": "#/definitions/ClassLoader"
+        },
+        "declaredAnnotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "descriptor": {
+          "$ref": "#/definitions/ModuleDescriptor"
+        },
+        "layer": {
+          "$ref": "#/definitions/ModuleLayer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "named": {
+          "type": "boolean"
+        },
+        "packages": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        }
+      }
+    },
+    "ModuleDescriptor": {
+      "type": "object",
+      "properties": {
+        "automatic": {
+          "type": "boolean"
+        },
+        "open": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ModuleLayer": {
+      "type": "object"
+    },
+    "Package": {
+      "type": "object",
+      "properties": {
+        "annotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "declaredAnnotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "implementationTitle": {
+          "type": "string"
+        },
+        "implementationVendor": {
+          "type": "string"
+        },
+        "implementationVersion": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sealed": {
+          "type": "boolean"
+        },
+        "specificationTitle": {
+          "type": "string"
+        },
+        "specificationVendor": {
+          "type": "string"
+        },
+        "specificationVersion": {
+          "type": "string"
+        }
+      }
+    },
+    "Part": {
+      "type": "object",
+      "properties": {
+        "contentType": {
+          "type": "string"
+        },
+        "headerNames": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "inputStream": {
+          "$ref": "#/definitions/InputStream"
+        },
+        "name": {
+          "type": "string"
+        },
+        "size": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "submittedFileName": {
+          "type": "string"
+        }
+      }
+    },
+    "Principal": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "PrintWriter": {
+      "type": "object"
+    },
+    "ServletContext": {
+      "type": "object",
+      "properties": {
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "classLoader": {
+          "$ref": "#/definitions/ClassLoader"
+        },
+        "contextPath": {
+          "type": "string"
+        },
+        "defaultSessionTrackingModes": {
+          "items": {
+            "enum": [
+              "COOKIE",
+              "URL",
+              "SSL"
+            ],
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "effectiveMajorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "effectiveMinorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "effectiveSessionTrackingModes": {
+          "items": {
+            "enum": [
+              "COOKIE",
+              "URL",
+              "SSL"
+            ],
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "filterRegistrations": {
+          "additionalProperties": {
+            "$ref": "#/definitions/FilterRegistration"
+          },
+          "type": "object"
+        },
+        "initParameterNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "jspConfigDescriptor": {
+          "$ref": "#/definitions/JspConfigDescriptor"
+        },
+        "majorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "minorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "requestCharacterEncoding": {
+          "type": "string"
+        },
+        "responseCharacterEncoding": {
+          "type": "string"
+        },
+        "serverInfo": {
+          "type": "string"
+        },
+        "servletContextName": {
+          "type": "string"
+        },
+        "servletNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "servletRegistrations": {
+          "additionalProperties": {
+            "$ref": "#/definitions/ServletRegistration"
+          },
+          "type": "object"
+        },
+        "servlets": {
+          "$ref": "#/definitions/EnumerationServlet"
+        },
+        "sessionCookieConfig": {
+          "$ref": "#/definitions/SessionCookieConfig"
+        },
+        "sessionTimeout": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "virtualServerName": {
+          "type": "string"
+        }
+      }
+    },
+    "ServletInputStream": {
+      "type": "object",
+      "properties": {
+        "finished": {
+          "type": "boolean"
+        },
+        "ready": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ServletOutputStream": {
+      "type": "object",
+      "properties": {
+        "ready": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ServletRegistration": {
+      "type": "object",
+      "properties": {
+        "className": {
+          "type": "string"
+        },
+        "initParameters": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "mappings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "runAsRole": {
+          "type": "string"
+        }
+      }
+    },
+    "ServletRequest": {
+      "type": "object",
+      "properties": {
+        "asyncContext": {
+          "$ref": "#/definitions/AsyncContext"
+        },
+        "asyncStarted": {
+          "type": "boolean"
+        },
+        "asyncSupported": {
+          "type": "boolean"
+        },
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "characterEncoding": {
+          "type": "string"
+        },
+        "contentLength": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "contentLengthLong": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "dispatcherType": {
+          "enum": [
+            "FORWARD",
+            "INCLUDE",
+            "REQUEST",
+            "ASYNC",
+            "ERROR"
+          ],
+          "type": "string"
+        },
+        "inputStream": {
+          "$ref": "#/definitions/ServletInputStream"
+        },
+        "localAddr": {
+          "type": "string"
+        },
+        "localName": {
+          "type": "string"
+        },
+        "localPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "locales": {
+          "$ref": "#/definitions/EnumerationLocale"
+        },
+        "parameterMap": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        "parameterNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "reader": {
+          "$ref": "#/definitions/BufferedReader"
+        },
+        "remoteAddr": {
+          "type": "string"
+        },
+        "remoteHost": {
+          "type": "string"
+        },
+        "remotePort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        },
+        "serverName": {
+          "type": "string"
+        },
+        "serverPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "servletContext": {
+          "$ref": "#/definitions/ServletContext"
+        }
+      }
+    },
+    "ServletResponse": {
+      "type": "object",
+      "properties": {
+        "bufferSize": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "characterEncoding": {
+          "type": "string"
+        },
+        "committed": {
+          "type": "boolean"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "outputStream": {
+          "$ref": "#/definitions/ServletOutputStream"
+        },
+        "writer": {
+          "$ref": "#/definitions/PrintWriter"
+        }
+      }
+    },
+    "SessionCookieConfig": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "httpOnly": {
+          "type": "boolean"
+        },
+        "maxAge": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        }
+      }
+    },
+    "StringBuffer": {
+      "type": "object"
+    },
+    "TaglibDescriptor": {
+      "type": "object",
+      "properties": {
+        "taglibLocation": {
+          "type": "string"
+        },
+        "taglibURI": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "host": "",
+  "info": {
+    "description": "This page documents the REST APIs that perform Symantec Endpoint Protection Manager operations.",
+    "title": "Symantec Endpoint Protection Manager API Reference",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/policy-objects/fingerprints": {
+      "get": {
+        "description": "",
+        "operationId": "Get File Finger Print List By Name",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "name": "domainId",
+            "in": "query",
+            "description": "The domain for the file fingerprint list.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "The Name of the file fingerprint list.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/FingerPrintList"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets the file fingerprint list for a specified Name as a set of hash values. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "post": {
+        "description": "",
+        "operationId": "Add BlackList",
+        "parameters": [
+          {
+            "description": "The blacklist to be added.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BlacklistPayloadString"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "409": {
+            "description": "The request could not be completed due to a conflict with the current state of the target resource. File Figerprint already exists "
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Adds a blacklist as a file fingerprint list to Symantec Endpoint Protection Manager. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policy-objects/fingerprints/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get File Finger Print List",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the file fingerprint list.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/FingerPrintList"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets the file fingerprint list for a specified ID as a set of hash values. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "post": {
+        "description": "",
+        "operationId": "Update BlackList",
+        "parameters": [
+          {
+            "description": "The fingerprint list to update.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BlacklistPayloadString"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the file fingerprint list to update.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "410": {
+            "description": "Can not find the object specified"
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Updates an existing blacklist. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "operationId": "Delete BlackList",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the file fingerprint list to delete.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "410": {
+            "description": "Cannot find the specified object."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Deletes an existing blacklist, and removes it from a group to which it applies. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v2/policy-objects/fingerprints": {
+      "get": {
+        "description": "",
+        "operationId": "Get File Finger Print List By Name",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "name": "domainId",
+            "in": "query",
+            "description": "The domain for the file fingerprint list.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "The Name of the file fingerprint list.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/FingerPrintList"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets the file fingerprint list for a specified Name as a set of hash values. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "post": {
+        "description": "",
+        "operationId": "Add BlackList",
+        "parameters": [
+          {
+            "description": "The blacklist to be added.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BlacklistPayloadMapStringString"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "409": {
+            "description": "The request could not be completed due to a conflict with the current state of the target resource. File Figerprint already exists "
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Adds a blacklist as a file fingerprint list to Symantec Endpoint Protection Manager. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v2/policy-objects/fingerprints/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get File Finger Print List",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletRequest"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the file fingerprint list.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/FingerPrintList"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets the file fingerprint list for a specified ID as a set of hash values. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "post": {
+        "description": "",
+        "operationId": "Update BlackList",
+        "parameters": [
+          {
+            "description": "The fingerprint list to update.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BlacklistPayloadMapStringString"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the file fingerprint list to update.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "410": {
+            "description": "Can not find the object specified"
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Updates an existing blacklist. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "operationId": "Delete BlackList",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the file fingerprint list to delete.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "410": {
+            "description": "Cannot find the specified object."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Deletes an existing blacklist, and removes it from a group to which it applies. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "schemes": [
+    "https"
+  ],
+  "swagger": "2.0",
+  "tags": [
+    {
+      "name": "production"
+    }
+  ]
+}

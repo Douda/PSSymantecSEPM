@@ -1,0 +1,33 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Build & Import Module",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "Build-Module -SourcePath '${workspaceFolder}/Source/PSSymantecSEPM.psd1' -SemVer 0.0.1 -OutputDirectory '${workspaceFolder}/Output'; $mod = (Get-ChildItem '${workspaceFolder}/Output/PSSymantecSEPM' -Directory | Sort-Object Name -Descending | Select-Object -First 1).FullName; Import-Module \"$mod/PSSymantecSEPM.psm1\" -Force",
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Run All Tests",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "Invoke-Pester '${workspaceFolder}/Tests' -Output Detailed",
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Run Pester (Current File)",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "Invoke-Pester '${file}' -Output Detailed",
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "PowerShell Interactive",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "Write-Host 'PowerShell session ready. Module available after build.'",
+            "internalConsoleOptions": "openOnSessionStart"
+        }
+    ]
+}

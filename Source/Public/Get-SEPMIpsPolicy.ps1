@@ -19,8 +19,6 @@ function Get-SEPMIpsPolicy {
     .PARAMETER PolicyName
         The name of the policy to get the details of
         Is a required parameter
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMIpsPolicy -PolicyName "Intrusion Prevention policy PRODUCTION"
 
@@ -44,28 +42,13 @@ function Get-SEPMIpsPolicy {
         )]
         [Alias("Policy_Name")]
         [String]
-        $PolicyName,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $PolicyName
     )
 
     begin {
-                # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/policies/ips"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+                $URI = $session.BaseURLv1 + "/policies/ips"
+
         # Stores the policy summary for all policies only once
         $policies = Get-SEPMPoliciesSummary
     }
@@ -86,9 +69,9 @@ function Get-SEPMIpsPolicy {
         
         # prepare the parameters
         $params = @{
+            Session = $session
             Method          = 'GET'
             Uri             = $URI
-            headers         = $headers
             UseBasicParsing = $true
         }
     

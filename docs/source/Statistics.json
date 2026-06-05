@@ -1,0 +1,791 @@
+{
+  "basePath": "/sepm/api/v1",
+  "definitions": {
+    "AutoResolvedAttacks": {
+      "type": "object",
+      "required": [
+        "autoResolvedAttacksCount",
+        "epochTime"
+      ],
+      "properties": {
+        "autoResolvedAttacksCount": {
+          "description": "The number of attacks that were automatically resolved during a specified time period.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "epochTime": {
+          "description": "The time at the end of the specified time period during which attacks were automatically resolved.",
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "AutoResolvedAttacksResponse": {
+      "type": "object",
+      "required": [
+        "getautoResolvedAttacks",
+        "lastUpdated"
+      ],
+      "properties": {
+        "getautoResolvedAttacks": {
+          "description": "A list of attacks that were automatically resolved. Each item on the list contains a count of attacks during a specified time period.",
+          "items": {
+            "$ref": "#/definitions/AutoResolvedAttacks"
+          },
+          "type": "array"
+        },
+        "lastUpdated": {
+          "description": "The last time the client responded to a request to update the last time an attack was automatically resolved.",
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "ClientDefStatus": {
+      "type": "object",
+      "required": [
+        "clientsCount",
+        "version"
+      ],
+      "properties": {
+        "clientsCount": {
+          "description": "The number of clients that use this definition revision number.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "version": {
+          "description": "The client's definition revision number.",
+          "type": "string"
+        }
+      }
+    },
+    "ClientDefStatusResponse": {
+      "type": "object",
+      "required": [
+        "clientDefStatusList",
+        "lastUpdated"
+      ],
+      "properties": {
+        "clientDefStatusList": {
+          "description": "The list of client definition revision numbers.",
+          "items": {
+            "$ref": "#/definitions/ClientDefStatus"
+          },
+          "type": "array"
+        },
+        "lastUpdated": {
+          "description": "The last time the client updated its definition revision number.",
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "ClientVersion": {
+      "type": "object",
+      "required": [
+        "clientsCount",
+        "formattedVersion",
+        "version"
+      ],
+      "properties": {
+        "clientsCount": {
+          "description": "The number of clients on each product version.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "formattedVersion": {
+          "description": "The formatted product version number. For example, 12.1.5 (12.1 RU5) build 5337, or 12.1 (12.1) build 4971.",
+          "type": "string"
+        },
+        "version": {
+          "description": "The client's product version number.",
+          "type": "string"
+        }
+      }
+    },
+    "ClientVersionResponse": {
+      "type": "object",
+      "required": [
+        "clientVersionList",
+        "lastUpdated"
+      ],
+      "properties": {
+        "clientVersionList": {
+          "description": "The list of client versions.",
+          "items": {
+            "$ref": "#/definitions/ClientVersion"
+          },
+          "type": "array"
+        },
+        "lastUpdated": {
+          "description": "The last time the client updated its client version.",
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "ClientsOnlineStats": {
+      "type": "object",
+      "required": [
+        "clientsCount",
+        "status"
+      ],
+      "properties": {
+        "clientsCount": {
+          "description": "The number of clients.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "status": {
+          "description": "The client's online status. Possible values are Online or Offline.",
+          "type": "string"
+        }
+      }
+    },
+    "ClientsOnlineStatsResponse": {
+      "type": "object",
+      "required": [
+        "clientCountStatsList",
+        "lastUpdated"
+      ],
+      "properties": {
+        "clientCountStatsList": {
+          "description": "A list of the online or offline status of the clients.",
+          "items": {
+            "$ref": "#/definitions/ClientsOnlineStats"
+          },
+          "type": "array"
+        },
+        "lastUpdated": {
+          "description": "The last time the client updated its online status.",
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "ContentDownloadSource": {
+      "type": "object",
+      "required": [
+        "clientCount",
+        "sourceKey",
+        "sourceName"
+      ],
+      "properties": {
+        "clientCount": {
+          "description": "A count of clients by content download source.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "sourceKey": {
+          "description": "The key that identifies the content download source. Possible values are SEPM, GUP, PUBLIC_LU, INTERNAL_LUA, or OTHER.",
+          "type": "string"
+        },
+        "sourceName": {
+          "description": "The name of the content download source. Possible values are Symantec Endpoint Protection Manager, Group Update Provider, LiveUpdate, Internal LiveUpdate, or Other.",
+          "type": "string"
+        }
+      }
+    },
+    "ContentDownloadSourceResponse": {
+      "type": "object",
+      "required": [
+        "downloadSources",
+        "lastUpdated"
+      ],
+      "properties": {
+        "downloadSources": {
+          "description": "A list of the available client download sources.",
+          "items": {
+            "$ref": "#/definitions/ContentDownloadSource"
+          },
+          "type": "array"
+        },
+        "lastUpdated": {
+          "description": "The last time the client updated this information.",
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "InfectedClientStats": {
+      "type": "object",
+      "properties": {
+        "clientsCount": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "epochTime": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "InfectedClientStatsResponse": {
+      "type": "object",
+      "properties": {
+        "infectedClientStats": {
+          "items": {
+            "$ref": "#/definitions/InfectedClientStats"
+          },
+          "type": "array"
+        },
+        "lastUpdated": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "LicenseUsage": {
+      "type": "object",
+      "properties": {
+        "quarter": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "seat_count": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "year": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "MalwareClientStats": {
+      "type": "object",
+      "required": [
+        "clientsCount",
+        "epochTime"
+      ],
+      "properties": {
+        "clientsCount": {
+          "description": "The number of affected clients.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "epochTime": {
+          "description": "The time at the end of the specified time period during which malware against clients was found.",
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "MalwareClientStatsResponse": {
+      "type": "object",
+      "required": [
+        "lastUpdated",
+        "malwareClientStats"
+      ],
+      "properties": {
+        "lastUpdated": {
+          "description": "The last time the client updated its malware client count.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "malwareClientStats": {
+          "description": "The list of clients that report malware.",
+          "items": {
+            "$ref": "#/definitions/MalwareClientStats"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "RiskDistributionStats": {
+      "type": "object",
+      "required": [
+        "protectionEnabledClientCount",
+        "protectionName",
+        "riskCount"
+      ],
+      "properties": {
+        "protectionEnabledClientCount": {
+          "description": "A list of how many clients have a specific protection technology enabled.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "protectionName": {
+          "description": "The name of the protection technology that detected the risk. Possible values are Antivirus, SONAR, Download Insight, or CIDS.",
+          "type": "string"
+        },
+        "riskCount": {
+          "description": "The list of the number of risks sorted by the protection technology that detected them.",
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "RiskDistributionStatsResponse": {
+      "type": "object",
+      "required": [
+        "riskDistributionStats"
+      ],
+      "properties": {
+        "riskDistributionStats": {
+          "description": "The list of risk distribution statistics.",
+          "items": {
+            "$ref": "#/definitions/RiskDistributionStats"
+          },
+          "type": "array"
+        }
+      }
+    }
+  },
+  "host": "",
+  "info": {
+    "description": "This page documents the REST APIs that perform Symantec Endpoint Protection Manager operations.",
+    "title": "Symantec Endpoint Protection Manager API Reference",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/stats/autoresolved/{reportType}/{startTime}/to/{endTime}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Auto Resolved Attacks Count",
+        "parameters": [
+          {
+            "name": "endTime",
+            "in": "path",
+            "description": "The end time for gathering these statistics.",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "reportType",
+            "in": "path",
+            "description": "The type of report. Report types are Hour, Day, Week, and Month.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "startTime",
+            "in": "path",
+            "description": "The start time for gathering these statistics.",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "timeZone",
+            "in": "query",
+            "description": "The time zone of the returned events. The default is UTC.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/AutoResolvedAttacksResponse"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets a list of threats that were automatically resolved. Threats include viruses, spyware, and risks.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/stats/client/content": {
+      "get": {
+        "description": "",
+        "operationId": "Get Client Def Status",
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/ClientDefStatusResponse"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets a list of clients for a group by content version.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/stats/client/content/sources": {
+      "get": {
+        "description": "",
+        "operationId": "Get Client Content Download Sources",
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "query",
+            "description": "The locale specified and the language in which to return results. The default is en-US.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/ContentDownloadSourceResponse"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets a list and count of client groups by content download sources.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/stats/client/infection/{reportType}/{startTime}/to/{endTime}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Infected Client",
+        "parameters": [
+          {
+            "name": "endTime",
+            "in": "path",
+            "description": "The end time for gathering these statistics.",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "reportType",
+            "in": "path",
+            "description": "The type of report. Report types are Hour, Day, Week, and Month.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "startTime",
+            "in": "path",
+            "description": "The start time for gathering these statistics.",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "timeZone",
+            "in": "query",
+            "description": "The time zone of the returned events. The default is UTC.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/InfectedClientStatsResponse"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets a list and count for a specified time range of infected clients.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/stats/client/malware/{reportType}/{startTime}/to/{endTime}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Malware Client Stats",
+        "parameters": [
+          {
+            "name": "endTime",
+            "in": "path",
+            "description": "The end time for gathering these statistics.",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "reportType",
+            "in": "path",
+            "description": "The type of report. Report types are Hour, Day, Week, and Month.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "startTime",
+            "in": "path",
+            "description": "The start time for gathering these statistics.",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "timeZone",
+            "in": "query",
+            "description": "The time zone of the returned events. The default is UTC.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/MalwareClientStatsResponse"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets a list for a specified time range of clients reporting malware events.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/stats/client/onlinestatus": {
+      "get": {
+        "description": "",
+        "operationId": "Get Clients Online Offline Count Stats",
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/ClientsOnlineStatsResponse"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets a list and count of the online and offline clients.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/stats/client/risk/{startTime}/to/{endTime}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Risk Distribution Stats",
+        "parameters": [
+          {
+            "name": "endTime",
+            "in": "path",
+            "description": "The end time for gathering these statistics.",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "startTime",
+            "in": "path",
+            "description": "The start time for gathering these statistics.",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "timeZone",
+            "in": "query",
+            "description": "The time zone of the returned events. The default is UTC.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/RiskDistributionStatsResponse"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets a list for a specified time range the risk distribution by protection technology information for the given time range.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/stats/client/version": {
+      "get": {
+        "description": "",
+        "operationId": "Get Client Version",
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/ClientVersionResponse"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets a list and count of clients by client product version.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/stats/licenses": {
+      "get": {
+        "description": "",
+        "operationId": "Get SEPM License Usage",
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/LicenseUsage"
+              },
+              "type": "array"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Returns license usage for last four quarters.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/stats/threat": {
+      "get": {
+        "description": "",
+        "operationId": "Get Threat Stats",
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets threat statistics.",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "schemes": [
+    "https"
+  ],
+  "swagger": "2.0",
+  "tags": [
+    {
+      "name": "production"
+    }
+  ]
+}

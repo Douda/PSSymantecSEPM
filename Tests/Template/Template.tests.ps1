@@ -1,72 +1,98 @@
+# PSSymantecSEPM — Pester 5 Test Template
+#
+# Use this file as a starting point for new tests.
+# Choose the pattern that matches your cmdlet:
+#   - PUBLIC function: no InModuleScope, mock boundaries with -ModuleName
+#   - PRIVATE function: InModuleScope inside It blocks
+
 [CmdletBinding()]
 param()
 
-# Build & Load the module
-$moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-. (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-Init.ps1')
+# ============================================================================
+# PUBLIC FUNCTION PATTERN
+# ============================================================================
+# For cmdlets exported by the module. Test through the public interface.
+# Mock the system boundaries (Initialize-SEPMSession, Invoke-ABRestMethod) using
+# -ModuleName PSSymantecSEPM. No InModuleScope needed.
 
-# For Public function
-Describe 'MyCommand' {
+Describe 'MyPublicCommand' {
     BeforeAll {
-        # This is common test code setup logic for all Pester test files
-        $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-        . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-BeforeAll.ps1')
+        # Import TestHelpers and initialize the test environment
+        $testHelpersRoot = Join-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -ChildPath 'TestHelpers'
+        Import-Module -Name (Join-Path -Path $testHelpersRoot -ChildPath 'PSSymantecSEPM.TestHelpers.psd1') -Force
+        $script:TestState = Initialize-TestEnvironment
 
-        # Load Pester test environment setup
-        . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-TestEnvironmentSetup.ps1')
-
-        # Any mock ?
-        # Mock Test-SEPMAccessToken -ModuleName $script:moduleName { return $true } 
+        # Override file paths to isolate from real config (TestDrive: is Pester's temp filesystem)
+        InModuleScope PSSymantecSEPM {
+            $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
+            $script:credentialsFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+            $script:accessTokenFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
+        }
     }
 
     AfterAll {
-        # This is common test code teardown logic for all Pester test files
-        $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-        . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-AfterAll.ps1')
+        Clear-TestEnvironment -State $script:TestState
     }
 
-    Context 'token provided as parameter' {
-        BeforeAll {}
+    Context 'basic behavior' {
+        It 'Test 1' -Pending {
+            # Mock the module boundaries with -ModuleName
+            # Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            # Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM { return $fakeResponse }
 
-        It 'Test 1' {
-            $result = MyFunction
-            $result | Should -Be "MyResult"
+            $result = MyPublicCommand
+            $result | Should -Be "Expected"
         }
-        
-        It 'Test 2' {}
     }
 }
 
-# For Private function (use InModuleScope to test private function)
-Describe 'MyCommand' {
-    InModuleScope PSSymantecSEPM { 
-        BeforeAll {
-            # This is common test code setup logic for all Pester test files
-            $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-BeforeAll.ps1')
+# ============================================================================
+# PRIVATE FUNCTION PATTERN
+# ============================================================================
+# For module-internal functions. InModuleScope is placed inside individual
+# It blocks (never around Describe). Use BeforeAll/AfterAll without InModuleScope
+# — the lifecycle functions handle module initialization internally.
 
-            # Load Pester test environment setup
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-TestEnvironmentSetup.ps1')
+Describe 'MyPrivateFunction' {
+    BeforeAll {
+        # Import TestHelpers and initialize the test environment
+        $testHelpersRoot = Join-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -ChildPath 'TestHelpers'
+        Import-Module -Name (Join-Path -Path $testHelpersRoot -ChildPath 'PSSymantecSEPM.TestHelpers.psd1') -Force
+        $script:TestState = Initialize-TestEnvironment
 
-            # Any mock ?
-            # Mock Test-SEPMAccessToken -ModuleName $script:moduleName { return $true } 
+        # Override file paths to isolate from real config
+        InModuleScope PSSymantecSEPM {
+            $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
+            $script:credentialsFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+            $script:accessTokenFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
         }
+    }
 
-        AfterAll {
-            # This is common test code teardown logic for all Pester test files
-            $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-AfterAll.ps1')
-        }
+    AfterAll {
+        Clear-TestEnvironment -State $script:TestState
+    }
 
-        Context 'token provided as parameter' {
-            BeforeAll {}
-
-            It 'Test 1' {
-                $result = MyFunction
-                $result | Should -Be "MyResult"
+    Context 'basic behavior' {
+        It 'Test 1' -Pending {
+            InModuleScope PSSymantecSEPM {
+                # Access module-scoped variables and call private functions directly
+                $result = MyPrivateFunction
+                $result | Should -Be "Expected"
             }
-
-            It 'Test 2' {}
         }
     }
 }
+
+# ============================================================================
+# NOTES
+# ============================================================================
+# - Use $state = @{ callCount = 0 } with $state.callCount++ inside Mock for
+#   mutable counters (Pester 5 mock closure limitation).
+# - Always use -ModuleName PSSymantecSEPM on Mock and Should -Invoke.
+# - Use Should -Invoke (Pester 5) instead of Assert-MockCalled (Pester 4).
+# - TestDrive: is available for file I/O isolation.
+# - Template files are in Tests/Template/ subdirectory, so Split-Path -Parent
+#   reaches Tests/ where TestHelpers/ lives.
+# - Regular test files in Tests/ use $PSScriptRoot directly for the TestHelpers path.
+# - $PSScriptRoot is NOT available in BeforeDiscovery on some Pester 5 versions;
+#   the template uses BeforeAll for all setup.

@@ -7,5 +7,7 @@ Aurelien/
 gitversion.exe
 # Ignore Thunder client
 thunder-tests/
-.vscode/settings.json
-.vscode/launch.json
+# VS Code user-specific files (not shared)
+.vscode/*.code-snippets
+# Keep settings.json and launch.json — they're shared config
+Windows/

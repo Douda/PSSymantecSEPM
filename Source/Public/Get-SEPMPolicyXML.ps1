@@ -8,8 +8,6 @@ function Get-SEPMPolicyXML {
     .PARAMETER PolicyName    
         The name of the policy to get the details of
         Is a required parameter
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .OUTPUTS
         XML object of the policy details
         Typename: System.Xml.XmlDocument
@@ -42,28 +40,13 @@ function Get-SEPMPolicyXML {
         )]
         [Alias("Policy_ID")]
         [String]
-        $PolicyID,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $PolicyID
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/policies/raw"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/policies/raw"
+
         
     }
 
@@ -81,13 +64,13 @@ function Get-SEPMPolicyXML {
         
         # prepare the parameters
         $params = @{
+            Session = $session
             Method  = 'GET'
             Uri     = $URI
-            headers = $headers
         }
 
         try {
-            $resp = Invoke-RestMethod @params -SkipCertificateCheck
+            $resp = Invoke-ABRestMethod -params $params
         } catch {
             Write-Warning -Message "Error: $_"
         }

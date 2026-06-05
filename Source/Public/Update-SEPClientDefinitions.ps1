@@ -12,8 +12,6 @@ function Update-SEPClientDefinitions {
         cannot be used with ComputerName
     .PARAMETER IncludeSubGroups
         Specifies whether to include subgroups when querying by group name
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         Update-SEPClientDefinitions -ComputerName "Computer1"
         Sends a command to update content to Computer1
@@ -55,27 +53,12 @@ function Update-SEPClientDefinitions {
             ParameterSetName = 'GroupName'
         )]
         [switch]
-        $IncludeSubGroups,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $IncludeSubGroups
     )
     
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+
     }
     
     process {
@@ -87,7 +70,7 @@ function Update-SEPClientDefinitions {
                 $ComputerIDList += $ComputerID
             }
 
-            $URI = $script:BaseURLv1 + "/command-queue/updatecontent"
+            $URI = $session.BaseURLv1 + "/command-queue/updatecontent"
 
             # URI query strings
             $QueryStrings = @{
@@ -99,9 +82,9 @@ function Update-SEPClientDefinitions {
     
             # prepare the parameters
             $params = @{
+                Session = $session
                 Method  = 'POST'
                 Uri     = $URI
-                headers = $headers
             }
 
             $resp = Invoke-ABRestMethod -params $params
@@ -114,7 +97,7 @@ function Update-SEPClientDefinitions {
             # 1. finds all computers in the group #
             #######################################
             $allComputers = @()
-            $URI = $script:BaseURLv1 + "/computers"
+            $URI = $session.BaseURLv1 + "/computers"
 
             # URI query strings
             $QueryStrings = @{
@@ -132,9 +115,9 @@ function Update-SEPClientDefinitions {
                 try {
                     # prepare the parameters
                     $params = @{
+                        Session = $session
                         Method  = 'GET'
                         Uri     = $URI
-                        headers = $headers
                     }
 
                     $resp = Invoke-ABRestMethod -params $params
@@ -163,7 +146,7 @@ function Update-SEPClientDefinitions {
             # 2. send command to all computers in the group #
             #################################################
 
-            $URI = $script:BaseURLv1 + "/command-queue/updatecontent"
+            $URI = $session.BaseURLv1 + "/command-queue/updatecontent"
             $AllResp = @()
             
             # Send command to each computers in the group individually
@@ -178,9 +161,9 @@ function Update-SEPClientDefinitions {
         
                 # prepare the parameters
                 $params = @{
+                    Session = $session
                     Method  = 'POST'
                     Uri     = $URI
-                    headers = $headers
                 }
                 $resp = Invoke-ABRestMethod -params $params
                 $AllResp += $resp
