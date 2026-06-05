@@ -1,30 +1,29 @@
 [CmdletBinding()]
 param()
 
-BeforeDiscovery {
-    $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-    . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-Init.ps1')
-}
-
 Describe 'Get-SEPComputers' {
     BeforeAll {
-        $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-        . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/DummyDataGenerator.ps1')
+        Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
+        $script:TestState = Initialize-TestEnvironment
+
+        InModuleScope PSSymantecSEPM {
+            $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
+            $script:credentialsFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+            $script:accessTokenFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
+        }
+    }
+
+    AfterAll {
+        Clear-TestEnvironment -State $script:TestState
     }
 
     Context 'No parameters' {
         It 'Should return exactly one page of computers' {
-            $fakeSession = [PSCustomObject]@{
-                Headers   = @{ Authorization = 'Bearer FakeToken'; Content = 'application/json' }
-                BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
-                BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
-                SkipCert  = $true
-                TokenInfo = [PSCustomObject]@{ token = 'FakeToken'; tokenExpiration = (Get-Date).AddHours(1) }
-            }
+            $fakeSession = New-TestSession -SkipCert
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
-                return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyDataSEPComputers }); firstPage = $false; lastPage = $true }
+                return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyComputer }); firstPage = $false; lastPage = $true }
             }
 
             $result = Get-SEPComputers
@@ -34,17 +33,11 @@ Describe 'Get-SEPComputers' {
         }
 
         It 'Should have the expected type' {
-            $fakeSession = [PSCustomObject]@{
-                Headers   = @{ Authorization = 'Bearer FakeToken'; Content = 'application/json' }
-                BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
-                BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
-                SkipCert  = $true
-                TokenInfo = [PSCustomObject]@{ token = 'FakeToken'; tokenExpiration = (Get-Date).AddHours(1) }
-            }
+            $fakeSession = New-TestSession -SkipCert
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
-                return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyDataSEPComputers }); firstPage = $false; lastPage = $true }
+                return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyComputer }); firstPage = $false; lastPage = $true }
             }
 
             $result = Get-SEPComputers
@@ -54,22 +47,16 @@ Describe 'Get-SEPComputers' {
 
     Context 'With pagination' {
         It 'Should perform exactly 2 API calls to get all computers' {
-            $fakeSession = [PSCustomObject]@{
-                Headers   = @{ Authorization = 'Bearer FakeToken'; Content = 'application/json' }
-                BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
-                BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
-                SkipCert  = $true
-                TokenInfo = [PSCustomObject]@{ token = 'FakeToken'; tokenExpiration = (Get-Date).AddHours(1) }
-            }
+            $fakeSession = New-TestSession -SkipCert
 
             $state = @{ callCount = 0 }
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
                 $state.callCount++
                 if ($state.callCount -ge 2) {
-                    return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyDataSEPComputers }); firstPage = $false; lastPage = $true }
+                    return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyComputer }); firstPage = $false; lastPage = $true }
                 } else {
-                    return [PSCustomObject]@{ content = (1..100 | ForEach-Object { New-DummyDataSEPComputers }); firstPage = $true; lastPage = $false }
+                    return [PSCustomObject]@{ content = (1..100 | ForEach-Object { New-DummyComputer }); firstPage = $true; lastPage = $false }
                 }
             }
 
@@ -81,18 +68,12 @@ Describe 'Get-SEPComputers' {
 
     Context 'ComputerName parameter' {
         It 'Should contain MyComputer only' {
-            $fakeSession = [PSCustomObject]@{
-                Headers   = @{ Authorization = 'Bearer FakeToken'; Content = 'application/json' }
-                BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
-                BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
-                SkipCert  = $true
-                TokenInfo = [PSCustomObject]@{ token = 'FakeToken'; tokenExpiration = (Get-Date).AddHours(1) }
-            }
+            $fakeSession = New-TestSession -SkipCert
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
                 return [PSCustomObject]@{
-                    content   = (, @(New-DummyDataSEPComputers -ComputerName "MyComputer")) + (1..4 | ForEach-Object { New-DummyDataSEPComputers })
+                    content   = (, @(New-DummyComputer -ComputerName "MyComputer")) + (1..4 | ForEach-Object { New-DummyComputer })
                     firstPage = $true; lastPage = $true
                 }
             }
@@ -103,18 +84,12 @@ Describe 'Get-SEPComputers' {
         }
 
         It 'With Computername from the pipeline' {
-            $fakeSession = [PSCustomObject]@{
-                Headers   = @{ Authorization = 'Bearer FakeToken'; Content = 'application/json' }
-                BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
-                BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
-                SkipCert  = $true
-                TokenInfo = [PSCustomObject]@{ token = 'FakeToken'; tokenExpiration = (Get-Date).AddHours(1) }
-            }
+            $fakeSession = New-TestSession -SkipCert
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
                 return [PSCustomObject]@{
-                    content   = (, @(New-DummyDataSEPComputers -ComputerName "MyComputer")) + (1..4 | ForEach-Object { New-DummyDataSEPComputers })
+                    content   = (, @(New-DummyComputer -ComputerName "MyComputer")) + (1..4 | ForEach-Object { New-DummyComputer })
                     firstPage = $true; lastPage = $true
                 }
             }
@@ -125,18 +100,12 @@ Describe 'Get-SEPComputers' {
         }
 
         It 'Should have the expected type' {
-            $fakeSession = [PSCustomObject]@{
-                Headers   = @{ Authorization = 'Bearer FakeToken'; Content = 'application/json' }
-                BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
-                BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
-                SkipCert  = $true
-                TokenInfo = [PSCustomObject]@{ token = 'FakeToken'; tokenExpiration = (Get-Date).AddHours(1) }
-            }
+            $fakeSession = New-TestSession -SkipCert
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
                 return [PSCustomObject]@{
-                    content   = (, @(New-DummyDataSEPComputers -ComputerName "MyComputer")) + (1..4 | ForEach-Object { New-DummyDataSEPComputers })
+                    content   = (, @(New-DummyComputer -ComputerName "MyComputer")) + (1..4 | ForEach-Object { New-DummyComputer })
                     firstPage = $true; lastPage = $true
                 }
             }
@@ -148,13 +117,7 @@ Describe 'Get-SEPComputers' {
 
     Context 'GroupName parameter' {
         It 'Should contain only computers from the group "My Company\\MyGroup"' {
-            $fakeSession = [PSCustomObject]@{
-                Headers   = @{ Authorization = 'Bearer FakeToken'; Content = 'application/json' }
-                BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
-                BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
-                SkipCert  = $true
-                TokenInfo = [PSCustomObject]@{ token = 'FakeToken'; tokenExpiration = (Get-Date).AddHours(1) }
-            }
+            $fakeSession = New-TestSession -SkipCert
 
             $state = @{ callCount = 0 }
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
@@ -162,12 +125,12 @@ Describe 'Get-SEPComputers' {
                 $state.callCount++
                 if ($state.callCount -ge 2) {
                     return [PSCustomObject]@{
-                        content = (1..5 | ForEach-Object { New-DummyDataSEPComputers -GroupName "My Company\\MyGroup" }) + (1..5 | ForEach-Object { New-DummyDataSEPComputers -GroupName "My Company\\MyGroup\\Subgroup" })
+                        content = (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup" }) + (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup\\Subgroup" })
                         firstPage = $false; lastPage = $true
                     }
                 } else {
                     return [PSCustomObject]@{
-                        content = (1..5 | ForEach-Object { New-DummyDataSEPComputers -GroupName "My Company\\MyGroup" }) + (1..5 | ForEach-Object { New-DummyDataSEPComputers -GroupName "My Company\\MyGroup\\Subgroup" }) + (1..8 | ForEach-Object { New-DummyDataSEPComputers })
+                        content = (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup" }) + (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup\\Subgroup" }) + (1..8 | ForEach-Object { New-DummyComputer })
                         firstPage = $true; lastPage = $false
                     }
                 }
@@ -179,13 +142,7 @@ Describe 'Get-SEPComputers' {
         }
 
         It 'Should contain subgroups' {
-            $fakeSession = [PSCustomObject]@{
-                Headers   = @{ Authorization = 'Bearer FakeToken'; Content = 'application/json' }
-                BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
-                BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
-                SkipCert  = $true
-                TokenInfo = [PSCustomObject]@{ token = 'FakeToken'; tokenExpiration = (Get-Date).AddHours(1) }
-            }
+            $fakeSession = New-TestSession -SkipCert
 
             $state = @{ callCount = 0 }
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
@@ -193,12 +150,12 @@ Describe 'Get-SEPComputers' {
                 $state.callCount++
                 if ($state.callCount -ge 2) {
                     return [PSCustomObject]@{
-                        content = (1..5 | ForEach-Object { New-DummyDataSEPComputers -GroupName "My Company\\MyGroup" }) + (1..5 | ForEach-Object { New-DummyDataSEPComputers -GroupName "My Company\\MyGroup\\Subgroup" })
+                        content = (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup" }) + (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup\\Subgroup" })
                         firstPage = $false; lastPage = $true
                     }
                 } else {
                     return [PSCustomObject]@{
-                        content = (1..5 | ForEach-Object { New-DummyDataSEPComputers -GroupName "My Company\\MyGroup" }) + (1..5 | ForEach-Object { New-DummyDataSEPComputers -GroupName "My Company\\MyGroup\\Subgroup" }) + (1..8 | ForEach-Object { New-DummyDataSEPComputers })
+                        content = (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup" }) + (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup\\Subgroup" }) + (1..8 | ForEach-Object { New-DummyComputer })
                         firstPage = $true; lastPage = $false
                     }
                 }
@@ -211,17 +168,11 @@ Describe 'Get-SEPComputers' {
         }
 
         It 'Should have the expected type' {
-            $fakeSession = [PSCustomObject]@{
-                Headers   = @{ Authorization = 'Bearer FakeToken'; Content = 'application/json' }
-                BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
-                BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
-                SkipCert  = $true
-                TokenInfo = [PSCustomObject]@{ token = 'FakeToken'; tokenExpiration = (Get-Date).AddHours(1) }
-            }
+            $fakeSession = New-TestSession -SkipCert
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
-                return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyDataSEPComputers -GroupName "My Company\\MyGroup" }); firstPage = $true; lastPage = $true }
+                return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup" }); firstPage = $true; lastPage = $true }
             }
 
             $result = Get-SEPComputers -GroupName "My Company\\MyGroup"
@@ -231,17 +182,11 @@ Describe 'Get-SEPComputers' {
 
     Context 'URI construction' {
         It 'ComputerName includes computerName query parameter in URI' {
-            $fakeSession = [PSCustomObject]@{
-                Headers   = @{ Authorization = 'Bearer FakeToken'; Content = 'application/json' }
-                BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
-                BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
-                SkipCert  = $true
-                TokenInfo = [PSCustomObject]@{ token = 'FakeToken'; tokenExpiration = (Get-Date).AddHours(1) }
-            }
+            $fakeSession = New-TestSession -SkipCert
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
-                return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyDataSEPComputers }); firstPage = $true; lastPage = $true }
+                return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyComputer }); firstPage = $true; lastPage = $true }
             }
 
             Get-SEPComputers -ComputerName "MyComputer" | Out-Null
@@ -252,17 +197,11 @@ Describe 'Get-SEPComputers' {
         }
 
         It 'No parameters includes default sort query in URI' {
-            $fakeSession = [PSCustomObject]@{
-                Headers   = @{ Authorization = 'Bearer FakeToken'; Content = 'application/json' }
-                BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
-                BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
-                SkipCert  = $true
-                TokenInfo = [PSCustomObject]@{ token = 'FakeToken'; tokenExpiration = (Get-Date).AddHours(1) }
-            }
+            $fakeSession = New-TestSession -SkipCert
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
-                return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyDataSEPComputers }); firstPage = $true; lastPage = $true }
+                return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyComputer }); firstPage = $true; lastPage = $true }
             }
 
             Get-SEPComputers | Out-Null

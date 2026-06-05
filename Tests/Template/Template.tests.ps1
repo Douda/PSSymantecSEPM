@@ -16,19 +16,22 @@ param()
 # -ModuleName PSSymantecSEPM. No InModuleScope needed.
 
 Describe 'MyPublicCommand' {
-    BeforeDiscovery {
-        $moduleRootPath = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
-        . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-Init.ps1')
-    }
-
     BeforeAll {
-        $moduleRootPath = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
-        . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-BeforeAll.ps1')
+        # Import TestHelpers and initialize the test environment
+        $testHelpersRoot = Join-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -ChildPath 'TestHelpers'
+        Import-Module -Name (Join-Path -Path $testHelpersRoot -ChildPath 'PSSymantecSEPM.TestHelpers.psd1') -Force
+        $script:TestState = Initialize-TestEnvironment
+
+        # Override file paths to isolate from real config (TestDrive: is Pester's temp filesystem)
+        InModuleScope PSSymantecSEPM {
+            $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
+            $script:credentialsFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+            $script:accessTokenFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
+        }
     }
 
     AfterAll {
-        $moduleRootPath = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
-        . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-AfterAll.ps1')
+        Clear-TestEnvironment -State $script:TestState
     }
 
     Context 'basic behavior' {
@@ -47,27 +50,26 @@ Describe 'MyPublicCommand' {
 # PRIVATE FUNCTION PATTERN
 # ============================================================================
 # For module-internal functions. InModuleScope is placed inside individual
-# It blocks (never around Describe). Use BeforeAll/AfterAll with InModuleScope
-# when module-scoped state setup is needed.
+# It blocks (never around Describe). Use BeforeAll/AfterAll without InModuleScope
+# — the lifecycle functions handle module initialization internally.
 
 Describe 'MyPrivateFunction' {
-    BeforeDiscovery {
-        $moduleRootPath = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
-        . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-Init.ps1')
-    }
-
     BeforeAll {
+        # Import TestHelpers and initialize the test environment
+        $testHelpersRoot = Join-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -ChildPath 'TestHelpers'
+        Import-Module -Name (Join-Path -Path $testHelpersRoot -ChildPath 'PSSymantecSEPM.TestHelpers.psd1') -Force
+        $script:TestState = Initialize-TestEnvironment
+
+        # Override file paths to isolate from real config
         InModuleScope PSSymantecSEPM {
-            $moduleRootPath = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-BeforeAll.ps1')
+            $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
+            $script:credentialsFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+            $script:accessTokenFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
         }
     }
 
     AfterAll {
-        InModuleScope PSSymantecSEPM {
-            $moduleRootPath = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-AfterAll.ps1')
-        }
+        Clear-TestEnvironment -State $script:TestState
     }
 
     Context 'basic behavior' {
@@ -89,8 +91,8 @@ Describe 'MyPrivateFunction' {
 # - Always use -ModuleName PSSymantecSEPM on Mock and Should -Invoke.
 # - Use Should -Invoke (Pester 5) instead of Assert-MockCalled (Pester 4).
 # - TestDrive: is available for file I/O isolation.
-# - Template files are in Tests/Template/ subdirectory, so Split-Path must go
-#   up two levels (via double Split-Path -Parent) to reach the repo root.
-# - Regular test files in Tests/ need only one Split-Path -Parent.
+# - Template files are in Tests/Template/ subdirectory, so Split-Path -Parent
+#   reaches Tests/ where TestHelpers/ lives.
+# - Regular test files in Tests/ use $PSScriptRoot directly for the TestHelpers path.
 # - $PSScriptRoot is NOT available in BeforeDiscovery on some Pester 5 versions;
-#   the template above computes it from the test file path.
+#   the template uses BeforeAll for all setup.

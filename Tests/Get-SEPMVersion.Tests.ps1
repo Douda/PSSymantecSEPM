@@ -1,24 +1,25 @@
 [CmdletBinding()]
 param()
 
-BeforeDiscovery {
-    $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-    . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-Init.ps1')
-}
-
 Describe 'Get-SEPMVersion' {
+    BeforeAll {
+        Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
+        $script:TestState = Initialize-TestEnvironment
+
+        InModuleScope PSSymantecSEPM {
+            $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
+            $script:credentialsFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+            $script:accessTokenFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
+        }
+    }
+
+    AfterAll {
+        Clear-TestEnvironment -State $script:TestState
+    }
+
     Context 'Session-based flow' {
         It 'returns version object with API_SEQUENCE, API_VERSION, and version fields' {
-            $fakeSession = [PSCustomObject]@{
-                Headers   = @{ Authorization = 'Bearer FakeSessionToken'; Content = 'application/json' }
-                BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
-                BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
-                SkipCert  = $false
-                TokenInfo = [PSCustomObject]@{
-                    token           = 'FakeSessionToken'
-                    tokenExpiration = (Get-Date).AddHours(1)
-                }
-            }
+            $fakeSession = New-TestSession -Token 'FakeSessionToken'
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
@@ -38,16 +39,7 @@ Describe 'Get-SEPMVersion' {
         }
 
         It 'passes headers when Session.SkipCert is $true' {
-            $fakeSession = [PSCustomObject]@{
-                Headers   = @{ Authorization = 'Bearer SkipSessionToken'; Content = 'application/json' }
-                BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
-                BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
-                SkipCert  = $true
-                TokenInfo = [PSCustomObject]@{
-                    token           = 'SkipSessionToken'
-                    tokenExpiration = (Get-Date).AddHours(1)
-                }
-            }
+            $fakeSession = New-TestSession -SkipCert -Token 'SkipSessionToken'
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM { return 'OK' }
@@ -61,16 +53,7 @@ Describe 'Get-SEPMVersion' {
         }
 
         It 'passes the session object to Invoke-ABRestMethod via $params.Session' {
-            $fakeSession = [PSCustomObject]@{
-                Headers   = @{ Authorization = 'Bearer FakeSessionToken'; Content = 'application/json' }
-                BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
-                BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
-                SkipCert  = $false
-                TokenInfo = [PSCustomObject]@{
-                    token           = 'FakeSessionToken'
-                    tokenExpiration = (Get-Date).AddHours(1)
-                }
-            }
+            $fakeSession = New-TestSession -Token 'FakeSessionToken'
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM { return 'OK' }
