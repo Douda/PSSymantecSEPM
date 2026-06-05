@@ -24,8 +24,6 @@ function Remove-SEPMWindowsFolderException {
     .PARAMETER ExcludeChildProcesses
         Exclude child processes from the Application Control exclusions
         Requires ApplicationControl to be set to true
-    .PARAMETER SkipCertificateCheck
-        Skip the certificate check when connecting to the SEPM
     .PARAMETER AllScans
         Add the exception to all scan types
         Equivalent to setting Sonar, SecurityRiskCategory and ApplicationControl to true
@@ -56,11 +54,6 @@ function Remove-SEPMWindowsFolderException {
 
     [CmdletBinding()]
     param (
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck,
-
         # Policy Name
         [Parameter(
             ValueFromPipelineByPropertyName = $true,

@@ -30,11 +30,6 @@ function Remove-SEPMWindowsExtensionException {
 
     [CmdletBinding()]
     param (
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck,
-
         # Policy Name
         [Parameter(
             ValueFromPipelineByPropertyName = $true,

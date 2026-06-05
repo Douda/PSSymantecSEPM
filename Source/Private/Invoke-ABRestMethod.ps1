@@ -5,7 +5,6 @@ function Invoke-ABRestMethod {
     .DESCRIPTION
         Invokes a REST method with a PS version-appropriate method
         Handles the differences between PS versions 5 and 6 for certificate validation skipping
-        Tests the certificate of the server if self signed
     .NOTES
         Helper function for Invoke-ABRestMethod
     .PARAMETER params

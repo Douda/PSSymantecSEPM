@@ -19,8 +19,6 @@ function Add-SEPMMacFileException {
             AllScans
             AutoProtect
             ScheduledAndOndemand
-    .PARAMETER SkipCertificateCheck
-        Skip the certificate check when connecting to the SEPM
     .EXAMPLE
         Add-SEPMMacFileException -PolicyName "Workstations Default Exception Policy" -Path "C:\Temp\file1.exe" -Sonar
 
@@ -47,11 +45,6 @@ function Add-SEPMMacFileException {
 
     [CmdletBinding()]
     param (
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck,
-
         # Policy Name
         [Parameter(
             ValueFromPipelineByPropertyName = $true,

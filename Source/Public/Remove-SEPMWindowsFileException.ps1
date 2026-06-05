@@ -11,8 +11,6 @@ function Remove-SEPMWindowsFileException {
         Path to add to the exception list
     .PARAMETER PathVariable
         Path variable to use for the path
-    .PARAMETER SkipCertificateCheck
-        Skip the certificate check when connecting to the SEPM
     .EXAMPLE
         Remove-SEPMWindowsFileException -PolicyName "Default" -Path "C:\Temp\file1.exe"
     
@@ -21,11 +19,6 @@ function Remove-SEPMWindowsFileException {
     
     
     param (
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck,
-
         # Policy Name
         [Parameter(
             ValueFromPipelineByPropertyName = $true,
