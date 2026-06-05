@@ -1,18 +1,12 @@
 [CmdletBinding()]
 param()
 
-BeforeDiscovery {
-    $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-    . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-Init.ps1')
-}
-
 Describe 'Clear-SEPMAuthentication' {
     BeforeAll {
-        InModuleScope PSSymantecSEPM {
-            # This is common test code setup logic for all Pester test files
-            $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-BeforeAll.ps1')
+        Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
+        $script:TestState = Initialize-TestEnvironment
 
+        InModuleScope PSSymantecSEPM {
             # Override file paths to isolate from real config
             $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
             $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
@@ -29,11 +23,7 @@ Describe 'Clear-SEPMAuthentication' {
     }
 
     AfterAll {
-        InModuleScope PSSymantecSEPM {
-            # This is common test code teardown logic for all Pester test files
-            $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-AfterAll.ps1')
-        }
+        Clear-TestEnvironment -State $script:TestState
     }
 
     It 'Should remove credential and access token from memory' {
