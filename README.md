@@ -320,7 +320,7 @@ Import-Module ./Output/PSSymantecSEPM/PSSymantecSEPM.psm1 -Force
 Build-ModuleLocal
 
 # Run tests
-Invoke-Pester ./Tests -Output Detailed
+Invoke-Pester -Path ./Tests -Output Detailed
 ```
 
 ### Configuring for Your SEPM Server
