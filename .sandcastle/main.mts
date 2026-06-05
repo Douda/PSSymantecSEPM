@@ -273,7 +273,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
       const implement = await sandbox.run({
         name: "implementer",
         maxIterations: 1,
-        agent: sandcastle.pi("claude-sonnet-4-6"),
+        agent: sandcastle.pi("deepseek-v4-pro"),
         promptFile: "./.sandcastle/implement-prompt.md",
         promptArgs: {
           PR_NUMBER: String(prSlice.prNumber),
@@ -297,7 +297,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
       await sandbox.run({
         name: "reviewer",
         maxIterations: 1,
-        agent: sandcastle.pi("claude-sonnet-4-6"),
+        agent: sandcastle.pi("deepseek-v4-pro"),
         promptFile: "./.sandcastle/review-prompt.md",
         promptArgs: {
           BRANCH: branch,
@@ -373,7 +373,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
         const implement = await sandbox.run({
           name: "implementer",
           maxIterations: 1,
-          agent: sandcastle.pi("claude-sonnet-4-6"),
+          agent: sandcastle.pi("deepseek-v4-pro"),
           promptFile: "./.sandcastle/implement-standalone-prompt.md",
           promptArgs: {
             ISSUE_NUMBER: String(standaloneIssue.issueNumber),
@@ -394,7 +394,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
       await sandbox.run({
         name: "reviewer",
         maxIterations: 1,
-        agent: sandcastle.pi("claude-sonnet-4-6"),
+        agent: sandcastle.pi("deepseek-v4-pro"),
         promptFile: "./.sandcastle/review-prompt.md",
         promptArgs: {
           BRANCH: branch,
