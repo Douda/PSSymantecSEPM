@@ -12,11 +12,8 @@ Describe 'MyCommand' {
         $moduleRootPath = Split-Path -Path (Split-Path $PSScriptRoot) -Parent
         . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-BeforeAll.ps1')
 
-        # Load Pester test environment setup
-        # . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-TestEnvironmentSetup.ps1')
-
         # Any mock ?
-        # Mock Test-SEPMAccessToken -ModuleName $script:moduleName { return $true } 
+        # Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession } 
     }
 
     AfterAll {
@@ -45,11 +42,8 @@ Describe 'MyCommand' {
             $moduleRootPath = Split-Path -Path (Split-Path $PSScriptRoot) -Parent
             . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-BeforeAll.ps1')
 
-            # Load Pester test environment setup
-            # . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-TestEnvironmentSetup.ps1')
-
             # Any mock ?
-            # Mock Test-SEPMAccessToken -ModuleName $script:moduleName { return $true } 
+            # Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession } 
         }
 
         AfterAll {
