@@ -15,9 +15,6 @@ function Export-SEPMExceptionPolicyToExcel {
     
     
     param (
-        # Skip certificate check
-
-        
         # Policy Name
         [Parameter(
             ValueFromPipelineByPropertyName = $true,

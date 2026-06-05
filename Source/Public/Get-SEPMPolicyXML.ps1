@@ -70,7 +70,7 @@ function Get-SEPMPolicyXML {
         }
 
         try {
-            $resp = Invoke-RestMethod @params -SkipCertificateCheck
+            $resp = Invoke-ABRestMethod -params $params
         } catch {
             Write-Warning -Message "Error: $_"
         }

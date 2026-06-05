@@ -29,12 +29,6 @@ function Get-SEPClientInfectedStatus {
         $Clean
     )
 
-    begin {
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-    }
-
     process {
         if ($clean) {
             $non_infected = Get-SEPComputers | Where-Object { $_.infected -ne 1 }
