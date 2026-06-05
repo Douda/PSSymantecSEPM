@@ -53,19 +53,31 @@ RIGHT (vertical):
 
 ### 1. Planning
 
-Before writing any code:
+Before writing any code, gather requirements. How you do this depends on the starting point.
+
+#### When given an issue reference (e.g., `tdd-ps #2`)
+
+**The issue IS the spec.** Read it first and derive the plan from it. Do not re-ask questions it already answers.
+
+1. **Fetch the issue**: `gh issue view #2 --json title,body,labels` — extract requirements, acceptance criteria, and any interface details.
+2. **Produce a derived plan** — fill out every planning item from the issue content. If the issue says "add a Get-SEPMThreatStats cmdlet that returns threat stats," you now know the verb-noun name, the output shape, and the API boundary.
+3. **Present concisely** — one summary paragraph + behavior list. Example: _"Issue #2 asks for Get-SEPMThreatStats. Public interface: Get-SEPMThreatStats [-SkipCertificateCheck], outputs SEP.ThreatStats. Two behaviors: returns stats with correct shape, enables cert skipping. Mocking Invoke-ABRestMethod at $BaseURLv1/stats/threat. Proceed?"_
+4. **Only ask clarifying questions if the issue is genuinely ambiguous** — missing parameter details, unclear output shape, conflicting requirements. Otherwise, proceed directly to the tracer bullet after approval.
+5. **Get brief approval** (one line is enough) and start the tracer bullet.
+
+#### When working from conversation context (no issue)
+
+The user described the feature in chat. The requirements are in the conversation history, not an issue.
 
 - **Read the project's CONTEXT.md** — use the domain glossary so test names, parameter names, and type names match the project's language. Don't invent new terms.
 - **Identify the cmdlet's public interface**: verb-noun name, parameters, pipeline support, output type name.
-- **Confirm with user** which behaviors to test (prioritize).
 - **Identify the system boundary**: usually `Invoke-ABRestMethod` for API modules, or the equivalent HTTP/DB/filesystem call. This is your primary mock point.
 - **Check for shared state**: does the cmdlet read `$script:` variables? Set them? Tests will need to manage that.
+- **Confirm with user** which behaviors to test (prioritize).
 - **List the behaviors** (not implementation steps): "returns computers filtered by name", "paginates when more than one page exists", "outputs SEP.Computer type".
-- **Get user approval on the plan**.
+- **Get user approval on the plan** before writing any code.
 
 Ask: "What should the cmdlet's public interface look like? Which behaviors are most important to test?"
-
-**You can't test everything.** Confirm which behaviors matter most. Focus on critical paths and complex logic, not every edge case.
 
 ### 2. Tracer Bullet
 
