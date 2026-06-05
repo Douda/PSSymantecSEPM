@@ -4,8 +4,6 @@ function Get-SEPMCommandStatus {
         Get Command Status Details
     .DESCRIPTION
         Gets the details of a command status
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
     PS C:\PSSymantecSEPM> $status = Get-SEPMCommandStatus -Command_ID D17D6DF9877049559910DD7B0306711C
 
@@ -49,28 +47,13 @@ function Get-SEPMCommandStatus {
         )]
         [string]
         [Alias("ID", "CommandID")]
-        $Command_ID,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $Command_ID
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/command-queue/$command_id"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/command-queue/$command_id"
+
     }
 
     process {
@@ -80,9 +63,9 @@ function Get-SEPMCommandStatus {
         do {
             # prepare the parameters
             $params = @{
+                Session = $session
                 Method  = 'GET'
                 Uri     = $URI
-                headers = $headers
             }
 
             $resp = Invoke-ABRestMethod -params $params

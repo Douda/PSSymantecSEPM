@@ -25,8 +25,6 @@ function Add-SEPMWindowsFolderException {
     .PARAMETER ExcludeChildProcesses
         Exclude child processes from the Application Control exclusions
         Requires ApplicationControl to be set to true
-    .PARAMETER SkipCertificateCheck
-        Skip the certificate check when connecting to the SEPM
     .PARAMETER AllScans
         Add the exception to all scan types
         Equivalent to setting Sonar, SecurityRiskCategory and ApplicationControl to true
@@ -57,11 +55,6 @@ function Add-SEPMWindowsFolderException {
 
     [CmdletBinding()]
     param (
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck,
-
         # Policy Name
         [Parameter(
             ValueFromPipelineByPropertyName = $true,
@@ -132,19 +125,9 @@ function Add-SEPMWindowsFolderException {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv2 + "/policies/exceptions"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv2 + "/policies/exceptions"
+
     }
 
     process {
@@ -197,9 +180,9 @@ function Add-SEPMWindowsFolderException {
 
         # prepare the parameters
         $params = @{
+            Session = $session
             Method      = 'PATCH'
             Uri         = $URI + "/" + $Policy.PolicyID
-            headers     = $headers
             contenttype = 'application/json'
             Body        = $Policy.ObjBody | ConvertTo-Json -Depth 100
         }

@@ -6,8 +6,6 @@ function Start-SEPMReplication {
         Initiates replication with a remote site
     .PARAMETER partnerSiteName
         The name of the remote site to replicate with
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Start-SEPMReplication -partnerSiteName "Remote site Americas"
 
@@ -22,12 +20,7 @@ function Start-SEPMReplication {
     param (
         [Parameter()]
         [string]
-        $partnerSiteName,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $partnerSiteName
 
         # TODO known bug with SEPM API, these parameters are returning invalid option if not set to false 
         # [switch]
@@ -38,19 +31,9 @@ function Start-SEPMReplication {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/replication/replicatenow"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/replication/replicatenow"
+
     }
 
     process {
@@ -66,9 +49,9 @@ function Start-SEPMReplication {
 
         # prepare the parameters
         $params = @{
+            Session = $session
             Method  = 'POST'
             Uri     = $URI
-            headers = $headers
         }
     
         $resp = Invoke-ABRestMethod -params $params

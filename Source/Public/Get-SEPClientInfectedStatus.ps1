@@ -12,8 +12,6 @@ function Get-SEPClientInfectedStatus {
         List of SEP Clients with Infected status
     .PARAMETER Clean
         If specified, returns SEP Clients with Clean status
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         Get-SEPClientInfectedStatus
 
@@ -28,19 +26,8 @@ function Get-SEPClientInfectedStatus {
     param (
         [Parameter()]
         [switch]
-        $Clean,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $Clean
     )
-
-    begin {
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-    }
 
     process {
         if ($clean) {

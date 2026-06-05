@@ -21,8 +21,6 @@ function Send-SEPMCommandClearIronCache {
     .PARAMETER SHA1
         SHA1 hash of the suspicious file.
         Cannot be used with SHA256 or MD5
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         Send-SEPMCommandClearIronCache -ComputerName "Computer1"
 
@@ -87,33 +85,18 @@ function Send-SEPMCommandClearIronCache {
                 return $true
             })]
         [string]
-        $SHA1,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $SHA1
     )
     
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
+        $session = Initialize-SEPMSession
         
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+
     }
     
     process {
         # Init 
-        $URI = $script:BaseURLv1 + "/command-queue/ironcache"
+        $URI = $session.BaseURLv1 + "/command-queue/ironcache"
 
         # Build body and add correct hash to body
         $body = @{
@@ -180,9 +163,9 @@ function Send-SEPMCommandClearIronCache {
 
         # Invoke the request params
         $params = @{
+            Session = $session
             Method      = 'POST'
             Uri         = $URI
-            headers     = $headers
             Body        = $body | ConvertTo-Json
             ContentType = 'application/json'
         }

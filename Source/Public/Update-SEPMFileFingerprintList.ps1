@@ -24,8 +24,6 @@ function Update-SEPMFileFingerprintList {
     .PARAMETER hashlist
         The hash list to add to the fingerprint list
         Can be generated using Get-FileHash or takes a string array of hashes
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         $domainId = Get-SEPMDomain | Where-Object { $_.name -eq "Default" } | Select-Object -ExpandProperty id
         $hashlist = ls -file C:\Users\$env:USERNAME\Downloads\*.exe | Get-FileHash -algorithm SHA256
@@ -68,37 +66,22 @@ function Update-SEPMFileFingerprintList {
             ParameterSetName = 'ID'
         )]
         [string]
-        $FingerprintListID,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $FingerprintListID
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+
     }
 
     process {
         # Get the FingerprintListID if the FingerprintListName is provided
         if ($FingerprintListName) {
-            $URI = $script:BaseURLv1 + "/policy-objects/fingerprints"
+            $URI = $session.BaseURLv1 + "/policy-objects/fingerprints"
             $FingerprintListID = Get-SEPMFileFingerprintList -FingerprintListName $FingerprintListName | Select-Object -ExpandProperty id
         }
 
-        $URI = $script:BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"
+        $URI = $session.BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"
 
         # Construct the body & required fields
         $body = @{
@@ -110,9 +93,9 @@ function Update-SEPMFileFingerprintList {
         }
 
         $params = @{
+            Session = $session
             Method      = 'POST'
             Uri         = $URI
-            headers     = $headers
             Body        = $body | ConvertTo-Json
             ContentType = 'application/json'
         }

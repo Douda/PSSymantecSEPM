@@ -4,8 +4,6 @@ function Get-SEPMLocationXML {
         Gets a list of locations for a specific group
     .DESCRIPTION
         Gets a list of locations for a specific group
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .PARAMETER GroupID
         Mandatory parameter for the group ID
     .INPUTS
@@ -43,9 +41,7 @@ function Get-SEPMLocationXML {
     [CmdletBinding()]
     param (
         # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck,
+
 
         # GroupID
         [Parameter(
@@ -66,18 +62,8 @@ function Get-SEPMLocationXML {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+
         $allGroupsInfo = Get-SEPMGroups
     }
 
@@ -85,14 +71,14 @@ function Get-SEPMLocationXML {
         # Get Group info
         $groupInfo = $allGroupsInfo | Where-Object { $_.id -eq $GroupID }
 
-        $URI = $script:BaseURLv1 + "/groups/$GroupID/locations/$LocationID/xml"
+        $URI = $session.BaseURLv1 + "/groups/$GroupID/locations/$LocationID/xml"
         # $locationList = @()
 
         # prepare the parameters
         $params = @{
+            Session = $session
             Method  = 'GET'
             Uri     = $URI
-            headers = $headers
         }
 
         # QueryString parameters
@@ -101,9 +87,9 @@ function Get-SEPMLocationXML {
         # Invoke the request
         $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
         $params = @{
+            Session = $session
             Method  = 'GET'
             Uri     = $URI
-            headers = $headers
         }
                 
         $resp = Invoke-ABRestMethod -params $params

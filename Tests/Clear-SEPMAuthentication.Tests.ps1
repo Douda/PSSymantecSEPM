@@ -12,11 +12,18 @@ Describe 'Get-SEPComputers' {
             $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
             . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-BeforeAll.ps1')
 
-            # Load Pester test environment setup
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-TestEnvironmentSetup.ps1')
+            # Override file paths to isolate from real config
+            $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
+            $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+            $script:accessTokenFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
 
-            # Load the dummy data generator functions
-            # . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/DummyDataGenerator.ps1')
+            # Stage credentials and token for Clear tests
+            $creds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList 'FakeUser', (ConvertTo-SecureString -String 'FakePassword' -AsPlainText -Force)
+            $creds | Export-Clixml -Path $script:credentialsFilePath -Force
+            $script:Credential = $creds
+
+            $script:accessToken = [PSCustomObject]@{ token = 'FakeToken'; tokenExpiration = (Get-Date).AddHours(1) }
+            $script:accessToken | Export-Clixml -Path $script:accessTokenFilePath -Force
         }
 
         AfterAll {

@@ -12,8 +12,6 @@ function Get-SEPMExceptionPolicy {
         List a specific exception category
         Valid values are "files", "directories", "webdomains"
         # TODO : add all the other exception types in example
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMExceptionPolicy -PolicyName "Standard Servers - Exception policy"
 
@@ -82,11 +80,6 @@ function Get-SEPMExceptionPolicy {
         [String]
         $PolicyName,
 
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck,
-
         # List a specific exception category
         [Parameter()]
         [ValidateSet("files", "directories", "webdomains", "extensions", "tamper")]
@@ -95,20 +88,10 @@ function Get-SEPMExceptionPolicy {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
+        $session = Initialize-SEPMSession
         # BaseURL V2
-        $URI = $script:BaseURLv2 + "/policies/exceptions"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $URI = $session.BaseURLv2 + "/policies/exceptions"
+
         # Stores the policy summary for all policies only once
         $policies = Get-SEPMPoliciesSummary
     }
@@ -129,9 +112,9 @@ function Get-SEPMExceptionPolicy {
         
         # prepare the parameters
         $params = @{
+            Session = $session
             Method          = 'GET'
             Uri             = $URI
-            headers         = $headers
             UseBasicParsing = $true
         }
     

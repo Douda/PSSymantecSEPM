@@ -15,11 +15,6 @@ function Export-SEPMExceptionPolicyToExcel {
     
     
     param (
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck,
-        
         # Policy Name
         [Parameter(
             ValueFromPipelineByPropertyName = $true,
@@ -52,7 +47,7 @@ function Export-SEPMExceptionPolicyToExcel {
 
     process {
         # Get Exception policy object
-        $ExceptionPolicy = Get-SEPMExceptionPolicy -PolicyName $PolicyName -SkipCertificateCheck:$SkipCertificateCheck
+        $ExceptionPolicy = Get-SEPMExceptionPolicy -PolicyName $PolicyName
 
         # Verify the PSObject typename is "SEPM.ExceptionPolicy"
         if ($ExceptionPolicy.PSObject.TypeNames[0] -ne "SEPM.ExceptionPolicy") {
