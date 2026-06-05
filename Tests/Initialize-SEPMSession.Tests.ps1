@@ -172,6 +172,51 @@ Describe 'Initialize-SEPMSession' {
             }
         }
 
+        Context 'Disk-cached token' {
+            BeforeAll {
+                # Override file paths to avoid reading real user tokens
+                $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
+                $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+                $script:accessTokenFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
+
+                $script:configuration = [PSCustomObject]@{
+                    ServerAddress = 'FakeServer01'
+                    port          = '1234'
+                    domain        = ''
+                }
+                $script:BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
+                $script:BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
+                $script:SkipCert  = $false
+
+                # Clear memory caches to force fallback to disk
+                $script:accessToken = $null
+                $script:_session   = $null
+
+                # Write token file to TestDrive
+                [PSCustomObject]@{
+                    token                = 'FakeTokenFromDisk'
+                    tokenExpiration      = (Get-Date).AddSeconds(3600)
+                    SkipCertificateCheck = $true
+                } | Export-Clixml -Path $script:accessTokenFilePath -Force
+
+                Mock Test-SEPMAccessToken -ModuleName $script:moduleName { return $true }
+            }
+
+            It 'reads disk-cached token and builds a valid session' {
+                $result = Initialize-SEPMSession
+                $result | Should -BeOfType [PSCustomObject]
+                $result.Headers.Authorization | Should -Be 'Bearer FakeTokenFromDisk'
+                $result.TokenInfo | Should -Not -BeNullOrEmpty
+                $result.TokenInfo.token | Should -Be 'FakeTokenFromDisk'
+            }
+
+            It 'promotes disk token to script:accessToken after session init' {
+                $null = Initialize-SEPMSession
+                $script:accessToken | Should -Not -BeNullOrEmpty
+                $script:accessToken.token | Should -Be 'FakeTokenFromDisk'
+            }
+        }
+
         Context 'Missing configuration' {
             BeforeAll {
                 # Override file paths to avoid reading real user tokens

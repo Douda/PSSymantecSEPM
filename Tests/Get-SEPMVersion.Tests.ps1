@@ -42,6 +42,35 @@ Describe 'Get-SEPMVersion' {
             }
         }
 
+        It 'passes headers when Session.SkipCert is $true' {
+            InModuleScope PSSymantecSEPM {
+                $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
+                $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+                $script:accessTokenFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
+
+                $script:fakeSession = [PSCustomObject]@{
+                    Headers   = @{ Authorization = 'Bearer SkipSessionToken'; Content = 'application/json' }
+                    BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
+                    BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
+                    SkipCert  = $true
+                    TokenInfo = [PSCustomObject]@{
+                        token           = 'SkipSessionToken'
+                        tokenExpiration = (Get-Date).AddHours(1)
+                    }
+                }
+
+                Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+                Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM { return 'OK' }
+
+                Get-SEPMVersion | Out-Null
+                Assert-MockCalled Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It -ParameterFilter {
+                    $null -ne $params.Session -and
+                    $params.Session.SkipCert -eq $true -and
+                    $params.Session.Headers.Authorization -eq 'Bearer SkipSessionToken'
+                }
+            }
+        }
+
         It 'passes the session object to Invoke-ABRestMethod via $params.Session' {
             InModuleScope PSSymantecSEPM {
                 $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
