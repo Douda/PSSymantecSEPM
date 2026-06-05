@@ -1,7 +1,8 @@
 # PSSymantecSEPM.TestHelpers — Test lifecycle and fixture functions
 #
 # Provides Initialize-TestEnvironment and Clear-TestEnvironment for managing
-# the test environment lifecycle (build, import, backup, reset, restore).
+# the test environment lifecycle (build, import, backup, reset, restore),
+# and New-TestSession for creating fake session objects.
 # Replaces the legacy Tests/Config/Common-*.ps1 dot-sourced scripts.
 
 #Requires -Modules @{ ModuleName = 'ModuleBuilder'; ModuleVersion = '2.0.0' }
@@ -44,7 +45,7 @@ function Initialize-TestEnvironment {
     Build-Module -SourcePath $manifestPath -SemVer 0.0.1
 
     Write-Verbose "Importing PSSymantecSEPM from $modulePath"
-    Import-Module -Name $modulePath -Force
+    Import-Module -Name $modulePath -Force -Global
 
     # Back up user's configuration, credentials, and access token files
     $configBackup = New-TemporaryFile
@@ -121,4 +122,72 @@ function Clear-TestEnvironment {
     # Clean up temporary backup files
     Write-Verbose "Removing temporary backup files"
     Remove-Item -Path $State.ConfigBackup, $State.CredsBackup, $State.TokenBackup -Force -ErrorAction SilentlyContinue
+}
+
+function New-TestSession {
+    <#
+    .SYNOPSIS
+        Creates a fake session object matching the shape returned by
+        Initialize-SEPMSession, for use in tests.
+
+    .DESCRIPTION
+        Returns a PSCustomObject with Headers, BaseURLv1, BaseURLv2, SkipCert,
+        and TokenInfo properties. Use this instead of constructing inline
+        [PSCustomObject]@{} hashes in every It block.
+
+    .PARAMETER ServerAddress
+        The server hostname or IP. Default: 'FakeServer01'.
+
+    .PARAMETER Port
+        The server port. Default: '1234'.
+
+    .PARAMETER Token
+        The bearer token value. Default: 'FakeToken'.
+
+    .PARAMETER SkipCert
+        If set, SkipCert is $true and certificate validation is bypassed.
+
+    .PARAMETER TokenExpired
+        If set, sets the token expiration to 1 hour in the past.
+
+    .EXAMPLE
+        # Default session (valid token, no cert skip)
+        $session = New-TestSession
+
+    .EXAMPLE
+        # Session with expired token and cert skipping
+        $session = New-TestSession -SkipCert -TokenExpired
+
+    .EXAMPLE
+        # Custom server and token
+        $session = New-TestSession -ServerAddress 'MyServer' -Port '8446' -Token 'abc123'
+    #>
+    [CmdletBinding()]
+    param(
+        [string] $ServerAddress = 'FakeServer01',
+        [string] $Port = '1234',
+        [string] $Token = 'FakeToken',
+        [switch] $SkipCert,
+        [switch] $TokenExpired
+    )
+
+    $expiration = if ($TokenExpired) {
+        (Get-Date).AddHours(-1)
+    } else {
+        (Get-Date).AddHours(1)
+    }
+
+    return [PSCustomObject]@{
+        Headers   = @{
+            Authorization = "Bearer $Token"
+            Content       = 'application/json'
+        }
+        BaseURLv1 = "https://${ServerAddress}:${Port}/sepm/api/v1"
+        BaseURLv2 = "https://${ServerAddress}:${Port}/sepm/api/v2"
+        SkipCert  = $SkipCert.IsPresent
+        TokenInfo = [PSCustomObject]@{
+            token           = $Token
+            tokenExpiration = $expiration
+        }
+    }
 }

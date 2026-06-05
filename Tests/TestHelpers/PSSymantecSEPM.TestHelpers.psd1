@@ -8,6 +8,7 @@
     FunctionsToExport = @(
         'Initialize-TestEnvironment'
         'Clear-TestEnvironment'
+        'New-TestSession'
     )
     PrivateData       = @{
         PSData = @{

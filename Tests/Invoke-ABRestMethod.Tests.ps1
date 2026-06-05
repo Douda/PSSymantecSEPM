@@ -1,20 +1,25 @@
 [CmdletBinding()]
 param()
 
-BeforeDiscovery {
-    $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-    . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-Init.ps1')
-}
-
 Describe 'Invoke-ABRestMethod' {
+    BeforeAll {
+        Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
+        $script:TestState = Initialize-TestEnvironment
+
+        InModuleScope PSSymantecSEPM {
+            $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
+            $script:credentialsFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+            $script:accessTokenFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
+        }
+    }
+
+    AfterAll {
+        Clear-TestEnvironment -State $script:TestState
+    }
+
     Context 'Session object provided' {
         BeforeAll {
             InModuleScope PSSymantecSEPM {
-                # Override file paths to isolate from real config
-                $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
-                $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
-                $script:accessTokenFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
-
                 $script:configuration = [PSCustomObject]@{
                     ServerAddress = 'FakeServer01'
                     port          = '1234'
@@ -24,21 +29,9 @@ Describe 'Invoke-ABRestMethod' {
                 $script:BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
                 $script:SkipCert  = $false
 
-                $script:fakeSession = [PSCustomObject]@{
-                    Headers   = @{
-                        Authorization = 'Bearer FakeSessionToken'
-                        Content       = 'application/json'
-                    }
-                    BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
-                    BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
-                    SkipCert  = $false
-                    TokenInfo = [PSCustomObject]@{
-                        token           = 'FakeSessionToken'
-                        tokenExpiration = (Get-Date).AddHours(1)
-                    }
-                }
+                $script:fakeSession = New-TestSession -Token 'FakeSessionToken'
 
-                Mock Invoke-RestMethod -ModuleName $script:moduleName { return 'OK' }
+                Mock Invoke-RestMethod -ModuleName PSSymantecSEPM { return 'OK' }
             }
         }
 
@@ -52,7 +45,7 @@ Describe 'Invoke-ABRestMethod' {
                 $result = Invoke-ABRestMethod -params $params
                 $result | Should -Be 'OK'
 
-                Assert-MockCalled Invoke-RestMethod -ModuleName $script:moduleName -Exactly 1 -Scope It -ParameterFilter {
+                Assert-MockCalled Invoke-RestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It -ParameterFilter {
                     $Headers.Authorization -eq 'Bearer FakeSessionToken' -and
                     $Headers.Content -eq 'application/json'
                 }
@@ -63,26 +56,14 @@ Describe 'Invoke-ABRestMethod' {
     Context 'Certificate skipping with Session.SkipCert = $true' {
         BeforeAll {
             InModuleScope PSSymantecSEPM {
-                Mock Invoke-RestMethod -ModuleName $script:moduleName { return 'OK' }
-                Mock Skip-Cert -ModuleName $script:moduleName {}
+                Mock Invoke-RestMethod -ModuleName PSSymantecSEPM { return 'OK' }
+                Mock Skip-Cert -ModuleName PSSymantecSEPM {}
             }
         }
 
         It 'passes headers and avoids Skip-Cert on PS 7+ when SkipCert is $true' {
             InModuleScope PSSymantecSEPM {
-                $sessionWithSkip = [PSCustomObject]@{
-                    Headers   = @{
-                        Authorization = 'Bearer SkipToken'
-                        Content       = 'application/json'
-                    }
-                    BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
-                    BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
-                    SkipCert  = $true
-                    TokenInfo = [PSCustomObject]@{
-                        token           = 'SkipToken'
-                        tokenExpiration = (Get-Date).AddHours(1)
-                    }
-                }
+                $sessionWithSkip = New-TestSession -SkipCert -Token 'SkipToken'
 
                 $params = @{
                     Method  = 'GET'
@@ -92,13 +73,13 @@ Describe 'Invoke-ABRestMethod' {
                 $result = Invoke-ABRestMethod -params $params
                 $result | Should -Be 'OK'
 
-                Assert-MockCalled Invoke-RestMethod -ModuleName $script:moduleName -Exactly 1 -Scope It -ParameterFilter {
+                Assert-MockCalled Invoke-RestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It -ParameterFilter {
                     $Headers.Authorization -eq 'Bearer SkipToken'
                 }
                 if ($PSVersionTable.PSVersion.Major -ge 6) {
-                    Assert-MockCalled Skip-Cert -ModuleName $script:moduleName -Exactly 0 -Scope It
+                    Assert-MockCalled Skip-Cert -ModuleName PSSymantecSEPM -Exactly 0 -Scope It
                 } else {
-                    Assert-MockCalled Skip-Cert -ModuleName $script:moduleName -Exactly 1 -Scope It
+                    Assert-MockCalled Skip-Cert -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
                 }
             }
         }
@@ -107,8 +88,8 @@ Describe 'Invoke-ABRestMethod' {
     Context 'Backward compatibility: no Session provided' {
         BeforeAll {
             InModuleScope PSSymantecSEPM {
-                Mock Invoke-RestMethod -ModuleName $script:moduleName { return 'OK' }
-                Mock Skip-Cert -ModuleName $script:moduleName {}
+                Mock Invoke-RestMethod -ModuleName PSSymantecSEPM { return 'OK' }
+                Mock Skip-Cert -ModuleName PSSymantecSEPM {}
             }
         }
 
@@ -124,7 +105,7 @@ Describe 'Invoke-ABRestMethod' {
                 $result = Invoke-ABRestMethod -params $params
                 $result | Should -Be 'OK'
 
-                Assert-MockCalled Invoke-RestMethod -ModuleName $script:moduleName -Exactly 1 -Scope It
+                Assert-MockCalled Invoke-RestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
             }
         }
 
@@ -140,7 +121,7 @@ Describe 'Invoke-ABRestMethod' {
                 $result = Invoke-ABRestMethod -params $params
                 $result | Should -Be 'OK'
 
-                Assert-MockCalled Invoke-RestMethod -ModuleName $script:moduleName -Exactly 1 -Scope It
+                Assert-MockCalled Invoke-RestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
             }
         }
     }
