@@ -46,16 +46,15 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        shell: powershell
+        shell: pwsh
         run: |
-          # NuGet provider is pre-installed on GitHub Actions Windows runners
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name ModuleBuilder -Force -Scope CurrentUser
           Install-Module -Name Configuration -Force -Scope CurrentUser
-          Install-Module -Name Pester -RequiredVersion 5.7.1 -Force -Scope CurrentUser -SkipPublisherCheck
+          Install-Module -Name Pester -RequiredVersion 5.7.1 -Force -Scope CurrentUser
 
       - name: Build module
-        shell: powershell
+        shell: pwsh
         run: |
           Import-Module ModuleBuilder -Force
           Build-Module -SourcePath ./Source/PSSymantecSEPM.psd1 -SemVer 0.0.1
