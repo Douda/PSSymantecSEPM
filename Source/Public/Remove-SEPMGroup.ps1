@@ -13,8 +13,6 @@ function Remove-SEPMGroup {
         "My Company\EMEA\Workstations"
     .PARAMETER EnabledInheritance
         Specifies if the group should inherit the parent group's policies
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         Remove-SEPMGroup -GroupName "Win7" -ParentGroup "My Company\EMEA\Workstations"
 
@@ -28,9 +26,7 @@ function Remove-SEPMGroup {
     [CmdletBinding()]
     param (
         # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck,
+
 
         # group name
         [Parameter(
@@ -65,19 +61,9 @@ function Remove-SEPMGroup {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/groups"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/groups"
+
         # Get all groups from SEPM
         $allGroups = Get-SEPMGroups
     }
@@ -101,9 +87,9 @@ function Remove-SEPMGroup {
 
         # prepare the parameters
         $params = @{
+            Session = $session
             Method      = 'POST'
             Uri         = $URI + "/$ParentGroupID"
-            headers     = $headers
             contenttype = 'application/json'
             body        = $body | ConvertTo-Json
         }

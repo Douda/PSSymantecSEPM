@@ -12,8 +12,6 @@ function Move-SEPClientGroup {
         Specifies the group full path name for which you want to get the information
         Full path name is the group name with the parent groups separated by backslash
         "My Company\EMEA\Workstations"
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         Move-SEPClientGroup -ComputerName "MyComputer" -GroupName "My Company\EMEA\Workstations"
 
@@ -27,9 +25,7 @@ function Move-SEPClientGroup {
     [CmdletBinding()]
     param (
         # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck,
+
 
         # ComputerName
         [Parameter(
@@ -51,19 +47,9 @@ function Move-SEPClientGroup {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/computers"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/computers"
+
         # Get all groups from SEPM
         $allGroups = Get-SEPMGroups
     }
@@ -98,9 +84,9 @@ function Move-SEPClientGroup {
 
         # prepare the parameters
         $params = @{
+            Session = $session
             Method      = 'PATCH'
             Uri         = $URI
-            headers     = $headers
             contenttype = 'application/json'
             body        = $body | ForEach-Object { ConvertTo-Json @( $_ ) } # This way converts to JSON as array
         }

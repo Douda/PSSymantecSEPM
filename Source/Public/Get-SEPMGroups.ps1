@@ -4,8 +4,6 @@ function Get-SEPMGroups {
         Gets a group list
     .DESCRIPTION
         Gets a group list
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\GitHub_Projects\PSSymantecSEPM> Get-SEPMGroups | Select-Object -First 1 
 
@@ -28,35 +26,20 @@ function Get-SEPMGroups {
 #>
 
     [CmdletBinding()]
-    param (
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
-    )
+    param()
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/groups"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/groups"
+
     }
 
     process {
         # prepare the parameters
         $params = @{
+            Session = $session
             Method  = 'GET'
             Uri     = $URI
-            headers = $headers
         }
 
         # QueryString parameters for pagination
@@ -70,9 +53,9 @@ function Get-SEPMGroups {
             try {
                 # Invoke the request params
                 $params = @{
+                    Session = $session
                     Method  = 'GET'
                     Uri     = $URI
-                    headers = $headers
                 }
                 
                 $resp = Invoke-ABRestMethod -params $params

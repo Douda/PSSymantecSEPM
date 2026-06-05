@@ -19,7 +19,7 @@ Function Get-SEPMVersion {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $script:BaseURLv1 + '/version'
+        $URI = $session.BaseURLv1 + '/version'
     }
 
     process {

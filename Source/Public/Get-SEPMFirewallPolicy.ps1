@@ -7,8 +7,6 @@ function Get-SEPMFirewallPolicy {
     .PARAMETER PolicyName    
         The name of the policy to get the details of
         Is a required parameter
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMFirewallPolicy -PolicyName "Standard Servers - Firewall policy"
 
@@ -43,28 +41,13 @@ function Get-SEPMFirewallPolicy {
         )]
         [Alias("Policy_ID")]
         [String]
-        $PolicyID,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $PolicyID
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/policies/firewall"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/policies/firewall"
+
         
     }
 
@@ -88,9 +71,9 @@ function Get-SEPMFirewallPolicy {
         
         # prepare the parameters
         $params = @{
+            Session = $session
             Method  = 'GET'
             Uri     = $URI
-            headers = $headers
         }
 
         try {

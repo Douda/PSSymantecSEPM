@@ -4,8 +4,6 @@ function Get-SEPMGroupSettings {
         Gets a group list
     .DESCRIPTION
         Gets a group list
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\GitHub_Projects\PSSymantecSEPM> Get-SEPMGroups | Select-Object -First 1 
 
@@ -30,9 +28,7 @@ function Get-SEPMGroupSettings {
     [CmdletBinding()]
     param (
         # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck,
+
 
         [Parameter(Mandatory = $true)]
         $locationId,
@@ -42,46 +38,35 @@ function Get-SEPMGroupSettings {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        # $URI = $script:BaseURLv1 + "/groups"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        # $URI = $session.BaseURLv1 + "/groups"
+
     }
 
     process {
         # Location ID
-        $URI = $script:BaseURLv1 + "/groups/$groupId/locations/$locationId/settings"
+        $URI = $session.BaseURLv1 + "/groups/$groupId/locations/$locationId/settings"
 
         # prepare the parameters
         $params = @{
+            Session = $session
             Method  = 'GET'
             Uri     = $URI
-            headers = $headers
         }
 
         # Invoke the request
         try {
             # Invoke the request params
             $params = @{
+                Session = $session
                 Method  = 'GET'
                 Uri     = $URI
-                headers = $headers
             }
                 
             $resp = Invoke-ABRestMethod -params $params
         } catch {
             Write-Warning -Message "Error: $_"
         }
-
 
         # Add a PSTypeName to the object
         # $resp | ForEach-Object {

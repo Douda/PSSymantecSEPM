@@ -17,8 +17,6 @@ function Start-SEPScan {
         Specifies the type of scan to send to the endpoint(s)
         Valid values are ActiveScan and FullScan
         By default, the ActiveScan switch is used
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Start-SEPScan -ComputerName MyComputer01 -ActiveScan
 
@@ -75,27 +73,12 @@ function Start-SEPScan {
         [Parameter(ParameterSetName = 'ComputerNameFullScan')]
         [Parameter(ParameterSetName = 'GroupNameFullScan')]
         [switch]
-        $FullScan,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $FullScan
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+
     }
 
     process {
@@ -109,10 +92,10 @@ function Start-SEPScan {
             }
 
             if ($ActiveScan) {
-                $URI = $script:BaseURLv1 + "/command-queue/activescan"
+                $URI = $session.BaseURLv1 + "/command-queue/activescan"
             }
             if ($FullScan) {
-                $URI = $script:BaseURLv1 + "/command-queue/fullscan"
+                $URI = $session.BaseURLv1 + "/command-queue/fullscan"
             }
 
             # URI query strings
@@ -125,9 +108,9 @@ function Start-SEPScan {
 
             # prepare the parameters
             $params = @{
+                Session = $session
                 Method  = 'POST'
                 Uri     = $URI
-                headers = $headers
             }
     
             $resp = Invoke-ABRestMethod -params $params
@@ -140,7 +123,7 @@ function Start-SEPScan {
             # 1. finds all computers in the group #
             #######################################
             $allComputers = @()
-            $URI = $script:BaseURLv1 + "/computers"
+            $URI = $session.BaseURLv1 + "/computers"
 
             # URI query strings
             $QueryStrings = @{
@@ -158,9 +141,9 @@ function Start-SEPScan {
                 try {
                     # prepare the parameters
                     $params = @{
+                        Session = $session
                         Method  = 'GET'
                         Uri     = $URI
-                        headers = $headers
                     }
                     
                     $resp = Invoke-ABRestMethod -params $params
@@ -184,10 +167,10 @@ function Start-SEPScan {
             #################################################
 
             if ($ActiveScan) {
-                $URI = $script:BaseURLv1 + "/command-queue/activescan"
+                $URI = $session.BaseURLv1 + "/command-queue/activescan"
             }
             if ($FullScan) {
-                $URI = $script:BaseURLv1 + "/command-queue/fullscan"
+                $URI = $session.BaseURLv1 + "/command-queue/fullscan"
             }
 
             $AllResp = @()
@@ -203,9 +186,9 @@ function Start-SEPScan {
         
                 # prepare the parameters
                 $params = @{
+                    Session = $session
                     Method  = 'POST'
                     Uri     = $URI
-                    headers = $headers
                 }
 
                 # Send command to each computers in the group
