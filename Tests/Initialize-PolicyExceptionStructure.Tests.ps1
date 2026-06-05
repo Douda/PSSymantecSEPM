@@ -1,9 +1,10 @@
 [CmdletBinding()]
 param()
 
-# Build & Load the module
-$moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-. (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-Init.ps1')
+BeforeDiscovery {
+    $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
+    . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-Init.ps1')
+}
 
 Describe 'Initialize-PolicyExceptionStructure' {
     It 'Returns correct object type' {

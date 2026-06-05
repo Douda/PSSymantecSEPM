@@ -1,14 +1,15 @@
 [CmdletBinding()]
 param()
 
-# Build & Load the module
-$moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-. (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-Init.ps1')
+BeforeDiscovery {
+    $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
+    . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-Init.ps1')
+}
 
 Describe 'Initialize-SEPMSession' {
-    InModuleScope PSSymantecSEPM { 
-        Context 'Session creation' {
-            BeforeAll {
+    Context 'Session creation' {
+        BeforeAll {
+            InModuleScope PSSymantecSEPM {
                 # Override file paths to avoid reading real user tokens
                 $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
                 $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
@@ -39,8 +40,10 @@ Describe 'Initialize-SEPMSession' {
                     }
                 }
             }
+        }
 
-            It 'returns a [PSCustomObject] with Headers, BaseURLv1, BaseURLv2, SkipCert' {
+        It 'returns a [PSCustomObject] with Headers, BaseURLv1, BaseURLv2, SkipCert' {
+            InModuleScope PSSymantecSEPM {
                 $result = Initialize-SEPMSession
                 $result | Should -BeOfType [PSCustomObject]
                 $result.Headers | Should -Not -BeNullOrEmpty
@@ -51,9 +54,11 @@ Describe 'Initialize-SEPMSession' {
                 $result.SkipCert | Should -BeFalse
             }
         }
+    }
 
-        Context 'Session caching' {
-            BeforeAll {
+    Context 'Session caching' {
+        BeforeAll {
+            InModuleScope PSSymantecSEPM {
                 # Override file paths to avoid reading real user tokens
                 $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
                 $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
@@ -87,8 +92,10 @@ Describe 'Initialize-SEPMSession' {
                     }
                 }
             }
+        }
 
-            It 'reuses cached session on second call without re-querying SEPM' {
+        It 'reuses cached session on second call without re-querying SEPM' {
+            InModuleScope PSSymantecSEPM {
                 # First call establishes the session (queries SEPM once)
                 $session1 = Initialize-SEPMSession
                 $session1 | Should -Not -BeNullOrEmpty
@@ -102,9 +109,11 @@ Describe 'Initialize-SEPMSession' {
                 $script:_mockAuthCallCount | Should -Be 1
             }
         }
+    }
 
-        Context 'Token expiry renewal' {
-            BeforeAll {
+    Context 'Token expiry renewal' {
+        BeforeAll {
+            InModuleScope PSSymantecSEPM {
                 # Override file paths to avoid reading real user tokens
                 $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
                 $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
@@ -136,8 +145,10 @@ Describe 'Initialize-SEPMSession' {
                     }
                 }
             }
+        }
 
-            It 'transparently renews when cached token is expired' {
+        It 'transparently renews when cached token is expired' {
+            InModuleScope PSSymantecSEPM {
                 # First, set up an expired session cache
                 $expiredTokenInfo = [PSCustomObject]@{
                     token           = 'OldExpiredToken'
@@ -171,9 +182,11 @@ Describe 'Initialize-SEPMSession' {
                 $script:_mockAuthCallCount | Should -Be 1
             }
         }
+    }
 
-        Context 'Disk-cached token' {
-            BeforeAll {
+    Context 'Disk-cached token' {
+        BeforeAll {
+            InModuleScope PSSymantecSEPM {
                 # Override file paths to avoid reading real user tokens
                 $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
                 $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
@@ -201,24 +214,30 @@ Describe 'Initialize-SEPMSession' {
 
                 Mock Test-SEPMAccessToken -ModuleName $script:moduleName { return $true }
             }
+        }
 
-            It 'reads disk-cached token and builds a valid session' {
+        It 'reads disk-cached token and builds a valid session' {
+            InModuleScope PSSymantecSEPM {
                 $result = Initialize-SEPMSession
                 $result | Should -BeOfType [PSCustomObject]
                 $result.Headers.Authorization | Should -Be 'Bearer FakeTokenFromDisk'
                 $result.TokenInfo | Should -Not -BeNullOrEmpty
                 $result.TokenInfo.token | Should -Be 'FakeTokenFromDisk'
             }
+        }
 
-            It 'promotes disk token to script:accessToken after session init' {
+        It 'promotes disk token to script:accessToken after session init' {
+            InModuleScope PSSymantecSEPM {
                 $null = Initialize-SEPMSession
                 $script:accessToken | Should -Not -BeNullOrEmpty
                 $script:accessToken.token | Should -Be 'FakeTokenFromDisk'
             }
         }
+    }
 
-        Context 'Missing configuration' {
-            BeforeAll {
+    Context 'Missing configuration' {
+        BeforeAll {
+            InModuleScope PSSymantecSEPM {
                 # Override file paths to avoid reading real user tokens
                 $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
                 $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
@@ -239,8 +258,10 @@ Describe 'Initialize-SEPMSession' {
 
                 Mock Test-SEPMAccessToken -ModuleName $script:moduleName { return $false }
             }
+        }
 
-            It 'throws an error when configuration is missing' {
+        It 'throws an error when configuration is missing' {
+            InModuleScope PSSymantecSEPM {
                 { Initialize-SEPMSession -ErrorAction Stop } | Should -Throw
             }
         }

@@ -1,13 +1,14 @@
 [CmdletBinding()]
 param()
 
-# Build & Load the module
-$moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-. (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-Init.ps1')
+BeforeDiscovery {
+    $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
+    . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-Init.ps1')
+}
 
 Describe 'Set-SEPMAuthentication' {
-    InModuleScope PSSymantecSEPM { 
-        BeforeAll {
+    BeforeAll {
+        InModuleScope PSSymantecSEPM {
             # This is common test code setup logic for all Pester test files
             $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
             . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-BeforeAll.ps1')
@@ -17,14 +18,18 @@ Describe 'Set-SEPMAuthentication' {
             $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
             $script:accessTokenFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
         }
+    }
 
-        AfterAll {
+    AfterAll {
+        InModuleScope PSSymantecSEPM {
             # This is common test code teardown logic for all Pester test files
             $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
             . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-AfterAll.ps1')
         }
+    }
 
-        It 'Should have credential loaded in memory' {
+    It 'Should have credential loaded in memory' {
+        InModuleScope PSSymantecSEPM {
             $dummyCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList 'FakeDummyUser',
                 (ConvertTo-SecureString -String 'FakeDummyPassword' -AsPlainText -Force)
             Set-SEPMAuthentication -Credentials $dummyCreds
@@ -32,8 +37,10 @@ Describe 'Set-SEPMAuthentication' {
             $script:Credential.UserName | Should -Be 'FakeDummyUser'
             $script:Credential | Should -BeOfType [System.Management.Automation.PSCredential]
         }
+    }
 
-        It 'Should have credential saved to disk' {
+    It 'Should have credential saved to disk' {
+        InModuleScope PSSymantecSEPM {
             $dummyCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList 'FakeDummyUser',
                 (ConvertTo-SecureString -String 'FakeDummyPassword' -AsPlainText -Force)
             Set-SEPMAuthentication -Credentials $dummyCreds

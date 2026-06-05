@@ -1,16 +1,17 @@
 [CmdletBinding()]
 param()
 
-# Build & Load the module
-$moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-. (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-Init.ps1')
+BeforeDiscovery {
+    $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
+    . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-Init.ps1')
+}
 
 Describe 'Clear-SEPMAuthentication' {
-    InModuleScope PSSymantecSEPM { 
-        BeforeAll {
+    BeforeAll {
+        InModuleScope PSSymantecSEPM {
             # This is common test code setup logic for all Pester test files
             $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-BeforeAll.ps1')
+            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-BeforeAll.ps1')
 
             # Override file paths to isolate from real config
             $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
@@ -25,24 +26,29 @@ Describe 'Clear-SEPMAuthentication' {
             $script:accessToken = [PSCustomObject]@{ token = 'FakeToken'; tokenExpiration = (Get-Date).AddHours(1) }
             $script:accessToken | Export-Clixml -Path $script:accessTokenFilePath -Force
         }
+    }
 
-        AfterAll {
+    AfterAll {
+        InModuleScope PSSymantecSEPM {
             # This is common test code teardown logic for all Pester test files
             $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-AfterAll.ps1')
+            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-AfterAll.ps1')
         }
+    }
 
-        It 'Should remove credential and access token from memory' {
+    It 'Should remove credential and access token from memory' {
+        InModuleScope PSSymantecSEPM {
             Clear-SEPMAuthentication
             $script:Credential | Should -BeNullOrEmpty
             $script:accessToken | Should -BeNullOrEmpty
         }
-    
-        It 'Should remove credential and access token from file storage' {
+    }
+
+    It 'Should remove credential and access token from file storage' {
+        InModuleScope PSSymantecSEPM {
             Clear-SEPMAuthentication
             $script:accessTokenFilePath | Should -Not -Exist
             $script:credentialsFilePath | Should -Not -Exist
         }
     }
 }
-
