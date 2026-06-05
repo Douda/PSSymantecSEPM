@@ -31,6 +31,7 @@ jobs:
           Build-Module -SourcePath ./Source/PSSymantecSEPM.psd1 -SemVer 0.0.1
 
       - name: Run tests
+        timeout-minutes: 5
         shell: pwsh
         run: |
           Import-Module Pester -Force
@@ -60,8 +61,11 @@ jobs:
           Build-Module -SourcePath ./Source/PSSymantecSEPM.psd1 -SemVer 0.0.1
 
       - name: Run tests
+        timeout-minutes: 10
         shell: powershell
         run: |
+          # Override Get-Credential to prevent hangs in non-interactive CI
+          function global:Get-Credential { throw 'Get-Credential called in headless CI - test should mock this' }
           Import-Module Pester -Force
           $result = Invoke-Pester ./Tests/ -PassThru
           Write-Host "Passed: $($result.PassedCount) | Failed: $($result.FailedCount) | Skipped: $($result.SkippedCount)"
