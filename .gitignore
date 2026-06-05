@@ -11,3 +11,4 @@ thunder-tests/
 .vscode/*.code-snippets
 # Keep settings.json and launch.json — they're shared config
 Windows/
+node_modules/
