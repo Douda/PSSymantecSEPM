@@ -45,7 +45,7 @@ Describe 'Get-SEPMVersion' {
             Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM { return 'OK' }
 
             Get-SEPMVersion | Out-Null
-            Assert-MockCalled Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It -ParameterFilter {
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
                 $null -ne $params.Session -and
                 $params.Session.SkipCert -eq $true -and
                 $params.Session.Headers.Authorization -eq 'Bearer SkipSessionToken'
@@ -59,8 +59,8 @@ Describe 'Get-SEPMVersion' {
             Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM { return 'OK' }
 
             Get-SEPMVersion | Out-Null
-            Assert-MockCalled Initialize-SEPMSession -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
-            Assert-MockCalled Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It -ParameterFilter {
+            Should -Invoke Initialize-SEPMSession -ModuleName PSSymantecSEPM -Times 1 -Exactly
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
                 $null -ne $params.Session -and
                 $params.Session.Headers.Authorization -eq 'Bearer FakeSessionToken'
             }

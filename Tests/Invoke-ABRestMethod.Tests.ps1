@@ -45,7 +45,7 @@ Describe 'Invoke-ABRestMethod' {
                 $result = Invoke-ABRestMethod -params $params
                 $result | Should -Be 'OK'
 
-                Assert-MockCalled Invoke-RestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It -ParameterFilter {
+                Should -Invoke Invoke-RestMethod -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
                     $Headers.Authorization -eq 'Bearer FakeSessionToken' -and
                     $Headers.Content -eq 'application/json'
                 }
@@ -73,13 +73,13 @@ Describe 'Invoke-ABRestMethod' {
                 $result = Invoke-ABRestMethod -params $params
                 $result | Should -Be 'OK'
 
-                Assert-MockCalled Invoke-RestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It -ParameterFilter {
+                Should -Invoke Invoke-RestMethod -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
                     $Headers.Authorization -eq 'Bearer SkipToken'
                 }
                 if ($PSVersionTable.PSVersion.Major -ge 6) {
-                    Assert-MockCalled Skip-Cert -ModuleName PSSymantecSEPM -Exactly 0 -Scope It
+                    Should -Invoke Skip-Cert -ModuleName PSSymantecSEPM -Times 0 -Exactly
                 } else {
-                    Assert-MockCalled Skip-Cert -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
+                    Should -Invoke Skip-Cert -ModuleName PSSymantecSEPM -Times 1 -Exactly
                 }
             }
         }
@@ -105,7 +105,7 @@ Describe 'Invoke-ABRestMethod' {
                 $result = Invoke-ABRestMethod -params $params
                 $result | Should -Be 'OK'
 
-                Assert-MockCalled Invoke-RestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
+                Should -Invoke Invoke-RestMethod -ModuleName PSSymantecSEPM -Times 1 -Exactly
             }
         }
 
@@ -121,7 +121,7 @@ Describe 'Invoke-ABRestMethod' {
                 $result = Invoke-ABRestMethod -params $params
                 $result | Should -Be 'OK'
 
-                Assert-MockCalled Invoke-RestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
+                Should -Invoke Invoke-RestMethod -ModuleName PSSymantecSEPM -Times 1 -Exactly
             }
         }
     }
