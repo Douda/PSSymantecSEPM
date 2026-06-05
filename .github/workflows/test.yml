@@ -22,7 +22,7 @@ jobs:
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name ModuleBuilder -Force -Scope CurrentUser
           Install-Module -Name Configuration -Force -Scope CurrentUser
-          Install-Module -Name Pester -MaximumVersion 4.99.99 -Force -Scope CurrentUser
+          Install-Module -Name Pester -RequiredVersion 5.7.1 -Force -Scope CurrentUser
 
       - name: Build module
         shell: pwsh
@@ -52,7 +52,7 @@ jobs:
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name ModuleBuilder -Force -Scope CurrentUser
           Install-Module -Name Configuration -Force -Scope CurrentUser
-          Install-Module -Name Pester -MaximumVersion 4.99.99 -Force -Scope CurrentUser -SkipPublisherCheck
+          Install-Module -Name Pester -RequiredVersion 5.7.1 -Force -Scope CurrentUser -SkipPublisherCheck
 
       - name: Build module
         shell: powershell
