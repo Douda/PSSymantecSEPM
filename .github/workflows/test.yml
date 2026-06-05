@@ -48,9 +48,7 @@ jobs:
       - name: Install dependencies
         shell: powershell
         run: |
-          # Force TLS 1.2 for PSGallery connectivity
-          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-          Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+          # NuGet provider is pre-installed on GitHub Actions Windows runners
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name ModuleBuilder -Force -Scope CurrentUser
           Install-Module -Name Configuration -Force -Scope CurrentUser
