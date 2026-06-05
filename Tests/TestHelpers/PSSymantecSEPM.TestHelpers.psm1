@@ -191,3 +191,181 @@ function New-TestSession {
         }
     }
 }
+
+function New-DummyComputer {
+    <#
+    .SYNOPSIS
+        Generates a dummy SEP Computer object for testing purposes.
+
+    .DESCRIPTION
+        Generates a dummy SEP Computer object matching the shape returned by
+        the SEPM API's /computers endpoint. Replaces New-DummyDataSEPComputers
+        from the legacy DummyDataGenerator.ps1.
+
+    .PARAMETER ComputerName
+        The computer name. If omitted, a random name like WIN-1234 is generated.
+
+    .PARAMETER GroupName
+        The group name (e.g. "My Company\\MyGroup"). If omitted, a random name
+        like "My Company\\test group 42" is generated.
+
+    .EXAMPLE
+        1..3 | New-DummyComputer
+
+        Generates 3 dummy SEP Computer objects with random names and groups.
+
+    .EXAMPLE
+        New-DummyComputer -ComputerName "WORKSTATION-01" -GroupName "Default Group"
+
+        Generates a single dummy computer with the specified name and group.
+    #>
+    [CmdletBinding()]
+    param(
+        [string] $ComputerName,
+        [string] $GroupName
+    )
+
+    process {
+        $customObject = New-Object PSObject
+
+        if ($ComputerName) {
+            $customObject | Add-Member -Type NoteProperty -Name 'computerName' -Value $ComputerName
+        } else {
+            $customObject | Add-Member -Type NoteProperty -Name 'computerName' -Value ('WIN-' + (Get-Random -Minimum 1 -Maximum 10000))
+        }
+
+        $group = New-Object PSObject
+        if ($GroupName) {
+            $group | Add-Member -Type NoteProperty -Name 'name' -Value $GroupName
+        } else {
+            $group | Add-Member -Type NoteProperty -Name 'name' -Value ('My Company\test group ' + (Get-Random -Minimum 1 -Maximum 100))
+        }
+        $group | Add-Member -Type NoteProperty -Name 'id' -Value ([guid]::NewGuid().ToString())
+        $group | Add-Member -Type NoteProperty -Name 'fullPathName' -Value $null
+        $group | Add-Member -Type NoteProperty -Name 'externalReferenceId' -Value $null
+        $group | Add-Member -Type NoteProperty -Name 'source' -Value $null
+
+        $domain = New-Object PSObject
+        $domain | Add-Member -Type NoteProperty -Name 'id' -Value ([guid]::NewGuid().ToString())
+        $domain | Add-Member -Type NoteProperty -Name 'name' -Value 'Default'
+        $group | Add-Member -Type NoteProperty -Name 'domain' -Value $domain
+        $customObject | Add-Member -Type NoteProperty -Name 'group' -Value $group
+
+        $ipv4 = ((1..4 | ForEach-Object { Get-Random -Minimum 1 -Maximum 255 }) -join '.')
+        $ipv6 = ((1..8 | ForEach-Object { '{0:X4}' -f (Get-Random -Minimum 0x0000 -Maximum 0xFFFF) }) -join ':')
+        $customObject | Add-Member -Type NoteProperty -Name 'ipAddresses' -Value @($ipv4, $ipv6)
+
+        $mac = ((1..6 | ForEach-Object { '{0:X2}' -f (Get-Random -Minimum 0 -Maximum 256) }) -join '-')
+        $customObject | Add-Member -Type NoteProperty -Name 'macAddresses' -Value @(1..2 | ForEach-Object { $mac })
+
+        $gateways = @(1..4 | ForEach-Object { ((1..4 | ForEach-Object { Get-Random -Minimum 1 -Maximum 255 }) -join '.') })
+        $customObject | Add-Member -Type NoteProperty -Name 'gateways' -Value $gateways
+
+        $subnetMasks = @((ForEach-Object { (1..3 | ForEach-Object { Get-Random -Minimum 1 -Maximum 255 }) -join '.' }) + '.0')
+        $customObject | Add-Member -Type NoteProperty -Name 'subnetMasks' -Value @($subnetMasks, '64')
+
+        $dnsv4 = ((1..4 | ForEach-Object { Get-Random -Minimum 1 -Maximum 255 }) -join '.')
+        $dnsv6 = ((1..8 | ForEach-Object { '{0:X4}' -f (Get-Random -Minimum 0x0000 -Maximum 0xFFFF) }) -join ':')
+        $customObject | Add-Member -Type NoteProperty -Name 'dnsServers' -Value @($dnsv4, $dnsv6)
+
+        $Wins = ((1..4 | ForEach-Object { Get-Random -Minimum 1 -Maximum 255 }) -join '.')
+        $customObject | Add-Member -Type NoteProperty -Name 'winServers' -Value @(1..2 | ForEach-Object { $Wins })
+
+        $customObject | Add-Member -Type NoteProperty -Name 'description' -Value ('Description of computer id: ' + $group.id)
+        $customObject | Add-Member -Type NoteProperty -Name 'lastInventoryDate' -Value (Get-Date)
+        $customObject | Add-Member -Type NoteProperty -Name 'lastModifiedDate' -Value (Get-Date)
+        $customObject | Add-Member -Type NoteProperty -Name 'createdDate' -Value (Get-Date)
+        $customObject | Add-Member -Type NoteProperty -Name 'createdBy' -Value ('User' + (Get-Random -Minimum 1 -Maximum 100))
+        $customObject | Add-Member -Type NoteProperty -Name 'lastModifiedBy' -Value ('User' + (Get-Random -Minimum 1 -Maximum 100))
+        $customObject | Add-Member -Type NoteProperty -Name 'version' -Value (Get-Random -Minimum 1 -Maximum 10)
+        $customObject | Add-Member -Type NoteProperty -Name 'deleted' -Value $false
+
+        return $customObject
+    }
+}
+
+function New-DummyPolicySummary {
+    <#
+    .SYNOPSIS
+        Generates dummy SEPM policy summary objects for testing purposes.
+
+    .DESCRIPTION
+        Generates dummy policy summary objects matching the shape returned by
+        the SEPM API's /policies/summary endpoint. Replaces
+        New-DummyDataSEPMPoliciesSummary from the legacy DummyDataGenerator.ps1.
+
+    .PARAMETER PolicyName
+        The name of the policy. Required when PolicyType is specified.
+
+    .PARAMETER PolicyType
+        The type of the policy. Must be one of: hid, exceptions, mem, ntr, av,
+        fw, ips, lucontent, lu, hi, adc, msl, upgrade.
+
+    .PARAMETER PoliciesPerPolicyType
+        Number of policies to generate per policy type. Default: 1.
+
+    .EXAMPLE
+        New-DummyPolicySummary -PolicyName 'My AV Policy' -PolicyType 'av'
+
+        Generates a single policy summary object for the specified policy.
+
+    .EXAMPLE
+        New-DummyPolicySummary -PoliciesPerPolicyType 2
+
+        Generates 2 policy summary objects for each of the 13 policy types (26 total).
+    #>
+    [CmdletBinding(DefaultParameterSetName = 'Default')]
+    param(
+        [Parameter(ParameterSetName = 'SinglePolicy', Mandatory = $true)]
+        [string] $PolicyName,
+
+        [Parameter(ParameterSetName = 'SinglePolicy', Mandatory = $true)]
+        [string] $PolicyType,
+
+        [Parameter(ParameterSetName = 'Default')]
+        [int] $PoliciesPerPolicyType = 1
+    )
+
+    function New-DummyObject {
+        param(
+            [string] $PolicyName,
+            [string] $PolicyType
+        )
+
+        $id = -join ((48..57) + (65..70) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
+        $lastmodifiedtime = [long]([double]::Parse((Get-Date -UFormat %s)) * 1000)
+
+        return New-Object PSObject -Property @{
+            sources               = $null
+            enabled               = $true
+            desc                  = 'Random description of ' + $PolicyName
+            name                  = $PolicyName
+            lastmodifiedtime      = $lastmodifiedtime
+            id                    = $id
+            domainid              = [guid]::NewGuid().ToString()
+            policytype            = $PolicyType
+            subtype               = $null
+            assignedtocloudgroups = $null
+            assignedtolocations   = $null
+        }
+    }
+
+    $policytypes = @('hid', 'exceptions', 'mem', 'ntr', 'av', 'fw', 'ips', 'lucontent', 'lu', 'hi', 'adc', 'msl', 'upgrade')
+    $dummyObjects = @()
+
+    if ($PSCmdlet.ParameterSetName -eq 'SinglePolicy') {
+        if ($PolicyType -in $policytypes) {
+            $dummyObjects += New-DummyObject -PolicyName $PolicyName -PolicyType $PolicyType
+        } else {
+            Write-Error "Invalid policy type. Please provide one of the following: $($policytypes -join ', ')"
+        }
+    } else {
+        foreach ($policytype in $policytypes) {
+            1..$PoliciesPerPolicyType | ForEach-Object {
+                $dummyObjects += New-DummyObject -PolicyName ("policy $policytype $_") -PolicyType $policytype
+            }
+        }
+    }
+
+    return $dummyObjects
+}

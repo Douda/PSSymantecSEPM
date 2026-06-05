@@ -9,6 +9,8 @@
         'Initialize-TestEnvironment'
         'Clear-TestEnvironment'
         'New-TestSession'
+        'New-DummyComputer'
+        'New-DummyPolicySummary'
     )
     PrivateData       = @{
         PSData = @{
