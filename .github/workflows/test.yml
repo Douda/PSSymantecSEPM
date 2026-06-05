@@ -34,6 +34,7 @@ jobs:
         timeout-minutes: 5
         shell: pwsh
         run: |
+          Write-Host "PowerShell version: $($PSVersionTable.PSVersion)"
           Import-Module Pester -Force
           $result = Invoke-Pester ./Tests/ -PassThru
           Write-Host "Passed: $($result.PassedCount) | Failed: $($result.FailedCount) | Skipped: $($result.SkippedCount)"
@@ -68,6 +69,7 @@ jobs:
         timeout-minutes: 10
         shell: powershell
         run: |
+          Write-Host "PowerShell version: $($PSVersionTable.PSVersion)"
           # Override Get-Credential to prevent hangs in non-interactive CI
           function global:Get-Credential { throw 'Get-Credential called in headless CI - test should mock this' }
           Import-Module Pester -Force
