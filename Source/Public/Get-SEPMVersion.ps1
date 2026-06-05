@@ -4,8 +4,6 @@ Function Get-SEPMVersion {
         Gets the current version of Symantec Endpoint Protection Manager.
     .DESCRIPTION
         Gets the current version of Symantec Endpoint Protection Manager. This function dot not require authentication.
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMVersion
 
@@ -17,37 +15,20 @@ Function Get-SEPMVersion {
     #>
 
     [CmdletBinding()]
-    param (
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
-    )
-    
+    param()
+
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/version"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $script:BaseURLv1 + '/version'
     }
 
     process {
-        # prepare the parameters
         $params = @{
             Method  = 'GET'
             Uri     = $URI
-            headers = $headers
+            Session = $session
         }
-    
+
         $resp = Invoke-ABRestMethod -params $params
         return $resp
     }
