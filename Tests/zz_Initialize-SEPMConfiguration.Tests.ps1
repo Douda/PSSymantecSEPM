@@ -67,7 +67,7 @@ Describe 'Initialize-SepmConfiguration' {
                         Initialize-SepmConfiguration
 
                         # Assert that Reset-SEPMConfiguration was called exactly once
-                        Should -Invoke Reset-SEPMConfiguration -ModuleName $script:moduleName -Times 1 -Exactly
+                        Assert-MockCalled Reset-SEPMConfiguration -ModuleName $script:moduleName -Exactly 1 -Scope It
                     }
                 }
 

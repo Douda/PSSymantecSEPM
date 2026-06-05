@@ -14,11 +14,7 @@ Describe 'Build-SEPMQueryURI' {
             $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
             . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-BeforeAll.ps1')
 
-            # Load Pester test environment setup
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-TestEnvironmentSetup.ps1')
-
-            # Load the dummy data generator functions
-            # . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/DummyDataGenerator.ps1')
+            # Build-SEPMQueryURI is a pure function; no module state needed
         }
 
         AfterAll {
@@ -28,7 +24,8 @@ Describe 'Build-SEPMQueryURI' {
         }
 
         It 'Single URI parameter' {
-            $URI = $script:BaseURLv1 + "/computers"
+            $baseUrl = 'https://FakeServer01:1234/sepm/api/v1'
+            $URI = $baseUrl + '/computers'
             $QueryStrings = @{
                 computerName = "TestComputer01"
             }
@@ -37,7 +34,8 @@ Describe 'Build-SEPMQueryURI' {
         }
 
         It 'Multiple URI parameters' {
-            $URI = $script:BaseURLv1 + "/computers"
+            $baseUrl = 'https://FakeServer01:1234/sepm/api/v1'
+            $URI = $baseUrl + '/computers'
             $QueryStrings = @{
                 sort      = "COMPUTER_NAME"
                 pageIndex = 1
@@ -50,7 +48,8 @@ Describe 'Build-SEPMQueryURI' {
         }
 
         It 'Should return base URI when no query strings are provided' {
-            $URI = $script:BaseURLv1 + "/computers"
+            $baseUrl = 'https://FakeServer01:1234/sepm/api/v1'
+            $URI = $baseUrl + '/computers'
             $result = Build-SEPMQueryURI -BaseURI $URI -QueryStrings @{}
             $result | Should -Be $URI
         }

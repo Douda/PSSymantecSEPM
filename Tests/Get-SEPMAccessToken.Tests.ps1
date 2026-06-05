@@ -3,38 +3,67 @@ param()
 
 # Build & Load the module
 $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-. (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-Init.ps1')
+. (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-Init.ps1')
 
 Describe 'Get-SEPMAccessToken' {
     InModuleScope PSSymantecSEPM { 
         BeforeAll {
             # This is common test code setup logic for all Pester test files
             $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-BeforeAll.ps1')
+            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-BeforeAll.ps1')
 
-            # Load Pester test environment setup
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-TestEnvironmentSetup.ps1')
+            # Override file paths to isolate from real config
+            $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
+            $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+            $script:accessTokenFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
+
+            # Set up configuration so BaseURLv1/v2 are populated
+            $script:configuration = [PSCustomObject]@{
+                ServerAddress = 'FakeServer01'
+                port          = '1234'
+                domain        = ''
+            }
+            $script:BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
+            $script:BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
+            $script:SkipCert  = $false
 
             # Mock Test-SEPMAccessToken to return true for valid token
-            Mock Test-SEPMAccessToken -ModuleName $script:moduleName { return $true }
+            Mock Test-SEPMAccessToken -ModuleName PSSymantecSEPM { return $true }
         }
 
         AfterAll {
             # This is common test code teardown logic for all Pester test files
             $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-AfterAll.ps1')
+            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-AfterAll.ps1')
         }
 
         Context 'token provided as parameter' {
-            BeforeAll {}
-
             It 'Test Token with parameter' {
-                $token = [PSCustomObject]@{
-                    'token' = 'FakeToken'
+                InModuleScope PSSymantecSEPM {
+                    $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
+                    $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+                    $script:accessTokenFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
+
+                    $script:configuration = [PSCustomObject]@{
+                        ServerAddress = 'FakeServer01'
+                        port          = '1234'
+                        domain        = ''
+                    }
+                    $script:BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
+                    $script:BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
+
+                    $pass = ConvertTo-SecureString -String 'FakePassword' -AsPlainText -Force
+                    $script:Credential = New-Object System.Management.Automation.PSCredential -ArgumentList 'FakeUser', $pass
+
+                    Mock Test-SEPMAccessToken -ModuleName PSSymantecSEPM { return $true }
+
+                    $token = [PSCustomObject]@{
+                        'token' = 'FakeToken'
+                    }
+                    $result = Get-SEPMAccessToken -AccessToken $token
+                    $result | Should -Be $token
+                    $script:accessToken | Should -Be $token
                 }
-                $result = Get-SEPMAccessToken -AccessToken $token
-                $result | Should -Be $token
-                $script:accessToken | Should -Be $token
             }
         }
 
@@ -86,17 +115,34 @@ Describe 'Get-SEPMAccessToken' {
 
         Context 'query token from SEPM' {
             BeforeAll {
-                # Initialize configuration to force query token from SEPM
-                $script:accessToken = $null # No token in memory
+                # Ensure credential is set
+                $pass = ConvertTo-SecureString -String 'FakePassword' -AsPlainText -Force
+                $script:Credential = New-Object System.Management.Automation.PSCredential -ArgumentList 'FakeUser', $pass
 
-                # invalid any token already available
-                Mock Test-SEPMAccessToken -ModuleName $script:moduleName { return $false }
+                # Ensure BaseURL is configured in this context
+                $script:configuration = [PSCustomObject]@{
+                    ServerAddress = 'FakeServer01'
+                    port          = '1234'
+                    domain        = ''
+                }
+                $script:BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
+                $script:BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
+
+                # No token in memory, forces query to SEPM
+                $script:accessToken = $null
+
+                # Invalidate any cached token
+                Mock Test-SEPMAccessToken -ModuleName PSSymantecSEPM { return $false }
+
+                $URI_Authenticate = $script:BaseURLv1 + '/identity/authenticate'
 
                 # Mock Invoke-ABRestMethod to return a valid token
-                Mock Invoke-ABRestMethod -ModuleName $script:moduleName -ParameterFilter { $params -eq $Params } {
+                Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                    $params.Method -eq 'POST' -and $params.Uri -eq $URI_Authenticate
+                } {
                     return [PSCustomObject]@{
                         'token'         = 'FakeTokenFromSEPM'
-                        tokenExpiration = [Int64]'43199' # random up to 44k
+                        tokenExpiration = [Int64]'43199'
                     }
                 }
             }
