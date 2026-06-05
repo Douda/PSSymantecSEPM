@@ -45,20 +45,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install dependencies (pwsh for build)
+      - name: Install dependencies
         shell: pwsh
         run: |
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          # Install for pwsh (build)
           Install-Module -Name ModuleBuilder -Force -Scope CurrentUser
           Install-Module -Name Configuration -Force -Scope CurrentUser
-
-      - name: Install dependencies (PS 5.1 for test runtime)
-        shell: powershell
-        run: |
-          # pwsh step above bootstraps NuGet; these go to WindowsPowerShell path
-          Install-Module -Name ModuleBuilder -Force -Scope CurrentUser
-          Install-Module -Name Configuration -Force -Scope CurrentUser
-          Install-Module -Name Pester -RequiredVersion 5.7.1 -Force -Scope CurrentUser -SkipPublisherCheck
+          # Save for PS 5.1 (test runtime) — different module path
+          $ps51Path = "$env:ProgramFiles\WindowsPowerShell\Modules"
+          Save-Module -Name ModuleBuilder -Path $ps51Path -Force
+          Save-Module -Name Configuration -Path $ps51Path -Force
+          Save-Module -Name Pester -RequiredVersion 5.7.1 -Path $ps51Path -Force
 
       - name: Build module
         shell: pwsh
