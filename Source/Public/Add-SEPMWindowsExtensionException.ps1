@@ -63,19 +63,9 @@ function Add-SEPMWindowsExtensionException {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv2 + "/policies/exceptions"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv2 + "/policies/exceptions"
+
     }
 
     process {
@@ -118,9 +108,9 @@ function Add-SEPMWindowsExtensionException {
 
         # prepare the parameters
         $params = @{
+            Session = $session
             Method      = 'PATCH'
             Uri         = $URI + "/" + $Policy.PolicyID
-            headers     = $headers
             contenttype = 'application/json'
             Body        = $Policy.ObjBody | ConvertTo-Json -Depth 100
         }

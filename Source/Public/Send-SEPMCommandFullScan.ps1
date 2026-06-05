@@ -12,8 +12,6 @@ function Send-SEPMCommandFullScan {
     The name of the group to send the command to
     Cannot be used with ComputerName
     Does not include subgroups
-.PARAMETER SkipCertificateCheck
-    Skip certificate check
 .EXAMPLE
     Send-SEPMCommandFullScan -ComputerName "Computer1"
  
@@ -43,33 +41,18 @@ function Send-SEPMCommandFullScan {
         )]
         [Alias("Group")]
         [String]
-        $GroupName,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $GroupName
     )
     
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
+        $session = Initialize-SEPMSession
         
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+
     }
     
     process {
         # Init 
-        $URI = $script:BaseURLv1 + "/command-queue/fullscan"
+        $URI = $session.BaseURLv1 + "/command-queue/fullscan"
 
         if ($ComputerName) {
             # Get computer ID(s) from computer name(s)
@@ -120,9 +103,9 @@ function Send-SEPMCommandFullScan {
 
         # Invoke the request params
         $params = @{
+            Session = $session
             Method      = 'POST'
             Uri         = $URI
-            headers     = $headers
             Body        = $body | ConvertTo-Json
             ContentType = 'application/json'
         }
