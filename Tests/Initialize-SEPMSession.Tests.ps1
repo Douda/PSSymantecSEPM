@@ -30,7 +30,6 @@ Describe 'Initialize-SEPMSession' {
                 $script:accessToken = $null
 
                 Mock Test-SEPMAccessToken -ModuleName $script:moduleName { return $false }
-                Mock Test-SEPMCertificate -ModuleName $script:moduleName {}
                 Mock Invoke-ABRestMethod -ModuleName $script:moduleName -ParameterFilter {
                     $params.Method -eq 'POST' -and $params.Uri -match '/identity/authenticate'
                 } {
@@ -78,7 +77,6 @@ Describe 'Initialize-SEPMSession' {
 
                 # Mock token as VALID for caching test
                 Mock Test-SEPMAccessToken -ModuleName $script:moduleName { return $true }
-                Mock Test-SEPMCertificate -ModuleName $script:moduleName {}
                 Mock Invoke-ABRestMethod -ModuleName $script:moduleName -ParameterFilter {
                     $params.Method -eq 'POST' -and $params.Uri -match '/identity/authenticate'
                 } {
@@ -128,7 +126,6 @@ Describe 'Initialize-SEPMSession' {
                 $script:accessToken = $null
                 $script:_mockAuthCallCount = 0
 
-                Mock Test-SEPMCertificate -ModuleName $script:moduleName {}
                 Mock Invoke-ABRestMethod -ModuleName $script:moduleName -ParameterFilter {
                     $params.Method -eq 'POST' -and $params.Uri -match '/identity/authenticate'
                 } {
@@ -196,7 +193,6 @@ Describe 'Initialize-SEPMSession' {
                 $script:accessToken = $null
 
                 Mock Test-SEPMAccessToken -ModuleName $script:moduleName { return $false }
-                Mock Test-SEPMCertificate -ModuleName $script:moduleName {}
             }
 
             It 'throws an error when configuration is missing' {

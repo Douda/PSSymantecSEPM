@@ -73,11 +73,8 @@ function Get-SEPMAccessToken {
         Set-SEPMAuthentication -credential (Get-Credential)
     }
 
-    # Test the certificate of the SEPM server
-    $URI_Authenticate = $script:BaseURLv1 + '/identity/authenticate'
-    Test-SEPMCertificate -URI $URI_Authenticate
-
     # Construct the request
+    $URI_Authenticate = $script:BaseURLv1 + '/identity/authenticate'
     $body = @{
         "username" = $script:Credential.UserName
         "password" = ([System.Net.NetworkCredential]::new("", $script:Credential.Password).Password)

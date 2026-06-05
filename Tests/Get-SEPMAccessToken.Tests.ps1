@@ -92,9 +92,6 @@ Describe 'Get-SEPMAccessToken' {
                 # invalid any token already available
                 Mock Test-SEPMAccessToken -ModuleName $script:moduleName { return $false }
 
-                # Mock Test-SEPMCertificate to return true for valid certificate
-                Mock Test-SEPMCertificate -ModuleName $script:moduleName -ParameterFilter { $URI -eq $URI_Authenticate } {}
-
                 # Mock Invoke-ABRestMethod to return a valid token
                 Mock Invoke-ABRestMethod -ModuleName $script:moduleName -ParameterFilter { $params -eq $Params } {
                     return [PSCustomObject]@{

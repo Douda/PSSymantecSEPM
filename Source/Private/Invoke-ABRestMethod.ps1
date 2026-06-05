@@ -29,15 +29,25 @@ function Invoke-ABRestMethod {
         $params
     )
 
-    # Test the certificate if self signed
-    if (-not $script:SkipCert) {
-        Test-SEPMCertificate -URI $params.Uri
+    # If a Session object is provided, use its properties; otherwise fall back to script scope
+    if ($params.ContainsKey('Session') -and $params.Session) {
+        $effectiveSkipCert = $params.Session.SkipCert
+        # Merge Session.Headers into $params.headers (Session.Headers as base)
+        $mergedHeaders = @{} + $params.Session.Headers
+        if ($params.ContainsKey('headers') -and $params.headers) {
+            foreach ($key in $params.headers.Keys) {
+                $mergedHeaders[$key] = $params.headers[$key]
+            }
+        }
+        $params.headers = $mergedHeaders
+    } else {
+        $effectiveSkipCert = $script:SkipCert
     }
 
     switch ($PSVersionTable.PSVersion.Major) {
         { $_ -ge 6 } { 
             try {
-                if ($script:SkipCert -eq $true) {
+                if ($effectiveSkipCert -eq $true) {
                     $resp = Invoke-RestMethod @params -SkipCertificateCheck
                 } else {
                     $resp = Invoke-RestMethod @params
@@ -49,7 +59,7 @@ function Invoke-ABRestMethod {
         }
         default {
             try {
-                if ($script:SkipCert -eq $true) {
+                if ($effectiveSkipCert -eq $true) {
                     Skip-Cert
                     $resp = Invoke-RestMethod @params
                 } else {
