@@ -58,25 +58,14 @@ function Get-SEPMFileFingerprintList {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
         
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
     }
 
     process {
 
         if ($FingerprintListName) {
-            $URI = $script:BaseURLv1 + "/policy-objects/fingerprints"
+            $URI = $session.BaseURLv1 + "/policy-objects/fingerprints"
             # URI query strings
             $QueryStrings = @{
                 name = $FingerprintListName
@@ -88,20 +77,20 @@ function Get-SEPMFileFingerprintList {
             $params = @{
                 Method  = 'GET'
                 Uri     = $URI
-                headers = $headers
+                headers = $session.Headers
             }
     
             $resp = Invoke-ABRestMethod -params $params
         }
 
         if ($FingerprintListID) {
-            $URI = $script:BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"
+            $URI = $session.BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"
             
             # prepare the parameters
             $params = @{
                 Method  = 'GET'
                 Uri     = $URI
-                headers = $headers
+                headers = $session.Headers
             }
     
             $resp = Invoke-ABRestMethod -params $params

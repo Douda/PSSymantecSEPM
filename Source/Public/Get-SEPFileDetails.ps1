@@ -31,19 +31,8 @@ function Get-SEPFileDetails {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/command-queue/file/$FileID/details"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
+        $URI = $session.BaseURLv1 + "/command-queue/file/$FileID/details"
     }
 
     process {
@@ -58,7 +47,7 @@ function Get-SEPFileDetails {
         $params = @{
             Method  = 'GET'
             Uri     = $URI
-            headers = $headers
+            headers = $session.Headers
         }
     
         $resp = Invoke-ABRestMethod -params $params

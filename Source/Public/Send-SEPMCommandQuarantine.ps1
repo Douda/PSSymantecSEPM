@@ -61,18 +61,7 @@ function Send-SEPMCommandQuarantine {
     )
     
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
     }
     
     process {
@@ -84,7 +73,7 @@ function Send-SEPMCommandQuarantine {
                 $ComputerIDList += $ComputerID
             }
 
-            $URI = $script:BaseURLv1 + "/command-queue/quarantine"
+            $URI = $session.BaseURLv1 + "/command-queue/quarantine"
 
             # URI query strings
             $QueryStrings = @{
@@ -103,7 +92,7 @@ function Send-SEPMCommandQuarantine {
             $params = @{
                 Method  = 'POST'
                 Uri     = $URI
-                headers = $headers
+                headers = $session.Headers
             }
     
             $resp = Invoke-ABRestMethod -params $params
@@ -114,7 +103,7 @@ function Send-SEPMCommandQuarantine {
         elseif ($GroupName) {
             # Get group ID from group name
             $GroupID = Get-SEPMGroups | Where-Object { $_.fullPathName -eq $GroupName } | Select-Object -ExpandProperty id -First 1
-            $URI = $script:BaseURLv1 + "/command-queue/quarantine"
+            $URI = $session.BaseURLv1 + "/command-queue/quarantine"
 
             # URI query strings
             $QueryStrings = @{
@@ -133,7 +122,7 @@ function Send-SEPMCommandQuarantine {
             $params = @{
                 Method  = 'POST'
                 Uri     = $URI
-                headers = $headers
+                headers = $session.Headers
             }
             
             $resp = Invoke-ABRestMethod -params $params

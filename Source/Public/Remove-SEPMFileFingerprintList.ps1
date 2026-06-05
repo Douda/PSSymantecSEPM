@@ -50,33 +50,22 @@ function Remove-SEPMFileFingerprintList {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
     }
 
     process {
         # Get the FingerprintListID if the FingerprintListName is provided
         if ($FingerprintListName) {
-            $URI = $script:BaseURLv1 + "/policy-objects/fingerprints"
+            $URI = $session.BaseURLv1 + "/policy-objects/fingerprints"
             $FingerprintListID = Get-SEPMFileFingerprintList -FingerprintListName $FingerprintListName | Select-Object -ExpandProperty id
         }
 
-        $URI = $script:BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"
+        $URI = $session.BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"
 
         $params = @{
             Method  = 'DELETE'
             Uri     = $URI
-            headers = $headers
+            headers = $session.Headers
         }
 
         $resp = Invoke-ABRestMethod -params $params

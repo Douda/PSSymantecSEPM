@@ -77,33 +77,22 @@ function Get-SEPMPoliciesSummary {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/policies/summary"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
+        $URI = $session.BaseURLv1 + "/policies/summary"
         # Get the list of groups and IDs to inject into the response
         $groups = Get-SEPMGroups
     }
 
     process {
         if ($PolicyType) {
-            $URI = $script:BaseURLv1 + "/policies/summary" + "/" + $PolicyType
+            $URI = $session.BaseURLv1 + "/policies/summary" + "/" + $PolicyType
         }
 
         # prepare the parameters
         $params = @{
             Method  = 'GET'
             Uri     = $URI
-            headers = $headers
+            headers = $session.Headers
         }
 
         # Invoke the request

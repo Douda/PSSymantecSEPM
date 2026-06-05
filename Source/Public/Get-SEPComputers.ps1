@@ -68,18 +68,7 @@ function Get-SEPComputers {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
     }
 
     process {
@@ -87,7 +76,7 @@ function Get-SEPComputers {
         # Using computer name API call
         if ($ComputerName) {
             $allResults = @()
-            $URI = $script:BaseURLv1 + "/computers"
+            $URI = $session.BaseURLv1 + "/computers"
 
             # URI query strings
             $QueryStrings = @{
@@ -101,7 +90,7 @@ function Get-SEPComputers {
             $params = @{
                 Method  = 'GET'
                 Uri     = $URI
-                headers = $headers
+                headers = $session.Headers
             }
 
             $allResults = (Invoke-ABRestMethod -params $params).content
@@ -113,7 +102,7 @@ function Get-SEPComputers {
         # Using computer name API call then filtering
         elseif ($GroupName) {
             $allResults = @()
-            $URI = $script:BaseURLv1 + "/computers"
+            $URI = $session.BaseURLv1 + "/computers"
 
             # URI query strings
             $QueryStrings = @{
@@ -131,7 +120,7 @@ function Get-SEPComputers {
                 $params = @{
                     Method  = 'GET'
                     Uri     = $URI
-                    headers = $headers
+                    headers = $session.Headers
                 }
 
                 $resp = Invoke-ABRestMethod -params $params
@@ -155,7 +144,7 @@ function Get-SEPComputers {
         # No parameters
         else {
             $allResults = @()
-            $URI = $script:BaseURLv1 + "/computers"
+            $URI = $session.BaseURLv1 + "/computers"
 
             # URI query strings
             $QueryStrings = @{
@@ -172,7 +161,7 @@ function Get-SEPComputers {
                 $params = @{
                     Method  = 'GET'
                     Uri     = $URI
-                    headers = $headers
+                    headers = $session.Headers
                 }
 
                 $resp = Invoke-ABRestMethod -params $params

@@ -54,22 +54,11 @@ function Add-SEPMFileFingerprintList {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
     }
 
     process {
-        $URI = $script:BaseURLv1 + "/policy-objects/fingerprints"
+        $URI = $session.BaseURLv1 + "/policy-objects/fingerprints"
 
         # Construct the body & required fields
         $body = @{
@@ -83,7 +72,7 @@ function Add-SEPMFileFingerprintList {
         $params = @{
             Method      = 'POST'
             Uri         = $URI
-            headers     = $headers
+            headers     = $session.Headers
             Body        = $body | ConvertTo-Json
             ContentType = 'application/json'
         }

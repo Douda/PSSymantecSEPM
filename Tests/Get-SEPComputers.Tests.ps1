@@ -3,108 +3,107 @@ param()
 
 # Build & Load the module
 $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-. (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-Init.ps1')
+. (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-Init.ps1')
+
+# Store repo root in env var so InModuleScope can access it (Pester isolates module scope)
+$env:SEPM_REPO_ROOT = $moduleRootPath
 
 Describe 'Get-SEPComputers' {
-    InModuleScope PSSymantecSEPM { 
+    InModuleScope PSSymantecSEPM {
+        # Dot-source dummy data generator inside InModuleScope so mocks can use it
+        . (Join-Path -Path $env:SEPM_REPO_ROOT -ChildPath 'Tests/DummyDataGenerator.ps1')
+
+        # Shared fake session fixture (must be inside InModuleScope for Pester scoping)
+        $fakeSession = [PSCustomObject]@{
+            Headers = @{
+                'Authorization' = 'Bearer FakeToken'
+                'Content'       = 'application/json'
+            }
+            BaseURLv1 = 'https://FakeServer01:1234/sepm/api/v1'
+            BaseURLv2 = 'https://FakeServer01:1234/sepm/api/v2'
+        } 
         BeforeAll {
-            # This is common test code setup logic for all Pester test files
             $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-BeforeAll.ps1')
-
-            # Load Pester test environment setup
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-TestEnvironmentSetup.ps1')
-
-            # Load the dummy data generator functions
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/DummyDataGenerator.ps1')
-
-            # Mock Test-SEPMAccessToken to return true for valid token
-            Mock Test-SEPMAccessToken -ModuleName $script:moduleName { return $true }
-
-            # API Call - 1st page always contains 100 computers
-            $script:APIResponseFirstPage = [PSCustomObject]@{
-                content   = (1..100 | ForEach-Object { New-DummyDataSEPComputers })
-                firstPage = $true
-                lastPage  = $false
-            }
-
-            # API Call - Last page always contains 5 computers
-            $script:APIResponseLastPage = [PSCustomObject]@{
-                content   = (1..5 | ForEach-Object { New-DummyDataSEPComputers })
-                firstPage = $false
-                lastPage  = $true
-            }
-
-            # Mock Invoke-ABRestMethod to return a valid response with only one page / 5 computers
-            Mock Invoke-ABRestMethod -ModuleName $script:moduleName -ParameterFilter {
-                $params.Uri -eq $URI -and $params.Method -eq 'GET'
-            } { 
-                return $script:APIResponseLastPage
-            }
+            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-BeforeAll.ps1')
+            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-TestEnvironmentSetup.ps1')
         }
 
         AfterAll {
-            # This is common test code teardown logic for all Pester test files
             $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-AfterAll.ps1')
+            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/Config/Common-AfterAll.ps1')
         }
 
         Context 'No parameters' {
-            BeforeAll {}
+            BeforeAll {
+                Mock Initialize-SEPMSession -ModuleName $script:moduleName { return $fakeSession }
+
+                # API Call - single page with 5 computers
+                Mock Invoke-ABRestMethod -ModuleName $script:moduleName {
+                    return [PSCustomObject]@{
+                        content   = (1..5 | ForEach-Object { New-DummyDataSEPComputers })
+                        firstPage = $true
+                        lastPage  = $true
+                    }
+                }
+            }
 
             It 'Should return exactly one page of computers' {
                 $result = Get-SEPComputers
                 $result | Should -Not -BeNullOrEmpty
                 $result.count | Should -Be 5
-                # Only one API call
-                Should -Invoke Invoke-ABRestMethod -Exactly 1 -Scope It
+                Assert-MockCalled Invoke-ABRestMethod -ModuleName $script:moduleName -Exactly 1 -Scope It
             }
 
             It 'Should have the expected type' {
                 $result = Get-SEPComputers
                 $result[0].PSObject.TypeNames[0] | Should -Be 'SEP.Computer'
             }
-            
+        }
 
-            Context 'With pagination' {
-                BeforeAll {
-                    # Mock Invoke-ABRestMethod to return a valid response with multiple pages
-                    $script:callCount = 0
-                    Mock Invoke-ABRestMethod -ModuleName $script:moduleName -ParameterFilter {
-                        $params.Uri -eq $URI -and $params.Method -eq 'GET'
-                    } { 
-                        $script:callCount++
-                        if ($script:callCount -ge 2) {
-                            return $script:APIResponseLastPage
-                        } else {
-                            return $script:APIResponseFirstPage
+        Context 'With pagination' {
+            BeforeAll {
+                Mock Initialize-SEPMSession -ModuleName $script:moduleName { return $fakeSession }
+
+                $script:callCount = 0
+                Mock Invoke-ABRestMethod -ModuleName $script:moduleName {
+                    $script:callCount++
+                    if ($script:callCount -ge 2) {
+                        return [PSCustomObject]@{
+                            content   = (1..5 | ForEach-Object { New-DummyDataSEPComputers })
+                            firstPage = $false
+                            lastPage  = $true
+                        }
+                    } else {
+                        return [PSCustomObject]@{
+                            content   = (1..100 | ForEach-Object { New-DummyDataSEPComputers })
+                            firstPage = $true
+                            lastPage  = $false
                         }
                     }
                 }
+            }
 
-                It 'Should perform exactly 2 API calls to get all computers' {
-                    $result = Get-SEPComputers
-                    $result | Should -Not -BeNullOrEmpty
-                    # Exactly two API calls
-                    Should -Invoke Invoke-ABRestMethod -Exactly 2 -Scope It
-                }
+            It 'Should perform exactly 2 API calls to get all computers' {
+                $result = Get-SEPComputers
+                $result | Should -Not -BeNullOrEmpty
+                Assert-MockCalled Invoke-ABRestMethod -ModuleName $script:moduleName -Exactly 2 -Scope It
             }
         }
 
         Context 'ComputerName parameter' {
             BeforeAll {
-                # Mock Invoke-ABRestMethod to return a valid response with computers, including one called "MyComputer"
-                Mock Invoke-ABRestMethod -ModuleName $script:moduleName -ParameterFilter {
-                    $params.Uri -eq $URI -and $params.Method -eq 'GET'
-                } { 
+                Mock Initialize-SEPMSession -ModuleName $script:moduleName { return $fakeSession }
+
+                Mock Invoke-ABRestMethod -ModuleName $script:moduleName {
                     return [PSCustomObject]@{
-                        content   = (, @(New-DummyDataSEPComputers -ComputerName "MyComputer")) + # Create an array with one computer
+                        content   = (, @(New-DummyDataSEPComputers -ComputerName "MyComputer")) +
                                     (1..4 | ForEach-Object { New-DummyDataSEPComputers })
                         firstPage = $true
                         lastPage  = $true
                     }
                 }
             }
+
             It 'Should contain MyComputer only' {
                 $result = Get-SEPComputers -ComputerName "MyComputer"
                 $result | Should -Not -BeNullOrEmpty
@@ -125,12 +124,10 @@ Describe 'Get-SEPComputers' {
 
         Context 'GroupName parameter' {
             BeforeAll {
-                # Mock Invoke-ABRestMethod to return a valid response
-                # 2 pages / 20+ computers / 2 specific groups
+                Mock Initialize-SEPMSession -ModuleName $script:moduleName { return $fakeSession }
+
                 $script:callCount = 0
-                Mock Invoke-ABRestMethod -ModuleName $script:moduleName -ParameterFilter {
-                    $params.Uri -eq $URI -and $params.Method -eq 'GET'
-                } { 
+                Mock Invoke-ABRestMethod -ModuleName $script:moduleName {
                     $script:callCount++
                     if ($script:callCount -ge 2) {
                         return [PSCustomObject]@{
@@ -150,6 +147,7 @@ Describe 'Get-SEPComputers' {
                     }
                 }
             }
+
             It 'Should contain only computers from the group "My Company\\MyGroup"' {
                 $result = Get-SEPComputers -GroupName "My Company\\MyGroup"
                 $result | Should -Not -BeNullOrEmpty
@@ -170,4 +168,3 @@ Describe 'Get-SEPComputers' {
         }
     }
 }
-

@@ -95,20 +95,9 @@ function Get-SEPMExceptionPolicy {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
         # BaseURL V2
-        $URI = $script:BaseURLv2 + "/policies/exceptions"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $URI = $session.BaseURLv2 + "/policies/exceptions"
         # Stores the policy summary for all policies only once
         $policies = Get-SEPMPoliciesSummary
     }
@@ -131,7 +120,7 @@ function Get-SEPMExceptionPolicy {
         $params = @{
             Method          = 'GET'
             Uri             = $URI
-            headers         = $headers
+            headers         = $session.Headers
             UseBasicParsing = $true
         }
     

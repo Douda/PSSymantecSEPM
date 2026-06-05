@@ -50,32 +50,21 @@ function Get-SEPMLicense {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/licenses"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
+        $URI = $session.BaseURLv1 + "/licenses"
     }
 
     process {
         #If the -Summary switch is used, then we will only return the summary of the license information
         if ($Summary) {
-            $URI = $script:BaseURLv1 + "/licenses/summary"
+            $URI = $session.BaseURLv1 + "/licenses/summary"
         }
 
         # prepare the parameters
         $params = @{
             Method  = 'GET'
             Uri     = $URI
-            headers = $headers
+            headers = $session.Headers
         }
     
         $resp = Invoke-ABRestMethod -params $params

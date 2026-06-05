@@ -52,24 +52,13 @@ function Send-SEPMCommandFullScan {
     )
     
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
         
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
     }
     
     process {
         # Init 
-        $URI = $script:BaseURLv1 + "/command-queue/fullscan"
+        $URI = $session.BaseURLv1 + "/command-queue/fullscan"
 
         if ($ComputerName) {
             # Get computer ID(s) from computer name(s)
@@ -122,7 +111,7 @@ function Send-SEPMCommandFullScan {
         $params = @{
             Method      = 'POST'
             Uri         = $URI
-            headers     = $headers
+            headers     = $session.Headers
             Body        = $body | ConvertTo-Json
             ContentType = 'application/json'
         }

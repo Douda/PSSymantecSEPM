@@ -64,19 +64,8 @@ function New-SEPMGroup {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/groups"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
+        $URI = $session.BaseURLv1 + "/groups"
         # Get all groups from SEPM
         $allGroups = Get-SEPMGroups
     }
@@ -102,7 +91,7 @@ function New-SEPMGroup {
         $params = @{
             Method      = 'POST'
             Uri         = $URI + "/$ParentGroupID"
-            headers     = $headers
+            headers     = $session.Headers
             contenttype = 'application/json'
             body        = $body | ConvertTo-Json
         }

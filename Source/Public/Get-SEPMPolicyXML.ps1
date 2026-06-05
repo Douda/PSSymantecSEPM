@@ -51,19 +51,8 @@ function Get-SEPMPolicyXML {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/policies/raw"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
+        $URI = $session.BaseURLv1 + "/policies/raw"
         
     }
 
@@ -83,7 +72,7 @@ function Get-SEPMPolicyXML {
         $params = @{
             Method  = 'GET'
             Uri     = $URI
-            headers = $headers
+            headers = $session.Headers
         }
 
         try {

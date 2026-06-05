@@ -28,26 +28,15 @@ function Confirm-SEPMEventInfo {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/events/acknowledge/$eventID"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
+        $URI = $session.BaseURLv1 + "/events/acknowledge/$eventID"
     }
 
     process {
         $params = @{
             Method  = 'POST'
             Uri     = $URI
-            headers = $headers
+            headers = $session.Headers
         }
         
         $resp = Invoke-ABRestMethod -params $params

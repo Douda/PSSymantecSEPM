@@ -37,19 +37,8 @@ function Get-SEPMDatabaseInfo {
         $SkipCertificateCheck
     )
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/admin/database"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
+        $URI = $session.BaseURLv1 + "/admin/database"
     }
 
     process {
@@ -57,7 +46,7 @@ function Get-SEPMDatabaseInfo {
         $params = @{
             Method  = 'GET'
             Uri     = $URI
-            headers = $headers
+            headers = $session.Headers
         }
     
         $resp = Invoke-ABRestMethod -params $params

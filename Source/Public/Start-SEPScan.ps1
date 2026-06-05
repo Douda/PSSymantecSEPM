@@ -84,18 +84,7 @@ function Start-SEPScan {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
     }
 
     process {
@@ -109,10 +98,10 @@ function Start-SEPScan {
             }
 
             if ($ActiveScan) {
-                $URI = $script:BaseURLv1 + "/command-queue/activescan"
+                $URI = $session.BaseURLv1 + "/command-queue/activescan"
             }
             if ($FullScan) {
-                $URI = $script:BaseURLv1 + "/command-queue/fullscan"
+                $URI = $session.BaseURLv1 + "/command-queue/fullscan"
             }
 
             # URI query strings
@@ -127,7 +116,7 @@ function Start-SEPScan {
             $params = @{
                 Method  = 'POST'
                 Uri     = $URI
-                headers = $headers
+                headers = $session.Headers
             }
     
             $resp = Invoke-ABRestMethod -params $params
@@ -140,7 +129,7 @@ function Start-SEPScan {
             # 1. finds all computers in the group #
             #######################################
             $allComputers = @()
-            $URI = $script:BaseURLv1 + "/computers"
+            $URI = $session.BaseURLv1 + "/computers"
 
             # URI query strings
             $QueryStrings = @{
@@ -160,7 +149,7 @@ function Start-SEPScan {
                     $params = @{
                         Method  = 'GET'
                         Uri     = $URI
-                        headers = $headers
+                        headers = $session.Headers
                     }
                     
                     $resp = Invoke-ABRestMethod -params $params
@@ -184,10 +173,10 @@ function Start-SEPScan {
             #################################################
 
             if ($ActiveScan) {
-                $URI = $script:BaseURLv1 + "/command-queue/activescan"
+                $URI = $session.BaseURLv1 + "/command-queue/activescan"
             }
             if ($FullScan) {
-                $URI = $script:BaseURLv1 + "/command-queue/fullscan"
+                $URI = $session.BaseURLv1 + "/command-queue/fullscan"
             }
 
             $AllResp = @()
@@ -205,7 +194,7 @@ function Start-SEPScan {
                 $params = @{
                     Method  = 'POST'
                     Uri     = $URI
-                    headers = $headers
+                    headers = $session.Headers
                 }
 
                 # Send command to each computers in the group

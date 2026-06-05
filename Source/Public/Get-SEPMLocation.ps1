@@ -58,18 +58,7 @@ function Get-SEPMLocation {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
         $allGroupsInfo = Get-SEPMGroups
     }
 
@@ -77,14 +66,14 @@ function Get-SEPMLocation {
         # Get Group info
         $groupInfo = $allGroupsInfo | Where-Object { $_.id -eq $GroupID }
 
-        $URI = $script:BaseURLv1 + "/groups" + "/$GroupID/locations"
+        $URI = $session.BaseURLv1 + "/groups" + "/$GroupID/locations"
         $locationList = @()
 
         # prepare the parameters
         $params = @{
             Method  = 'GET'
             Uri     = $URI
-            headers = $headers
+            headers = $session.Headers
         }
 
         # QueryString parameters
@@ -97,7 +86,7 @@ function Get-SEPMLocation {
         $params = @{
             Method  = 'GET'
             Uri     = $URI
-            headers = $headers
+            headers = $session.Headers
         }
                 
         $resp = Invoke-ABRestMethod -params $params

@@ -90,18 +90,7 @@ function Send-SEPMCommandGetFile {
     )
     
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession -SkipCertificateCheck:$SkipCertificateCheck
     }
     
     process {
@@ -112,7 +101,7 @@ function Send-SEPMCommandGetFile {
             $ComputerIDList += $ComputerID
         }
 
-        $URI = $script:BaseURLv1 + "/command-queue/files"
+        $URI = $session.BaseURLv1 + "/command-queue/files"
 
         # URI query strings
         $QueryStrings = @{
@@ -137,7 +126,7 @@ function Send-SEPMCommandGetFile {
         $params = @{
             Method  = 'POST'
             Uri     = $URI
-            headers = $headers
+            headers = $session.Headers
         }
 
         $resp = Invoke-ABRestMethod -params $params
