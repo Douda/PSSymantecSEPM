@@ -5,7 +5,7 @@ param()
 $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
 . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-Init.ps1')
 
-Describe 'Get-SEPComputers' {
+Describe 'Clear-SEPMAuthentication' {
     InModuleScope PSSymantecSEPM { 
         BeforeAll {
             # This is common test code setup logic for all Pester test files

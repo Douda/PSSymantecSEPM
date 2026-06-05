@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
     && rm -rf /var/lib/apt/lists/* \
-    && pip3 install --break-system-packages pywinrm
+    && pip3 install --user pywinrm
 
 # Switch to PowerShell for module installation
 SHELL ["/usr/bin/pwsh", "-c"]
@@ -28,13 +28,18 @@ RUN $ErrorActionPreference = 'Stop'; \
     $modules = @( \
         'ModuleBuilder', \
         'Configuration', \
-        'Pester', \
+        @{ Name = 'Pester'; RequiredVersion = '5.7.1' }, \
         'PSScriptAnalyzer', \
         'PlatyPS' \
     ); \
     foreach ($m in $modules) { \
-        Write-Host "Installing $m..." -ForegroundColor Green; \
-        Install-Module -Name $m -Scope AllUsers -Force -AllowClobber; \
+        if ($m -is [hashtable]) { \
+            Write-Host "Installing $($m.Name) $($m.RequiredVersion)..." -ForegroundColor Green; \
+            Install-Module -Name $m.Name -RequiredVersion $m.RequiredVersion -Scope AllUsers -Force -AllowClobber; \
+        } else { \
+            Write-Host "Installing $m..." -ForegroundColor Green; \
+            Install-Module -Name $m -Scope AllUsers -Force -AllowClobber; \
+        } \
     }
 
 # Set working directory (will be overridden by devcontainer mount)
