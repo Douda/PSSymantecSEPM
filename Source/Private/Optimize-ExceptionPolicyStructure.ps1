@@ -29,8 +29,9 @@ function Optimize-ExceptionPolicyStructure {
 
     process {
         # convert the object to a PSCustomObject (trick to convert custom class to PSCustomObject)
-        # There might be cleaner ways to do this
-        $obj = $obj | ConvertTo-Json -Depth 100 | ConvertFrom-Json -Depth 100
+        # PS 5.1: ConvertTo-Json lacks -Depth, ConvertFrom-Json lacks -Depth
+        $jsonParams = if ($PSVersionTable.PSVersion.Major -ge 6) { @{ Depth = 100 } } else { @{} }
+        $obj = $obj | ConvertTo-Json @jsonParams | ConvertFrom-Json @jsonParams
 
         # Listing all properties of the object
         $AllProperties = $obj | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name

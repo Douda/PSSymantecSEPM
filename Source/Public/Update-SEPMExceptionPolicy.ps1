@@ -320,11 +320,69 @@ function Update-SEPMExceptionPolicy {
         # Optimize AFTER dispatch so object is cleaned in process scope
         $ObjBody = Optimize-ExceptionPolicyStructure -obj $ObjBody
 
+        # Serialize body for PATCH
+        if ($PSVersionTable.PSVersion.Major -ge 6) {
+            # PS 7+: Optimize then serialize with full depth
+            $ObjBody = Optimize-ExceptionPolicyStructure -obj $ObjBody
+            $bodyJson = $ObjBody | ConvertTo-Json -Depth 100 -Compress
+        } else {
+            # PS 5.1: ConvertTo-Json lacks -Depth. Strip empty arrays from
+            # configuration to avoid HTTP 500, then serialize.
+            $cleanConfig = @{}
+            foreach ($prop in $ObjBody.configuration.PSObject.Properties) {
+                $val = $prop.Value
+                $isEmpty = $false
+                if ($null -eq $val) { $isEmpty = $true }
+                elseif ($val -is [System.Collections.IList] -and $val.Count -eq 0) { $isEmpty = $true }
+                elseif ($val -is [System.Collections.IDictionary] -and $val.Count -eq 0) { $isEmpty = $true }
+                if ($prop.Name -eq 'mac' -and $val.files.Count -eq 0) { $isEmpty = $true }
+                if ($prop.Name -eq 'linux') {
+                    $hasLinux = $val.directories.Count -gt 0
+                    if ($val.extension_list -and $val.extension_list.extensions -and $val.extension_list.extensions.Count -gt 0) { $hasLinux = $true }
+                    if (-not $hasLinux) { $isEmpty = $true }
+                }
+                if ($prop.Name -eq 'extension_list' -and $val.extensions.Count -eq 0) { $isEmpty = $true }
+                if (-not $isEmpty) { $cleanConfig[$prop.Name] = $val }
+            }
+            $bodyObj = [PSCustomObject]@{
+                name          = $ObjBody.name
+                configuration = [PSCustomObject]$cleanConfig
+            }
+            if ($null -ne $ObjBody.enabled) { $bodyObj | Add-Member -NotePropertyName enabled -NotePropertyValue $ObjBody.enabled }
+            if ($null -ne $ObjBody.desc)   { $bodyObj | Add-Member -NotePropertyName desc -NotePropertyValue $ObjBody.desc }
+            # PS 5.1 ConvertTo-Json truncates at depth 2. Use JavaScriptSerializer.
+            # Must convert PSCustomObject to plain Dictionary to avoid PSMethod cycles.
+            function ConvertTo-PlainDict {
+                param($obj)
+                if ($null -eq $obj) { return $null }
+                if ($obj -is [string] -or $obj -is [bool] -or $obj -is [int] -or $obj -is [long] -or $obj -is [double]) { return $obj }
+                if ($obj -is [System.Collections.IList]) {
+                    $arr = @()
+                    foreach ($item in $obj) { $arr += ConvertTo-PlainDict $item }
+                    return $arr
+                }
+                if ($obj -is [System.Collections.IDictionary] -or $obj -is [System.Management.Automation.PSCustomObject]) {
+                    $dict = New-Object 'System.Collections.Generic.Dictionary[string,object]'
+                    foreach ($key in $obj.Keys) {
+                        $dict[$key] = ConvertTo-PlainDict $obj[$key]
+                    }
+                    return $dict
+                }
+                return $obj.ToString()
+            }
+            $plainObject = ConvertTo-PlainDict $bodyObj
+            Add-Type -AssemblyName System.Web.Extensions -ErrorAction SilentlyContinue
+            $jss = New-Object System.Web.Script.Serialization.JavaScriptSerializer
+            $jss.MaxJsonLength = [int]::MaxValue
+            $jss.RecursionLimit = 100
+            $bodyJson = $jss.Serialize($plainObject)
+        }
+
         $params = @{
             Session     = $session
             Method      = 'PATCH'
             Uri         = $URI + "/" + $PolicyID
-            Body        = $ObjBody | ConvertTo-Json -Depth 100 -Compress
+            Body        = $bodyJson
         }
 
         $resp = Invoke-ABRestMethod -params $params
