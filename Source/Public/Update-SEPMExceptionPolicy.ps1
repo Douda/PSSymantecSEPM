@@ -112,11 +112,12 @@ function Update-SEPMExceptionPolicy {
         [switch]
         $Remove,
 
-        # ScanType
+        # ScanType (WindowsFolder and WindowsExtension)
         [Parameter(ParameterSetName = 'WindowsFolder')]
-        [ValidateSet('All', 'SecurityRisk', 'SONAR', 'ApplicationControl')]
+        [Parameter(ParameterSetName = 'WindowsExtension')]
+        [ValidateSet('All', 'SecurityRisk', 'SONAR', 'ApplicationControl', 'AllScans', 'AutoProtect', 'ScheduledAndOndemand')]
         [string]
-        $ScanType = 'All',
+        $ScanType = 'AllScans',
 
         # IncludeSubFolders
         [Parameter(ParameterSetName = 'WindowsFolder')]
@@ -215,14 +216,17 @@ function Update-SEPMExceptionPolicy {
 
             }
             'WindowsFolder'    = {
-                if ($SecurityRiskCategory -and $ScanType -ne 'SecurityRisk') {
+                # Default to 'All' for WindowsFolder when -ScanType not explicitly passed
+                $folderScanType = if ($PSBP.ContainsKey('ScanType')) { $ScanType } else { 'All' }
+
+                if ($SecurityRiskCategory -and $folderScanType -ne 'SecurityRisk') {
                     throw "The -SecurityRiskCategory parameter requires the -ScanType parameter to be set to 'SecurityRisk'."
                 }
 
                 $ExceptionParams = @{}
                 $ExceptionParams.directory = $FolderPath
                 $ExceptionParams.pathvariable = $PathVariable
-                $ExceptionParams.scantype = $ScanType
+                $ExceptionParams.scantype = $folderScanType
                 $ExceptionParams.RulestateSource = $script:ModuleName
                 $ExceptionParams.deleted = $Remove.IsPresent
 
@@ -230,7 +234,7 @@ function Update-SEPMExceptionPolicy {
                     $ExceptionParams.recursive = $true
                 }
 
-                if ($ScanType -eq 'SecurityRisk' -and $SecurityRiskCategory) {
+                if ($folderScanType -eq 'SecurityRisk' -and $SecurityRiskCategory) {
                     $ExceptionParams.scancategory = $SecurityRiskCategory
                 }
 
@@ -247,7 +251,33 @@ function Update-SEPMExceptionPolicy {
 
                 $ObjBody.AddConfigurationDirectoriesExceptions($DirectoryHashTable)
             }
-            'WindowsExtension' = { throw "Update-SEPMExceptionPolicy: WindowsExtension parameter set is not yet implemented." }
+            'WindowsExtension' = {
+                $existingPolicy = Get-SEPMExceptionPolicy -PolicyName $PolicyName
+                $existingExts = $existingPolicy.configuration.extension_list.extensions
+
+                if ($Remove.IsPresent) {
+                    foreach ($ext in $Extensions) {
+                        if ($ext -notin $existingExts) {
+                            throw "Cannot remove Extension '$ext'. It is not in the exception list."
+                        }
+                    }
+                    $resultExts = $existingExts | Where-Object { $_ -notin $Extensions }
+                    $deleted = $true
+                } else {
+                    $resultExts = @($Extensions) + @($existingExts) | Sort-Object | Get-Unique
+                    $deleted = $false
+                }
+
+                $extHash = $ObjBody.CreateExtensionListHashtable(
+                    $deleted,
+                    $null,
+                    $script:ModuleName,
+                    $ScanType,
+                    $resultExts
+                )
+
+                $ObjBody.AddExtensionsList($extHash)
+            }
             'Tamper'           = { throw "Update-SEPMExceptionPolicy: Tamper parameter set is not yet implemented." }
             'MacFile'          = { throw "Update-SEPMExceptionPolicy: MacFile parameter set is not yet implemented." }
             'Default'          = { throw "Update-SEPMExceptionPolicy: No parameter set specified. Use one of: WindowsFile, WindowsFolder, WindowsExtension, Tamper, MacFile." }

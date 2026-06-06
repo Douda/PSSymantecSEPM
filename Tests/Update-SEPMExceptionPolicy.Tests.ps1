@@ -184,6 +184,112 @@ Describe 'Update-SEPMExceptionPolicy' {
         }
     }
 
+    Context 'WindowsExtension' {
+        BeforeEach {
+            $script:fakeSession = New-TestSession -SkipCert
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
+            }
+            Mock Get-SEPMExceptionPolicy -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{
+                    configuration = [PSCustomObject]@{
+                        extension_list = [PSCustomObject]@{
+                            extensions = @('.tmp', '.log')
+                            scancategory = 'AllScans'
+                        }
+                    }
+                }
+            }
+        }
+
+        It 'Adds extensions, merging with existing extensions' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Extensions '.exe', '.tmp'
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $exts = $body.configuration.extension_list.extensions
+                $exts.Count -eq 3 -and
+                '.exe' -in $exts -and
+                '.log' -in $exts -and
+                '.tmp' -in $exts
+            } -Exactly 1 -Scope It
+        }
+
+        It 'Adds extensions, deduplicating when extension already in list' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Extensions '.tmp'
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $exts = $body.configuration.extension_list.extensions
+                $exts.Count -eq 2 -and
+                '.log' -in $exts -and
+                '.tmp' -in $exts
+            } -Exactly 1 -Scope It
+        }
+
+        It 'Removes specified extensions from the existing list' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Extensions '.tmp' -Remove
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $exts = $body.configuration.extension_list.extensions
+                $exts.Count -eq 1 -and
+                '.log' -in $exts -and
+                '.tmp' -notin $exts
+            } -Exactly 1 -Scope It
+        }
+
+        It 'Throws when removing an extension not in the list' {
+            { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Extensions '.exe' -Remove } |
+                Should -Throw -ExpectedMessage "*Cannot remove Extension '.exe'*"
+        }
+
+        It 'Defaults ScanType to AllScans' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Extensions '.exe'
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $body.configuration.extension_list.scancategory -eq 'AllScans'
+            } -Exactly 1 -Scope It
+        }
+
+        It 'Respects explicit ScanType parameter' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Extensions '.exe' -ScanType AutoProtect
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $body.configuration.extension_list.scancategory -eq 'AutoProtect'
+            } -Exactly 1 -Scope It
+        }
+    }
+
     Context 'Non-implemented parameter sets' {
         BeforeEach {
             $script:fakeSession = New-TestSession -SkipCert
@@ -191,11 +297,6 @@ Describe 'Update-SEPMExceptionPolicy' {
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
             }
-        }
-
-        It 'WindowsExtension throws not yet implemented' {
-            { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Extensions '.exe','.dll' } |
-                Should -Throw -ExpectedMessage '*WindowsExtension parameter set is not yet implemented*'
         }
 
         It 'Tamper throws not yet implemented' {
