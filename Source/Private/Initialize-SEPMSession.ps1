@@ -38,7 +38,7 @@ function Initialize-SEPMSession {
     $script:_session = [PSCustomObject]@{
         Headers   = @{
             Authorization = "Bearer $($tokenInfo.token)"
-            Content       = 'application/json'
+            'Content-Type' = 'application/json'
         }
         BaseURLv1 = $script:BaseURLv1
         BaseURLv2 = $script:BaseURLv2

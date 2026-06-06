@@ -29,8 +29,40 @@ function Optimize-ExceptionPolicyStructure {
 
     process {
         # convert the object to a PSCustomObject (trick to convert custom class to PSCustomObject)
-        # There might be cleaner ways to do this
-        $obj = $obj | ConvertTo-Json -Depth 100 | ConvertFrom-Json -Depth 100
+        if ($PSVersionTable.PSVersion.Major -ge 6) {
+            $obj = $obj | ConvertTo-Json -Depth 100 | ConvertFrom-Json -Depth 100
+        } else {
+            # PS 5.1: ConvertTo-Json truncates at depth 2. Recursively clone
+            # the PSObject tree to avoid depth-truncation corruption.
+            function Clone-PSObjectTree($node) {
+                if ($null -eq $node) { return $null }
+                if ($node -is [string] -or $node -is [bool] -or $node -is [int] -or $node -is [long] -or $node -is [double]) {
+                    return $node
+                }
+                if ($node -is [System.Collections.IList] -and $node -isnot [string]) {
+                    $arr = @()
+                    foreach ($item in $node) { $arr += Clone-PSObjectTree $item }
+                    return $arr
+                }
+                if ($node -is [System.Collections.IDictionary]) {
+                    $o = New-Object PSObject
+                    foreach ($key in $node.Keys) { $o | Add-Member -NotePropertyName $key -NotePropertyValue (Clone-PSObjectTree $node[$key]) -Force }
+                    return $o
+                }
+                # PSObject / PSCustomObject / class instance: clone safe property types.
+                # Skip ScriptProperty, ParameterizedProperty, CodeProperty, Method to avoid
+                # circular references during later JSON serialization.
+                $safeTypes = @('NoteProperty', 'Property')
+                $o = New-Object PSObject
+                foreach ($prop in $node.PSObject.Properties) {
+                    if ($prop.MemberType -in $safeTypes) {
+                        $o | Add-Member -NotePropertyName $prop.Name -NotePropertyValue (Clone-PSObjectTree $prop.Value) -Force
+                    }
+                }
+                return $o
+            }
+            $obj = Clone-PSObjectTree $obj
+        }
 
         # Listing all properties of the object
         $AllProperties = $obj | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name
