@@ -224,3 +224,9 @@ All five canonical labels use their defaults (`needs-triage`, `needs-info`, `rea
 ### Domain docs
 
 Single-context — one `CONTEXT.md` at the repo root, one `docs/adr/` directory. See `docs/agents/domain.md`.
+
+### Live smoke testing
+
+How to interact with the local SEPM VM for live API smoke tests (auth, curl, PS 7, PS 5.1). See `docs/agents/smoke-testing.md`.
+
+Credentials: `admin` / `Aurelien1!` (VM in docker-compose, local dev only).
