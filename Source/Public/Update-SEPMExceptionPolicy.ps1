@@ -66,33 +66,28 @@ function Update-SEPMExceptionPolicy {
 
         # Sonar
         [Parameter(ParameterSetName = 'WindowsFile')]
-        [Parameter(ParameterSetName = 'Tamper')]
         [switch]
         $Sonar,
 
         # SecurityRiskCategory
         [Parameter(ParameterSetName = 'WindowsFile')]
         [Parameter(ParameterSetName = 'WindowsFolder')]
-        [Parameter(ParameterSetName = 'Tamper')]
         [ValidateSet('AllScans', 'AutoProtect', 'ScheduledAndOndemand')]
         [string]
         $SecurityRiskCategory,
 
         # ApplicationControl
         [Parameter(ParameterSetName = 'WindowsFile')]
-        [Parameter(ParameterSetName = 'Tamper')]
         [switch]
         $ApplicationControl,
 
         # AllScans
         [Parameter(ParameterSetName = 'WindowsFile')]
-        [Parameter(ParameterSetName = 'Tamper')]
         [switch]
         $AllScans,
 
         # ExcludeChildProcesses
         [Parameter(ParameterSetName = 'WindowsFile')]
-        [Parameter(ParameterSetName = 'Tamper')]
         [ValidateScript({
             if (-not $ApplicationControl) {
                 throw "-ExcludeChildProcesses requires the -ApplicationControl switch."
