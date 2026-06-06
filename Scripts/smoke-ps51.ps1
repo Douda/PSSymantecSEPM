@@ -139,19 +139,19 @@ $results.B13 = T "B13" "WF: AllScans + PolicyDescription" `
 # === C group: WindowsFolder ===
 $results.C1 = T "C1" "WFolder: default All" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -FolderPath "C:\Temp\SmokeFolderC1" | Out-Null } `
-    { param($p) ($d = $p.configuration.directories | ? { $_.directory -like "*SmokeFolderC1*" } | Select -First 1); $d -ne $null }
+    { param($p) ($d = $p.configuration.directories | ? { $_.directory -like "*SmokeFolderC1*" } | Select -First 1); $d -and $d.scantype -eq "All" }
 
 $results.C2 = T "C2" "WFolder: ScanType SONAR" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -FolderPath "C:\Temp\SmokeFolderC2" -ScanType SONAR | Out-Null } `
-    { param($p) ($d = $p.configuration.directories | ? { $_.directory -like "*SmokeFolderC2*" } | Select -First 1); $d -ne $null }
+    { param($p) ($d = $p.configuration.directories | ? { $_.directory -like "*SmokeFolderC2*" } | Select -First 1); $d -and $d.scantype -eq "SONAR" }
 
 $results.C3 = T "C3" "WFolder: SecurityRisk + AutoProtect" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -FolderPath "C:\Temp\SmokeFolderC3" -ScanType SecurityRisk -SecurityRiskCategory AutoProtect | Out-Null } `
-    { param($p) ($d = $p.configuration.directories | ? { $_.directory -like "*SmokeFolderC3*" } | Select -First 1); $d -ne $null }
+    { param($p) ($d = $p.configuration.directories | ? { $_.directory -like "*SmokeFolderC3*" } | Select -First 1); $d -and $d.scantype -eq "SecurityRisk" -and $d.scancategory -eq "AutoProtect" }
 
 $results.C4 = T "C4" "WFolder: IncludeSubFolders" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -FolderPath "C:\Temp\SmokeFolderC4" -IncludeSubFolders | Out-Null } `
-    { param($p) ($d = $p.configuration.directories | ? { $_.directory -like "*SmokeFolderC4*" } | Select -First 1); $d -ne $null }
+    { param($p) ($d = $p.configuration.directories | ? { $_.directory -like "*SmokeFolderC4*" } | Select -First 1); $d -and $d.recursive -eq $true }
 
 Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -FolderPath "C:\Temp\SmokeFolderC5" | Out-Null
 Start-Sleep -Milliseconds 500
