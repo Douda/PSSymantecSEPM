@@ -13,7 +13,7 @@ Usage:
 
 import os, sys, winrm
 
-HOST = os.environ.get('WINRM_HOST', '172.17.0.1')
+HOST = os.environ.get('WINRM_HOST', 'localhost')
 PORT = int(os.environ.get('WINRM_PORT', '5986'))
 USER = os.environ.get('WINRM_USER', '')
 PASS = os.environ.get('WINRM_PASS', '')

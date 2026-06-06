@@ -7,8 +7,8 @@
 | VM container | `omarchy-windows` (dockur/windows) |
 | SEPM API | `https://localhost:8446/sepm/api/v{1,2}` |
 | SEPM version | 14.3.25029.9000 |
-| Credentials | `admin` / `Aurelien1!` / domain: `""` |
-| WinRM (PS 5.1) | SSL transport, port 5986, `172.17.0.1` |
+| Credentials | SEPM: `admin` / `Aurelien1!` / domain: `""`; WinRM: `douda` / `aurelien` |
+| WinRM (PS 5.1) | HTTP transport, port 5985, `localhost` (user: `douda`, pass: `aurelien`) |
 | Shared volume | `/home/douda/Windows/` ↔ `C:\Users\Administrator\Desktop\Shared\` |
 
 ## Connectivity
@@ -143,11 +143,13 @@ Get-SEPMVersion
 EOF
 
 # Run (env vars needed)
-WINRM_USER=Administrator WINRM_PASS=Aurelien1! python3 Scripts/invoke-winrm.py \
-  'C:\Users\Administrator\Desktop\Shared\test-ps51.ps1'
+WINRM_USER=douda WINRM_PASS=aurelien python3 Scripts/invoke-winrm.py \
+  'C:\Users\douda\Desktop\Shared\test-ps51.ps1'
 ```
 
 **PS 5.1 differences**: no `-SkipCertificateCheck` (use callback above); host IP is `10.0.2.2` (QEMU→Docker host); all .ps1 files need UTF-8 BOM; `ConvertFrom-Json` lacks `-AsHashtable`/`-Depth`.
+
+**⚠ PS 5.1 blocked**: QEMU VM networking broken after Docker network change to `172.19.0.0/16`. No host IP reachable from inside the VM.
 
 ## Smoke scripts
 
