@@ -110,18 +110,14 @@ function Get-SEPMExceptionPolicy {
         # Updating URI with policy ID
         $URI = $URI + "/" + $policyID
         
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method          = 'GET'
-            Uri             = $URI
-            UseBasicParsing = $true
+        # Use Invoke-SepmApi (handles PS5.1 + PS7 transport and deserialization)
+        $resp = Invoke-SepmApi -Method 'GET' -Uri $URI -Headers $session.Headers -SkipCert:$session.SkipCert
+
+        # PS5.1: Invoke-SepmApi returns PSCustomObject via JavaScriptSerializer.
+        # Convert to [ordered] hashtable for indexer compatibility ($resp["key"]).
+        if ($resp -is [PSCustomObject]) {
+            $resp = ConvertTo-Hashtable $resp
         }
-    
-        $resp = Invoke-ABRestMethod -params $params
-        
-        # JSON response to convert to PSObject
-        $resp = $resp | ConvertFrom-Json -AsHashtable -Depth 100
         
         # Add a PSTypeName to the object
         $resp.PSObject.TypeNames.Insert(0, 'SEPM.ExceptionPolicy')
