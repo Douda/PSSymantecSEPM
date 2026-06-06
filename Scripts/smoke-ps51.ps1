@@ -88,19 +88,19 @@ $results.A5 = T "A5" "Enable+Disable (error)" `
 # === B group: WindowsFile ===
 $results.B1 = T "B1" "WF: no scan (default AllScans)" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -Path "C:\Temp\SmokeB1.exe" | Out-Null } `
-    { param($p) ($f = $p.configuration.files | ? { $_.path -eq "C:\Temp\SmokeB1.exe" } | Select -First 1); $f -and $f.sonar }
+    { param($p) ($f = $p.configuration.files | ? { $_.path -eq "C:\Temp\SmokeB1.exe" } | Select -First 1); $f -and $f.sonar -eq $true -and $f.securityrisk -eq $true -and $f.applicationcontrol -eq $true -and $f.scancategory -eq "AllScans" }
 
 $results.B2 = T "B2" "WF: explicit AllScans" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -Path "C:\Temp\SmokeB2.exe" -AllScans | Out-Null } `
-    { param($p) ($f = $p.configuration.files | ? { $_.path -eq "C:\Temp\SmokeB2.exe" } | Select -First 1); $f -and $f.sonar }
+    { param($p) ($f = $p.configuration.files | ? { $_.path -eq "C:\Temp\SmokeB2.exe" } | Select -First 1); $f -and $f.sonar -and $f.securityrisk -and $f.applicationcontrol -and $f.scancategory -eq "AllScans" }
 
 $results.B3 = T "B3" "WF: Sonar only" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -Path "C:\Temp\SmokeB3.exe" -Sonar | Out-Null } `
-    { param($p) ($f = $p.configuration.files | ? { $_.path -eq "C:\Temp\SmokeB3.exe" } | Select -First 1); $f -and $f.sonar }
+    { param($p) ($f = $p.configuration.files | ? { $_.path -eq "C:\Temp\SmokeB3.exe" } | Select -First 1); $f -and $f.sonar -eq $true -and $f.securityrisk -ne $true -and $f.applicationcontrol -ne $true }
 
 $results.B4 = T "B4" "WF: SecurityRisk AutoProtect" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -Path "C:\Temp\SmokeB4.exe" -SecurityRiskCategory AutoProtect | Out-Null } `
-    { param($p) ($f = $p.configuration.files | ? { $_.path -eq "C:\Temp\SmokeB4.exe" } | Select -First 1); $f -and $f.scancategory -eq "AutoProtect" }
+    { param($p) ($f = $p.configuration.files | ? { $_.path -eq "C:\Temp\SmokeB4.exe" } | Select -First 1); $f -and $f.securityrisk -eq $true -and $f.scancategory -eq "AutoProtect" -and $f.sonar -ne $true }
 
 $results.B5 = T "B5" "WF: ApplicationControl only" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -Path "C:\Temp\SmokeB5.exe" -ApplicationControl | Out-Null } `
@@ -112,15 +112,15 @@ $results.B6 = T "B6" "WF: AppCtrl + ExcludeChildProcesses" `
 
 $results.B7 = T "B7" "WF: Sonar + AppCtrl" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -Path "C:\Temp\SmokeB7.exe" -Sonar -ApplicationControl | Out-Null } `
-    { param($p) ($f = $p.configuration.files | ? { $_.path -eq "C:\Temp\SmokeB7.exe" } | Select -First 1); $f -and $f.sonar }
+    { param($p) ($f = $p.configuration.files | ? { $_.path -eq "C:\Temp\SmokeB7.exe" } | Select -First 1); $f -and $f.sonar -and $f.applicationcontrol -and $f.securityrisk -ne $true }
 
 $results.B8 = T "B8" "WF: Sonar + SecurityRisk ScheduledAndOndemand" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -Path "C:\Temp\SmokeB8.exe" -Sonar -SecurityRiskCategory ScheduledAndOndemand | Out-Null } `
-    { param($p) ($f = $p.configuration.files | ? { $_.path -eq "C:\Temp\SmokeB8.exe" } | Select -First 1); $f -and $f.sonar }
+    { param($p) ($f = $p.configuration.files | ? { $_.path -eq "C:\Temp\SmokeB8.exe" } | Select -First 1); $f -and $f.sonar -and $f.securityrisk -and $f.scancategory -eq "ScheduledAndOndemand" }
 
 $results.B9 = T "B9" "WF: PathVariable [SYSTEM]" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -Path "C:\Windows\SmokeB9.exe" -PathVariable '[SYSTEM]' | Out-Null } `
-    { param($p) ($f = $p.configuration.files | ? { $_.path -like "*SmokeB9.exe" } | Select -First 1); $f -ne $null }
+    { param($p) ($f = $p.configuration.files | ? { $_.path -like "*SmokeB9.exe" } | Select -First 1); $f -and $f.pathvariable -eq "[SYSTEM]" }
 
 Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -Path "C:\Temp\SmokeB10.exe" -AllScans | Out-Null
 Start-Sleep -Milliseconds 500

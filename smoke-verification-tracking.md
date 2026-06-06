@@ -210,7 +210,78 @@ GET version via HttpWebRequest/KAFalse -> OK (14.3.25029.9000)
 
 `Get-SEPMVersion` uses `Invoke-RestMethod` directly and fails with the same TLS error.
 
+## PS 5.1 Results (`Scripts/smoke-ps51.ps1`)
+
+Run: `WINRM_USER=douda WINRM_PASS=aurelien python3 Scripts/invoke-winrm.py 'C:\Users\douda\Desktop\Shared\smoke-ps51.ps1'`
+Date: 2026-06-06
+Result: **29/34 PASS** (D group blocked by #51 — `-AsHashtable` not available on PS 5.1)
+
+### A. Policy-Level Metadata
+
+| # | Params | Expected | Result |
+|---|--------|----------|--------|
+| A1 | `-EnablePolicy` | `enabled = true` | 🟢 |
+| A2 | `-DisablePolicy` | `enabled = false` | 🟢 |
+| A3 | `-PolicyDescription "ps51-A3"` | desc set, enabled=true | 🟢 |
+| A4 | `-EnablePolicy -PolicyDescription "ps51-A4"` | enabled=true, desc set | 🟢 |
+| A5 | `-EnablePolicy -DisablePolicy` | Throws mutual exclusivity error | 🟢 |
+
+### B. WindowsFile
+
+| # | Params | Key assertion | Result |
+|---|--------|---------------|--------|
+| B1 | `-Path C:\Temp\SmokeB1.exe` (no scan) | sonar/securityrisk/applicationcontrol all true, scancat=AllScans | 🟢 |
+| B2 | `-Path C:\Temp\SmokeB2.exe -AllScans` | same as B1 | 🟢 |
+| B3 | `-Path C:\Temp\SmokeB3.exe -Sonar` | sonar=true, securityrisk≠true, appctrl≠true | 🟢 |
+| B4 | `-Path C:\Temp\SmokeB4.exe -SecurityRiskCategory AutoProtect` | securityrisk=true, scancat=AutoProtect, sonar≠true | 🟢 |
+| B5 | `-Path C:\Temp\SmokeB5.exe -ApplicationControl` | appctrl=true, sonar≠true, sec≠true | 🟢 |
+| B6 | `-Path C:\Temp\SmokeB6.exe -ApplicationControl -ExcludeChildProcesses` | appctrl=true, recursive=true | 🟢 |
+| B7 | `-Path C:\Temp\SmokeB7.exe -Sonar -ApplicationControl` | sonar=true, appctrl=true, sec≠true | 🟢 |
+| B8 | `-Path C:\Temp\SmokeB8.exe -Sonar -SecurityRiskCategory ScheduledAndOndemand` | sonar=true, sec=true, scancat=ScheduledAndOndemand | 🟢 |
+| B9 | `-Path C:\Windows\SmokeB9.exe -PathVariable [SYSTEM]` | pathvariable=[SYSTEM] | 🟢 |
+| B10 | Add then `-Remove` | Entry absent from GET response | 🟢 |
+| B12 | `-Path ... -AllScans -EnablePolicy` | rule added + enabled=true | 🟢 |
+| B13 | `-Path ... -AllScans -PolicyDescription "ps51-B13"` | rule added + desc set | 🟢 |
+
+### C. WindowsFolder
+
+| # | Params | Key assertion | Result |
+|---|--------|---------------|--------|
+| C1 | `-FolderPath C:\Temp\SmokeFolderC1` | scantype=All | 🟢 |
+| C2 | `-FolderPath C:\Temp\SmokeFolderC2 -ScanType SONAR` | scantype=SONAR | 🟢 |
+| C3 | `-FolderPath C:\Temp\SmokeFolderC3 -ScanType SecurityRisk -SecurityRiskCategory AutoProtect` | scantype=SecurityRisk, scancat=AutoProtect | 🟢 |
+| C4 | `-FolderPath C:\Temp\SmokeFolderC4 -IncludeSubFolders` | recursive=true | 🟢 |
+| C5 | Add then `-Remove` | Entry absent | 🟢 |
+| C6 | `-FolderPath ... -ScanType All -SecurityRiskCategory AllScans` | Throws validation error | 🟢 |
+
+### D. WindowsExtension
+
+| # | Params | Key assertion | Result |
+|---|--------|---------------|--------|
+| D1 | `-Extensions ".ps51test"` | Extension in list, merged | 🔴 |
+| D2 | `-Extensions ".ps51test"` again | Still 1 copy (dedup) | 🔴 |
+| D3 | `-Extensions ".ps51test" -Remove` | Extension absent | 🔴 |
+| D4 | `-Extensions ".nonexistent_ext" -Remove` | Throws validation error | 🔴 |
+| D5 | `-Extensions ".ps51test_d5" -ScanType AutoProtect` | scancat=AutoProtect | 🔴 |
+
+**D group blocked by #51**: `ConvertFrom-Json -AsHashtable` not available on PS 5.1. Extension merge/dedup logic in `Invoke-SepmApi` fails.
+
+### E. Tamper
+
+| # | Params | Key assertion | Result |
+|---|--------|---------------|--------|
+| E1 | `-TamperPath C:\Temp\SmokeTamperE1.exe` | path set, pathvar=[NONE] | 🟢 |
+| E2 | `-TamperPath C:\Windows\SmokeTamperE2.exe -PathVariable [SYSTEM]` | pathvar=[SYSTEM] | 🟢 |
+| E3 | `-TamperPath ... -Remove` (after E1) | Entry absent | 🟢 |
+
+### F. MacFile
+
+| # | Params | Key assertion | Result |
+|---|--------|---------------|--------|
+| F1 | `-MacPath /tmp/SmokeMacF1.app` | path set, pathvar=[NONE] | 🟢 |
+| F2 | `-MacPath /Users/test/SmokeMacF2.app -MacPathVariable [HOME]` | pathvar=[HOME] | 🟢 |
+| F3 | `-MacPath /tmp/SmokeMacF1.app -Remove` | Entry absent | 🟢 |
+
 ### PS 5.1 Test Status
 
-**IN PROGRESS 2026-06-06**: Module rebuilt and deployed. `Invoke-ABRestMethod` fix pending.
-Test script is ready at `C:\Users\douda\Desktop\Shared\smoke-ps51.ps1`.
+**VERIFIED 2026-06-06**: B-group 12/12 PASS with strengthened assertions matching PS7 spec. D-group blocked by #51.
