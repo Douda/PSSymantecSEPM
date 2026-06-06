@@ -47,7 +47,6 @@ function Update-SEPMExceptionPolicy {
         [Parameter(ParameterSetName = 'WindowsFile')]
         [Parameter(ParameterSetName = 'WindowsFolder')]
         [Parameter(ParameterSetName = 'Tamper')]
-        [Parameter(ParameterSetName = 'MacFile')]
         [ValidateSet(
             '[NONE]',
             '[COMMON_APPDATA]',
@@ -138,13 +137,23 @@ function Update-SEPMExceptionPolicy {
 
         # Tamper
         [Parameter(ParameterSetName = 'Tamper', Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern("^[A-Za-z]:\\(?:[^\\/:*?""<>|\r\n]+\\)*[^\\/:*?""<>|\r\n]+\.[^\\/:*?""<>|\r\n]+$")]
         [string]
         $TamperPath,
 
         # MacFile
         [Parameter(ParameterSetName = 'MacFile', Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^/([^/ ]+(/|$))+[^/ ]+\.[^/ ]+$')]
         [string]
-        $MacPath
+        $MacPath,
+
+        # MacFilePathVariable
+        [Parameter(ParameterSetName = 'MacFile')]
+        [ValidateSet('[NONE]', '[HOME]', '[APPLICATION]', '[LIBRARY]')]
+        [string]
+        $MacPathVariable = '[NONE]'
     )
 
     begin {
@@ -278,8 +287,31 @@ function Update-SEPMExceptionPolicy {
 
                 $ObjBody.AddExtensionsList($extHash)
             }
-            'Tamper'           = { throw "Update-SEPMExceptionPolicy: Tamper parameter set is not yet implemented." }
-            'MacFile'          = { throw "Update-SEPMExceptionPolicy: MacFile parameter set is not yet implemented." }
+            'Tamper'           = {
+                $tamperHash = $ObjBody.CreateTamperFilesHashtable(
+                    $null,                # sonar
+                    $Remove.IsPresent,     # deleted
+                    $null,                # rulestate_enabled
+                    $script:ModuleName,   # rulestate_source
+                    '',                    # scancategory
+                    $PathVariable,        # pathvariable
+                    $TamperPath,          # path
+                    $null,                # applicationcontrol
+                    $null,                # securityrisk
+                    $null                 # recursive
+                )
+                $ObjBody.AddTamperFiles($tamperHash)
+            }
+            'MacFile'          = {
+                $macHash = $ObjBody.CreateMacFilesHashtable(
+                    $Remove.IsPresent,
+                    $null,
+                    $script:ModuleName,
+                    $MacPathVariable,
+                    $MacPath
+                )
+                $ObjBody.AddMacFiles($macHash)
+            }
             'Default'          = { throw "Update-SEPMExceptionPolicy: No parameter set specified. Use one of: WindowsFile, WindowsFolder, WindowsExtension, Tamper, MacFile." }
         }
 

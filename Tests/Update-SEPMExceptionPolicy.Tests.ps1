@@ -290,7 +290,7 @@ Describe 'Update-SEPMExceptionPolicy' {
         }
     }
 
-    Context 'Non-implemented parameter sets' {
+    Context 'Tamper' {
         BeforeEach {
             $script:fakeSession = New-TestSession -SkipCert
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
@@ -299,14 +299,126 @@ Describe 'Update-SEPMExceptionPolicy' {
             }
         }
 
-        It 'Tamper throws not yet implemented' {
-            { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -TamperPath 'C:\test\file.exe' } |
-                Should -Throw -ExpectedMessage '*Tamper parameter set is not yet implemented*'
+        It 'Adds a tamper protection exception via PATCH' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -TamperPath 'C:\test\file.exe'
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $t = $body.configuration.tamper_files[0]
+                $t.path -eq 'C:\test\file.exe' -and
+                $t.pathvariable -eq '[NONE]' -and
+                $t.rulestate.source -eq 'PSSymantecSEPM'
+            } -Exactly 1 -Scope It
         }
 
-        It 'MacFile throws not yet implemented' {
-            { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -MacPath '/Applications/test.app' } |
-                Should -Throw -ExpectedMessage '*MacFile parameter set is not yet implemented*'
+        It 'Sets deleted=true when Remove is specified' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -TamperPath 'C:\test\file.exe' -Remove
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $body.configuration.tamper_files[0].deleted -eq $true
+            } -Exactly 1 -Scope It
+        }
+
+        It 'Rejects an invalid path without file extension' {
+            { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -TamperPath 'C:\test\folder' } |
+                Should -Throw -ErrorId "ParameterArgumentValidationError,Update-SEPMExceptionPolicy"
+        }
+
+        It 'Defaults PathVariable to [NONE]' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -TamperPath 'C:\test\file.exe'
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $body.configuration.tamper_files[0].pathvariable -eq '[NONE]'
+            } -Exactly 1 -Scope It
+        }
+    }
+
+    Context 'MacFile' {
+        BeforeEach {
+            $script:fakeSession = New-TestSession -SkipCert
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
+            }
+        }
+
+        It 'Adds a Mac file exception via PATCH' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -MacPath '/Applications/test.app'
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $f = $body.configuration.mac.files[0]
+                $f.path -eq '/Applications/test.app' -and
+                $f.pathvariable -eq '[NONE]' -and
+                $f.rulestate.source -eq 'PSSymantecSEPM'
+            } -Exactly 1 -Scope It
+        }
+
+        It 'Sets deleted=true when Remove is specified' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -MacPath '/Applications/test.app' -Remove
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $body.configuration.mac.files[0].deleted -eq $true
+            } -Exactly 1 -Scope It
+        }
+
+        It 'Rejects an invalid Mac path' {
+            { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -MacPath 'C:\test\file.exe' } |
+                Should -Throw -ErrorId "ParameterArgumentValidationError,Update-SEPMExceptionPolicy"
+        }
+
+        It 'Defaults PathVariable to [NONE]' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -MacPath '/Applications/test.app'
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $body.configuration.mac.files[0].pathvariable -eq '[NONE]'
+            } -Exactly 1 -Scope It
+        }
+    }
+
+    Context 'Non-implemented parameter sets' {
+        BeforeEach {
+            $script:fakeSession = New-TestSession -SkipCert
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
+            }
         }
 
         It 'Default throws not yet implemented' {
