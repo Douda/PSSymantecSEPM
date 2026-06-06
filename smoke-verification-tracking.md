@@ -8,12 +8,12 @@ Date: 2026-06-06
 
 ```bash
 # PS7
-pwsh -NoProfile -File Scripts/smoke-batch-ps7.ps1
+pwsh -NoProfile -File Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps7.ps1
 
 # PS5.1 (deploy first)
 rm -rf /home/douda/Windows/PSSymantecSEPM
 cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM
-cp Scripts/smoke-ps51.ps1 /home/douda/Windows/smoke-ps51.ps1
+cp Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps51.ps1 /home/douda/Windows/smoke-ps51.ps1
 WINRM_USER=douda WINRM_PASS=aurelien python3 Scripts/invoke-winrm.py 'C:\Users\douda\Desktop\Shared\smoke-ps51.ps1'
 ```
 

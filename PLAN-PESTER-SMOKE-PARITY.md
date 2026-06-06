@@ -2,7 +2,7 @@
 
 Branch: `54-pester-smoke-parity` (off `47-comprehensive-smoke-tests-update-sepmexceptionpolicy`)
 
-Goal: Replicate the 35 live smoke test assertions from `smoke-batch-ps7.ps1` / `smoke-ps51.ps1`
+Goal: Replicate the 35 live smoke test assertions from `Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps7.ps1` / `batch.ps51.ps1`
 inside the Pester test suite so these checks run in CI without a live SEPM instance.
 
 ## Current state

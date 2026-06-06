@@ -159,19 +159,23 @@ WINRM_USER=douda WINRM_PASS=aurelien python3 Scripts/invoke-winrm.py \
 
 | Script | Purpose |
 |--------|---------|
-| `Scripts/smoke-batch-ps7.ps1` | Full test matrix on PS7 (A1-G3, 35 tests) |
-| `Scripts/smoke-ps51.ps1` | Full test matrix on PS5.1 (A1-G3, 35 tests) |
+| `Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps7.ps1` | Full test matrix on PS7 (35 tests) |
+| `Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps51.ps1` | Full test matrix on PS5.1 (35 tests) |
+| `Scripts/Smoke/Update-SEPMExceptionPolicy/metadata.ps7.ps1` | Quick smoke (enable/disable/desc only) |
 
-Both scripts use a shared `T`/`Get-PolicyState` helper pattern with `Invoke-SepmApi` for GET verification.
+Smoke scripts are organized by cmdlet under `Scripts/Smoke/<CmdletName>/`.
+Each cmdlet directory has `batch.ps7.ps1`, `batch.ps51.ps1`, and optional helpers.
+
+Both batch scripts use a shared `T`/`Get-PolicyState` helper pattern with `Invoke-SepmApi` for GET verification.
 Only the preamble differs (cert setup, module path).
 
 ```bash
 # PS7
-pwsh -NoProfile -File Scripts/smoke-batch-ps7.ps1
+pwsh -NoProfile -File Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps7.ps1
 
 # PS5.1
 cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM
-cp Scripts/smoke-ps51.ps1 /home/douda/Windows/smoke-ps51.ps1
+cp Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps51.ps1 /home/douda/Windows/smoke-ps51.ps1
 WINRM_USER=douda WINRM_PASS=aurelien python3 Scripts/invoke-winrm.py 'C:\Users\douda\Desktop\Shared\smoke-ps51.ps1'
 ```
 

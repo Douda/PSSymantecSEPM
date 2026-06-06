@@ -44,8 +44,14 @@ Tests/
 ├── ... (one test file per module function)
 └── DummyDataGenerator.ps1       # Test fixtures for SEPM API responses
 Scripts/
+├── Smoke/                        # Live smoke tests (per cmdlet)
+│   └── Update-SEPMExceptionPolicy/
+│       ├── batch.ps7.ps1
+│       ├── batch.ps51.ps1
+│       └── metadata.ps7.ps1
 ├── Get-SEPKpiOldDefinitions.ps1
-└── WIP_SEPM_KPIs.ps1
+├── invoke-winrm.py               # PS 5.1 test runner
+└── setup-vm.ps1                  # Fresh VM configuration
 .vscode/                         # Shared workspace configs
 ├── settings.json
 ├── launch.json
