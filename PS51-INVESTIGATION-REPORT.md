@@ -2,7 +2,7 @@
 
 **Branch**: `40-ps51-smoke-tests`
 **Date**: 2026-06-06
-**Status**: ✅ SMOKE TEST PASSING (7/7) — serialization fully resolved
+**Status**: ✅ TRANSPORT DECISION MADE — Invoke-SepmApi (Invoke-RestMethod on PS7, HttpWebRequest on PS5.1)
 
 ---
 
@@ -82,3 +82,34 @@ Update-SEPMExceptionPolicy (PS 5.1 path)
 2. **WindowsExtension smoke test** — un-skip D1 test once Get-SEPMExceptionPolicy is fixed.
 3. **Run full test matrix** — A1-A5, B1-B13, C1-C6, D1-D5, E1-E3, F1-F3, G3 (matching PS7 results).
 4. **A2 false positive in smoke test** — `"errorCode:500"` string passes `$j.enabled -eq $false` check because string comparison coerces. Add explicit type check to the smoke test T() function.
+
+---
+
+## Transport decision (2026-06-06 — issue #48)
+
+Two transports were evaluated for PS 5.1:
+
+### Attempt 1: Invoke-RestMethod + ServicePoint tuning ❌
+
+Set `ConnectionLeaseTimeout=0` and `MaxIdleTime=1` on the ServicePoint before any requests. Works in isolation (auth → GET → PATCH all succeed) but **fails when mixed with HttpWebRequest connections** from `Invoke-ABRestMethod` (auth, policy summary). After HttpWebRequest opens connections with `KeepAlive=false`, subsequent `Invoke-RestMethod` calls fail with "The underlying connection was closed."
+
+### Attempt 2: HttpWebRequest + KeepAlive=false ✅ (CHOSEN)
+
+Same approach already proven in `Invoke-ABRestMethod`. Works for all endpoints (auth, GET, PATCH). No ServicePoint tuning needed. No interference with other transport layers.
+
+### Decision
+
+New `Invoke-SepmApi` function (`Source/Private/Invoke-SepmApi.ps1`):
+- **PS 7+**: `Invoke-RestMethod` with `-SkipCertificateCheck`. JSON parsed via `ConvertFrom-Json -AsHashtable` to handle SEPM's case-duplicate keys.
+- **PS 5.1**: `[System.Net.HttpWebRequest]` with `KeepAlive=false`. JSON parsed via `JavaScriptSerializer` → `ConvertFrom-DictionaryToPSObject`.
+
+`Invoke-ABRestMethod` is **deprecated**. `Update-SEPMExceptionPolicy` now uses `Invoke-SepmApi` for its PATCH call. Remaining ~40 callers to be migrated incrementally.
+
+### Results (2026-06-06)
+
+| Platform | A1-A5 | B1-B13 | C1-C6 | D1-D5 | E1-E3 | F1-F3 | Total |
+|----------|-------|--------|-------|-------|-------|-------|-------|
+| PS7 | 5/5 | 13/13 | 6/6 | 5/5 | 3/3 | 3/3 | **35/35** |
+| PS5.1 | 5/5 | 13/13 | 6/6 | 0/5* | 3/3 | 3/3 | **30/35** |
+
+*D group (WindowsExtension) fails on PS5.1 — `Get-SEPMExceptionPolicy` uses `-AsHashtable` (PS7-only). Fix in #51.

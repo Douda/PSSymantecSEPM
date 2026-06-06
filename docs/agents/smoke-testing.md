@@ -68,14 +68,16 @@ Only one exception policy exists:
 |------|----|------|
 | `Exceptions policy` | `4C4BC60CAC1E00027A25369C305828F9` | exceptions |
 
-### Verify state (PS 7, avoids Get-SEPMExceptionPolicy double-parse bug)
+### Verify state (Invoke-SepmApi — works on both PS7 and PS5.1)
 
 ```powershell
 $s = Initialize-SEPMSession
-$p = @{Session=$s;Method='GET';Uri=$s.BaseURLv2+'/policies/exceptions/4C4BC60CAC1E00027A25369C305828F9'}
-$r = Invoke-ABRestMethod -params $p
-$r.enabled; $r.desc; $r.configuration.files
+$p = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv2)/policies/exceptions/4C4BC60CAC1E00027A25369C305828F9" `
+    -Headers $s.Headers -SkipCert:$true
+$p.enabled; $p.desc; $p.configuration.files
 ```
+
+Invoke-SepmApi uses Invoke-RestMethod on PS7 and HttpWebRequest+KeepAlive=false on PS5.1 (see Source/Private/Invoke-SepmApi.ps1 for rationale).
 
 ### Verify state (curl)
 
@@ -133,10 +135,11 @@ printf '\xef\xbb\xbf' > /home/douda/Windows/test-ps51.ps1
 cat >> /home/douda/Windows/test-ps51.ps1 << 'EOF'
 $ErrorActionPreference="Continue"
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback={$true}
+[System.Net.ServicePointManager]::SecurityProtocol=[System.Net.SecurityProtocolType]::Tls12
 $cfg="$env:APPDATA\PSSymantecSEPM\config.json"
 New-Item -ItemType Directory (Split-Path $cfg) -Force|Out-Null
-@{port=8446;ServerAddress="10.0.2.2"}|ConvertTo-Json|Set-Content $cfg -Force
-Import-Module C:\Users\Administrator\Desktop\Shared\PSSymantecSEPM\PSSymantecSEPM.psm1 -Force
+@{port=8446;ServerAddress="localhost"}|ConvertTo-Json|Set-Content $cfg -Force
+Import-Module C:\Users\douda\Desktop\Shared\PSSymantecSEPM\PSSymantecSEPM.psm1 -Force
 $mod=Get-Module PSSymantecSEPM; & $mod {$script:SkipCert=$true}
 Get-SEPMVersion
 # ... test commands ...
@@ -147,37 +150,47 @@ WINRM_USER=douda WINRM_PASS=aurelien python3 Scripts/invoke-winrm.py \
   'C:\Users\douda\Desktop\Shared\test-ps51.ps1'
 ```
 
-**PS 5.1 differences**: no `-SkipCertificateCheck` (use callback above); host IP is `10.0.2.2` (QEMU→Docker host); all .ps1 files need UTF-8 BOM; `ConvertFrom-Json` lacks `-AsHashtable`/`-Depth`.
+**Transport**: PS5.1 uses `[HttpWebRequest]` with `KeepAlive=false` (via `Invoke-SepmApi`, see Source/Private/Invoke-SepmApi.ps1).
+`Invoke-RestMethod` on .NET Framework 4.x reuses TLS connections which SEPM 14.3 rejects.
 
-**⚠ PS 5.1 blocked**: QEMU VM networking broken after Docker network change to `172.19.0.0/16`. No host IP reachable from inside the VM.
+**PS 5.1 differences**: no `-SkipCertificateCheck` (use callback above); all .ps1 files need UTF-8 BOM; `ConvertFrom-Json` lacks `-AsHashtable`/`-Depth`; `Get-SEPMExceptionPolicy` broken on PS5.1 (uses `-AsHashtable` — fix pending in #51).
 
 ## Smoke scripts
 
 | Script | Purpose |
 |--------|---------|
-| `Scripts/smoke-test-exception-policy.ps1` | Build→import→auth→add file→verify→remove→verify |
-| `Scripts/smoke-metadata-ps7.ps1` | Enable/Disable/Description metadata mutations |
+| `Scripts/smoke-batch-ps7.ps1` | Full test matrix on PS7 (A1-F3, 35 tests) |
+| `Scripts/smoke-ps51.ps1` | Full test matrix on PS5.1 (A1-F3, 34 tests) |
+
+Both scripts use a shared `T`/`Get-PolicyState` helper pattern with `Invoke-SepmApi` for GET verification.
+Only the preamble differs (cert setup, module path).
 
 ```bash
-pwsh -NoProfile -File Scripts/smoke-test-exception-policy.ps1
-pwsh -NoProfile -File Scripts/smoke-metadata-ps7.ps1
+# PS7
+pwsh -NoProfile -File Scripts/smoke-batch-ps7.ps1
+
+# PS5.1
+cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM
+cp Scripts/smoke-ps51.ps1 /home/douda/Windows/smoke-ps51.ps1
+WINRM_USER=douda WINRM_PASS=aurelien python3 Scripts/invoke-winrm.py 'C:\Users\douda\Desktop\Shared\smoke-ps51.ps1'
 ```
 
 ## Known bugs
 
-### 1. `Update-SEPMExceptionPolicy` — PATCH with `configuration` body fails (ACTIVE)
+### 1. `Get-SEPMExceptionPolicy` — broken on PS 5.1
 
-**Symptom**: PATCH returns HTTP 200, but GET shows no changes applied. Same body works via curl and `Invoke-WebRequest` directly. Metadata-only PATCHes (enable/disable/desc, no `configuration` key) work correctly through the cmdlet.
+Uses `ConvertFrom-Json -AsHashtable` which doesn't exist on PS 5.1. Blocks WindowsExtension parameter set of `Update-SEPMExceptionPolicy` on PS 5.1.
+Fix pending in issue #51.
 
-**Debug approach**: compare raw bytes sent by `Invoke-ABRestMethod` vs curl via mitmproxy/tcpdump.
-
-### 2. `Get-SEPMExceptionPolicy` — double `ConvertFrom-Json` (pre-existing)
-
-`Invoke-RestMethod` auto-deserializes on PS 7+, then the cmdlet calls `ConvertFrom-Json` again. For verification, use raw GET via `Invoke-ABRestMethod` (see "Verify state" above).
-
-### 3. `Get-SEPComputers` — infinite loop on error (pre-existing)
+### 2. `Get-SEPComputers` — infinite loop on error (pre-existing)
 
 `do..until($resp.lastPage)` never terminates when `$resp` is an error string.
+
+### 3. SEPM JSON duplicate keys — `sonar`/`SONAR`
+
+SEPM 14.3 returns JSON with case-insensitive duplicate keys (e.g., `"sonar"` and `"SONAR"` in the same object).
+PowerShell's `ConvertFrom-Json` rejects these on both PS versions.
+`Invoke-SepmApi` uses `-AsHashtable` (PS7) and `JavaScriptSerializer` (PS5.1) as tolerant parsers.
 
 ## File layout
 
@@ -187,7 +200,8 @@ pwsh -NoProfile -File Scripts/smoke-metadata-ps7.ps1
 ~/.local/share/PSSymantecSEPM/accessToken.xml # cached token
 ~/Windows/                                   # shared with Windows VM
 Source/Private/00_Exceptions-Policy.ps1      # PowerShell class (loads first)
-Source/Private/Invoke-ABRestMethod.ps1       # REST layer (PS version switch)
+Source/Private/Invoke-ABRestMethod.ps1       # DEPRECATED — being replaced by Invoke-SepmApi
+Source/Private/Invoke-SepmApi.ps1            # New REST layer (PS7: Invoke-RestMethod, PS5.1: HttpWebRequest)
 Source/Private/Initialize-SEPMSession.ps1    # session factory
 Output/PSSymantecSEPM/                       # built module
 Scripts/invoke-winrm.py                      # PS 5.1 test runner
