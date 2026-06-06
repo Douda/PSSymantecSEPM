@@ -487,14 +487,9 @@ function Update-SEPMExceptionPolicy {
             $bodyJson = ConvertTo-JsonSafe $bodyObj
         }
 
-        $params = @{
-            Session     = $session
-            Method      = 'PATCH'
-            Uri         = $URI + "/" + $PolicyID
-            Body        = $bodyJson
-        }
-
-        $resp = Invoke-ABRestMethod -params $params
+        $patchUri = $URI + "/" + $PolicyID
+        $resp = Invoke-SepmApi -Method 'PATCH' -Uri $patchUri -Body $bodyJson `
+            -Headers $session.Headers -ContentType 'application/json' -SkipCert:$session.SkipCert
         return $resp
     }
 }
