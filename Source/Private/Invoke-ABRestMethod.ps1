@@ -39,6 +39,8 @@ function Invoke-ABRestMethod {
             }
         }
         $params.headers = $mergedHeaders
+        # Remove Session key to avoid partial-match collision with Invoke-RestMethod -SessionVariable
+        $params.Remove('Session')
     } else {
         $effectiveSkipCert = $script:SkipCert
     }
