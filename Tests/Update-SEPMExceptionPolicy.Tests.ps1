@@ -412,7 +412,7 @@ Describe 'Update-SEPMExceptionPolicy' {
         }
     }
 
-    Context 'Non-implemented parameter sets' {
+    Context 'Default' {
         BeforeEach {
             $script:fakeSession = New-TestSession -SkipCert
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
@@ -421,9 +421,86 @@ Describe 'Update-SEPMExceptionPolicy' {
             }
         }
 
-        It 'Default throws not yet implemented' {
-            { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' } |
-                Should -Throw -ExpectedMessage '*No parameter set specified*'
+        It 'enables the policy via PATCH' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -EnablePolicy
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $body.enabled -eq $true
+            } -Exactly 1 -Scope It
+        }
+
+        It 'disables the policy via PATCH' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -DisablePolicy
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $body.enabled -eq $false
+            } -Exactly 1 -Scope It
+        }
+
+        It 'sets the policy description via PATCH' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -PolicyDescription 'My new description'
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $body.desc -eq 'My new description'
+            } -Exactly 1 -Scope It
+        }
+
+        It 'enable + description in same call' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -EnablePolicy -PolicyDescription 'Enabled with desc'
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $body.enabled -eq $true -and
+                $body.desc -eq 'Enabled with desc'
+            } -Exactly 1 -Scope It
+        }
+
+        It 'enable + WindowsFile rule in same call' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Path 'C:\test\file.exe' -EnablePolicy
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $body.enabled -eq $true -and
+                $body.configuration.files[0].path -eq 'C:\test\file.exe'
+            } -Exactly 1 -Scope It
+        }
+
+        It 'throws when EnablePolicy and DisablePolicy are both specified' {
+            { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -EnablePolicy -DisablePolicy } |
+                Should -Throw -ExpectedMessage '*EnablePolicy*DisablePolicy*'
         }
     }
 }

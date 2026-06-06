@@ -111,6 +111,36 @@ function Update-SEPMExceptionPolicy {
         [switch]
         $Remove,
 
+        # EnablePolicy
+        [Parameter(ParameterSetName = 'Default')]
+        [Parameter(ParameterSetName = 'WindowsFile')]
+        [Parameter(ParameterSetName = 'WindowsFolder')]
+        [Parameter(ParameterSetName = 'WindowsExtension')]
+        [Parameter(ParameterSetName = 'Tamper')]
+        [Parameter(ParameterSetName = 'MacFile')]
+        [switch]
+        $EnablePolicy,
+
+        # DisablePolicy
+        [Parameter(ParameterSetName = 'Default')]
+        [Parameter(ParameterSetName = 'WindowsFile')]
+        [Parameter(ParameterSetName = 'WindowsFolder')]
+        [Parameter(ParameterSetName = 'WindowsExtension')]
+        [Parameter(ParameterSetName = 'Tamper')]
+        [Parameter(ParameterSetName = 'MacFile')]
+        [switch]
+        $DisablePolicy,
+
+        # PolicyDescription
+        [Parameter(ParameterSetName = 'Default')]
+        [Parameter(ParameterSetName = 'WindowsFile')]
+        [Parameter(ParameterSetName = 'WindowsFolder')]
+        [Parameter(ParameterSetName = 'WindowsExtension')]
+        [Parameter(ParameterSetName = 'Tamper')]
+        [Parameter(ParameterSetName = 'MacFile')]
+        [string]
+        $PolicyDescription,
+
         # ScanType (WindowsFolder and WindowsExtension)
         [Parameter(ParameterSetName = 'WindowsFolder')]
         [Parameter(ParameterSetName = 'WindowsExtension')]
@@ -162,6 +192,11 @@ function Update-SEPMExceptionPolicy {
     }
 
     process {
+        # Validate mutual exclusivity
+        if ($EnablePolicy -and $DisablePolicy) {
+            throw "-EnablePolicy and -DisablePolicy cannot be specified together."
+        }
+
         # Fetch policy summary and resolve PolicyID
         $policies = Get-SEPMPoliciesSummary
         $PolicyID = $policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -ExpandProperty id
@@ -312,10 +347,21 @@ function Update-SEPMExceptionPolicy {
                 )
                 $ObjBody.AddMacFiles($macHash)
             }
-            'Default'          = { throw "Update-SEPMExceptionPolicy: No parameter set specified. Use one of: WindowsFile, WindowsFolder, WindowsExtension, Tamper, MacFile." }
+            'Default'          = {}
         }
 
         & $dispatch[$PSCmdlet.ParameterSetName]
+
+        # Apply policy-level metadata mutations
+        if ($EnablePolicy) {
+            $ObjBody.enabled = $true
+        }
+        if ($DisablePolicy) {
+            $ObjBody.enabled = $false
+        }
+        if ($PSBP.ContainsKey('PolicyDescription')) {
+            $ObjBody.desc = $PolicyDescription
+        }
 
         # Optimize AFTER dispatch so object is cleaned in process scope
         $ObjBody = Optimize-ExceptionPolicyStructure -obj $ObjBody
