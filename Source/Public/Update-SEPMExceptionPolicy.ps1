@@ -161,6 +161,7 @@ function Update-SEPMExceptionPolicy {
         $ObjBody.name = $PolicyName
 
         # Dispatch hashtable: parameter set name → scriptblock
+        $PSBP = $PSBoundParameters
         $dispatch = @{
             'WindowsFile' = {
                 $ExceptionParams = @{}
@@ -170,7 +171,7 @@ function Update-SEPMExceptionPolicy {
                 $ExceptionParams.deleted = $Remove.IsPresent
 
                 # Parse scan type parameters
-                switch ($PSBoundParameters.Keys) {
+                switch ($PSBP.Keys) {
                     'Sonar'              { $ExceptionParams.sonar = $true }
                     'SecurityRiskCategory' {
                         $ExceptionParams.securityrisk = $true
