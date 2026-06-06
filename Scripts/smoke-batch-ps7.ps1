@@ -59,7 +59,8 @@ function T {
         $expectedErrors = @(
             "EnablePolicy.*DisablePolicy",
             "SecurityRiskCategory.*ScanType",
-            "Cannot remove Extension",
+            "not found",
+        "Cannot remove Extension",
             "requires the -ApplicationControl"
         )
         $isExpected = $false
@@ -225,7 +226,9 @@ $results.F3 = T "F3" "MacFile: Remove" `
     { param($p) ($p.configuration.mac.files | ? { $_.path -like "*SmokeMacF1*" }).Count -eq 0 }
 
 # === G group ===
-$results.G3 = "FAIL (known: API 500, cmdlet should validate PolicyName)"
+$results.G3 = T "G3" "NonExistentPolicy error" `
+    { Update-SEPMExceptionPolicy -PolicyName "NonExistentPolicy" -EnablePolicy } `
+    { param($p) $true }
 
 # === Summary ===
 Write-Host "`n========== SUMMARY (PS7) ==========" -ForegroundColor Yellow

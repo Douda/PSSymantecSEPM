@@ -153,14 +153,14 @@ WINRM_USER=douda WINRM_PASS=aurelien python3 Scripts/invoke-winrm.py \
 **Transport**: PS5.1 uses `[HttpWebRequest]` with `KeepAlive=false` (via `Invoke-SepmApi`, see Source/Private/Invoke-SepmApi.ps1).
 `Invoke-RestMethod` on .NET Framework 4.x reuses TLS connections which SEPM 14.3 rejects.
 
-**PS 5.1 differences**: no `-SkipCertificateCheck` (use callback above); all .ps1 files need UTF-8 BOM; `ConvertFrom-Json` lacks `-AsHashtable`/`-Depth`; `Get-SEPMExceptionPolicy` broken on PS5.1 (uses `-AsHashtable` — fix pending in #51).
+**PS 5.1 differences**: no `-SkipCertificateCheck` (use callback above); all .ps1 files need UTF-8 BOM; `ConvertFrom-Json` lacks `-AsHashtable`/`-Depth`.
 
 ## Smoke scripts
 
 | Script | Purpose |
 |--------|---------|
-| `Scripts/smoke-batch-ps7.ps1` | Full test matrix on PS7 (A1-F3, 35 tests) |
-| `Scripts/smoke-ps51.ps1` | Full test matrix on PS5.1 (A1-F3, 34 tests) |
+| `Scripts/smoke-batch-ps7.ps1` | Full test matrix on PS7 (A1-G3, 35 tests) |
+| `Scripts/smoke-ps51.ps1` | Full test matrix on PS5.1 (A1-G3, 35 tests) |
 
 Both scripts use a shared `T`/`Get-PolicyState` helper pattern with `Invoke-SepmApi` for GET verification.
 Only the preamble differs (cert setup, module path).
@@ -177,16 +177,11 @@ WINRM_USER=douda WINRM_PASS=aurelien python3 Scripts/invoke-winrm.py 'C:\Users\d
 
 ## Known bugs
 
-### 1. `Get-SEPMExceptionPolicy` — broken on PS 5.1
-
-Uses `ConvertFrom-Json -AsHashtable` which doesn't exist on PS 5.1. Blocks WindowsExtension parameter set of `Update-SEPMExceptionPolicy` on PS 5.1.
-Fix pending in issue #51.
-
-### 2. `Get-SEPComputers` — infinite loop on error (pre-existing)
+### 1. `Get-SEPComputers` — infinite loop on error (pre-existing)
 
 `do..until($resp.lastPage)` never terminates when `$resp` is an error string.
 
-### 3. SEPM JSON duplicate keys — `sonar`/`SONAR`
+### 2. SEPM JSON duplicate keys — `sonar`/`SONAR`
 
 SEPM 14.3 returns JSON with case-insensitive duplicate keys (e.g., `"sonar"` and `"SONAR"` in the same object).
 PowerShell's `ConvertFrom-Json` rejects these on both PS versions.

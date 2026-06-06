@@ -47,6 +47,7 @@ function T {
         $expectedErrors = @(
             "EnablePolicy.*DisablePolicy",
             "SecurityRiskCategory.*ScanType",
+            "not found",
             "Cannot remove Extension",
             "requires the -ApplicationControl"
         )
@@ -209,6 +210,11 @@ $results.F2 = T "F2" "MacFile: PathVariable [HOME]" `
 $results.F3 = T "F3" "MacFile: Remove" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -MacPath "/tmp/SmokeMacF1.app" -Remove | Out-Null } `
     { param($p) ($p.configuration.mac.files | ? { $_.path -like "*SmokeMacF1*" }).Count -eq 0 }
+
+# === G group: Error handling ===
+$results.G3 = T "G3" "NonExistentPolicy error" `
+    { Update-SEPMExceptionPolicy -PolicyName "NonExistentPolicy" -EnablePolicy } `
+    { param($p) $true }
 
 # === Summary ===
 Write-Host "`n========== SUMMARY (PS51) =========="

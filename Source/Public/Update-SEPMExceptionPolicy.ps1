@@ -196,6 +196,11 @@ function Update-SEPMExceptionPolicy {
         $policies = Get-SEPMPoliciesSummary
         $PolicyID = $policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -ExpandProperty id
 
+        # Validate PolicyName exists before making API call
+        if (-not $PolicyID) {
+            throw "Policy '$PolicyName' not found. Verify the policy name and try again."
+        }
+
         # Instantiate the policy exception structure
         $ObjBody = [SEPMPolicyExceptionsStructure]::new()
         $ObjBody.name = $PolicyName
