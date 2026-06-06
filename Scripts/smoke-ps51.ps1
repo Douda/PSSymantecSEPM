@@ -187,11 +187,11 @@ $results.D5 = T "D5" "WExt: ScanType AutoProtect" `
 # === E group: Tamper ===
 $results.E1 = T "E1" "Tamper: basic add" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -TamperPath "C:\Temp\SmokeTamperE1.exe" | Out-Null } `
-    { param($p) ($t = $p.configuration.tamper_files | ? { $_.path -like "*SmokeTamperE1*" } | Select -First 1); $t -ne $null }
+    { param($p) ($t = $p.configuration.tamper_files | ? { $_.path -eq "C:\Temp\SmokeTamperE1.exe" } | Select -First 1); $t -and $t.pathvariable -eq "[NONE]" -and $t.deleted -ne $true }
 
 $results.E2 = T "E2" "Tamper: PathVariable [SYSTEM]" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -TamperPath "C:\Windows\SmokeTamperE2.exe" -PathVariable '[SYSTEM]' | Out-Null } `
-    { param($p) ($t = $p.configuration.tamper_files | ? { $_.path -like "*SmokeTamperE2*" } | Select -First 1); $t -ne $null }
+    { param($p) ($t = $p.configuration.tamper_files | ? { $_.path -like "*SmokeTamperE2*" } | Select -First 1); $t -and $t.pathvariable -eq "[SYSTEM]" }
 
 $results.E3 = T "E3" "Tamper: Remove" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -TamperPath "C:\Temp\SmokeTamperE1.exe" -Remove | Out-Null } `
@@ -200,11 +200,11 @@ $results.E3 = T "E3" "Tamper: Remove" `
 # === F group: MacFile ===
 $results.F1 = T "F1" "MacFile: basic add" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -MacPath "/tmp/SmokeMacF1.app" | Out-Null } `
-    { param($p) ($m = $p.configuration.mac.files | ? { $_.path -like "*SmokeMacF1*" } | Select -First 1); $m -ne $null }
+    { param($p) ($m = $p.configuration.mac.files | ? { $_.path -eq "/tmp/SmokeMacF1.app" } | Select -First 1); $m -and $m.pathvariable -eq "[NONE]" -and $m.deleted -ne $true }
 
 $results.F2 = T "F2" "MacFile: PathVariable [HOME]" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -MacPath "/Users/test/SmokeMacF2.app" -MacPathVariable '[HOME]' | Out-Null } `
-    { param($p) ($m = $p.configuration.mac.files | ? { $_.path -like "*SmokeMacF2*" } | Select -First 1); $m -ne $null }
+    { param($p) ($m = $p.configuration.mac.files | ? { $_.path -like "*SmokeMacF2*" } | Select -First 1); $m -and $m.pathvariable -eq "[HOME]" }
 
 $results.F3 = T "F3" "MacFile: Remove" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -MacPath "/tmp/SmokeMacF1.app" -Remove | Out-Null } `
