@@ -93,7 +93,7 @@ Describe 'Update-SEPMExceptionPolicy' {
         }
     }
 
-    Context 'Non-implemented parameter sets' {
+    Context 'WindowsFolder' {
         BeforeEach {
             $script:fakeSession = New-TestSession -SkipCert
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
@@ -102,9 +102,95 @@ Describe 'Update-SEPMExceptionPolicy' {
             }
         }
 
-        It 'WindowsFolder throws not yet implemented' {
-            { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -FolderPath 'C:\test' } |
-                Should -Throw -ExpectedMessage '*WindowsFolder parameter set is not yet implemented*'
+        It 'Adds a folder exception with default All scan type via PATCH' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -FolderPath 'C:\test'
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $dir = $body.configuration.directories[0]
+                $dir.directory -eq 'C:\test' -and
+                $dir.scantype -eq 'All' -and
+                $dir.pathvariable -eq '[NONE]'
+            } -Exactly 1 -Scope It
+        }
+
+        It 'Adds a folder exception with specific ScanType' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -FolderPath 'C:\test' -ScanType SONAR
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $body.configuration.directories[0].scantype -eq 'SONAR'
+            } -Exactly 1 -Scope It
+        }
+
+        It 'Sets recursive=true when IncludeSubFolders is specified' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -FolderPath 'C:\test' -IncludeSubFolders
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $body.configuration.directories[0].recursive -eq $true
+            } -Exactly 1 -Scope It
+        }
+
+        It 'Sets deleted=true when Remove is specified' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -FolderPath 'C:\test' -Remove
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $body.configuration.directories[0].deleted -eq $true
+            } -Exactly 1 -Scope It
+        }
+
+        It 'Throws when SecurityRiskCategory is used without ScanType SecurityRisk' {
+            { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -FolderPath 'C:\test' -ScanType All -SecurityRiskCategory AllScans } |
+                Should -Throw -ExpectedMessage '*SecurityRiskCategory*ScanType*SecurityRisk*'
+        }
+
+        It 'Passes SecurityRiskCategory when ScanType is SecurityRisk' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -FolderPath 'C:\test' -ScanType SecurityRisk -SecurityRiskCategory AutoProtect
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $dir = $body.configuration.directories[0]
+                $dir.scantype -eq 'SecurityRisk' -and
+                $dir.scancategory -eq 'AutoProtect'
+            } -Exactly 1 -Scope It
+        }
+    }
+
+    Context 'Non-implemented parameter sets' {
+        BeforeEach {
+            $script:fakeSession = New-TestSession -SkipCert
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
+            }
         }
 
         It 'WindowsExtension throws not yet implemented' {

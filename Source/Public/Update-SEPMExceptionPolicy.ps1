@@ -73,6 +73,7 @@ function Update-SEPMExceptionPolicy {
 
         # SecurityRiskCategory
         [Parameter(ParameterSetName = 'WindowsFile')]
+        [Parameter(ParameterSetName = 'WindowsFolder')]
         [Parameter(ParameterSetName = 'Tamper')]
         [ValidateSet('AllScans', 'AutoProtect', 'ScheduledAndOndemand')]
         [string]
@@ -110,6 +111,17 @@ function Update-SEPMExceptionPolicy {
         [Parameter(ParameterSetName = 'MacFile')]
         [switch]
         $Remove,
+
+        # ScanType
+        [Parameter(ParameterSetName = 'WindowsFolder')]
+        [ValidateSet('All', 'SecurityRisk', 'SONAR', 'ApplicationControl')]
+        [string]
+        $ScanType = 'All',
+
+        # IncludeSubFolders
+        [Parameter(ParameterSetName = 'WindowsFolder')]
+        [switch]
+        $IncludeSubFolders,
 
         # -- Placeholder parameters for non-implemented parameter sets --
 
@@ -200,9 +212,40 @@ function Update-SEPMExceptionPolicy {
 
                 $ObjBody.AddConfigurationFilesExceptions($FilesHashTable)
 
-                $ObjBody = Optimize-ExceptionPolicyStructure -obj $ObjBody
             }
-            'WindowsFolder'    = { throw "Update-SEPMExceptionPolicy: WindowsFolder parameter set is not yet implemented." }
+            'WindowsFolder'    = {
+                if ($SecurityRiskCategory -and $ScanType -ne 'SecurityRisk') {
+                    throw "The -SecurityRiskCategory parameter requires the -ScanType parameter to be set to 'SecurityRisk'."
+                }
+
+                $ExceptionParams = @{}
+                $ExceptionParams.directory = $FolderPath
+                $ExceptionParams.pathvariable = $PathVariable
+                $ExceptionParams.scantype = $ScanType
+                $ExceptionParams.RulestateSource = $script:ModuleName
+                $ExceptionParams.deleted = $Remove.IsPresent
+
+                if ($IncludeSubFolders) {
+                    $ExceptionParams.recursive = $true
+                }
+
+                if ($ScanType -eq 'SecurityRisk' -and $SecurityRiskCategory) {
+                    $ExceptionParams.scancategory = $SecurityRiskCategory
+                }
+
+                $DirectoryHashTable = $ObjBody.CreateDirectoryHashtable(
+                    $ExceptionParams.deleted,
+                    $ExceptionParams.RulestateEnabled,
+                    $ExceptionParams.RulestateSource,
+                    $ExceptionParams.scancategory,
+                    $ExceptionParams.scantype,
+                    $ExceptionParams.pathvariable,
+                    $ExceptionParams.directory,
+                    $ExceptionParams.recursive
+                )
+
+                $ObjBody.AddConfigurationDirectoriesExceptions($DirectoryHashTable)
+            }
             'WindowsExtension' = { throw "Update-SEPMExceptionPolicy: WindowsExtension parameter set is not yet implemented." }
             'Tamper'           = { throw "Update-SEPMExceptionPolicy: Tamper parameter set is not yet implemented." }
             'MacFile'          = { throw "Update-SEPMExceptionPolicy: MacFile parameter set is not yet implemented." }
@@ -211,12 +254,14 @@ function Update-SEPMExceptionPolicy {
 
         & $dispatch[$PSCmdlet.ParameterSetName]
 
+        # Optimize AFTER dispatch so object is cleaned in process scope
+        $ObjBody = Optimize-ExceptionPolicyStructure -obj $ObjBody
+
         $params = @{
             Session     = $session
             Method      = 'PATCH'
             Uri         = $URI + "/" + $PolicyID
-            contenttype = 'application/json'
-            Body        = $ObjBody | ConvertTo-Json -Depth 100
+            Body        = $ObjBody | ConvertTo-Json -Depth 100 -Compress
         }
 
         $resp = Invoke-ABRestMethod -params $params
