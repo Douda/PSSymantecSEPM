@@ -1,0 +1,130 @@
+[CmdletBinding()]
+param()
+
+Describe 'Update-SEPMExceptionPolicy' {
+    BeforeAll {
+        Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
+        $script:TestState = Initialize-TestEnvironment
+
+        InModuleScope PSSymantecSEPM {
+            $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
+            $script:credentialsFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+            $script:accessTokenFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
+        }
+    }
+
+    AfterAll {
+        Clear-TestEnvironment -State $script:TestState
+    }
+
+    Context 'WindowsFile' {
+        BeforeEach {
+            $script:fakeSession = New-TestSession -SkipCert
+
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
+            }
+        }
+
+        It 'Adds a file exception with AllScans via PATCH to the API' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Path 'C:\test\file.exe' -AllScans
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
+        }
+
+        It 'Adds a file exception with Sonar only' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Path 'C:\test\file.exe' -Sonar
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $params.Method -eq 'PATCH'
+            } -Exactly 1 -Scope It
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                ($params.Body | ConvertFrom-Json).configuration.files[0].sonar -eq $true
+            } -Exactly 1 -Scope It
+        }
+
+        It 'Sets deleted=true on the payload when Remove is specified' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Path 'C:\test\file.exe' -Remove
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $body.configuration.files[0].deleted -eq $true
+            } -Exactly 1 -Scope It
+        }
+
+        It 'Defaults to AllScans when no scan type parameter is provided' {
+            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Path 'C:\test\file.exe'
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $params.Body | ConvertFrom-Json
+                $file = $body.configuration.files[0]
+                $file.sonar -eq $true -and
+                $file.securityrisk -eq $true -and
+                $file.applicationcontrol -eq $true -and
+                $file.scancategory -eq 'AllScans'
+            } -Exactly 1 -Scope It
+        }
+
+        It 'Rejects an invalid path without file extension' {
+            { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Path 'C:\test\folder' -AllScans } |
+                Should -Throw -ErrorId "ParameterArgumentValidationError,Update-SEPMExceptionPolicy"
+        }
+    }
+
+    Context 'Non-implemented parameter sets' {
+        BeforeEach {
+            $script:fakeSession = New-TestSession -SkipCert
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
+            }
+        }
+
+        It 'WindowsFolder throws not yet implemented' {
+            { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -FolderPath 'C:\test' } |
+                Should -Throw -ExpectedMessage '*WindowsFolder parameter set is not yet implemented*'
+        }
+
+        It 'WindowsExtension throws not yet implemented' {
+            { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Extensions '.exe','.dll' } |
+                Should -Throw -ExpectedMessage '*WindowsExtension parameter set is not yet implemented*'
+        }
+
+        It 'Tamper throws not yet implemented' {
+            { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -TamperPath 'C:\test\file.exe' } |
+                Should -Throw -ExpectedMessage '*Tamper parameter set is not yet implemented*'
+        }
+
+        It 'MacFile throws not yet implemented' {
+            { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -MacPath '/Applications/test.app' } |
+                Should -Throw -ExpectedMessage '*MacFile parameter set is not yet implemented*'
+        }
+
+        It 'Default throws not yet implemented' {
+            { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' } |
+                Should -Throw -ExpectedMessage '*No parameter set specified*'
+        }
+    }
+}
