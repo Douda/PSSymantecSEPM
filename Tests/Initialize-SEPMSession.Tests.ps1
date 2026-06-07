@@ -34,10 +34,10 @@ Describe 'Initialize-SEPMSession' {
                 $script:accessToken = $null
 
                 Mock Test-SEPMAccessToken -ModuleName PSSymantecSEPM { return $false }
-                Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
-                    $params.Method -eq 'POST' -and $params.Uri -match '/identity/authenticate'
+                Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter {
+                    $Method -eq 'POST' -and $Uri -match '/identity/authenticate'
                 } {
-                    return [PSCustomObject]@{
+                    return @{
                         token           = 'FakeTokenFromSEPM'
                         tokenExpiration = [Int64]3600
                     }
@@ -51,7 +51,7 @@ Describe 'Initialize-SEPMSession' {
                 $result | Should -BeOfType [PSCustomObject]
                 $result.Headers | Should -Not -BeNullOrEmpty
                 $result.Headers.Authorization | Should -Be 'Bearer FakeTokenFromSEPM'
-                $result.Headers.Content | Should -Be 'application/json'
+                $result.Headers.'Content-Type' | Should -Be 'application/json'
                 $result.BaseURLv1 | Should -Be 'https://FakeServer01:1234/sepm/api/v1'
                 $result.BaseURLv2 | Should -Be 'https://FakeServer01:1234/sepm/api/v2'
                 $result.SkipCert | Should -BeFalse
@@ -83,11 +83,11 @@ Describe 'Initialize-SEPMSession' {
                 $script:_mockAuthCallCount = 0
 
                 Mock Test-SEPMAccessToken -ModuleName PSSymantecSEPM { return $true }
-                Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
-                    $params.Method -eq 'POST' -and $params.Uri -match '/identity/authenticate'
+                Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter {
+                    $Method -eq 'POST' -and $Uri -match '/identity/authenticate'
                 } {
                     $script:_mockAuthCallCount++
-                    return [PSCustomObject]@{
+                    return @{
                         token           = 'FakeTokenFromSEPM'
                         tokenExpiration = [Int64]3600
                     }
@@ -131,11 +131,11 @@ Describe 'Initialize-SEPMSession' {
                 $script:accessToken = $null
                 $script:_mockAuthCallCount = 0
 
-                Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
-                    $params.Method -eq 'POST' -and $params.Uri -match '/identity/authenticate'
+                Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter {
+                    $Method -eq 'POST' -and $Uri -match '/identity/authenticate'
                 } {
                     $script:_mockAuthCallCount++
-                    return [PSCustomObject]@{
+                    return @{
                         token           = 'FakeTokenFromSEPM'
                         tokenExpiration = [Int64]3600
                     }

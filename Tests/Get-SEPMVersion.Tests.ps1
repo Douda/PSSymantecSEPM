@@ -22,10 +22,10 @@ Describe 'Get-SEPMVersion' {
             $fakeSession = New-TestSession -Token 'FakeSessionToken'
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter {
-                $params.Method -eq 'GET' -and $params.Uri -match '/version$'
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter {
+                $Method -eq 'GET' -and $Uri -match '/version$'
             } {
-                return [PSCustomObject]@{
+                return @{
                     API_SEQUENCE = '230504014'
                     API_VERSION  = '14.3.7000'
                     version      = '14.3.9816.7000'
@@ -38,31 +38,31 @@ Describe 'Get-SEPMVersion' {
             $result.version      | Should -Be '14.3.9816.7000'
         }
 
-        It 'passes headers when Session.SkipCert is $true' {
-            $fakeSession = New-TestSession -SkipCert -Token 'SkipSessionToken'
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM { return 'OK' }
-
-            Get-SEPMVersion | Out-Null
-            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
-                $null -ne $params.Session -and
-                $params.Session.SkipCert -eq $true -and
-                $params.Session.Headers.Authorization -eq 'Bearer SkipSessionToken'
-            }
-        }
-
-        It 'passes the session object to Invoke-ABRestMethod via $params.Session' {
+        It 'passes the session object to Invoke-SepmApi' {
             $fakeSession = New-TestSession -Token 'FakeSessionToken'
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM { return 'OK' }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { return @{ ok = $true } }
 
             Get-SEPMVersion | Out-Null
             Should -Invoke Initialize-SEPMSession -ModuleName PSSymantecSEPM -Times 1 -Exactly
-            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
-                $null -ne $params.Session -and
-                $params.Session.Headers.Authorization -eq 'Bearer FakeSessionToken'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $null -ne $Session -and
+                $Session.Headers.Authorization -eq 'Bearer FakeSessionToken'
+            }
+        }
+
+        It 'passes Session with SkipCert to Invoke-SepmApi' {
+            $fakeSession = New-TestSession -SkipCert -Token 'SkipSessionToken'
+
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { return @{ ok = $true } }
+
+            Get-SEPMVersion | Out-Null
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $null -ne $Session -and
+                $Session.SkipCert -eq $true -and
+                $Session.Headers.Authorization -eq 'Bearer SkipSessionToken'
             }
         }
     }
