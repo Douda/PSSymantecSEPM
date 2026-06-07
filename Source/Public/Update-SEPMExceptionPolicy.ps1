@@ -493,8 +493,8 @@ function Update-SEPMExceptionPolicy {
         }
 
         $patchUri = $URI + "/" + $PolicyID
-        $resp = Invoke-SepmApi -Method 'PATCH' -Uri $patchUri -Body $bodyJson `
-            -Headers $session.Headers -ContentType 'application/json' -SkipCert:$session.SkipCert
+        $resp = Invoke-SepmApi -Method 'PATCH' -Uri $patchUri -Session $session `
+            -Body $bodyJson -ContentType 'application/json'
         return $resp
     }
 }

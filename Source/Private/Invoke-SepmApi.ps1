@@ -2,7 +2,6 @@ function Invoke-SepmApi {
     <#
     .SYNOPSIS
         Thin REST wrapper using built-in transports on both PS versions.
-        Replaces Invoke-ABRestMethod.
 
     .DESCRIPTION
         PS 7+:  Invoke-RestMethod with optional -SkipCertificateCheck.

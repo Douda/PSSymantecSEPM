@@ -92,17 +92,8 @@ function Update-SEPMFileFingerprintList {
             data        = $hashlist
         }
 
-        $params = @{
-            Session = $session
-            Method      = 'POST'
-            Uri         = $URI
-            Body        = $body | ConvertTo-Json
-            ContentType = 'application/json'
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
-
-        # return the response
+        $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session `
+            -Body ($body | ConvertTo-Json) -ContentType 'application/json'
         return $resp
     }
 }

@@ -82,21 +82,9 @@ function Move-SEPClientGroup {
             }
         ) 
 
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method      = 'PATCH'
-            Uri         = $URI
-            contenttype = 'application/json'
-            body        = $body | ForEach-Object { ConvertTo-Json @( $_ ) } # This way converts to JSON as array
-        }
-    
-        # Invoke the request
-        try {
-            $resp = Invoke-ABRestMethod -params $params
-        } catch {
-            Write-Warning -Message "Error: $_"
-        }
+        $bodyJson = '[' + (($body | ConvertTo-Json) -join ',') + ']'
+        $resp = Invoke-SepmApi -Method 'PATCH' -Uri $URI -Session $session `
+            -Body $bodyJson -ContentType 'application/json'
 
         $fullResponse = [PSCustomObject]@{
             computerName        = $ComputerName

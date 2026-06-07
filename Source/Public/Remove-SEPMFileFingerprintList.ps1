@@ -56,13 +56,7 @@ function Remove-SEPMFileFingerprintList {
 
         $URI = $session.BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"
 
-        $params = @{
-            Session = $session
-            Method  = 'DELETE'
-            Uri     = $URI
-        }
-
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method 'DELETE' -Uri $URI -Session $session
         return $resp
     }
 }

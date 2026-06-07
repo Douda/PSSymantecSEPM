@@ -82,14 +82,7 @@ function Send-SEPMCommandQuarantine {
             # Construct the URI
             $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-            # prepare the parameters
-            $params = @{
-                Session = $session
-                Method  = 'POST'
-                Uri     = $URI
-            }
-    
-            $resp = Invoke-ABRestMethod -params $params
+            $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session
             return $resp
         }
 
@@ -112,14 +105,7 @@ function Send-SEPMCommandQuarantine {
             # Construct the URI
             $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-            # prepare the parameters
-            $params = @{
-                Session = $session
-                Method  = 'POST'
-                Uri     = $URI
-            }
-            
-            $resp = Invoke-ABRestMethod -params $params
+            $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session
             return $resp
         }
     }

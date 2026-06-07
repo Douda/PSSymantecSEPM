@@ -84,26 +84,9 @@ function New-SEPMGroup {
             "description" = $Description
         }
 
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method      = 'POST'
-            Uri         = $URI + "/$ParentGroupID"
-            contenttype = 'application/json'
-            body        = $body | ConvertTo-Json
-        }
-
-        # TODO For testing only - remove this
-        # $body | ConvertTo-Json -Depth 100 | Out-File .\Data\PolicyStructure.json -Force
-    
-        # Invoke the request
-        try {
-            $resp = Invoke-ABRestMethod -params $params
-        } catch {
-            Write-Warning -Message "Error: $_"
-        }
-
-        # return the response
+        $patchUri = $URI + "/$ParentGroupID"
+        $resp = Invoke-SepmApi -Method 'POST' -Uri $patchUri -Session $session `
+            -Body ($body | ConvertTo-Json) -ContentType 'application/json'
         return $resp
     }
 }

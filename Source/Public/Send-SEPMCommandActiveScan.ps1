@@ -101,16 +101,7 @@ function Send-SEPMCommandActiveScan {
             $URI = $builder.ToString()
         }
 
-        # Invoke the request params
-        $params = @{
-            Session = $session
-            Method      = 'POST'
-            Uri         = $URI
-            Body        = $body | ConvertTo-Json
-            ContentType = 'application/json'
-        }
-        
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session
 
         # return the response
         return $resp
