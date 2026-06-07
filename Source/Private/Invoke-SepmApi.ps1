@@ -2,34 +2,52 @@ function Invoke-SepmApi {
     <#
     .SYNOPSIS
         Thin REST wrapper using built-in transports on both PS versions.
-        Replaces Invoke-ABRestMethod one caller at a time.
+        Replaces Invoke-ABRestMethod.
 
     .DESCRIPTION
         PS 7+:  Invoke-RestMethod with optional -SkipCertificateCheck.
-                JSON auto-deserialized, or -AsHashtable for case-duplicate-key responses.
+                JSON auto-deserialized, converted to [hashtable] for uniform return type.
         PS 5.1: [System.Net.HttpWebRequest] with KeepAlive=false.
                 Invoke-RestMethod on .NET Framework 4.x reuses TLS connections
                 and SEPM 14.3 rejects them after the first POST ("connection closed").
                 KeepAlive=false forces a fresh TLS handshake per request.
-                JSON parsed via JavaScriptSerializer (ConvertFrom-Json chokes on
-                case-insensitive duplicate keys like sonar/SONAR in SEPM responses).
+                JSON parsed via JavaScriptSerializer, converted to [hashtable].
+
+    .PARAMETER Session
+        Session object from Initialize-SEPMSession. Provides Headers and SkipCert.
+        Mutually exclusive with -Headers/-SkipCert.
+
+    .PARAMETER Headers
+        Hashtable of HTTP headers. For auth bootstrap (Get-SEPMAccessToken).
+        Mutually exclusive with -Session.
+
+    .PARAMETER SkipCert
+        If true, skip certificate validation. For auth bootstrap (Manual set).
 
     .PARAMETER Method
         HTTP method (GET, POST, PATCH, etc.)
+
     .PARAMETER Uri
         Full URI for the request.
+
     .PARAMETER Body
         Optional request body (string, already serialized).
-    .PARAMETER Headers
-        Hashtable of HTTP headers.
+
     .PARAMETER ContentType
         Content-Type header value (defaults to application/json when Body present).
-    .PARAMETER SkipCert
-        If true, skip certificate validation.
     #>
 
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'Session')]
     param(
+        [Parameter(Mandatory = $true, ParameterSetName = 'Session')]
+        [PSCustomObject]$Session,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'Manual')]
+        [hashtable]$Headers,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'Manual')]
+        [bool]$SkipCert,
+
         [Parameter(Mandatory = $true)]
         [string]$Method,
 
@@ -38,25 +56,40 @@ function Invoke-SepmApi {
 
         [string]$Body,
 
-        [hashtable]$Headers = @{},
-
-        [string]$ContentType,
-
-        [bool]$SkipCert = $false
+        [string]$ContentType
     )
+
+    # === Resolve effective Headers and SkipCert from parameter set ===
+    $effectiveSkipCert = $false
+    $effectiveHeaders = @{}
+
+    if ($PSCmdlet.ParameterSetName -eq 'Session') {
+        # Validate session object
+        if ($null -eq $Session.Headers) {
+            throw 'Session object is missing the Headers property. Use Initialize-SEPMSession to create a valid session.'
+        }
+        if ($null -eq $Session.SkipCert) {
+            throw 'Session object is missing the SkipCert property. Use Initialize-SEPMSession to create a valid session.'
+        }
+        $effectiveSkipCert = $Session.SkipCert
+        $effectiveHeaders = $Session.Headers.Clone()
+    } else {
+        $effectiveSkipCert = $SkipCert
+        $effectiveHeaders = $Headers.Clone()
+    }
 
     # === PS 7+ path: Invoke-RestMethod ===
     if ($PSVersionTable.PSVersion.Major -ge 6) {
         $irmParams = @{
             Method  = $Method
             Uri     = $Uri
-            Headers = $Headers
+            Headers = $effectiveHeaders
         }
         if ($Body) { $irmParams.Body = $Body }
         if ($ContentType) { $irmParams.ContentType = $ContentType }
 
         try {
-            if ($SkipCert) {
+            if ($effectiveSkipCert) {
                 $resp = Invoke-RestMethod @irmParams -SkipCertificateCheck
             } else {
                 $resp = Invoke-RestMethod @irmParams
@@ -66,9 +99,7 @@ function Invoke-SepmApi {
             return "Error: $_"
         }
 
-        # SEPM policy responses contain case-insensitive duplicate keys
-        # (e.g., "sonar" and "SONAR"). PowerShell ConvertFrom-Json rejects
-        # these. Use -AsHashtable which is case-insensitive for keys.
+        # Convert JSON string to [hashtable] for uniform return type
         if ($resp -is [string] -and $resp -match '^\s*[\[\{]') {
             try {
                 return $resp | ConvertFrom-Json -AsHashtable -Depth 100 -ErrorAction Stop
@@ -77,18 +108,16 @@ function Invoke-SepmApi {
                 return $resp
             }
         }
+        # If already deserialized (PSCustomObject), convert to hashtable
+        if ($resp -is [PSCustomObject]) {
+            return ConvertTo-Hashtable -InputObject $resp
+        }
         return $resp
     }
 
     # === PS 5.1 path: HttpWebRequest + KeepAlive=false ===
-    # Invoke-RestMethod in .NET Framework 4.x reuses TCP connections.
-    # SEPM 14.3 rejects reused TLS sessions after the first POST request.
-    # HttpWebRequest with KeepAlive=false avoids this entirely.
-    # Additionally, ConvertFrom-Json in PS 5.1 fails on case-insensitive
-    # duplicate keys (sonar/SONAR). JavaScriptSerializer handles these.
-
     try {
-        if ($SkipCert) {
+        if ($effectiveSkipCert) {
             Skip-Cert
         }
 
@@ -105,11 +134,11 @@ function Invoke-SepmApi {
 
         # Apply headers
         $restricted = @('Content-Type', 'Accept', 'Connection', 'Expect', 'Host', 'Referer', 'User-Agent')
-        foreach ($key in $Headers.Keys) {
+        foreach ($key in $effectiveHeaders.Keys) {
             if ($key -eq 'Authorization') {
-                $req.Headers['Authorization'] = $Headers[$key]
+                $req.Headers['Authorization'] = $effectiveHeaders[$key]
             } elseif ($key -notin $restricted) {
-                $req.Headers.Add($key, $Headers[$key])
+                $req.Headers.Add($key, $effectiveHeaders[$key])
             }
         }
 
@@ -144,7 +173,7 @@ function Invoke-SepmApi {
         $respReader.Close()
         $httpResp.Close()
 
-        # Parse JSON
+        # Parse JSON to [hashtable] (uniform return type, no Dictionary→PSObject conversion)
         if ($respBodyStr -match '^\s*[\[\{]') {
             try {
                 Add-Type -AssemblyName System.Web.Extensions -ErrorAction SilentlyContinue
@@ -152,7 +181,7 @@ function Invoke-SepmApi {
                 $jss.MaxJsonLength = [int]::MaxValue
                 $jss.RecursionLimit = 100
                 $parsed = $jss.DeserializeObject($respBodyStr)
-                return ConvertFrom-DictionaryToPSObject $parsed
+                return ConvertTo-Hashtable -InputObject $parsed
             } catch {
                 return $respBodyStr
             }

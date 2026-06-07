@@ -23,13 +23,7 @@ Function Get-SEPMVersion {
     }
 
     process {
-        $params = @{
-            Method  = 'GET'
-            Uri     = $URI
-            Session = $session
-        }
-
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
         return $resp
     }
 }
