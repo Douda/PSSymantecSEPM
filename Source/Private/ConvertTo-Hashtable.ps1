@@ -57,11 +57,12 @@ function ConvertTo-Hashtable {
 
         # Array / IList (but not string) → convert each element
         if ($InputObject -is [System.Collections.IList] -and $InputObject -isnot [string]) {
-            $arr = @()
+            $arr = [System.Collections.Generic.List[object]]::new()
             foreach ($item in $InputObject) {
-                $arr += ConvertTo-Hashtable -InputObject $item
+                $arr.Add((ConvertTo-Hashtable -InputObject $item))
             }
-            return $arr
+            Write-Output $arr.ToArray() -NoEnumerate
+            return
         }
 
         # Scalar → return as-is
