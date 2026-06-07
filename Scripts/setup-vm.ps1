@@ -43,8 +43,8 @@ Set-Item -Path WSMan:\localhost\Service\AllowUnencrypted -Value $true -Force
 Set-Item -Path WSMan:\localhost\MaxEnvelopeSizekb -Value 4096
 Set-Item -Path WSMan:\localhost\MaxTimeoutms -Value 180000
 
-New-NetFirewallRule -Name "WinRM HTTP" -Protocol TCP -LocalPort 5985 -Direction Inbound -Action Allow -ErrorAction SilentlyContinue | Out-Null
-New-NetFirewallRule -Name "WinRM HTTPS" -Protocol TCP -LocalPort 5986 -Direction Inbound -Action Allow -ErrorAction SilentlyContinue | Out-Null
+New-NetFirewallRule -DisplayName "WinRM HTTP" -Protocol TCP -LocalPort 5985 -Direction Inbound -Action Allow -ErrorAction SilentlyContinue | Out-Null
+New-NetFirewallRule -DisplayName "WinRM HTTPS" -Protocol TCP -LocalPort 5986 -Direction Inbound -Action Allow -ErrorAction SilentlyContinue | Out-Null
 Write-Host "  Done." -ForegroundColor Green
 
 # ── 3. Add user to WinRM groups ──
