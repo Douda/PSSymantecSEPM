@@ -111,8 +111,8 @@ function Get-SEPMExceptionPolicy {
         # Updating URI with policy ID
         $URI = $URI + "/" + $policyID
         
-        # Use Invoke-SepmApi (handles PS5.1 + PS7 transport and deserialization)
-        $resp = Invoke-SepmApi -Method 'GET' -Uri $URI -Headers $session.Headers -SkipCert:$session.SkipCert
+        # Use Invoke-SepmApi with session (handles PS5.1 + PS7 transport and deserialization)
+        $resp = Invoke-SepmApi -Method 'GET' -Uri $URI -Session $session
 
         # Add a PSTypeName to the object
         $resp.PSObject.TypeNames.Insert(0, 'SEPM.ExceptionPolicy')
