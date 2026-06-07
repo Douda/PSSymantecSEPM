@@ -36,6 +36,8 @@ function Get-SEPClientVersion {
     process {
         $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
-        return $resp.clientVersionList
+        $list = $resp.clientVersionList
+        if ($null -eq $list) { return @() }
+        return $list
     }
 }

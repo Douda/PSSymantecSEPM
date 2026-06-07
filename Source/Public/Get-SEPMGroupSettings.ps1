@@ -47,12 +47,7 @@ function Get-SEPMGroupSettings {
         # Location ID
         $URI = $session.BaseURLv1 + "/groups/$groupId/locations/$locationId/settings"
 
-        # Invoke the request
-        try {
-            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
-        } catch {
-            Write-Warning -Message "Error: $_"
-        }
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
         # Add a PSTypeName to the object
         # $resp | ForEach-Object {

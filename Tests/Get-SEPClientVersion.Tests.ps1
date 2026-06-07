@@ -39,5 +39,17 @@ Describe 'Get-SEPClientVersion' {
             $result[0].clientsCount | Should -Be 5
             $result[1].version | Should -Be '14.2.1031.0100'
         }
+
+        It 'returns empty array when API returns null list' {
+            $fakeSession = New-TestSession -SkipCert
+
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                return @{ clientVersionList = $null }
+            }
+
+            $result = Get-SEPClientVersion
+            @($result).Count | Should -Be 0
+        }
     }
 }

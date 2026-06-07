@@ -25,6 +25,8 @@ function Get-SEPClientStatus {
     process {
         $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
-        return $resp.clientCountStatsList
+        $list = $resp.clientCountStatsList
+        if ($null -eq $list) { return @() }
+        return $list
     }
 }
