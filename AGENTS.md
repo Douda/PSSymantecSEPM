@@ -192,9 +192,9 @@ python3 Scripts/invoke-winrm.py 'C:\Users\<username>\Desktop\Shared\test-module.
 
 ### WinRM (PS 5.1 testing)
 - WinRM enabled on Windows VM with HTTP (5985) and HTTPS (5986) listeners.
-- HTTPS listener broken for pywinrm/PSWSMan (ConnectionReset) — use **SSL transport**.
-- Python `pywinrm` with `transport='ssl'` on port 5986 works. Pre-installed in image.
-- Credentials via `WINRM_USER` / `WINRM_PASS` env vars (set on host before opening devcontainer).
+- HTTPS/SSL listener broken for pywinrm (timeout/ConnectionReset). Use **NTLM transport on port 5985**.
+- Python `pywinrm` with `transport='ntlm'` on port 5985 works. Pre-installed in image.
+- Credentials: `smokeuser` / `smokepassword`. Set via `WINRM_USER` / `WINRM_PASS` env vars.
 - Always pass `-ExecutionPolicy Bypass` — WinRM sessions have Restricted policy.
 - Setup script: copy `Scripts/setup-vm.ps1` to shared volume, run as Admin once on new VM.
 - Runner: `python3 Scripts/invoke-winrm.py '<path-to-ps1-on-vm>'`
@@ -235,4 +235,4 @@ Single-context — one `CONTEXT.md` at the repo root, one `docs/adr/` directory.
 
 How to interact with the local SEPM VM for live API smoke tests (auth, curl, PS 7, PS 5.1). See `docs/agents/smoke-testing.md`.
 
-Credentials: `admin` / `Aurelien1!` (VM in docker-compose, local dev only).
+Credentials: SEPM: `admin` / `MyComplexPassword1!`; WinRM: `smokeuser` / `smokepassword`; SEPM backup: `douda` / `Aurelien1!` (VM in docker-compose, local dev only).
