@@ -1,6 +1,7 @@
 ﻿# Smoke verification batch runner for PS 5.1
-# Deploy: cp ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM
-# Run:   WINRM_USER=douda WINRM_PASS=aurelien python3 Scripts/invoke-winrm.py 'C:\Users\...\batch.ps51.ps1'
+# Deploy via bootstrap-smoke.sh (auto), or manually:
+#   cp ./Output/PSSymantecSEPM /home/.../Windows/PSSymantecSEPM
+#   WINRM_USER=... WINRM_PASS=... python3 Scripts/invoke-winrm.py 'C:\Users\...\batch.ps51.ps1'
 
 $ErrorActionPreference = "Continue"
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
@@ -13,7 +14,7 @@ $d = "$env:APPDATA\PSSymantecSEPM"
 New-Item -ItemType Directory $d -Force | Out-Null
 @{port=8446;ServerAddress="localhost"}|ConvertTo-Json|Set-Content "$d\config.json" -Force
 
-Import-Module C:\Users\douda\Desktop\Shared\PSSymantecSEPM\PSSymantecSEPM.psm1 -Force
+Import-Module "$env:USERPROFILE\Desktop\Shared\PSSymantecSEPM\PSSymantecSEPM.psm1" -Force
 $mod = Get-Module PSSymantecSEPM; & $mod { $script:SkipCert = $true }
 
 $POLICY_NAME = "Exceptions policy"
