@@ -56,5 +56,17 @@ Describe 'Get-SEPClientStatus' {
                 $Session.Headers.Authorization -eq 'Bearer StatusToken'
             }
         }
+
+        It 'returns empty array when API returns null list' {
+            $fakeSession = New-TestSession -SkipCert
+
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                return @{ lastUpdated = 1693910248728; clientCountStatsList = $null }
+            }
+
+            $result = Get-SEPClientStatus
+            @($result).Count | Should -Be 0
+        }
     }
 }

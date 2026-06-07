@@ -42,19 +42,16 @@ function Get-SEPMGroups {
         }
 
         # Invoke the request
+        $allResults = @()
         do {
-            try {
-                $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
-                # Process the response
-                $allResults += $resp.content
+            # Process the response
+            $allResults += $resp.content
 
-                # Increment the page index & update URI
-                $QueryStrings.pageIndex++
-                $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-            } catch {
-                Write-Warning -Message "Error: $_"
-            }
+            # Increment the page index & update URI
+            $QueryStrings.pageIndex++
+            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
         } until ($resp.lastPage -eq $true)
 
         # return the response

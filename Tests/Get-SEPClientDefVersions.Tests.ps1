@@ -38,5 +38,17 @@ Describe 'Get-SEPClientDefVersions' {
             $result[0].version | Should -Be '2023-09-04 rev. 002'
             $result[0].clientsCount | Should -Be 15
         }
+
+        It 'returns empty array when API returns null list' {
+            $fakeSession = New-TestSession -SkipCert
+
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                return @{ clientDefStatusList = $null }
+            }
+
+            $result = Get-SEPClientDefVersions
+            @($result).Count | Should -Be 0
+        }
     }
 }

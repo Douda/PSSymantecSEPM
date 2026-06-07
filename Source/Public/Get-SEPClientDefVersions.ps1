@@ -55,6 +55,8 @@ function Get-SEPClientDefVersions {
     process {
         $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
-        return $resp.clientDefStatusList
+        $list = $resp.clientDefStatusList
+        if ($null -eq $list) { return @() }
+        return $list
     }
 }
