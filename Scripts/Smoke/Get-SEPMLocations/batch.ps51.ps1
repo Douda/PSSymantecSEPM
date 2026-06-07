@@ -1,4 +1,4 @@
-# Smoke batch: locations GET cmdlets (PS 5.1)
+﻿# Smoke batch: locations GET cmdlets (PS 5.1)
 # Covers: Get-SEPMLocation, Get-SEPMLocationXML
 # Deploy: cp -r ./Output/PSSymantecSEPM /home/.../Windows/PSSymantecSEPM
 # Run via WinRM: python3 Scripts/invoke-winrm.py 'C:\...\batch.ps51.ps1'

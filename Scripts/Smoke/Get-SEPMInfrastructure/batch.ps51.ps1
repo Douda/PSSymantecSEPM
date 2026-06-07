@@ -1,4 +1,4 @@
-# Smoke batch: infrastructure GET cmdlets (PS 5.1)
+﻿# Smoke batch: infrastructure GET cmdlets (PS 5.1)
 # Deploy: cp -r ./Output/PSSymantecSEPM /home/.../Windows/PSSymantecSEPM
 # Run via WinRM: python3 Scripts/invoke-winrm.py 'C:\...\batch.ps51.ps1'
 # Usage: pwsh -NoProfile -File Scripts/Smoke/Get-SEPMInfrastructure/batch.ps51.ps1

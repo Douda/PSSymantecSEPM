@@ -11,9 +11,11 @@ Write-Host "=== PS 7 Metadata Smoke Test ===" -ForegroundColor Yellow
 
 function Get-PolicyState {
     $s = Initialize-SEPMSession
-    $uri = $s.BaseURLv2 + "/policies/exceptions/4C4BC60CAC1E00027A25369C305828F9"
-    $p = @{ Session = $s; Method = "GET"; Uri = $uri }
-    $r = Invoke-ABRestMethod -params $p
+    # Discover policy ID dynamically (same as batch runner)
+    $summary = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/policies/summary/exceptions" -Session $s
+    $policyId = $summary.content[0].id
+    $uri = $s.BaseURLv2 + "/policies/exceptions/$policyId"
+    $r = Invoke-SepmApi -Method GET -Uri $uri -Session $s
     return @{ enabled = $r.enabled; desc = $r.desc }
 }
 
