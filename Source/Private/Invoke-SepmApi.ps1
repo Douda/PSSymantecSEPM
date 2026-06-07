@@ -109,10 +109,12 @@ function Invoke-SepmApi {
             }
         }
         # If already deserialized (PSCustomObject), convert to hashtable
-        if ($resp -is [PSCustomObject]) {
+        if ($resp -is [PSCustomObject] -and -not ($resp -is [array])) {
             return ConvertTo-Hashtable -InputObject $resp
         }
-        return $resp
+        # PowerShell unrolls empty arrays to $null; use -NoEnumerate to preserve
+        Write-Output $resp -NoEnumerate
+        return
     }
 
     # === PS 5.1 path: HttpWebRequest + KeepAlive=false ===

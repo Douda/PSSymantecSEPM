@@ -66,30 +66,30 @@ function Get-SEPMLocation {
         $URI = $session.BaseURLv1 + "/groups" + "/$GroupID/locations"
         $locationList = @()
 
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
-        }
-
         # QueryString parameters
         $QueryStrings = @{
             hasName = $true
         }
-    
+
         # Invoke the request
         $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
+
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+
+        # Normalize response to string array (PS5.1 returns hashtable for JSON arrays)
+        if ($resp -is [hashtable]) {
+            $locationStrings = @()
+            foreach ($key in $resp.Keys) {
+                if ($key -is [int] -or $key -match '^\d+$') {
+                    $locationStrings += $resp[$key]
+                }
+            }
+        } else {
+            $locationStrings = @($resp)
         }
-                
-        $resp = Invoke-ABRestMethod -params $params
 
         # parse response and add group information to the list
-        foreach ($location in $resp) {
+        foreach ($location in $locationStrings) {
             $locationList += [PSCustomObject]@{
                 locationName      = $location.split(":")[0]
                 locationId        = $location.split("/")[-1]
@@ -97,11 +97,6 @@ function Get-SEPMLocation {
                 groupId           = $groupInfo.id
                 groupFullPathName = $groupInfo.fullPathName
             }
-        }
-
-        # Add a PSTypeName to the object
-        $locationList | ForEach-Object {
-            $_.PSObject.TypeNames.Insert(0, 'SEPM.GroupLocationInfo')
         }
 
         # return the response

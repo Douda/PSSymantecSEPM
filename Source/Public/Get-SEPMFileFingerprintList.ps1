@@ -68,26 +68,13 @@ function Get-SEPMFileFingerprintList {
             # Construct the URI
             $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-            $params = @{
-                Session = $session
-                Method  = 'GET'
-                Uri     = $URI
-            }
-    
-            $resp = Invoke-ABRestMethod -params $params
+            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
         }
 
         if ($FingerprintListID) {
             $URI = $session.BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"
-            
-            # prepare the parameters
-            $params = @{
-                Session = $session
-                Method  = 'GET'
-                Uri     = $URI
-            }
-    
-            $resp = Invoke-ABRestMethod -params $params
+
+            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
         }
         
         # return the response

@@ -74,25 +74,7 @@ function Get-SEPMLocationXML {
         $URI = $session.BaseURLv1 + "/groups/$GroupID/locations/$LocationID/xml"
         # $locationList = @()
 
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
-        }
-
-        # QueryString parameters
-        $QueryStrings = @{}
-    
-        # Invoke the request
-        $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
-        }
-                
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
         # # parse response and add group information to the list
         # foreach ($location in $resp) {
