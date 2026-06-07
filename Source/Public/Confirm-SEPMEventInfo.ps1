@@ -27,13 +27,7 @@ function Confirm-SEPMEventInfo {
     }
 
     process {
-        $params = @{
-            Session = $session
-            Method  = 'POST'
-            Uri     = $URI
-        }
-        
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method POST -Uri $URI -Session $session
 
         # return the response
         return $resp

@@ -33,14 +33,7 @@ function Get-SEPMEventInfo {
     }
 
     process {
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
-        }
-
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
         # Add a PSTypeName to the object
         $resp.criticalEventsInfoList | ForEach-Object {

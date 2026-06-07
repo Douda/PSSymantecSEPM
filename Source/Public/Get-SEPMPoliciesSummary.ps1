@@ -82,16 +82,9 @@ function Get-SEPMPoliciesSummary {
             $URI = $session.BaseURLv1 + "/policies/summary" + "/" + $PolicyType
         }
 
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
-        }
-
         # Invoke the request
         try {
-            $resp = Invoke-ABRestMethod -params $params
+            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
             # Add group FullPath to the response from their Group ID for ease of use
             # Parsing every response object
             foreach ($policy in $resp.content) {

@@ -98,8 +98,9 @@ function Get-SEPMExceptionPolicy {
 
     process {
         # Get Policy ID from policy name
-        $policyID = $policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -ExpandProperty id
-        $policy_type = $policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -ExpandProperty policytype
+        $policy = $policies | Where-Object { $_.name -eq $PolicyName }
+        $policyID = $policy.id
+        $policy_type = $policy.policytype
 
         if ($policy_type -ne "exceptions") {
             $message = "policy type is not of type EXCEPTIONS or does not exist - Please verify the policy name"
@@ -113,12 +114,6 @@ function Get-SEPMExceptionPolicy {
         # Use Invoke-SepmApi (handles PS5.1 + PS7 transport and deserialization)
         $resp = Invoke-SepmApi -Method 'GET' -Uri $URI -Headers $session.Headers -SkipCert:$session.SkipCert
 
-        # PS5.1: Invoke-SepmApi returns PSCustomObject via JavaScriptSerializer.
-        # Convert to [ordered] hashtable for indexer compatibility ($resp["key"]).
-        if ($resp -is [PSCustomObject]) {
-            $resp = ConvertTo-Hashtable $resp
-        }
-        
         # Add a PSTypeName to the object
         $resp.PSObject.TypeNames.Insert(0, 'SEPM.ExceptionPolicy')
 
