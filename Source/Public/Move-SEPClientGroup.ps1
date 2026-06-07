@@ -56,7 +56,8 @@ function Move-SEPClientGroup {
 
     process {
         # Get the computer hardwareID
-        $hardwareKey = Get-SEPComputers -ComputerName $ComputerName | Select-Object -ExpandProperty hardwareKey
+        $computer = Get-SEPComputers -ComputerName $ComputerName | Select-Object -First 1
+        $hardwareKey = if ($computer) { $computer.hardwareKey } else { $null }
         if ([string]::IsNullOrEmpty($hardwareKey)) {
             $message = "HardwareKey of computer $ComputerName not found. Please check the computer name and try again."
             Write-Error $message
@@ -64,7 +65,8 @@ function Move-SEPClientGroup {
         }
 
         # Get the group ID of the destination group
-        $groupID = $allGroups | Where-Object { $_.fullPathName -eq $GroupName } | Select-Object -ExpandProperty id
+        $group = $allGroups | Where-Object { $_.fullPathName -eq $GroupName } | Select-Object -First 1
+        $groupID = if ($group) { $group.id } else { $null }
         if ([string]::IsNullOrEmpty($groupID)) {
             $message = "Group $GroupName not found. Please check the group name and try again."
             $message += "Following group format is expected: 'My Company\group\subgroup'"

@@ -78,7 +78,8 @@ function Update-SEPMFileFingerprintList {
         # Get the FingerprintListID if the FingerprintListName is provided
         if ($FingerprintListName) {
             $URI = $session.BaseURLv1 + "/policy-objects/fingerprints"
-            $FingerprintListID = Get-SEPMFileFingerprintList -FingerprintListName $FingerprintListName | Select-Object -ExpandProperty id
+            $fp = Get-SEPMFileFingerprintList -FingerprintListName $FingerprintListName | Select-Object -First 1
+            $FingerprintListID = if ($fp) { $fp.id } else { $null }
         }
 
         $URI = $session.BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"

@@ -70,7 +70,8 @@ function Remove-SEPMGroup {
 
     process {
         # Get the group ID of the destination group
-        $ParentGroupID = $allGroups | Where-Object { $_.fullPathName -eq $ParentGroup } | Select-Object -ExpandProperty id
+        $parent = $allGroups | Where-Object { $_.fullPathName -eq $ParentGroup } | Select-Object -First 1
+        $ParentGroupID = if ($parent) { $parent.id } else { $null }
         if ([string]::IsNullOrEmpty($ParentGroupID)) {
             $message = "Group $GroupName not found. Please check the parent group name and try again."
             $message += "Following group format is expected: 'My Company\group\subgroup'"
