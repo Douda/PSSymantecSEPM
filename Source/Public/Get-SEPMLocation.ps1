@@ -76,8 +76,14 @@ function Get-SEPMLocation {
 
         $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
-        # Normalize response to string array (PS5.1 returns hashtable for JSON arrays)
-        if ($resp -is [hashtable]) {
+        # Normalize response to string array (Invoke-SepmApi returns Object[] for arrays,
+        # hashtable or string for single values)
+        if ($resp -is [array] -and $resp -isnot [string]) {
+            $locationStrings = $resp
+        } elseif ($resp -is [string]) {
+            $locationStrings = @($resp)
+        } elseif ($resp -is [hashtable]) {
+            # Legacy: hashtable with numeric keys (pre-ConvertTo-Hashtable fix)
             $locationStrings = @()
             foreach ($key in $resp.Keys) {
                 if ($key -is [int] -or $key -match '^\d+$') {
@@ -85,7 +91,7 @@ function Get-SEPMLocation {
                 }
             }
         } else {
-            $locationStrings = @($resp)
+            $locationStrings = @()
         }
 
         # parse response and add group information to the list
@@ -99,7 +105,7 @@ function Get-SEPMLocation {
             }
         }
 
-        # return the response
-        return $locationList
+        # return the response (use -NoEnumerate to prevent single-element unrolling)
+        Write-Output $locationList -NoEnumerate
     }
 }
