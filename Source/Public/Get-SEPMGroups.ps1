@@ -35,31 +35,17 @@ function Get-SEPMGroups {
     }
 
     process {
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
-        }
-
         # QueryString parameters for pagination
         $QueryStrings = @{
             pageSize  = 25
             pageIndex = 1
         }
-    
+
         # Invoke the request
         do {
             try {
-                # Invoke the request params
-                $params = @{
-                    Session = $session
-                    Method  = 'GET'
-                    Uri     = $URI
-                }
-                
-                $resp = Invoke-ABRestMethod -params $params
-                
+                $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+
                 # Process the response
                 $allResults += $resp.content
 
@@ -70,11 +56,6 @@ function Get-SEPMGroups {
                 Write-Warning -Message "Error: $_"
             }
         } until ($resp.lastPage -eq $true)
-
-        # Add a PSTypeName to the object
-        $allResults | ForEach-Object {
-            $_.PSObject.TypeNames.Insert(0, 'SEPM.GroupInfo')
-        }
 
         # return the response
         return $allResults

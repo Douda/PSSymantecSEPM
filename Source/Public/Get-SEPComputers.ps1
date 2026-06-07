@@ -82,14 +82,8 @@ function Get-SEPComputers {
             # Construct the URI
             $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-            # Invoke the request params
-            $params = @{
-                Session = $session
-                Method  = 'GET'
-                Uri     = $URI
-            }
-
-            $allResults = (Invoke-ABRestMethod -params $params).content
+            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+            $allResults = $resp.content
 
             # Filtering
             $allResults = $allResults | Where-Object { $_.computerName -like $ComputerName }
@@ -110,17 +104,10 @@ function Get-SEPComputers {
 
             # Construct the URI
             $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-    
-            do {
-                # Invoke the request params
-                $params = @{
-                    Session = $session
-                    Method  = 'GET'
-                    Uri     = $URI
-                }
 
-                $resp = Invoke-ABRestMethod -params $params
-                
+            do {
+                $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+
                 # Process the response
                 $allResults += $resp.content
 
@@ -151,16 +138,9 @@ function Get-SEPComputers {
 
             # Construct the URI
             $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-    
-            do {
-                # Invoke the request params
-                $params = @{
-                    Session = $session
-                    Method  = 'GET'
-                    Uri     = $URI
-                }
 
-                $resp = Invoke-ABRestMethod -params $params
+            do {
+                $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
                 # Process the response
                 $allResults += $resp.content
@@ -169,11 +149,6 @@ function Get-SEPComputers {
                 $QueryStrings.pageIndex++
                 $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
             } until ($resp.lastPage -eq $true)
-        }
-
-        # Add a PSTypeName to the object 
-        $allresults | ForEach-Object {
-            $_.PSTypeNames.Insert(0, "SEP.Computer")
         }
 
         # return the response

@@ -53,19 +53,7 @@ function Get-SEPClientDefVersions {
     }
 
     process {
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
-
-        # Add a PSTypeName to the object
-        $resp.clientDefStatusList | ForEach-Object {
-            $_.PSTypeNames.Insert(0, "SEP.clientDefStatusList")
-        }
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
         return $resp.clientDefStatusList
     }

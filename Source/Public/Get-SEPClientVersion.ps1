@@ -34,19 +34,7 @@ function Get-SEPClientVersion {
     }
 
     process {
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
-
-        # Add a PSTypeName to the object
-        $resp.clientVersionList | ForEach-Object {
-            $_.PSTypeNames.Insert(0, "SEP.clientVersionList")
-        }
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
         return $resp.clientVersionList
     }

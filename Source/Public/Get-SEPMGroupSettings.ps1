@@ -47,23 +47,9 @@ function Get-SEPMGroupSettings {
         # Location ID
         $URI = $session.BaseURLv1 + "/groups/$groupId/locations/$locationId/settings"
 
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
-        }
-
         # Invoke the request
         try {
-            # Invoke the request params
-            $params = @{
-                Session = $session
-                Method  = 'GET'
-                Uri     = $URI
-            }
-                
-            $resp = Invoke-ABRestMethod -params $params
+            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
         } catch {
             Write-Warning -Message "Error: $_"
         }
