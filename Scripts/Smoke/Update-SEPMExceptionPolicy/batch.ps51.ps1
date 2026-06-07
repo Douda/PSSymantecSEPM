@@ -17,8 +17,19 @@ New-Item -ItemType Directory $d -Force | Out-Null
 Import-Module "$env:USERPROFILE\Desktop\Shared\PSSymantecSEPM\PSSymantecSEPM.psm1" -Force
 $mod = Get-Module PSSymantecSEPM; & $mod { $script:SkipCert = $true }
 
-$POLICY_NAME = "Exceptions policy"
-$POLICY_ID   = "4C4BC60CAC1E00027A25369C305828F9"
+$POLICY_NAME = $null
+$POLICY_ID   = $null
+
+# ── Discovery: find first available exception policy ──
+$s = Initialize-SEPMSession
+$summary = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/policies/summary/exceptions" -Headers $s.Headers -SkipCert:$s.SkipCert
+if (-not $summary.content -or $summary.content.Count -eq 0) {
+    Write-Error "No exception policies found"
+    exit 1
+}
+$POLICY_NAME = $summary.content[0].name
+$POLICY_ID   = $summary.content[0].id
+Write-Host "Policy: $POLICY_NAME ($POLICY_ID)"
 
 function Get-PolicyState {
     $s = Initialize-SEPMSession
@@ -63,6 +74,11 @@ function T {
         return "FAIL"
     }
 }
+
+# ── Save original state for restore (after function definitions) ──
+$originalPolicy = Get-PolicyState
+$ORIGINAL_ENABLED = if ($originalPolicy.enabled -is [bool]) { $originalPolicy.enabled } else { $originalPolicy.enabled -eq $true }
+$ORIGINAL_DESC = $originalPolicy.desc
 
 $results = @{}
 
@@ -216,6 +232,76 @@ $results.F3 = T "F3" "MacFile: Remove" `
 $results.G3 = T "G3" "NonExistentPolicy error" `
     { Update-SEPMExceptionPolicy -PolicyName "NonExistentPolicy" -EnablePolicy } `
     { param($p) $true }
+
+# ── Restore policy to original state ──
+Write-Host "`n========== RESTORE =========="
+
+# Metadata
+if ($ORIGINAL_ENABLED) {
+    $descToRestore = if ($ORIGINAL_DESC.Length -gt 1024) { $ORIGINAL_DESC.Substring(0, 1024) } else { $ORIGINAL_DESC }
+    Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -EnablePolicy -PolicyDescription $descToRestore -ErrorAction SilentlyContinue | Out-Null
+} else {
+    Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -DisablePolicy -PolicyDescription $ORIGINAL_DESC -ErrorAction SilentlyContinue | Out-Null
+}
+Start-Sleep -Milliseconds 500
+
+$finalState = Get-PolicyState
+
+# Purge Smoke files
+$smokeFiles = @($finalState.configuration.files | Where-Object { $_.path -match 'Smoke' })
+foreach ($f in $smokeFiles) {
+    Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -Path $f.path -Remove -ErrorAction SilentlyContinue | Out-Null
+    Start-Sleep -Milliseconds 200
+}
+Write-Host "  Files removed: $($smokeFiles.Count)"
+
+# Purge Smoke directories
+$smokeDirs = @($finalState.configuration.directories | Where-Object { $_.directory -match 'Smoke' })
+foreach ($d in $smokeDirs) {
+    Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -FolderPath $d.directory -Remove -ErrorAction SilentlyContinue | Out-Null
+    Start-Sleep -Milliseconds 200
+}
+Write-Host "  Directories removed: $($smokeDirs.Count)"
+
+# Purge Smoke extensions
+$el = $finalState.configuration.extension_list
+if ($el -and $el.extensions) {
+    $smokeExts = @($el.extensions | Where-Object { $_ -match 'smoke' })
+    foreach ($e in $smokeExts) {
+        Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -Extensions $e -Remove -ErrorAction SilentlyContinue | Out-Null
+        Start-Sleep -Milliseconds 200
+    }
+    Write-Host "  Extensions removed: $($smokeExts.Count)"
+}
+
+# Purge Smoke tamper files
+$smokeTamper = @($finalState.configuration.tamper_files | Where-Object { $_.path -match 'Smoke' })
+foreach ($t in $smokeTamper) {
+    Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -TamperPath $t.path -Remove -ErrorAction SilentlyContinue | Out-Null
+    Start-Sleep -Milliseconds 200
+}
+Write-Host "  Tamper files removed: $($smokeTamper.Count)"
+
+# Purge Smoke Mac files
+if ($finalState.configuration.mac -and $finalState.configuration.mac.files) {
+    $smokeMac = @($finalState.configuration.mac.files | Where-Object { $_.path -match 'Smoke' })
+    foreach ($m in $smokeMac) {
+        Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -MacPath $m.path -Remove -ErrorAction SilentlyContinue | Out-Null
+        Start-Sleep -Milliseconds 200
+    }
+    Write-Host "  Mac files removed: $($smokeMac.Count)"
+}
+
+# Verify
+$check = Get-PolicyState
+$remainingSmoke = @($check.configuration.files | Where-Object { $_.path -match 'Smoke' }).Count +
+                  @($check.configuration.directories | Where-Object { $_.directory -match 'Smoke' }).Count +
+                  @($check.configuration.tamper_files | Where-Object { $_.path -match 'Smoke' }).Count
+if ($remainingSmoke -eq 0) {
+    Write-Host "  Policy restored: clean (0 Smoke artifacts)"
+} else {
+    Write-Host "  Policy restored: $remainingSmoke Smoke artifacts remain (extensions may persist — SEPM API limitation)"
+}
 
 # === Summary ===
 Write-Host "`n========== SUMMARY (PS51) =========="
