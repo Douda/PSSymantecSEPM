@@ -45,19 +45,7 @@ Function Get-SEPMAdmins {
         # Construct the URI
         $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
-        }
-        
-        $resp = Invoke-ABRestMethod -params $params
-
-        
-        # Add a PSTypeName to the object
-        $resp | ForEach-Object {
-            $_.PSTypeNames.Insert(0, "SEP.adminList")
-        }
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
         # Process the response
         if ([string]::IsNullOrEmpty($AdminName)) {

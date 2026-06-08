@@ -14,7 +14,8 @@ pwsh -NoProfile -File Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps7.ps1
 rm -rf /home/douda/Windows/PSSymantecSEPM
 cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM
 cp Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps51.ps1 /home/douda/Windows/smoke-ps51.ps1
-WINRM_USER=douda WINRM_PASS=aurelien python3 Scripts/invoke-winrm.py 'C:\Users\douda\Desktop\Shared\smoke-ps51.ps1'
+# invoke-winrm.py now defaults to smokeuser/smokepassword NTLM/5985
+python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\smoke-ps51.ps1'
 ```
 
 ## Results

@@ -23,20 +23,10 @@ function Get-SEPClientStatus {
     }
 
     process {
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
-        # Add a PSTypeName to the object
-        $resp.clientCountStatsList | ForEach-Object {
-            $_.PSTypeNames.Insert(0, "SEP.clientStatusList")
-        }
-
-        return $resp.clientCountStatsList
+        $list = $resp.clientCountStatsList
+        if ($null -eq $list) { return @() }
+        return $list
     }
 }

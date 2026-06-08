@@ -91,8 +91,8 @@ function Send-SEPMCommandGetFile {
         # Get computer ID(s) from computer name(s)
         $ComputerIDList = @()
         foreach ($C in $ComputerName) {
-            $ComputerID = Get-SEPComputers -ComputerName $C | Select-Object -ExpandProperty uniqueId
-            $ComputerIDList += $ComputerID
+            $computer = Get-SEPComputers -ComputerName $C | Select-Object -First 1
+            if ($computer) { $ComputerIDList += $computer.uniqueId }
         }
 
         $URI = $session.BaseURLv1 + "/command-queue/files"
@@ -116,14 +116,7 @@ function Send-SEPMCommandGetFile {
         # Construct the URI
         $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method  = 'POST'
-            Uri     = $URI
-        }
-
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session
         return $resp
     }
 }

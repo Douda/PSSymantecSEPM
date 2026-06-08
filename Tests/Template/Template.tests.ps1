@@ -12,7 +12,7 @@ param()
 # PUBLIC FUNCTION PATTERN
 # ============================================================================
 # For cmdlets exported by the module. Test through the public interface.
-# Mock the system boundaries (Initialize-SEPMSession, Invoke-ABRestMethod) using
+# Mock the system boundaries (Initialize-SEPMSession, Invoke-SepmApi) using
 # -ModuleName PSSymantecSEPM. No InModuleScope needed.
 
 Describe 'MyPublicCommand' {
@@ -38,7 +38,7 @@ Describe 'MyPublicCommand' {
         It 'Test 1' -Pending {
             # Mock the module boundaries with -ModuleName
             # Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            # Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM { return $fakeResponse }
+            # Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { return $fakeResponse }
 
             $result = MyPublicCommand
             $result | Should -Be "Expected"

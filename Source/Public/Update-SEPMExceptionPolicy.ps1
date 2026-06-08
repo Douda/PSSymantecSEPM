@@ -194,7 +194,7 @@ function Update-SEPMExceptionPolicy {
 
         # Fetch policy summary and resolve PolicyID
         $policies = Get-SEPMPoliciesSummary
-        $PolicyID = $policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -ExpandProperty id
+        $PolicyID = ($policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -First 1).id
 
         # Validate PolicyName exists before making API call
         if (-not $PolicyID) {
@@ -493,8 +493,8 @@ function Update-SEPMExceptionPolicy {
         }
 
         $patchUri = $URI + "/" + $PolicyID
-        $resp = Invoke-SepmApi -Method 'PATCH' -Uri $patchUri -Body $bodyJson `
-            -Headers $session.Headers -ContentType 'application/json' -SkipCert:$session.SkipCert
+        $resp = Invoke-SepmApi -Method 'PATCH' -Uri $patchUri -Session $session `
+            -Body $bodyJson -ContentType 'application/json'
         return $resp
     }
 }

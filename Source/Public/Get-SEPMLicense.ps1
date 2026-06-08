@@ -57,22 +57,8 @@ function Get-SEPMLicense {
             $URI = $session.BaseURLv1 + "/licenses/summary"
         }
 
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
-        # Add a PSTypeName to the object
-        if ($Summary) {
-            $resp.PSObject.TypeNames.Insert(0, 'SEPM.LicenseSummaryInfo')
-        } else {
-            $resp.PSObject.TypeNames.Insert(0, 'SEPM.LicenseInfo')
-        }
-        
         return $resp
     }
 }

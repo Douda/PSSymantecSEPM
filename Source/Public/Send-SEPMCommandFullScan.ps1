@@ -58,8 +58,8 @@ function Send-SEPMCommandFullScan {
             # Get computer ID(s) from computer name(s)
             $ComputerIDList = @()
             foreach ($C in $ComputerName) {
-                $ComputerID = Get-SEPComputers -ComputerName $C | Select-Object -ExpandProperty uniqueId
-                $ComputerIDList += $ComputerID
+                $computer = Get-SEPComputers -ComputerName $C | Select-Object -First 1
+                if ($computer) { $ComputerIDList += $computer.uniqueId }
             }
 
             # URI query strings
@@ -82,8 +82,8 @@ function Send-SEPMCommandFullScan {
             # Get group ID(s) from group name(s)
             $GroupIDList = @()
             foreach ($G in $GroupName) {
-                $GroupID = Get-SEPMGroups | Where-Object { $_.fullPathName -eq $G } | Select-Object -ExpandProperty id -First 1
-                $GroupIDList += $GroupID
+                $group = Get-SEPMGroups | Where-Object { $_.fullPathName -eq $G } | Select-Object -First 1
+                if ($group) { $GroupIDList += $group.id }
             }
 
             # URI query strings
@@ -101,16 +101,7 @@ function Send-SEPMCommandFullScan {
             $URI = $builder.ToString()
         }
 
-        # Invoke the request params
-        $params = @{
-            Session = $session
-            Method      = 'POST'
-            Uri         = $URI
-            Body        = $body | ConvertTo-Json
-            ContentType = 'application/json'
-        }
-        
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session
 
         # return the response
         return $resp

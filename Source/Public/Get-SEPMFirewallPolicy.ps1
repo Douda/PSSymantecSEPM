@@ -56,8 +56,9 @@ function Get-SEPMFirewallPolicy {
         if ($PolicyName) {
             # Get Policy ID from policy name
             $policies = Get-SEPMPoliciesSummary
-            $policyID = $policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -ExpandProperty id
-            $policy_type = $policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -ExpandProperty policytype
+            $policy = $policies | Where-Object { $_.name -eq $PolicyName }
+            $policyID = $policy.id
+            $policy_type = $policy.policytype
 
             if ($policy_type -ne "fw") {
                 $message = "policy type is not of type FIREWALL or does not exist - Please verify the policy name"
@@ -69,15 +70,8 @@ function Get-SEPMFirewallPolicy {
         # Updating URI with policy ID
         $URI = $URI + "/" + $policyID
         
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
-        }
-
         try {
-            $resp = Invoke-ABRestMethod -params $params
+            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
         } catch {
             Write-Warning -Message "Error: $_"
         }

@@ -66,30 +66,36 @@ function Get-SEPMLocation {
         $URI = $session.BaseURLv1 + "/groups" + "/$GroupID/locations"
         $locationList = @()
 
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
-        }
-
         # QueryString parameters
         $QueryStrings = @{
             hasName = $true
         }
-    
+
         # Invoke the request
         $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
+
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+
+        # Normalize response to string array (Invoke-SepmApi returns Object[] for arrays,
+        # hashtable or string for single values)
+        if ($resp -is [array] -and $resp -isnot [string]) {
+            $locationStrings = $resp
+        } elseif ($resp -is [string]) {
+            $locationStrings = @($resp)
+        } elseif ($resp -is [hashtable]) {
+            # Legacy: hashtable with numeric keys (pre-ConvertTo-Hashtable fix)
+            $locationStrings = @()
+            foreach ($key in $resp.Keys) {
+                if ($key -is [int] -or $key -match '^\d+$') {
+                    $locationStrings += $resp[$key]
+                }
+            }
+        } else {
+            $locationStrings = @()
         }
-                
-        $resp = Invoke-ABRestMethod -params $params
 
         # parse response and add group information to the list
-        foreach ($location in $resp) {
+        foreach ($location in $locationStrings) {
             $locationList += [PSCustomObject]@{
                 locationName      = $location.split(":")[0]
                 locationId        = $location.split("/")[-1]
@@ -99,12 +105,7 @@ function Get-SEPMLocation {
             }
         }
 
-        # Add a PSTypeName to the object
-        $locationList | ForEach-Object {
-            $_.PSObject.TypeNames.Insert(0, 'SEPM.GroupLocationInfo')
-        }
-
-        # return the response
-        return $locationList
+        # return the response (use -NoEnumerate to prevent single-element unrolling)
+        Write-Output $locationList -NoEnumerate
     }
 }

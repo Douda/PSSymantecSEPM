@@ -87,8 +87,8 @@ function Start-SEPScan {
             # Get computer ID(s) from computer name(s)
             $ComputerIDList = @()
             foreach ($C in $ComputerName) {
-                $ComputerID = Get-SEPComputers -ComputerName $C | Select-Object -ExpandProperty uniqueId
-                $ComputerIDList += $ComputerID
+                $computer = Get-SEPComputers -ComputerName $C | Select-Object -First 1
+                if ($computer) { $ComputerIDList += $computer.uniqueId }
             }
 
             if ($ActiveScan) {
@@ -106,14 +106,7 @@ function Start-SEPScan {
             # Construct the URI
             $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-            # prepare the parameters
-            $params = @{
-                Session = $session
-                Method  = 'POST'
-                Uri     = $URI
-            }
-    
-            $resp = Invoke-ABRestMethod -params $params
+            $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session
             return $resp
         }
 
@@ -139,14 +132,7 @@ function Start-SEPScan {
             # Get computer list
             do {
                 try {
-                    # prepare the parameters
-                    $params = @{
-                        Session = $session
-                        Method  = 'GET'
-                        Uri     = $URI
-                    }
-                    
-                    $resp = Invoke-ABRestMethod -params $params
+                    $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
                 
                     # Process the response
                     $allComputers += $resp.content
@@ -184,15 +170,8 @@ function Start-SEPScan {
                 # Construct the URI
                 $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
         
-                # prepare the parameters
-                $params = @{
-                    Session = $session
-                    Method  = 'POST'
-                    Uri     = $URI
-                }
-
                 # Send command to each computers in the group
-                $resp = Invoke-ABRestMethod -params $params
+                $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session
                 $AllResp += $resp
             }
             

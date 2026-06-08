@@ -122,8 +122,8 @@ function Send-SEPMCommandClearIronCache {
             # Get computer ID(s) from computer name(s)
             $ComputerIDList = @()
             foreach ($C in $ComputerName) {
-                $ComputerID = Get-SEPComputers -ComputerName $C | Select-Object -ExpandProperty uniqueId
-                $ComputerIDList += $ComputerID
+                $computer = Get-SEPComputers -ComputerName $C | Select-Object -First 1
+                if ($computer) { $ComputerIDList += $computer.uniqueId }
             }
 
             # URI query strings
@@ -144,7 +144,8 @@ function Send-SEPMCommandClearIronCache {
         # If group name is specified
         elseif ($GroupName) {
             # Get group ID from group name
-            $GroupID = Get-SEPMGroups | Where-Object { $_.fullPathName -eq $GroupName } | Select-Object -ExpandProperty id -First 1
+            $group = Get-SEPMGroups | Where-Object { $_.fullPathName -eq $GroupName } | Select-Object -First 1
+            $GroupID = if ($group) { $group.id } else { $null }
 
             # URI query strings
             $QueryStrings = @{
@@ -161,16 +162,8 @@ function Send-SEPMCommandClearIronCache {
             $URI = $builder.ToString()
         }
 
-        # Invoke the request params
-        $params = @{
-            Session = $session
-            Method      = 'POST'
-            Uri         = $URI
-            Body        = $body | ConvertTo-Json
-            ContentType = 'application/json'
-        }
-        
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session `
+            -Body ($body | ConvertTo-Json) -ContentType 'application/json'
 
         # return the response
         return $resp

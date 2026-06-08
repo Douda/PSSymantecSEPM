@@ -82,15 +82,10 @@ function Get-SEPMAccessToken {
         "domain"   = $script:configuration.domain
     }
 
-    $Params = @{
-        Method      = 'POST'
-        Uri         = $URI_Authenticate
-        ContentType = "application/json"
-        Body        = ($body | ConvertTo-Json)
-    }
-
-    # Invoke the request and SkipCert if needed
-    $Response = Invoke-ABRestMethod -params $Params
+    # Invoke the request and SkipCert if needed (Manual parameter set — no session exists yet)
+    $Response = Invoke-SepmApi -Method POST -Uri $URI_Authenticate `
+        -Body ($body | ConvertTo-Json) -ContentType 'application/json' `
+        -Headers @{} -SkipCert $script:SkipCert
 
     # Sort the response
     $CachedToken = [PSCustomObject]@{

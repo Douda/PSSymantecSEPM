@@ -24,14 +24,7 @@ function Get-SEPMThreatStats {
     }
 
     process {
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
         return $resp.Stats
     }
 }

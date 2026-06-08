@@ -78,7 +78,8 @@ function Update-SEPMFileFingerprintList {
         # Get the FingerprintListID if the FingerprintListName is provided
         if ($FingerprintListName) {
             $URI = $session.BaseURLv1 + "/policy-objects/fingerprints"
-            $FingerprintListID = Get-SEPMFileFingerprintList -FingerprintListName $FingerprintListName | Select-Object -ExpandProperty id
+            $fp = Get-SEPMFileFingerprintList -FingerprintListName $FingerprintListName | Select-Object -First 1
+            $FingerprintListID = if ($fp) { $fp.id } else { $null }
         }
 
         $URI = $session.BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"
@@ -92,17 +93,8 @@ function Update-SEPMFileFingerprintList {
             data        = $hashlist
         }
 
-        $params = @{
-            Session = $session
-            Method      = 'POST'
-            Uri         = $URI
-            Body        = $body | ConvertTo-Json
-            ContentType = 'application/json'
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
-
-        # return the response
+        $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session `
+            -Body ($body | ConvertTo-Json) -ContentType 'application/json'
         return $resp
     }
 }

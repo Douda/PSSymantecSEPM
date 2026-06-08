@@ -7,9 +7,9 @@
 | VM container | `omarchy-windows` (dockur/windows) |
 | SEPM API | `https://localhost:8446/sepm/api/v{1,2}` |
 | SEPM version | 14.3.25029.9000 |
-| Credentials | SEPM: `admin` / `Aurelien1!` / domain: `""`; WinRM: `douda` / `aurelien` |
-| WinRM (PS 5.1) | HTTP transport, port 5985, `localhost` (user: `douda`, pass: `aurelien`) |
-| Shared volume | `/home/douda/Windows/` ↔ `C:\Users\Administrator\Desktop\Shared\` |
+| Credentials | SEPM: `admin` / `MyComplexPassword1!` / domain: `""`; WinRM: `smokeuser` / `smokepassword` |
+| WinRM (PS 5.1) | NTLM transport, port 5985, `localhost` (SSL/5986 broken with pywinrm) |
+| Shared volume | `/home/douda/Windows/` ↔ `C:\Users\smokeuser\Desktop\Shared\` |
 
 ## Connectivity
 
@@ -26,7 +26,7 @@ curl -sk https://localhost:8446/sepm/api/v1/version
 ```bash
 TOKEN=$(curl -sk -X POST https://localhost:8446/sepm/api/v1/identity/authenticate \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"Aurelien1!","appName":"test","domain":""}' \
+  -d '{"username":"admin","password":"MyComplexPassword1!","appName":"test","domain":""}' \
   | pwsh -NoProfile -c '$i=$input|Out-String;($i|ConvertFrom-Json).token')
 # Use: -H "Authorization: Bearer $TOKEN"
 ```
@@ -139,15 +139,19 @@ $ErrorActionPreference="Continue"
 $cfg="$env:APPDATA\PSSymantecSEPM\config.json"
 New-Item -ItemType Directory (Split-Path $cfg) -Force|Out-Null
 @{port=8446;ServerAddress="localhost"}|ConvertTo-Json|Set-Content $cfg -Force
-Import-Module C:\Users\douda\Desktop\Shared\PSSymantecSEPM\PSSymantecSEPM.psm1 -Force
+Import-Module C:\Users\smokeuser\Desktop\Shared\PSSymantecSEPM\PSSymantecSEPM.psm1 -Force
 $mod=Get-Module PSSymantecSEPM; & $mod {$script:SkipCert=$true}
 Get-SEPMVersion
 # ... test commands ...
 EOF
 
-# Run (env vars needed)
-WINRM_USER=douda WINRM_PASS=aurelien python3 Scripts/invoke-winrm.py \
-  'C:\Users\douda\Desktop\Shared\test-ps51.ps1'
+# Run (NTLM transport, port 5985 — invoke-winrm.py defaults to broken SSL/5986)
+python3 -c "
+import winrm
+s = winrm.Session('localhost:5985', auth=('smokeuser','smokepassword'), transport='ntlm')
+r = s.run_cmd('powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\smokeuser\\\\Desktop\\\\Shared\\\\test-ps51.ps1\"')
+print(r.std_out.decode())
+"
 ```
 
 **Transport**: PS5.1 uses `[HttpWebRequest]` with `KeepAlive=false` (via `Invoke-SepmApi`, see Source/Private/Invoke-SepmApi.ps1).
@@ -176,7 +180,13 @@ pwsh -NoProfile -File Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps7.ps1
 # PS5.1
 cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM
 cp Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps51.ps1 /home/douda/Windows/smoke-ps51.ps1
-WINRM_USER=douda WINRM_PASS=aurelien python3 Scripts/invoke-winrm.py 'C:\Users\douda\Desktop\Shared\smoke-ps51.ps1'
+# Note: invoke-winrm.py defaults to SSL/5986 (broken). Use NTLM/5985:
+python3 -c "
+import winrm
+s = winrm.Session('localhost:5985', auth=('smokeuser','smokepassword'), transport='ntlm')
+r = s.run_cmd('powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\smokeuser\\\\Desktop\\\\Shared\\\\smoke-ps51.ps1\"')
+print(r.std_out.decode())
+"
 ```
 
 ## Known bugs

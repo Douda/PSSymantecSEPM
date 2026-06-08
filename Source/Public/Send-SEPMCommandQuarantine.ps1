@@ -63,8 +63,8 @@ function Send-SEPMCommandQuarantine {
             # Get computer ID(s) from computer name(s)
             $ComputerIDList = @()
             foreach ($C in $ComputerName) {
-                $ComputerID = Get-SEPComputers -ComputerName $C | Select-Object -ExpandProperty uniqueId
-                $ComputerIDList += $ComputerID
+                $computer = Get-SEPComputers -ComputerName $C | Select-Object -First 1
+                if ($computer) { $ComputerIDList += $computer.uniqueId }
             }
 
             $URI = $session.BaseURLv1 + "/command-queue/quarantine"
@@ -82,21 +82,15 @@ function Send-SEPMCommandQuarantine {
             # Construct the URI
             $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-            # prepare the parameters
-            $params = @{
-                Session = $session
-                Method  = 'POST'
-                Uri     = $URI
-            }
-    
-            $resp = Invoke-ABRestMethod -params $params
+            $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session
             return $resp
         }
 
         # If group name is specified
         elseif ($GroupName) {
             # Get group ID from group name
-            $GroupID = Get-SEPMGroups | Where-Object { $_.fullPathName -eq $GroupName } | Select-Object -ExpandProperty id -First 1
+            $group = Get-SEPMGroups | Where-Object { $_.fullPathName -eq $GroupName } | Select-Object -First 1
+            $GroupID = if ($group) { $group.id } else { $null }
             $URI = $session.BaseURLv1 + "/command-queue/quarantine"
 
             # URI query strings
@@ -112,14 +106,7 @@ function Send-SEPMCommandQuarantine {
             # Construct the URI
             $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-            # prepare the parameters
-            $params = @{
-                Session = $session
-                Method  = 'POST'
-                Uri     = $URI
-            }
-            
-            $resp = Invoke-ABRestMethod -params $params
+            $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session
             return $resp
         }
     }

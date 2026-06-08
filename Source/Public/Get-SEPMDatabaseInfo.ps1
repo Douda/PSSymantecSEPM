@@ -36,17 +36,7 @@ function Get-SEPMDatabaseInfo {
     }
 
     process {
-        # prepare the parameters
-        $params = @{
-            Session = $session
-            Method  = 'GET'
-            Uri     = $URI
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
-
-        # Add a PSTypeName to the object
-        $resp.PSObject.TypeNames.Insert(0, 'SEPM.DatabaseInfo')
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
         return $resp
     }

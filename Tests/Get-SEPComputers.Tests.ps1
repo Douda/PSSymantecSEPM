@@ -22,26 +22,14 @@ Describe 'Get-SEPComputers' {
             $fakeSession = New-TestSession -SkipCert
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
-                return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyComputer }); firstPage = $false; lastPage = $true }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
+                return @{ content = (1..5 | ForEach-Object { New-DummyComputer }); firstPage = $false; lastPage = $true }
             }
 
             $result = Get-SEPComputers
             $result | Should -Not -BeNullOrEmpty
             $result.count | Should -Be 5
-            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
-        }
-
-        It 'Should have the expected type' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
-                return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyComputer }); firstPage = $false; lastPage = $true }
-            }
-
-            $result = Get-SEPComputers
-            $result[0].PSObject.TypeNames[0] | Should -Be 'SEP.Computer'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
         }
     }
 
@@ -51,18 +39,18 @@ Describe 'Get-SEPComputers' {
 
             $state = @{ callCount = 0 }
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
                 $state.callCount++
                 if ($state.callCount -ge 2) {
-                    return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyComputer }); firstPage = $false; lastPage = $true }
+                    return @{ content = (1..5 | ForEach-Object { New-DummyComputer }); firstPage = $false; lastPage = $true }
                 } else {
-                    return [PSCustomObject]@{ content = (1..100 | ForEach-Object { New-DummyComputer }); firstPage = $true; lastPage = $false }
+                    return @{ content = (1..100 | ForEach-Object { New-DummyComputer }); firstPage = $true; lastPage = $false }
                 }
             }
 
             $result = Get-SEPComputers
             $result | Should -Not -BeNullOrEmpty
-            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 2 -Scope It
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Exactly 2 -Scope It
         }
     }
 
@@ -71,8 +59,8 @@ Describe 'Get-SEPComputers' {
             $fakeSession = New-TestSession -SkipCert
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
-                return [PSCustomObject]@{
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
+                return @{
                     content   = (, @(New-DummyComputer -ComputerName "MyComputer")) + (1..4 | ForEach-Object { New-DummyComputer })
                     firstPage = $true; lastPage = $true
                 }
@@ -87,8 +75,8 @@ Describe 'Get-SEPComputers' {
             $fakeSession = New-TestSession -SkipCert
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
-                return [PSCustomObject]@{
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
+                return @{
                     content   = (, @(New-DummyComputer -ComputerName "MyComputer")) + (1..4 | ForEach-Object { New-DummyComputer })
                     firstPage = $true; lastPage = $true
                 }
@@ -98,21 +86,6 @@ Describe 'Get-SEPComputers' {
             $result | Should -Not -BeNullOrEmpty
             $result.computername | Should -Be "MyComputer"
         }
-
-        It 'Should have the expected type' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
-                return [PSCustomObject]@{
-                    content   = (, @(New-DummyComputer -ComputerName "MyComputer")) + (1..4 | ForEach-Object { New-DummyComputer })
-                    firstPage = $true; lastPage = $true
-                }
-            }
-
-            $result = Get-SEPComputers -ComputerName "MyComputer"
-            $result.PSObject.TypeNames[0] | Should -Be 'SEP.Computer'
-        }
     }
 
     Context 'GroupName parameter' {
@@ -121,15 +94,15 @@ Describe 'Get-SEPComputers' {
 
             $state = @{ callCount = 0 }
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
                 $state.callCount++
                 if ($state.callCount -ge 2) {
-                    return [PSCustomObject]@{
+                    return @{
                         content = (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup" }) + (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup\\Subgroup" })
                         firstPage = $false; lastPage = $true
                     }
                 } else {
-                    return [PSCustomObject]@{
+                    return @{
                         content = (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup" }) + (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup\\Subgroup" }) + (1..8 | ForEach-Object { New-DummyComputer })
                         firstPage = $true; lastPage = $false
                     }
@@ -146,15 +119,15 @@ Describe 'Get-SEPComputers' {
 
             $state = @{ callCount = 0 }
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
                 $state.callCount++
                 if ($state.callCount -ge 2) {
-                    return [PSCustomObject]@{
+                    return @{
                         content = (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup" }) + (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup\\Subgroup" })
                         firstPage = $false; lastPage = $true
                     }
                 } else {
-                    return [PSCustomObject]@{
+                    return @{
                         content = (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup" }) + (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup\\Subgroup" }) + (1..8 | ForEach-Object { New-DummyComputer })
                         firstPage = $true; lastPage = $false
                     }
@@ -166,18 +139,6 @@ Describe 'Get-SEPComputers' {
             $result.group.name | Where-Object { $_ -eq "My Company\\MyGroup" } | Should -Not -BeNullOrEmpty
             $result.group.name | Where-Object { $_ -eq "My Company\\MyGroup\\Subgroup" } | Should -Not -BeNullOrEmpty
         }
-
-        It 'Should have the expected type' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
-                return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup" }); firstPage = $true; lastPage = $true }
-            }
-
-            $result = Get-SEPComputers -GroupName "My Company\\MyGroup"
-            $result[0].PSObject.TypeNames[0] | Should -Be 'SEP.Computer'
-        }
     }
 
     Context 'URI construction' {
@@ -185,14 +146,14 @@ Describe 'Get-SEPComputers' {
             $fakeSession = New-TestSession -SkipCert
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
-                return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyComputer }); firstPage = $true; lastPage = $true }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
+                return @{ content = (1..5 | ForEach-Object { New-DummyComputer }); firstPage = $true; lastPage = $true }
             }
 
             Get-SEPComputers -ComputerName "MyComputer" | Out-Null
 
-            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It -ParameterFilter {
-                $params.Uri -match '/computers\?computerName=MyComputer$'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Exactly 1 -Scope It -ParameterFilter {
+                $Uri -match '/computers\?computerName=MyComputer$'
             }
         }
 
@@ -200,14 +161,14 @@ Describe 'Get-SEPComputers' {
             $fakeSession = New-TestSession -SkipCert
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-ABRestMethod -ModuleName PSSymantecSEPM -ParameterFilter { $params.Method -eq 'GET' } {
-                return [PSCustomObject]@{ content = (1..5 | ForEach-Object { New-DummyComputer }); firstPage = $true; lastPage = $true }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
+                return @{ content = (1..5 | ForEach-Object { New-DummyComputer }); firstPage = $true; lastPage = $true }
             }
 
             Get-SEPComputers | Out-Null
 
-            Should -Invoke Invoke-ABRestMethod -ModuleName PSSymantecSEPM -Exactly 1 -Scope It -ParameterFilter {
-                $params.Uri -match 'sort=COMPUTER_NAME'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Exactly 1 -Scope It -ParameterFilter {
+                $Uri -match 'sort=COMPUTER_NAME'
             }
         }
     }
