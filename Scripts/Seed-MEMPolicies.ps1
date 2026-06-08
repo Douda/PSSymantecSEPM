@@ -121,17 +121,21 @@ function Invoke-SeedMEMPolicies {
             continue
         }
 
-        # Step 1: POST minimal payload to create policy
+        # Step 1: POST with full configuration
+        # Note: SEPM 14.3 honors config.enabled and globalauditmodeoverride on POST
+        #       but ignores them on PATCH. Always send all config in POST body.
+        $config = $entry.Configuration.Clone()
         $postBody = @{
-            name    = $entry.Name
-            desc    = $entry.Description
-            enabled = $entry.Enabled
-        } | ConvertTo-Json
+            name          = $entry.Name
+            desc          = $entry.Description
+            enabled       = $entry.Enabled
+            configuration = $config
+        } | ConvertTo-Json -Depth 10 -Compress
 
         $createUri = "$($session.BaseURLv1)/policies/mem"
         $null = _InvokeApi -Method POST -Uri $createUri -Session $session -Body $postBody
 
-        # Step 2: GET summary to retrieve server-assigned ID
+        # Step 2: GET summary to retrieve server-assigned ID (POST returns empty body)
         $summaryResp = _InvokeApi -Method GET -Uri "$($session.BaseURLv1)/policies/summary/mem" -Session $session
         $summaryContent = if ($summaryResp -and $summaryResp.ContainsKey('content')) {
             $summaryResp.content
@@ -146,17 +150,6 @@ function Invoke-SeedMEMPolicies {
             continue
         }
         $policyId = $createdPolicy.id
-
-        # Step 3: Build PATCH body with full MemConfiguration
-        $config = $entry.Configuration.Clone()
-        # Ensure arrays are preserved correctly in JSON
-        $patchBody = @{
-            name          = $entry.Name
-            configuration = $config
-        } | ConvertTo-Json -Depth 10 -Compress
-
-        $patchUri = "$($session.BaseURLv1)/policies/mem/$policyId"
-        $null = _InvokeApi -Method PATCH -Uri $patchUri -Session $session -Body $patchBody
 
         $policyMap[$entry.Name] = $policyId
     }

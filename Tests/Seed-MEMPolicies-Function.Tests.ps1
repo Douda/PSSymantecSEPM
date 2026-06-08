@@ -104,57 +104,42 @@ Describe 'Invoke-SeedMEMPolicies' {
             $script:postBodies.Count | Should -Be 4
         }
 
-        It 'sends 4 PATCH requests' {
-            $script:patchBodies.Count | Should -Be 4
+        It 'sends no PATCH requests (POST sets full config)' {
+            $script:patchBodies.Count | Should -Be 0
         }
 
-        It 'POST body is minimal (name, desc, enabled)' {
+        It 'POST body includes full configuration' {
             $firstPost = $script:postBodies[0] | ConvertFrom-Json
             $firstPost.name | Should -Be 'Standard MEM'
             $firstPost.desc | Should -Not -BeNullOrEmpty
             $firstPost.enabled | Should -BeTrue
-            $firstPost.PSObject.Properties.Name | Should -Not -Contain 'configuration'
+            $firstPost.configuration | Should -Not -BeNullOrEmpty
+            $firstPost.configuration.enabled | Should -BeTrue
+            $firstPost.configuration.enablejavaprotection | Should -BeTrue
+            $firstPost.configuration.enableadvanced | Should -BeFalse
         }
 
-        It 'PATCH body includes full configuration' {
-            $standardPatch = $script:patchBodies[0] | ConvertFrom-Json
-            $standardPatch.name | Should -Be 'Standard MEM'
-            $standardPatch.configuration | Should -Not -BeNullOrEmpty
-            $standardPatch.configuration.enabled | Should -BeTrue
-            $standardPatch.configuration.enablejavaprotection | Should -BeTrue
-            $standardPatch.configuration.enableadvanced | Should -BeFalse
+        It 'POST body for Advanced MEM has customrules and globaltechniqueoverrides' {
+            $advancedPost = $script:postBodies[1] | ConvertFrom-Json
+            $advancedPost.name | Should -Be 'Advanced MEM'
+            $advancedPost.configuration.enableadvanced | Should -BeTrue
+            $advancedPost.configuration.customrules.Count | Should -BeGreaterOrEqual 2
+            $advancedPost.configuration.globaltechniqueoverrides.Count | Should -BeGreaterOrEqual 1
         }
 
-        It 'PATCH body for Advanced MEM has customrules and globaltechniqueoverrides' {
-            $advancedPatch = $script:patchBodies[1] | ConvertFrom-Json
-            $advancedPatch.name | Should -Be 'Advanced MEM'
-            $advancedPatch.configuration.enableadvanced | Should -BeTrue
-            $advancedPatch.configuration.customrules.Count | Should -BeGreaterOrEqual 2
-            $advancedPatch.configuration.globaltechniqueoverrides.Count | Should -BeGreaterOrEqual 1
-        }
-
-        It 'Java-Only MEM POST body has enabled=true (policy level), config.enabled=false' {
+        It 'Java-Only MEM POST body has config.enabled=false, enablejavaprotection=true' {
             $javaPost = $script:postBodies[2] | ConvertFrom-Json
             $javaPost.name | Should -Be 'Java-Only MEM'
             $javaPost.enabled | Should -BeTrue
+            $javaPost.configuration.enabled | Should -BeFalse
+            $javaPost.configuration.enablejavaprotection | Should -BeTrue
+            $javaPost.configuration.enableadvanced | Should -BeFalse
         }
 
-        It 'Java-Only MEM PATCH body has config.enabled=false, enablejavaprotection=true' {
-            $javaPatch = $script:patchBodies[2] | ConvertFrom-Json
-            $javaPatch.configuration.enabled | Should -BeFalse
-            $javaPatch.configuration.enablejavaprotection | Should -BeTrue
-            $javaPatch.configuration.enableadvanced | Should -BeFalse
-        }
-
-        It 'Audit MEM PATCH body has globalauditmodeoverride=true' {
-            $auditPatch = $script:patchBodies[3] | ConvertFrom-Json
-            $auditPatch.name | Should -Be 'Audit MEM'
-            $auditPatch.configuration.globalauditmodeoverride | Should -BeTrue
-        }
-
-        It 'PATCH uses /policies/mem/{id} endpoint' {
-            # Verified by mock collecting patchBodies — the function calls PATCH with correct URI
-            $script:patchBodies.Count | Should -Be 4
+        It 'Audit MEM POST body has globalauditmodeoverride=true' {
+            $auditPost = $script:postBodies[3] | ConvertFrom-Json
+            $auditPost.name | Should -Be 'Audit MEM'
+            $auditPost.configuration.globalauditmodeoverride | Should -BeTrue
         }
     }
 
@@ -172,7 +157,7 @@ Describe 'Invoke-SeedMEMPolicies' {
                 if ($Method -eq 'GET') {
                     return @{ content = $script:policyList.ToArray() }
                 }
-                throw "POST/PATCH/DELETE should not be called for idempotent runs"
+                throw "POST/DELETE should not be called for idempotent runs"
             }
 
             . $script:SeedScriptPath

@@ -90,20 +90,18 @@ Write-Host "  Advanced: advanced=true customs=$customCount overrides=$overrideCo
 Write-Host "--- Verify Java-Only MEM ---"
 $java = Get-MEMPolicyByName 'Java-Only MEM'
 if (-not $java) { throw "FAIL: Java-Only MEM not found" }
+if ($java.configuration.enabled -ne $false) { throw "FAIL: Java-Only MEM config.enabled should be false, got: $($java.configuration.enabled)" }
 if ($java.configuration.enablejavaprotection -ne $true) { throw "FAIL: Java-Only MEM enablejavaprotection should be true" }
 if ($java.configuration.enableadvanced -ne $false) { throw "FAIL: Java-Only MEM enableadvanced should be false" }
-# Known SEPM API limitation: configuration.enabled is always true (unchangeable via PATCH)
 Write-Host "  Java-Only: enabled=$($java.configuration.enabled) java=$($java.configuration.enablejavaprotection) - PASS"
-Write-Host "    (config.enabled=$($java.configuration.enabled) — known SEPM API limitation, seed sends false)"
 
 # ── Verify Audit MEM ──
 Write-Host "--- Verify Audit MEM ---"
 $audit = Get-MEMPolicyByName 'Audit MEM'
 if (-not $audit) { throw "FAIL: Audit MEM not found" }
+if ($audit.configuration.globalauditmodeoverride -ne $true) { throw "FAIL: Audit MEM globalauditmodeoverride should be true, got: $($audit.configuration.globalauditmodeoverride)" }
 if ($audit.configuration.enabled -ne $true) { throw "FAIL: Audit MEM config.enabled should be true" }
-# Known SEPM API limitation: globalauditmodeoverride always returned as false (unchangeable via PATCH)
 Write-Host "  Audit: enabled=$($audit.configuration.enabled) audit=$($audit.configuration.globalauditmodeoverride) - PASS"
-Write-Host "    (globalauditmodeoverride=$($audit.configuration.globalauditmodeoverride) — known SEPM API limitation, seed sends true)"
 
 # ── Idempotency ──
 Write-Host "--- Idempotency ---"
