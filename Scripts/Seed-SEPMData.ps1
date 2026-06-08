@@ -71,6 +71,9 @@ $seedUpgradePoliciesScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-Upgr
 $seedTDADPoliciesScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-TDADPolicies.ps1'
 . $seedTDADPoliciesScript
 
+$seedHostGroupsScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-HostGroups.ps1'
+. $seedHostGroupsScript
+
 # If no categories specified, default to all
 if (-not $Categories -or $Categories.Count -eq 0) {
     Write-Output 'No categories implemented yet'
@@ -112,5 +115,10 @@ switch -Regex ($Categories) {
         Write-Output '=== Seeding TDAD Policies ==='
         $result = Invoke-SeedTDADPolicies -State $State
         Write-Output "TDAD policies seeded: $($result.TDADPolicyMap.Count)"
+    }
+    '^HostGroups$' {
+        Write-Output '=== Seeding Host Groups ==='
+        $result = Invoke-SeedHostGroups -State $State
+        Write-Output "Host groups seeded: $($result.HostGroupMap.Count)"
     }
 }

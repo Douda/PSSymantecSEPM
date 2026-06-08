@@ -234,4 +234,34 @@ Describe 'Seed-SEPMData' {
             ($output -match 'TDAD policies seeded: 2') | Should -Not -BeNullOrEmpty
         }
     }
+
+    Context '-Categories HostGroups dispatch' {
+        BeforeAll {
+            $fakeSession = New-TestSession -SkipCert
+            $realModule = Get-Module PSSymantecSEPM
+
+            Mock Import-Module { return $realModule }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                if ($Method -eq 'GET') {
+                    return @{
+                        content = @(
+                            @{ name = 'Corporate LAN'; id = 'id-cl' }
+                            @{ name = 'DMZ Servers'; id = 'id-dmz' }
+                        )
+                    }
+                }
+                return $null
+            }
+        }
+
+        It 'dispatches to Invoke-SeedHostGroups and reports count' {
+            $output = & $script:SeedScriptPath -Categories HostGroups
+
+            $output | Should -Not -BeNullOrEmpty
+            ($output -match '=== Seeding Host Groups ===') | Should -Not -BeNullOrEmpty
+            ($output -match 'Host groups seeded: 2') | Should -Not -BeNullOrEmpty
+        }
+    }
 }
