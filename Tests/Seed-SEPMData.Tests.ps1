@@ -107,4 +107,38 @@ Describe 'Seed-SEPMData' {
             ($output -match 'Groups seeded:') | Should -Not -BeNullOrEmpty
         }
     }
+
+    Context '-Categories ExceptionsPolicies dispatch' {
+        BeforeAll {
+            $fakeSession = New-TestSession -SkipCert
+            $realModule = Get-Module PSSymantecSEPM
+
+            Mock Import-Module { return $realModule }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+
+            # Simulate GET returning 4 existing policies (idempotent skip)
+            # Must be module-scoped because _InvokeApi calls via & $State.Module
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                if ($Method -eq 'GET') {
+                    return @{
+                        content = @(
+                            @{ name = 'Standard Workstation Exceptions'; id = 'id-1' }
+                            @{ name = 'Server Exceptions'; id = 'id-2' }
+                            @{ name = 'Developer Exceptions'; id = 'id-3' }
+                            @{ name = 'Emergency Disabled'; id = 'id-4' }
+                        )
+                    }
+                }
+                return $null
+            }
+        }
+
+        It 'dispatches to Invoke-SeedExceptionsPolicies and reports count' {
+            $output = & $script:SeedScriptPath -Categories ExceptionsPolicies
+
+            $output | Should -Not -BeNullOrEmpty
+            ($output -match '=== Seeding Exceptions Policies ===') | Should -Not -BeNullOrEmpty
+            ($output -match 'Exceptions policies seeded: 4') | Should -Not -BeNullOrEmpty
+        }
+    }
 }

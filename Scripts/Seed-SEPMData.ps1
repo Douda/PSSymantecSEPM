@@ -59,6 +59,9 @@ $seedGroupsScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-Groups.ps1'
 $seedAdminsScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-Admins.ps1'
 . $seedAdminsScript
 
+$seedExceptionsPoliciesScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-ExceptionsPolicies.ps1'
+. $seedExceptionsPoliciesScript
+
 # If no categories specified, default to all
 if (-not $Categories -or $Categories.Count -eq 0) {
     Write-Output 'No categories implemented yet'
@@ -80,5 +83,10 @@ switch -Regex ($Categories) {
         Write-Output '=== Seeding Admins ==='
         $result = Invoke-SeedAdmins -State $State
         Write-Output "Admins seeded: $($result.AdminMap.Count)"
+    }
+    '^ExceptionsPolicies$' {
+        Write-Output '=== Seeding Exceptions Policies ==='
+        $result = Invoke-SeedExceptionsPolicies -State $State
+        Write-Output "Exceptions policies seeded: $($result.ExceptionPolicyMap.Count)"
     }
 }
