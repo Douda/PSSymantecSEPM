@@ -87,3 +87,10 @@ A security incident detected by a Client or SEPM — virus detection, intrusion
 attempt, policy violation, or other threat activity. Events may require
 administrator acknowledgment.
 _Avoid_: Alert, incident, notification, log entry
+
+**Policy Snapshot**:
+A PSObject bundling fetched Policy summaries, full Policy objects, and a
+Location ID→name map for zero, one, or more Policy types. Built by
+`Get-SEPMPolicySnapshot` and consumed by Export-ToExcel cmdlets. Persisted via
+`Export-Clixml` for offline use.
+_Avoid_: Dump, export bundle, policy collection
