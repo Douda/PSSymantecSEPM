@@ -2,29 +2,8 @@
 # Covers: Get-SEPMLocation, Get-SEPMLocationXML
 # Usage: pwsh -NoProfile -File Scripts/Smoke/Get-SEPMLocations/batch.ps7.ps1
 
-$ErrorActionPreference = "Continue"
-
-Import-Module ./Output/PSSymantecSEPM/PSSymantecSEPM.psm1 -Force
-$mod = Get-Module PSSymantecSEPM
-& $mod { $script:SkipCert = $true }
-
-function T {
-    param($Id, $Label, [ScriptBlock]$Action, [ScriptBlock]$Assert)
-    Write-Host "--- $Id : $Label ---" -ForegroundColor Cyan
-    try {
-        $result = & $Action
-        if ($result -is [string] -and $result -like "Error:*") {
-            Write-Host "  VERDICT: FAIL (API error)" -ForegroundColor Red
-            return "FAIL"
-        }
-        $ok = & $Assert $result
-        if ($ok) { Write-Host "  VERDICT: PASS" -ForegroundColor Green; return "PASS" }
-        else     { Write-Host "  VERDICT: FAIL" -ForegroundColor Red;   return "FAIL" }
-    } catch {
-        Write-Host "  ERROR: $($_.Exception.Message)" -ForegroundColor Red
-        return "FAIL"
-    }
-}
+$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
+. "$RepoRoot/Scripts/Smoke/Common.ps1"
 
 $results = @{}
 

@@ -1,11 +1,8 @@
 # Smoke verification batch runner — sourced by vertical-slice test scripts
 # Usage: pwsh -NoProfile -File Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps7.ps1
 
-$ErrorActionPreference = "Continue"
-
-Import-Module ./Output/PSSymantecSEPM/PSSymantecSEPM.psm1 -Force
-$mod = Get-Module PSSymantecSEPM
-& $mod { $script:SkipCert = $true }
+$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
+. "$RepoRoot/Scripts/Smoke/Common.ps1"
 
 # ── Discovery: find first available exception policy ──
 $s = Initialize-SEPMSession
