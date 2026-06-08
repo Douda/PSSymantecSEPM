@@ -31,7 +31,7 @@ if not script_path:
 cmd = f'powershell -ExecutionPolicy Bypass -File "{script_path}"'
 s = winrm.Session(f'{HOST}:{PORT}', auth=(USER, PASS), transport='ntlm')
 r = s.run_cmd(cmd)
-print(r.std_out.decode())
+print(r.std_out.decode('utf-8', errors='replace'))
 if r.std_err:
     err = r.std_err.decode().strip()
     if err:

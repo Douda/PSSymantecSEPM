@@ -74,6 +74,9 @@ $seedTDADPoliciesScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-TDADPol
 $seedHostGroupsScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-HostGroups.ps1'
 . $seedHostGroupsScript
 
+$seedFingerprintsScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-Fingerprints.ps1'
+. $seedFingerprintsScript
+
 # If no categories specified, default to all
 if (-not $Categories -or $Categories.Count -eq 0) {
     Write-Output 'No categories implemented yet'
@@ -120,5 +123,10 @@ switch -Regex ($Categories) {
         Write-Output '=== Seeding Host Groups ==='
         $result = Invoke-SeedHostGroups -State $State
         Write-Output "Host groups seeded: $($result.HostGroupMap.Count)"
+    }
+    '^Fingerprints$' {
+        Write-Output '=== Seeding Fingerprints ==='
+        $result = Invoke-SeedFingerprints -State $State
+        Write-Output "Fingerprints seeded: $($result.FingerprintMap.Count)"
     }
 }

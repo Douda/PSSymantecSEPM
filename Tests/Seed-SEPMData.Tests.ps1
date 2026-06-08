@@ -264,4 +264,33 @@ Describe 'Seed-SEPMData' {
             ($output -match 'Host groups seeded: 2') | Should -Not -BeNullOrEmpty
         }
     }
+
+    Context '-Categories Fingerprints dispatch' {
+        BeforeAll {
+            $fakeSession = New-TestSession -SkipCert
+            $realModule = Get-Module PSSymantecSEPM
+
+            Mock Import-Module { return $realModule }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                if ($Method -eq 'GET' -and $Uri -match '/domains$') {
+                    return @(@{ id = 'default-domain-id'; name = 'Default' })
+                }
+                if ($Method -eq 'POST') {
+                    $bodyObj = $Body | ConvertFrom-Json
+                    return @{ id = 'id-' + $bodyObj.name; name = $bodyObj.name }
+                }
+                return $null
+            }
+        }
+
+        It 'dispatches to Invoke-SeedFingerprints and reports count' {
+            $output = & $script:SeedScriptPath -Categories Fingerprints
+
+            $output | Should -Not -BeNullOrEmpty
+            ($output -match '=== Seeding Fingerprints ===') | Should -Not -BeNullOrEmpty
+            ($output -match 'Fingerprints seeded: 2') | Should -Not -BeNullOrEmpty
+        }
+    }
 }
