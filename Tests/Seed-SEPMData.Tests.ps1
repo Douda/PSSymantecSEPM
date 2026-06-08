@@ -79,4 +79,32 @@ Describe 'Seed-SEPMData' {
             $output -match 'Force: False' | Should -BeTrue
         }
     }
+
+    Context '-Categories Groups dispatch' {
+        BeforeAll {
+            $fakeSession = New-TestSession -SkipCert
+            $realModule = Get-Module PSSymantecSEPM
+
+            Mock Import-Module { return $realModule }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            Mock Get-SEPMGroups {
+                return @(
+                    [PSCustomObject]@{ id = 'mc-id'; name = 'My Company'; fullPathName = 'My Company' },
+                    [PSCustomObject]@{ id = 'def-id'; name = 'Default Group'; fullPathName = 'My Company\Default Group' }
+                )
+            }
+            Mock New-SEPMGroup {
+                return @{ id = 'fake-id'; name = $GroupName; fullPathName = "$ParentGroup\$GroupName" }
+            }
+            Mock Invoke-SepmApi { param($Method, $Uri, $Session, $Body, $ContentType) }
+        }
+
+        It 'dispatches to Invoke-SeedGroups and reports count' {
+            $output = & $script:SeedScriptPath -Categories Groups
+
+            $output | Should -Not -BeNullOrEmpty
+            ($output -match '=== Seeding Groups ===') | Should -Not -BeNullOrEmpty
+            ($output -match 'Groups seeded:') | Should -Not -BeNullOrEmpty
+        }
+    }
 }

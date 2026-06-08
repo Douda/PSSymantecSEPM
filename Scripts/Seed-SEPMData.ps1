@@ -52,6 +52,10 @@ if ($Force) {
 
 # ── Dispatch ──
 
+# Dot-source seed function scripts
+$seedGroupsScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-Groups.ps1'
+. $seedGroupsScript
+
 # If no categories specified, default to all
 if (-not $Categories -or $Categories.Count -eq 0) {
     Write-Output 'No categories implemented yet'
@@ -63,5 +67,10 @@ switch -Regex ($Categories) {
     '^Test$' {
         Write-Output 'Framework ready'
         Write-Output "Force: $($State.Force)"
+    }
+    '^Groups$' {
+        Write-Output '=== Seeding Groups ==='
+        $result = Invoke-SeedGroups -State $State
+        Write-Output "Groups seeded: $($result.GroupMap.Count)"
     }
 }

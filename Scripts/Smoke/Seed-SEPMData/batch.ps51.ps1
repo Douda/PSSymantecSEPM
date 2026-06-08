@@ -9,6 +9,10 @@ $RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
 
 Write-Host "=== Smoke: Seed-SEPMData (PS5.1) ==="
 
+# Copy seed scripts to shared volume root (deployed there from host)
+# Seed-Groups.ps1 and Seed-SEPMData.ps1 are already in $RepoRoot
+# (they were deployed directly, not in a Scripts/ subdirectory)
+
 $seedScript = "$RepoRoot\Seed-SEPMData.ps1"
 
 # ── Test: -Categories Test ──
@@ -36,5 +40,25 @@ $result = & $seedScript
 if (-not $result) { throw "FAIL: no output from no-params" }
 if (($result -match 'No categories implemented yet').Count -eq 0) { throw "FAIL: expected 'No categories implemented yet', got: $result" }
 Write-Host "  VERDICT: PASS"
+
+# ── Test: -Categories Groups (live seed) ──
+Write-Host "--- Test: -Categories Groups ---"
+$beforeCount = (Get-SEPMGroups).Count
+$result = & $seedScript -Categories Groups
+$afterCount = (Get-SEPMGroups).Count
+
+if (-not $result) { throw "FAIL: no output from -Categories Groups" }
+if (($result -match 'Groups seeded:').Count -eq 0) { throw "FAIL: expected seed count, got: $result" }
+# Groups may already exist from other smoke runs; just verify nothing was lost
+if ($afterCount -lt $beforeCount) { throw "FAIL: group count decreased ($beforeCount -> $afterCount)" }
+Write-Host "  VERDICT: PASS (groups: $afterCount, seeded count reported)"
+
+# ── Test: Groups Idempotency ──
+Write-Host "--- Test: Groups Idempotency ---"
+$beforeCount = (Get-SEPMGroups).Count
+$result = & $seedScript -Categories Groups
+$afterCount = (Get-SEPMGroups).Count
+if ($afterCount -ne $beforeCount) { throw "FAIL: counts changed on re-run ($beforeCount -> $afterCount)" }
+Write-Host "  VERDICT: PASS (idempotent, $afterCount groups)"
 
 Write-Host "`n=== Smoke: Seed-SEPMData (PS5.1) — ALL PASS ==="

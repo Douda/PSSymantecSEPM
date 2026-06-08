@@ -36,4 +36,24 @@ if (-not $result) { throw "FAIL: no output from no-params" }
 if (($result -match 'No categories implemented yet').Count -eq 0) { throw "FAIL: expected 'No categories implemented yet', got: $result" }
 Write-Host "  VERDICT: PASS" -ForegroundColor Green
 
+# ── Test: -Categories Groups (live seed) ──
+Write-Host "--- Test: -Categories Groups ---"
+$beforeCount = (Get-SEPMGroups).Count
+$result = & $seedScript -Categories Groups
+$afterCount = (Get-SEPMGroups).Count
+
+if (-not $result) { throw "FAIL: no output from -Categories Groups" }
+if (($result -match 'Groups seeded:').Count -eq 0) { throw "FAIL: expected seed count, got: $result" }
+if ($afterCount -le $beforeCount) { throw "FAIL: group count did not increase ($beforeCount -> $afterCount)" }
+$added = $afterCount - $beforeCount
+Write-Host "  VERDICT: PASS (groups: $beforeCount -> $afterCount, +$added)" -ForegroundColor Green
+
+# ── Test: Groups Idempotency ──
+Write-Host "--- Test: Groups Idempotency ---"
+$beforeCount = (Get-SEPMGroups).Count
+$result = & $seedScript -Categories Groups
+$afterCount = (Get-SEPMGroups).Count
+if ($afterCount -ne $beforeCount) { throw "FAIL: counts changed on re-run ($beforeCount -> $afterCount)" }
+Write-Host "  VERDICT: PASS (idempotent, $afterCount groups)" -ForegroundColor Green
+
 Write-Host "`n=== Smoke: Seed-SEPMData (PS7) — ALL PASS ===" -ForegroundColor Green
