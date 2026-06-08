@@ -68,6 +68,9 @@ $seedMEMPoliciesScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-MEMPolic
 $seedUpgradePoliciesScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-UpgradePolicies.ps1'
 . $seedUpgradePoliciesScript
 
+$seedTDADPoliciesScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-TDADPolicies.ps1'
+. $seedTDADPoliciesScript
+
 # If no categories specified, default to all
 if (-not $Categories -or $Categories.Count -eq 0) {
     Write-Output 'No categories implemented yet'
@@ -104,5 +107,10 @@ switch -Regex ($Categories) {
         Write-Output '=== Seeding Upgrade Policies ==='
         $result = Invoke-SeedUpgradePolicies -State $State
         Write-Output "Upgrade policies seeded: $($result.UpgradePolicyMap.Count)"
+    }
+    '^TDADPolicies$' {
+        Write-Output '=== Seeding TDAD Policies ==='
+        $result = Invoke-SeedTDADPolicies -State $State
+        Write-Output "TDAD policies seeded: $($result.TDADPolicyMap.Count)"
     }
 }

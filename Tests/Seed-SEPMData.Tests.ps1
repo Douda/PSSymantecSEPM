@@ -204,4 +204,34 @@ Describe 'Seed-SEPMData' {
             ($output -match 'Upgrade policies seeded: 3') | Should -Not -BeNullOrEmpty
         }
     }
+
+    Context '-Categories TDADPolicies dispatch' {
+        BeforeAll {
+            $fakeSession = New-TestSession -SkipCert
+            $realModule = Get-Module PSSymantecSEPM
+
+            Mock Import-Module { return $realModule }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                if ($Method -eq 'GET') {
+                    return @{
+                        content = @(
+                            @{ name = 'TDAD Enabled'; id = 'id-t1' }
+                            @{ name = 'TDAD Disabled'; id = 'id-t2' }
+                        )
+                    }
+                }
+                return $null
+            }
+        }
+
+        It 'dispatches to Invoke-SeedTDADPolicies and reports count' {
+            $output = & $script:SeedScriptPath -Categories TDADPolicies
+
+            $output | Should -Not -BeNullOrEmpty
+            ($output -match '=== Seeding TDAD Policies ===') | Should -Not -BeNullOrEmpty
+            ($output -match 'TDAD policies seeded: 2') | Should -Not -BeNullOrEmpty
+        }
+    }
 }
