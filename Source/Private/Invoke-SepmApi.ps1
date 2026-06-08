@@ -107,12 +107,15 @@ function Invoke-SepmApi {
                 return $resp
             }
         }
-        # If already deserialized (PSCustomObject), convert to hashtable
-        if ($resp -is [PSCustomObject] -and -not ($resp -is [array])) {
-            return ConvertTo-Hashtable -InputObject $resp
+        # Convert to hashtable for uniform return type (handles PSCustomObject, arrays, and scalars)
+        $result = ConvertTo-Hashtable -InputObject $resp
+        # Arrays need -NoEnumerate to prevent PowerShell unrolling 1-element arrays.
+        # Write-Output -NoEnumerate on non-arrays returns List<object> in PS 7.6+ (regression).
+        if ($result -is [array]) {
+            Write-Output $result -NoEnumerate
+        } else {
+            $result
         }
-        # PowerShell unrolls empty arrays to $null; use -NoEnumerate to preserve
-        Write-Output $resp -NoEnumerate
         return
     }
 

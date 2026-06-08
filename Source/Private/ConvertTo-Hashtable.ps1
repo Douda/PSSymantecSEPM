@@ -46,16 +46,8 @@ function ConvertTo-Hashtable {
             return $ht
         }
 
-        # PSCustomObject → convert via PSObject.Properties
-        if ($InputObject -is [PSCustomObject]) {
-            $ht = @{}
-            foreach ($prop in $InputObject.PSObject.Properties) {
-                $ht[$prop.Name] = ConvertTo-Hashtable -InputObject $prop.Value
-            }
-            return $ht
-        }
-
         # Array / IList (but not string) → convert each element
+        # Must check BEFORE PSCustomObject: Invoke-RestMethod arrays are also [PSCustomObject]
         if ($InputObject -is [System.Collections.IList] -and $InputObject -isnot [string]) {
             $arr = [System.Collections.Generic.List[object]]::new()
             foreach ($item in $InputObject) {
@@ -63,6 +55,15 @@ function ConvertTo-Hashtable {
             }
             Write-Output $arr.ToArray() -NoEnumerate
             return
+        }
+
+        # PSCustomObject → convert via PSObject.Properties
+        if ($InputObject -is [PSCustomObject]) {
+            $ht = @{}
+            foreach ($prop in $InputObject.PSObject.Properties) {
+                $ht[$prop.Name] = ConvertTo-Hashtable -InputObject $prop.Value
+            }
+            return $ht
         }
 
         # Scalar → return as-is
