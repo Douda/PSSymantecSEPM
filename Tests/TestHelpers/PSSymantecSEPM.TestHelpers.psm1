@@ -445,3 +445,60 @@ function New-DummyFirewallPolicy {
         return $obj
     }
 }
+
+function New-DummyLocation {
+    <#
+    .SYNOPSIS
+        Generates dummy SEPM Location objects for testing purposes.
+
+    .DESCRIPTION
+        Generates dummy location objects matching the shape returned by
+        Get-SEPMLocation.
+
+    .PARAMETER LocationName
+        The location name. Default: 'Default'.
+
+    .PARAMETER LocationID
+        The location ID. If omitted, a random GUID is generated.
+
+    .PARAMETER GroupName
+        The group name. Default: 'My Company'.
+
+    .PARAMETER GroupID
+        The group ID. If omitted, a random GUID is generated.
+
+    .PARAMETER GroupFullPathName
+        The group full path. Default: 'My Company'.
+
+    .EXAMPLE
+        New-DummyLocation -LocationName 'Default' -GroupName 'My Company'
+
+        Generates a single dummy location.
+
+    .EXAMPLE
+        1..3 | ForEach-Object { New-DummyLocation -LocationName "Location $_" }
+
+        Generates 3 dummy locations.
+    #>
+    [CmdletBinding()]
+    param(
+        [string] $LocationName = 'Default',
+        [string] $LocationID,
+        [string] $GroupName = 'My Company',
+        [string] $GroupID,
+        [string] $GroupFullPathName = 'My Company'
+    )
+
+    process {
+        $locId = if ($LocationID) { $LocationID } else { [guid]::NewGuid().ToString() }
+        $grpId = if ($GroupID) { $GroupID } else { [guid]::NewGuid().ToString() }
+
+        return [PSCustomObject]@{
+            locationName      = $LocationName
+            locationId        = $locId
+            groupName         = $GroupName
+            groupId           = $grpId
+            groupFullPathName = $GroupFullPathName
+        }
+    }
+}

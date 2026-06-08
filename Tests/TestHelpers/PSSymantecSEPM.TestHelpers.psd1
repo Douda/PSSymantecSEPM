@@ -12,6 +12,7 @@
         'New-DummyComputer'
         'New-DummyPolicySummary'
         'New-DummyFirewallPolicy'
+        'New-DummyLocation'
     )
     PrivateData       = @{
         PSData = @{
