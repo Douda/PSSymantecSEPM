@@ -56,4 +56,24 @@ $afterCount = (Get-SEPMGroups).Count
 if ($afterCount -ne $beforeCount) { throw "FAIL: counts changed on re-run ($beforeCount -> $afterCount)" }
 Write-Host "  VERDICT: PASS (idempotent, $afterCount groups)" -ForegroundColor Green
 
+# ── Test: -Categories Admins (live seed) ──
+Write-Host "--- Test: -Categories Admins ---"
+$beforeCount = (Get-SEPMAdmins).Count
+$result = & $seedScript -Categories Admins
+$afterCount = (Get-SEPMAdmins).Count
+
+if (-not $result) { throw "FAIL: no output from -Categories Admins" }
+if (($result -match 'Admins seeded:').Count -eq 0) { throw "FAIL: expected seed count, got: $result" }
+if ($afterCount -le $beforeCount) { throw "FAIL: admin count did not increase ($beforeCount -> $afterCount)" }
+$added = $afterCount - $beforeCount
+Write-Host "  VERDICT: PASS (admins: $beforeCount -> $afterCount, +$added)" -ForegroundColor Green
+
+# ── Test: Admins Idempotency ──
+Write-Host "--- Test: Admins Idempotency ---"
+$beforeCount = (Get-SEPMAdmins).Count
+$result = & $seedScript -Categories Admins
+$afterCount = (Get-SEPMAdmins).Count
+if ($afterCount -ne $beforeCount) { throw "FAIL: counts changed on re-run ($beforeCount -> $afterCount)" }
+Write-Host "  VERDICT: PASS (idempotent, $afterCount admins)" -ForegroundColor Green
+
 Write-Host "`n=== Smoke: Seed-SEPMData (PS7) — ALL PASS ===" -ForegroundColor Green

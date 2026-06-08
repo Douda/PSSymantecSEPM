@@ -45,7 +45,7 @@ $module = Import-Module PSSymantecSEPM -PassThru -Force
 $session = & $module { Initialize-SEPMSession }
 
 # Set up shared state lookup table for name-to-ID mappings across categories
-$State = @{ Force = $false }
+$State = @{ Force = $false; Module = $module; Session = $session }
 if ($Force) {
     $State.Force = $true
 }
@@ -55,6 +55,9 @@ if ($Force) {
 # Dot-source seed function scripts
 $seedGroupsScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-Groups.ps1'
 . $seedGroupsScript
+
+$seedAdminsScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-Admins.ps1'
+. $seedAdminsScript
 
 # If no categories specified, default to all
 if (-not $Categories -or $Categories.Count -eq 0) {
@@ -72,5 +75,10 @@ switch -Regex ($Categories) {
         Write-Output '=== Seeding Groups ==='
         $result = Invoke-SeedGroups -State $State
         Write-Output "Groups seeded: $($result.GroupMap.Count)"
+    }
+    '^Admins$' {
+        Write-Output '=== Seeding Admins ==='
+        $result = Invoke-SeedAdmins -State $State
+        Write-Output "Admins seeded: $($result.AdminMap.Count)"
     }
 }

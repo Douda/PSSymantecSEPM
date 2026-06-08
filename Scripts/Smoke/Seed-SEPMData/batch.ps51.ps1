@@ -61,4 +61,23 @@ $afterCount = (Get-SEPMGroups).Count
 if ($afterCount -ne $beforeCount) { throw "FAIL: counts changed on re-run ($beforeCount -> $afterCount)" }
 Write-Host "  VERDICT: PASS (idempotent, $afterCount groups)"
 
+# ── Test: -Categories Admins (live seed) ──
+Write-Host "--- Test: -Categories Admins ---"
+$beforeCount = (Get-SEPMAdmins).Count
+$result = & $seedScript -Categories Admins
+$afterCount = (Get-SEPMAdmins).Count
+
+if (-not $result) { throw "FAIL: no output from -Categories Admins" }
+if (($result -match 'Admins seeded:').Count -eq 0) { throw "FAIL: expected seed count, got: $result" }
+if ($afterCount -lt $beforeCount) { throw "FAIL: admin count decreased ($beforeCount -> $afterCount)" }
+Write-Host "  VERDICT: PASS (admins: $afterCount, seeded count reported)"
+
+# ── Test: Admins Idempotency ──
+Write-Host "--- Test: Admins Idempotency ---"
+$beforeCount = (Get-SEPMAdmins).Count
+$result = & $seedScript -Categories Admins
+$afterCount = (Get-SEPMAdmins).Count
+if ($afterCount -ne $beforeCount) { throw "FAIL: counts changed on re-run ($beforeCount -> $afterCount)" }
+Write-Host "  VERDICT: PASS (idempotent, $afterCount admins)"
+
 Write-Host "`n=== Smoke: Seed-SEPMData (PS5.1) — ALL PASS ==="
