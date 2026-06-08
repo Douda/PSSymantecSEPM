@@ -141,4 +141,36 @@ Describe 'Seed-SEPMData' {
             ($output -match 'Exceptions policies seeded: 4') | Should -Not -BeNullOrEmpty
         }
     }
+
+    Context '-Categories MEMPolicies dispatch' {
+        BeforeAll {
+            $fakeSession = New-TestSession -SkipCert
+            $realModule = Get-Module PSSymantecSEPM
+
+            Mock Import-Module { return $realModule }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                if ($Method -eq 'GET') {
+                    return @{
+                        content = @(
+                            @{ name = 'Standard MEM'; id = 'id-1' }
+                            @{ name = 'Advanced MEM'; id = 'id-2' }
+                            @{ name = 'Java-Only MEM'; id = 'id-3' }
+                            @{ name = 'Audit MEM'; id = 'id-4' }
+                        )
+                    }
+                }
+                return $null
+            }
+        }
+
+        It 'dispatches to Invoke-SeedMEMPolicies and reports count' {
+            $output = & $script:SeedScriptPath -Categories MEMPolicies
+
+            $output | Should -Not -BeNullOrEmpty
+            ($output -match '=== Seeding MEM Policies ===') | Should -Not -BeNullOrEmpty
+            ($output -match 'MEM policies seeded: 4') | Should -Not -BeNullOrEmpty
+        }
+    }
 }

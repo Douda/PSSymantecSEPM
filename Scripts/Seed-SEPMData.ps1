@@ -62,6 +62,9 @@ $seedAdminsScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-Admins.ps1'
 $seedExceptionsPoliciesScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-ExceptionsPolicies.ps1'
 . $seedExceptionsPoliciesScript
 
+$seedMEMPoliciesScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-MEMPolicies.ps1'
+. $seedMEMPoliciesScript
+
 # If no categories specified, default to all
 if (-not $Categories -or $Categories.Count -eq 0) {
     Write-Output 'No categories implemented yet'
@@ -88,5 +91,10 @@ switch -Regex ($Categories) {
         Write-Output '=== Seeding Exceptions Policies ==='
         $result = Invoke-SeedExceptionsPolicies -State $State
         Write-Output "Exceptions policies seeded: $($result.ExceptionPolicyMap.Count)"
+    }
+    '^MEMPolicies$' {
+        Write-Output '=== Seeding MEM Policies ==='
+        $result = Invoke-SeedMEMPolicies -State $State
+        Write-Output "MEM policies seeded: $($result.MEMPolicyMap.Count)"
     }
 }
