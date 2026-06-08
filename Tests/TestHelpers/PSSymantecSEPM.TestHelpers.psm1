@@ -369,3 +369,79 @@ function New-DummyPolicySummary {
 
     return $dummyObjects
 }
+
+function New-DummyFirewallPolicy {
+    <#
+    .SYNOPSIS
+        Generates a dummy SEPM Firewall Policy object for testing purposes.
+
+    .DESCRIPTION
+        Generates a dummy SEPM Firewall Policy object matching the shape returned by
+        the SEPM API's /policies/firewall/{id} endpoint.
+
+    .PARAMETER PolicyName
+        The name of the firewall policy.
+
+    .PARAMETER PolicyID
+        The ID of the policy. If omitted, a random 64-char hex ID is generated.
+
+    .EXAMPLE
+        New-DummyFirewallPolicy -PolicyName "Standard Servers - Firewall policy"
+
+        Generates a single dummy firewall policy.
+
+    .EXAMPLE
+        1..3 | ForEach-Object { New-DummyFirewallPolicy -PolicyName "FW Policy $_" }
+
+        Generates 3 dummy firewall policies.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $PolicyName,
+
+        [string] $PolicyID
+    )
+
+    process {
+        $id = if ($PolicyID) { $PolicyID } else {
+            -join ((48..57) + (65..70) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
+        }
+        $lastmodifiedtime = [long]([double]::Parse((Get-Date -UFormat %s)) * 1000)
+
+        $obj = New-Object PSObject -Property @{
+            sources          = [PSCustomObject]@{ type = 'firewall' }
+            configuration    = [PSCustomObject]@{
+                enforced_rules       = @()
+                baseline_rules       = @()
+                ignore_parent_rules  = $false
+                smart_dhcp           = $false
+                smart_dns            = $false
+                smart_wins           = $false
+                token_ring_traffic   = $false
+                netbios_protection   = $false
+                reverse_dns          = $false
+                port_scan            = $false
+                dos                  = $false
+                antimac_spoofing     = $false
+                autoblock            = $false
+                autoblock_duration   = 600
+                stealth_web          = $false
+                antiIP_spoofing      = $false
+                hide_os              = $false
+                windows_firewall     = 'NO_ACTION'
+                windows_firewall_notification = $false
+                endpoint_notification = $null
+                p2p_auth             = $null
+                mac                  = $null
+            }
+            enabled          = $true
+            desc             = "Description of $PolicyName"
+            name             = $PolicyName
+            lastmodifiedtime = $lastmodifiedtime
+            id               = $id
+        }
+        $obj.PSObject.TypeNames.Insert(0, 'SEPM.FirewallPolicy')
+        return $obj
+    }
+}

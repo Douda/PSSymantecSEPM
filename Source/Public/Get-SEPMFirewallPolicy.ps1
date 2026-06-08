@@ -7,6 +7,12 @@ function Get-SEPMFirewallPolicy {
     .PARAMETER PolicyName    
         The name of the policy to get the details of
         Is a required parameter
+    .PARAMETER PolicyID
+        The ID of the policy to get the details of
+    .PARAMETER All
+        Fetch all firewall policies.
+    .PARAMETER DelayMs
+        Delay in milliseconds between individual policy fetches when -All is used. Default: 200.
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMFirewallPolicy -PolicyName "Standard Servers - Firewall policy"
 
@@ -20,6 +26,10 @@ function Get-SEPMFirewallPolicy {
         lastmodifiedtime : 1692253688318
 
         Shows an example of getting the firewall policy details for the policy named "Standard Servers - Firewall policy"
+    .EXAMPLE
+        PS C:\PSSymantecSEPM> Get-SEPMFirewallPolicy -All
+
+        Returns all firewall policies.
 #>
 
     [CmdletBinding(DefaultParameterSetName = 'PolicyName')]
@@ -41,7 +51,21 @@ function Get-SEPMFirewallPolicy {
         )]
         [Alias("Policy_ID")]
         [String]
-        $PolicyID
+        $PolicyID,
+
+        # All switch
+        [Parameter(
+            ParameterSetName = 'All'
+        )]
+        [switch]
+        $All,
+
+        # DelayMs
+        [Parameter(
+            ParameterSetName = 'All'
+        )]
+        [int]
+        $DelayMs = 200
     )
 
     begin {
@@ -52,6 +76,34 @@ function Get-SEPMFirewallPolicy {
     }
 
     process {
+
+        if ($All) {
+            # Fetch all FW policy summaries
+            $fwPolicies = Get-SEPMPoliciesSummary -PolicyType fw
+            $allResults = @()
+            $total = $fwPolicies.Count
+            $i = 0
+
+            foreach ($fwPolicy in $fwPolicies) {
+                $i++
+                $policyURI = $URI + "/" + $fwPolicy.id
+
+                Write-Progress -Activity "Fetching firewall policies" -Status "$i/$total` : $($fwPolicy.name)" -PercentComplete ($i / $total * 100)
+
+                $resp = Invoke-SepmApi -Method GET -Uri $policyURI -Session $session
+
+                # Add a PSTypeName to the object
+                $resp.PSObject.TypeNames.Insert(0, 'SEPM.FirewallPolicy')
+                $allResults += $resp
+
+                # Delay between API calls (skip after last)
+                if ($i -lt $total) {
+                    Start-Sleep -Milliseconds $DelayMs
+                }
+            }
+
+            return $allResults
+        }
 
         if ($PolicyName) {
             # Get Policy ID from policy name

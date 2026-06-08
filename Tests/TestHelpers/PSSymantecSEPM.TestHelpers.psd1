@@ -11,6 +11,7 @@
         'New-TestSession'
         'New-DummyComputer'
         'New-DummyPolicySummary'
+        'New-DummyFirewallPolicy'
     )
     PrivateData       = @{
         PSData = @{
