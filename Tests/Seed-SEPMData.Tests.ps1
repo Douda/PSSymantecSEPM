@@ -173,4 +173,35 @@ Describe 'Seed-SEPMData' {
             ($output -match 'MEM policies seeded: 4') | Should -Not -BeNullOrEmpty
         }
     }
+
+    Context '-Categories UpgradePolicies dispatch' {
+        BeforeAll {
+            $fakeSession = New-TestSession -SkipCert
+            $realModule = Get-Module PSSymantecSEPM
+
+            Mock Import-Module { return $realModule }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                if ($Method -eq 'GET') {
+                    return @{
+                        content = @(
+                            @{ name = 'Zero-Day Upgrade'; id = 'id-zd' }
+                            @{ name = 'Weekend Upgrade'; id = 'id-we' }
+                            @{ name = 'Manual Upgrade'; id = 'id-mu' }
+                        )
+                    }
+                }
+                return $null
+            }
+        }
+
+        It 'dispatches to Invoke-SeedUpgradePolicies and reports count' {
+            $output = & $script:SeedScriptPath -Categories UpgradePolicies
+
+            $output | Should -Not -BeNullOrEmpty
+            ($output -match '=== Seeding Upgrade Policies ===') | Should -Not -BeNullOrEmpty
+            ($output -match 'Upgrade policies seeded: 3') | Should -Not -BeNullOrEmpty
+        }
+    }
 }

@@ -35,7 +35,7 @@ param(
     [switch] $Force
 )
 
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Continue'
 
 # Import the PSSymantecSEPM module
 $module = Import-Module PSSymantecSEPM -PassThru -Force
@@ -64,6 +64,9 @@ $seedExceptionsPoliciesScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-E
 
 $seedMEMPoliciesScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-MEMPolicies.ps1'
 . $seedMEMPoliciesScript
+
+$seedUpgradePoliciesScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-UpgradePolicies.ps1'
+. $seedUpgradePoliciesScript
 
 # If no categories specified, default to all
 if (-not $Categories -or $Categories.Count -eq 0) {
@@ -96,5 +99,10 @@ switch -Regex ($Categories) {
         Write-Output '=== Seeding MEM Policies ==='
         $result = Invoke-SeedMEMPolicies -State $State
         Write-Output "MEM policies seeded: $($result.MEMPolicyMap.Count)"
+    }
+    '^UpgradePolicies$' {
+        Write-Output '=== Seeding Upgrade Policies ==='
+        $result = Invoke-SeedUpgradePolicies -State $State
+        Write-Output "Upgrade policies seeded: $($result.UpgradePolicyMap.Count)"
     }
 }
