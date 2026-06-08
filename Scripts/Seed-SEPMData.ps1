@@ -1,0 +1,67 @@
+<#
+.SYNOPSIS
+    Seeds a SEPM server with test data across multiple categories.
+
+.DESCRIPTION
+    Master orchestrator for all seed operations. Imports the PSSymantecSEPM module,
+    authenticates via Initialize-SEPMSession, and dispatches to per-category seed
+    functions based on the -Categories parameter.
+
+.PARAMETER Categories
+    Which seed categories to run. Valid values: Test (framework diagnostic).
+    Default: all categories.
+
+.PARAMETER Force
+    Enables reset-before-create mode. Passed through to per-category functions via
+    $State.Force.
+
+.EXAMPLE
+    Seed-SEPMData.ps1 -Categories Test
+
+    Imports the module, authenticates, prints "Framework ready", and exits.
+
+.EXAMPLE
+    Seed-SEPMData.ps1
+
+    Runs all seed categories (currently prints "No categories implemented yet").
+#>
+
+[CmdletBinding()]
+param(
+    [Parameter(Position = 0)]
+    [ValidateNotNullOrEmpty()]
+    [string[]] $Categories,
+
+    [switch] $Force
+)
+
+$ErrorActionPreference = 'Stop'
+
+# Import the PSSymantecSEPM module
+$module = Import-Module PSSymantecSEPM -PassThru -Force
+& $module { $script:SkipCert = $true }
+
+# Authenticate and create session (Private function, called via module scope)
+$session = & $module { Initialize-SEPMSession }
+
+# Set up shared state lookup table for name-to-ID mappings across categories
+$State = @{ Force = $false }
+if ($Force) {
+    $State.Force = $true
+}
+
+# ── Dispatch ──
+
+# If no categories specified, default to all
+if (-not $Categories -or $Categories.Count -eq 0) {
+    Write-Output 'No categories implemented yet'
+    return
+}
+
+# Top-level dispatch switch
+switch -Regex ($Categories) {
+    '^Test$' {
+        Write-Output 'Framework ready'
+        Write-Output "Force: $($State.Force)"
+    }
+}
