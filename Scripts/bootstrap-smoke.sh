@@ -23,6 +23,7 @@
 #   SHARED_VOLUME            — host-side path mapped to VM Desktop/Shared
 #   SKIP_PS51                — set to 1 to skip WinRM smoke tests
 #   SKIP_PS7                 — set to 1 to skip PS7 smoke tests
+#   SEED                     — set to 1 to seed SEPM data before smoke tests (default: 0)
 #
 # Usage:
 #   ./Scripts/bootstrap-smoke.sh
@@ -236,6 +237,46 @@ if echo "${VM_VERIFY_OUT}" | grep -q "14\."; then
     ok "VM module authenticates (version: $(echo "${VM_VERIFY_OUT}" | grep -oP '14\.\S+' | head -1))"
 else
     warn "VM verify output did not contain version string"
+fi
+
+# ────────────────────────────────────────────────────────────────────────────
+# Phase 5.5: Seed data (optional)
+# ────────────────────────────────────────────────────────────────────────────
+section "Phase 5.5: Seed data"
+
+if [ "${SEED:-0}" = "0" ]; then
+    info "SEED=0 — skipping seed data"
+else
+    # 5.5a. Devcontainer (PS7)
+    SEED_SCRIPT="${REPO_ROOT}/Scripts/Seed-SEPMData.ps1"
+    if [ ! -f "${SEED_SCRIPT}" ]; then
+        warn "Seed-SEPMData.ps1 not found at ${SEED_SCRIPT} — skipping"
+    else
+        info "Seeding SEPM data on devcontainer (PS7)..."
+        if pwsh -NoProfile -File "${SEED_SCRIPT}" 2>&1; then
+            ok "Seed data created (PS7)"
+        else
+            warn "Seed data (PS7) reported errors — continuing"
+        fi
+    fi
+
+    # 5.5b. VM (PS5.1)
+    SEED_FILES=("${REPO_ROOT}"/Scripts/Seed-*.ps1)
+    if [ ${#SEED_FILES[@]} -eq 0 ] || [ ! -f "${SEED_FILES[0]}" ]; then
+        warn "No Seed-*.ps1 files found — skipping VM seed"
+    else
+        info "Deploying seed scripts to VM..."
+        cp "${REPO_ROOT}"/Scripts/Seed-*.ps1 "${SHARED_VOLUME}/"
+        ok "Seed scripts → shared volume"
+
+        info "Seeding SEPM data on VM (PS5.1)..."
+        VM_SEED_SCRIPT="${VM_DESKTOP}\\Seed-SEPMData.ps1"
+        if python3 "${REPO_ROOT}/Scripts/invoke-winrm.py" "${VM_SEED_SCRIPT}" 2>&1; then
+            ok "Seed data created (PS5.1)"
+        else
+            warn "Seed data (PS5.1) reported errors — continuing"
+        fi
+    fi
 fi
 
 # ────────────────────────────────────────────────────────────────────────────
