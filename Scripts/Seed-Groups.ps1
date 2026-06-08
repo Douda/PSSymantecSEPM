@@ -22,10 +22,8 @@
     Deletes existing seed groups, then recreates.
 
 .NOTES
-    Force reset depends on Remove-SEPMGroup being functional. As of 2026-06-08,
-    Remove-SEPMGroup is a broken copy-paste of New-SEPMGroup (uses POST instead
-    of DELETE). Force reset will not actually delete groups until that cmdlet
-    is fixed.
+    Force reset requires Remove-SEPMGroup, which was fixed in the same
+    changeset (it was previously a broken copy-paste of New-SEPMGroup).
 #>
 
 #Requires -Version 5.1

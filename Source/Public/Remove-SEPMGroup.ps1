@@ -1,33 +1,28 @@
 function Remove-SEPMGroup {
-    <# TODO Update the help
+    <#
     .SYNOPSIS
-        Creates a new SEPM group
+        Deletes a SEPM group
     .DESCRIPTION
-        Creates a new SEPM group
-        Requires the full path name of the parent group
+        Deletes a SEPM group by its full path name.
+        Requires the GroupName and ParentGroup to locate the group.
     .PARAMETER GroupName
-        Specifies the name of the group to create
+        Specifies the name of the group to delete
     .PARAMETER ParentGroup
         Specifies the full path name of the parent group
         Full path name is the group name with the parent groups separated by backslash
         "My Company\EMEA\Workstations"
-    .PARAMETER EnabledInheritance
-        Specifies if the group should inherit the parent group's policies
     .EXAMPLE
         Remove-SEPMGroup -GroupName "Win7" -ParentGroup "My Company\EMEA\Workstations"
 
-        Creates a new group Win7 under the group My Company\EMEA\Workstations
+        Deletes the group Win7 under My Company\EMEA\Workstations
     .EXAMPLE
-        Remove-SEPMGroup -GroupName "Win 10" -ParentGroup "My Company\EMEA\Workstations" -EnabledInheritance
+        Remove-SEPMGroup -GroupName "TestGroup" -ParentGroup "My Company"
 
-        Creates a new group Win 10 under the group My Company\EMEA\Workstations and enables inheritance
+        Deletes the group TestGroup directly under My Company
     #>
 
     [CmdletBinding()]
     param (
-        # Skip certificate check
-
-
         # group name
         [Parameter(
             ValueFromPipelineByPropertyName = $true,
@@ -42,22 +37,7 @@ function Remove-SEPMGroup {
             ValueFromPipelineByPropertyName = $true
         )]
         [String]
-        $ParentGroup,
-
-        # Enabled inheritance
-        [Parameter(
-            ValueFromPipelineByPropertyName = $true
-        )]
-        [Alias("Inherit")]
-        [switch]
-        $EnabledInheritance,
-
-        # Group Description
-        [Parameter(
-            ValueFromPipelineByPropertyName = $true
-        )]
-        [String]
-        $Description
+        $ParentGroup
     )
 
     begin {
@@ -69,26 +49,19 @@ function Remove-SEPMGroup {
     }
 
     process {
-        # Get the group ID of the destination group
-        $parent = $allGroups | Where-Object { $_.fullPathName -eq $ParentGroup } | Select-Object -First 1
-        $ParentGroupID = if ($parent) { $parent.id } else { $null }
-        if ([string]::IsNullOrEmpty($ParentGroupID)) {
-            $message = "Group $GroupName not found. Please check the parent group name and try again."
-            $message += "Following group format is expected: 'My Company\group\subgroup'"
+        # Build the full path and find the group's own ID
+        $fullPathName = "$ParentGroup\$GroupName"
+        $group = $allGroups | Where-Object { $_.fullPathName -eq $fullPathName } | Select-Object -First 1
+
+        if (-not $group -or [string]::IsNullOrEmpty($group.id)) {
+            $message = "Group '$fullPathName' not found. Please check the group name and parent group and try again."
+            $message += " Following group format is expected: 'My Company\group\subgroup'"
             Write-Error $message
             return
         }
 
-        # Body structure for the request
-        $body = @{
-            "inherits"    = $EnabledInheritance.ToBool()
-            "name"        = $GroupName
-            "description" = $Description
-        }
-
-        $patchUri = $URI + "/$ParentGroupID"
-        $resp = Invoke-SepmApi -Method 'POST' -Uri $patchUri -Session $session `
-            -Body ($body | ConvertTo-Json) -ContentType 'application/json'
+        $deleteUri = $URI + "/$($group.id)"
+        $resp = Invoke-SepmApi -Method 'DELETE' -Uri $deleteUri -Session $session
         return $resp
     }
 }
