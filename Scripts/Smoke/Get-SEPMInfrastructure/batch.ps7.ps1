@@ -2,33 +2,8 @@
 # Covers: Get-SEPGUPList, Get-SEPMLicense, Get-SEPMDatabaseInfo, Get-SEPMLatestDefinition
 # Usage: pwsh -NoProfile -File Scripts/Smoke/Get-SEPMInfrastructure/batch.ps7.ps1
 
-$ErrorActionPreference = "Continue"
-
-Import-Module ./Output/PSSymantecSEPM/PSSymantecSEPM.psm1 -Force
-$mod = Get-Module PSSymantecSEPM
-& $mod { $script:SkipCert = $true }
-
-function T {
-    param($Id, $Label, [ScriptBlock]$Action, [ScriptBlock]$Assert)
-    Write-Host "--- $Id : $Label ---" -ForegroundColor Cyan
-    try {
-        $result = & $Action
-
-        # Check for API error strings
-        if ($result -is [string] -and $result -like "Error:*") {
-            Write-Host "  VERDICT: FAIL (API error: $result)" -ForegroundColor Red
-            return "FAIL"
-        }
-
-        $ok = & $Assert $result
-        if ($ok) { Write-Host "  VERDICT: PASS" -ForegroundColor Green; return "PASS" }
-        else     { Write-Host "  VERDICT: FAIL" -ForegroundColor Red;   return "FAIL" }
-    } catch {
-        $errMsg = $_.Exception.Message
-        Write-Host "  ERROR: $errMsg" -ForegroundColor Red
-        return "FAIL"
-    }
-}
+$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
+. "$RepoRoot/Scripts/Smoke/Common.ps1"
 
 $results = @{}
 

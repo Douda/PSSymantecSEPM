@@ -46,16 +46,29 @@ pwsh -NoProfile -c '
   Import-Module ModuleBuilder -Force
   Build-Module -SourcePath ./Source/PSSymantecSEPM.psd1 -SemVer 0.0.1
 '
+```
 
-# Import + configure + auth
-pwsh -NoProfile -c '
-  @{port=8446;ServerAddress="localhost"}|ConvertTo-Json |
-    Set-Content "$env:HOME/.config/PSSymantecSEPM/config.json" -Force
-  rm "$env:HOME/.local/share/PSSymantecSEPM/accessToken.xml" -Force -EA SilentlyContinue
-  Import-Module ./Output/PSSymantecSEPM/PSSymantecSEPM.psm1 -Force
-  $mod=Get-Module PSSymantecSEPM; & $mod {$script:SkipCert=$true}
-  Get-SEPMVersion; Get-SEPMAccessToken
-'
+### Quick smoke (one-liner after Common.ps1)
+
+All smoke scripts dot-source `Scripts/Smoke/Common.ps1` which handles module import,
+certificate bypass (`$script:SkipCert`), SEPM configuration, and authentication in one line:
+
+```powershell
+$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
+. "$RepoRoot/Scripts/Smoke/Common.ps1"
+```
+
+Common.ps1 also exports `T` and `Skip` helper functions used by all smoke scripts.
+Credentials (`admin` / `MyComplexPassword1!`) live in Common.ps1 and Common-PS51.ps1 —
+change them once, all smoke scripts update.
+
+### Manual (bypassing Common.ps1)
+
+Only needed when debugging the smoke infrastructure itself:
+
+```powershell
+Import-Module ./Output/PSSymantecSEPM/PSSymantecSEPM.psm1 -Force
+$mod = Get-Module PSSymantecSEPM; & $mod { $script:SkipCert = $true }
 ```
 
 **`$script:SkipCert` must be set in module scope** — `Test-SEPMCertificate` is disabled (no auto-detect of self-signed certs).
@@ -130,29 +143,43 @@ $r.StatusCode  # 200 = success
 # Deploy module
 cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM
 
-# Write test script with UTF-8 BOM (mandatory for PS 5.1)
-printf '\xef\xbb\xbf' > /home/douda/Windows/test-ps51.ps1
-cat >> /home/douda/Windows/test-ps51.ps1 << 'EOF'
-$ErrorActionPreference="Continue"
-[System.Net.ServicePointManager]::ServerCertificateValidationCallback={$true}
-[System.Net.ServicePointManager]::SecurityProtocol=[System.Net.SecurityProtocolType]::Tls12
-$cfg="$env:APPDATA\PSSymantecSEPM\config.json"
-New-Item -ItemType Directory (Split-Path $cfg) -Force|Out-Null
-@{port=8446;ServerAddress="localhost"}|ConvertTo-Json|Set-Content $cfg -Force
-Import-Module C:\Users\smokeuser\Desktop\Shared\PSSymantecSEPM\PSSymantecSEPM.psm1 -Force
-$mod=Get-Module PSSymantecSEPM; & $mod {$script:SkipCert=$true}
-Get-SEPMVersion
-# ... test commands ...
-EOF
-
-# Run (NTLM transport, port 5985 — invoke-winrm.py defaults to broken SSL/5986)
-python3 -c "
-import winrm
-s = winrm.Session('localhost:5985', auth=('smokeuser','smokepassword'), transport='ntlm')
-r = s.run_cmd('powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\smokeuser\\\\Desktop\\\\Shared\\\\test-ps51.ps1\"')
-print(r.std_out.decode())
+# Deploy shared init (once per VM session)
+pwsh -NoProfile -c "
+  \$bom = [System.Text.UTF8Encoding]::new(\$true)
+  \$c = Get-Content ./Scripts/Smoke/Common-PS51.ps1 -Raw
+  [System.IO.File]::WriteAllText('/home/douda/Windows/Common-PS51.ps1', \$c, \$bom)
 "
 ```
+
+All PS5.1 smoke scripts dot-source Common-PS51.ps1:
+```powershell
+$RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
+. "$RepoRoot\Common-PS51.ps1"
+```
+
+This handles TLS 1.2, certificate bypass, module import, SEPM config, and
+authentication. Write the script body with just assertions.
+
+### Writing a PS5.1 smoke script (UTF-8 BOM mandatory)
+
+```bash
+printf '\xef\xbb\xbf' > /home/douda/Windows/smoke-<cmdlet>.ps1
+cat >> /home/douda/Windows/smoke-<cmdlet>.ps1 << 'EOF'
+$ErrorActionPreference = "Continue"
+$RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
+. "$RepoRoot\Common-PS51.ps1"
+
+# ... smoke assertions ...
+EOF
+```
+
+### Run (NTLM transport, port 5985)
+
+```bash
+python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\smoke-<cmdlet>.ps1'
+```
+
+`invoke-winrm.py` handles NTLM auth on port 5985. SSL/5986 is broken with pywinrm.
 
 **Transport**: PS5.1 uses `[HttpWebRequest]` with `KeepAlive=false` (via `Invoke-SepmApi`, see Source/Private/Invoke-SepmApi.ps1).
 `Invoke-RestMethod` on .NET Framework 4.x reuses TLS connections which SEPM 14.3 rejects.
@@ -161,32 +188,36 @@ print(r.std_out.decode())
 
 ## Smoke scripts
 
-| Script | Purpose |
-|--------|---------|
-| `Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps7.ps1` | Full test matrix on PS7 (35 tests) |
-| `Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps51.ps1` | Full test matrix on PS5.1 (35 tests) |
-| `Scripts/Smoke/Update-SEPMExceptionPolicy/metadata.ps7.ps1` | Quick smoke (enable/disable/desc only) |
-
 Smoke scripts are organized by cmdlet under `Scripts/Smoke/<CmdletName>/`.
 Each cmdlet directory has `batch.ps7.ps1`, `batch.ps51.ps1`, and optional helpers.
 
-Both batch scripts use a shared `T`/`Get-PolicyState` helper pattern with `Invoke-SepmApi` for GET verification.
-Only the preamble differs (cert setup, module path).
+All scripts dot-source a shared init file that handles module import, auth,
+and provides `T`/`Skip` helper functions:
+- PS7: `Scripts/Smoke/Common.ps1`
+- PS5.1: `Scripts/Smoke/Common-PS51.ps1` (deployed to shared volume)
+
+| Suite | Purpose |
+|-------|---------|
+| `Seed-SEPMData` | Orchestrator skeleton: Test category + Force flag |
+| `Get-SEPMFiles` | File fingerprint list + file details GET |
+| `Get-SEPMInfrastructure` | GUP list, license, database info, latest definitions |
+| `Get-SEPMLocations` | Location list + XML export |
+| `Update-SEPMExceptionPolicy` | Full PATCH matrix (35 tests per runtime) |
+
+Only the preamble differs between PS7 and PS5.1 — the test logic is identical.
 
 ```bash
 # PS7
-pwsh -NoProfile -File Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps7.ps1
+pwsh -NoProfile -File Scripts/Smoke/<Suite>/batch.ps7.ps1
 
 # PS5.1
 cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM
-cp Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps51.ps1 /home/douda/Windows/smoke-ps51.ps1
-# Note: invoke-winrm.py defaults to SSL/5986 (broken). Use NTLM/5985:
-python3 -c "
-import winrm
-s = winrm.Session('localhost:5985', auth=('smokeuser','smokepassword'), transport='ntlm')
-r = s.run_cmd('powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\smokeuser\\\\Desktop\\\\Shared\\\\smoke-ps51.ps1\"')
-print(r.std_out.decode())
+pwsh -NoProfile -c "
+  \$bom = [System.Text.UTF8Encoding]::new(\$true)
+  \$c = Get-Content ./Scripts/Smoke/<Suite>/batch.ps51.ps1 -Raw
+  [System.IO.File]::WriteAllText('/home/douda/Windows/smoke-<suite>.ps1', \$c, \$bom)
 "
+python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\smoke-<suite>.ps1'
 ```
 
 ## Known bugs

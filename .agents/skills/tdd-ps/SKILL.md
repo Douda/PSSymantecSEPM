@@ -94,15 +94,26 @@ For a typical API-wrapper module, the tracer bullet looks like:
 
 ```powershell
 Describe 'Get-MyData' {
-    InModuleScope MyModule {
-        BeforeAll {
-            . ./Tests/Config/Common-Init.ps1
-            . ./Tests/Config/Common-BeforeAll.ps1
-            . ./Tests/Config/Common-TestEnvironmentSetup.ps1
+    BeforeAll {
+        Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
+        $script:TestState = Initialize-TestEnvironment
 
-            Mock Invoke-ABRestMethod -ModuleName MyModule {
-                return [PSCustomObject]@{ Results = @('a', 'b') }
-            }
+        InModuleScope PSSymantecSEPM {
+            $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
+            $script:credentialsFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+            $script:accessTokenFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
+        }
+    }
+
+    AfterAll {
+        Clear-TestEnvironment -State $script:TestState
+    }
+
+    Context 'basic behavior' {
+        BeforeAll {
+            $fakeSession = New-TestSession
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { return @{ data = @('a', 'b') } }
         }
 
         It 'returns results from the API' {
@@ -142,6 +153,112 @@ After all tests pass, look for refactor candidates (see [refactoring.md](refacto
 
 **Never refactor while RED.** Get to GREEN first.
 
+### 5. Live Smoke Test
+
+After all unit tests pass and refactoring is clean, verify the cmdlet works against the live SEPM VM on both PS versions. This catches issues that unit tests with mocks miss: real API response shapes, PS5.1 type differences, encoding bugs, transport-layer problems.
+
+**Run smoke at slice completion — not per cycle.** One smoke run after all red-green cycles are done and refactoring passes.
+
+See [docs/agents/smoke-testing.md](../../../docs/agents/smoke-testing.md) for the full environment reference (credentials, ports, connectivity).
+
+#### 5a. Create smoke scripts
+
+Generate two scripts under `Scripts/Smoke/<CmdletName>/`:
+
+```
+Scripts/Smoke/<CmdletName>/
+├── batch.ps7.ps1       # PS7 smoke
+└── batch.ps51.ps1      # PS5.1 smoke
+```
+
+Both scripts start by dot-sourcing the shared init:
+
+**PS7** — `batch.ps7.ps1`:
+```powershell
+$ErrorActionPreference = "Continue"
+$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
+. "$RepoRoot/Scripts/Smoke/Common.ps1"
+
+Write-Host "=== Smoke: <CmdletName> (PS7) ==="
+
+# Use T helper (from Common.ps1) for GET cmdlets:
+$results = @{}
+$results.A1 = T "A1" "<label>" \`
+    { <CmdletName> [-Param value] } \`
+    { param($r) $r -ne $null -and ... }
+
+# Or direct assertion for standalone scripts/mutation cmdlets
+$result = <CmdletName> [-Param value]
+if (-not $result) { throw "FAIL: no output" }
+# ...
+```
+
+**PS5.1** — `batch.ps51.ps1`:
+```powershell
+$ErrorActionPreference = "Continue"
+$RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
+. "$RepoRoot\Common-PS51.ps1"
+
+Write-Host "=== Smoke: <CmdletName> (PS5.1) ==="
+# ... same assertions as PS7, adapted for PS5.1 types ...
+```
+
+**PS5.1 files must have UTF-8 BOM** (`\xef\xbb\xbf` prefix). Write with:
+```bash
+pwsh -NoProfile -Command "
+  \$bom = [System.Text.UTF8Encoding]::new(\$true)
+  \$c = Get-Content ./Scripts/Smoke/<CmdletName>/batch.ps51.ps1 -Raw
+  [System.IO.File]::WriteAllText('/home/douda/Windows/smoke-<cmdlet>.ps1', \$c, \$bom)
+"
+```
+
+#### 5b. Deploy and run
+
+```bash
+# Deploy module to shared volume (PS5.1 needs it)
+cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM
+
+# Deploy Common-PS51.ps1 (once per VM session)
+pwsh -NoProfile -c "
+  \$bom = [System.Text.UTF8Encoding]::new(\$true)
+  \$c = Get-Content ./Scripts/Smoke/Common-PS51.ps1 -Raw
+  [System.IO.File]::WriteAllText('/home/douda/Windows/Common-PS51.ps1', \$c, \$bom)
+"
+
+# PS7: run locally
+pwsh -NoProfile -File Scripts/Smoke/<CmdletName>/batch.ps7.ps1
+
+# PS5.1: deploy script + run via WinRM (NTLM port 5985)
+pwsh -NoProfile -c "
+  \$bom = [System.Text.UTF8Encoding]::new(\$true)
+  \$c = Get-Content ./Scripts/Smoke/<CmdletName>/batch.ps51.ps1 -Raw
+  [System.IO.File]::WriteAllText('/home/douda/Windows/smoke-<cmdlet>.ps1', \$c, \$bom)
+"
+python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\smoke-<cmdlet>.ps1'
+```
+
+#### 5c. Assertions
+
+Smoke assertions differ from unit test assertions. They don't use Pester mocks — they hit real APIs.
+
+**Required for every cmdlet:**
+- Output is non-null/non-empty
+- Output type is correct (check `GetType().FullName` or PSTypeName)
+- Key fields are populated (not null/empty strings)
+
+**For mutation cmdlets** (Add/Set/Remove), use the ground truth pattern: mutate → re-fetch via `Invoke-SepmApi` → assert the change persisted.
+
+**For PS5.1**, watch for type differences:
+- API output may be `Hashtable` instead of `PSCustomObject` (use `.$key` access)
+- `ConvertFrom-Json` lacks `-AsHashtable` and `-Depth` (use `Invoke-SepmApi`)
+
+#### 5d. On failure
+
+1. **Check the API response directly**: `curl -sk ...` (see [docs/agents/smoke-testing.md](../../../docs/agents/smoke-testing.md) ground truth section)
+2. **Compare PS7 vs PS5.1**: is the failure version-specific? Type mismatch? Encoding?
+3. **Don't refactor the cmdlet to match smoke output** — fix the cmdlet, not the smoke
+4. **If the cmdlet behavior is correct but smoke assertions are wrong**, update the smoke assertions
+
 ## Checklist Per Cycle
 
 ```
@@ -153,4 +270,16 @@ After all tests pass, look for refactor candidates (see [refactoring.md](refacto
 [ ] PS version differences handled (see ps-version-handling.md)
 [ ] Code is minimal for this test — no speculative parameters or features
 [ ] Domain terms from CONTEXT.md used in test names and variables
+```
+
+## Checklist Per Slice (after refactor, before declaring done)
+
+```
+[ ] All unit tests pass (Invoke-Pester green)
+[ ] Smoke scripts created under Scripts/Smoke/<CmdletName>/
+[ ] Smoke scripts dot-source Scripts/Smoke/Common.ps1 (PS7) or Common-PS51.ps1 (PS5.1)
+[ ] Smoke passes on PS7 (pwsh -File .../batch.ps7.ps1)
+[ ] Smoke passes on PS5.1 (WinRM via python3 Scripts/invoke-winrm.py)
+[ ] No hardcoded credentials in smoke scripts (use Common.ps1 / Common-PS51.ps1)
+[ ] PS5.1 smoke script deployed with UTF-8 BOM
 ```

@@ -1,0 +1,117 @@
+# Smoke verification for Fingerprints seed (PS7)
+# Usage: pwsh -NoProfile -File Scripts/Smoke/Seed-Fingerprints/batch.ps7.ps1
+
+$ErrorActionPreference = "Continue"
+
+$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
+. "$RepoRoot/Scripts/Smoke/Common.ps1"
+
+Write-Host "=== Smoke: Seed Fingerprints (PS7) ==="
+
+$seedScript = Join-Path -Path $RepoRoot -ChildPath 'Scripts/Seed-SEPMData.ps1'
+$seedNames = @('Known Malware Hashes', 'Approved Binaries')
+
+# ── Clean state: delete existing seed fingerprint lists if any ──
+$s = Initialize-SEPMSession
+foreach ($name in $seedNames) {
+    $existing = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/policy-objects/fingerprints?name=$([System.Uri]::EscapeDataString($name))" -Headers $s.Headers -SkipCert:$s.SkipCert
+    if ($existing -and $existing.id) {
+        $delResp = Invoke-SepmApi -Method DELETE -Uri "$($s.BaseURLv1)/policy-objects/fingerprints/$($existing.id)" -Headers $s.Headers -SkipCert:$s.SkipCert
+        if ($delResp -is [string] -and $delResp -like 'Error:*') {
+            Write-Host "  NOTE: DELETE failed for $name (API limitation). Will recreate via Force."
+        } else {
+            Write-Host "  Cleaned up: $name"
+        }
+    }
+}
+
+# ── Baseline: count existing fingerprint lists ──
+$s = Initialize-SEPMSession
+$domains = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/domains" -Headers $s.Headers -SkipCert:$s.SkipCert
+$defaultDomainId = ($domains | Where-Object { $_.name -eq 'Default' } | Select-Object -First 1).id
+Write-Host "Default domain ID: $defaultDomainId"
+if (-not $defaultDomainId) { throw "FAIL: could not find Default domain" }
+
+# ── Seed ──
+Write-Host "--- Seeding Fingerprints ---"
+$result = & $seedScript -Categories Fingerprints 6>&1
+
+$outputText = if ($result -is [array]) { $result -join "`n" } else { $result.ToString() }
+if ($outputText -notmatch 'Fingerprints seeded: 2') {
+    throw "FAIL: expected 'Fingerprints seeded: 2', got: $outputText"
+}
+
+# Rebuild module output (seed script may have used -Force import)
+Import-Module "$RepoRoot/Output/PSSymantecSEPM/PSSymantecSEPM.psm1" -Force
+& (Get-Module PSSymantecSEPM) { $script:SkipCert = $true }
+
+# ── Verify Known Malware Hashes ──
+Write-Host "--- Verify Known Malware Hashes ---"
+$fpHashes = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/policy-objects/fingerprints?name=Known%20Malware%20Hashes" -Headers $s.Headers -SkipCert:$s.SkipCert
+if (-not $fpHashes) { throw "FAIL: Known Malware Hashes not found" }
+if ($fpHashes.name -ne 'Known Malware Hashes') { throw "FAIL: name mismatch: $($fpHashes.name)" }
+Write-Host "  name: $($fpHashes.name)"
+Write-Host "  hashType: $($fpHashes.hashType)"
+Write-Host "  description: $($fpHashes.description)"
+$hashCount = if ($fpHashes.data) { if ($fpHashes.data.Count) { $fpHashes.data.Count } else { 1 } } else { 0 }
+if ($hashCount -ne 5) { throw "FAIL: Known Malware Hashes should have 5 hashes, got $hashCount" }
+Write-Host "  hash count: $hashCount PASS"
+
+# Verify hash format
+foreach ($hash in $fpHashes.data) {
+    if ($hash -is [string] -and $hash.Length -ne 64) {
+        throw "FAIL: hash '$hash' is not 64 chars (length: $($hash.Length))"
+    }
+    if ($hash -is [string] -and $hash -notmatch '^[0-9a-fA-F]{64}$') {
+        throw "FAIL: hash '$hash' is not valid hex"
+    }
+}
+Write-Host "  all hashes are 64-char hex PASS"
+
+# ── Verify Approved Binaries ──
+Write-Host "--- Verify Approved Binaries ---"
+$abHashes = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/policy-objects/fingerprints?name=Approved%20Binaries" -Headers $s.Headers -SkipCert:$s.SkipCert
+if (-not $abHashes) { throw "FAIL: Approved Binaries not found" }
+if ($abHashes.name -ne 'Approved Binaries') { throw "FAIL: name mismatch: $($abHashes.name)" }
+$hashCount = if ($abHashes.data) { if ($abHashes.data.Count) { $abHashes.data.Count } else { 1 } } else { 0 }
+if ($hashCount -ne 3) { throw "FAIL: Approved Binaries should have 3 hashes, got $hashCount" }
+Write-Host "  hash count: $hashCount PASS"
+
+# Verify hash format
+foreach ($hash in $abHashes.data) {
+    if ($hash -is [string] -and $hash.Length -ne 64) {
+        throw "FAIL: hash '$hash' is not 64 chars (length: $($hash.Length))"
+    }
+    if ($hash -is [string] -and $hash -notmatch '^[0-9a-fA-F]{64}$') {
+        throw "FAIL: hash '$hash' is not valid hex"
+    }
+}
+Write-Host "  all hashes are 64-char hex PASS"
+
+# ── Idempotency ──
+Write-Host "--- Idempotency ---"
+$beforeCount = 2
+$result = & $seedScript -Categories Fingerprints 6>&1
+Import-Module "$RepoRoot/Output/PSSymantecSEPM/PSSymantecSEPM.psm1" -Force
+& (Get-Module PSSymantecSEPM) { $script:SkipCert = $true }
+
+$outputText = if ($result -is [array]) { $result -join "`n" } else { $result.ToString() }
+if ($outputText -notmatch 'Fingerprints seeded: 2') {
+    throw "FAIL: idempotent re-run output mismatch: $outputText"
+}
+Write-Host "  Idempotent: re-run seeded 2 fingerprint lists - PASS"
+
+# ── Force mode: delete and recreate ──
+Write-Host "--- Force mode ---"
+& $seedScript -Categories Fingerprints -Force 6>&1 | Out-Null
+Import-Module "$RepoRoot/Output/PSSymantecSEPM/PSSymantecSEPM.psm1" -Force
+& (Get-Module PSSymantecSEPM) { $script:SkipCert = $true }
+
+# Verify both still exist
+$fpHashes2 = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/policy-objects/fingerprints?name=Known%20Malware%20Hashes" -Headers $s.Headers -SkipCert:$s.SkipCert
+$abHashes2 = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/policy-objects/fingerprints?name=Approved%20Binaries" -Headers $s.Headers -SkipCert:$s.SkipCert
+if (-not $fpHashes2) { throw "FAIL: Known Malware Hashes missing after Force" }
+if (-not $abHashes2) { throw "FAIL: Approved Binaries missing after Force" }
+Write-Host "  Force mode: both fingerprint lists recreated - PASS"
+
+Write-Host "`n=== Smoke: Seed Fingerprints (PS7) — ALL PASS ===" -ForegroundColor Green

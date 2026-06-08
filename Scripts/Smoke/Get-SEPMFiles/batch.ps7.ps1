@@ -2,39 +2,8 @@
 # Covers: Get-SEPMFileFingerprintList, Get-SEPFileDetails
 # Usage: pwsh -NoProfile -File Scripts/Smoke/Get-SEPMFiles/batch.ps7.ps1
 
-$ErrorActionPreference = "Continue"
-
-Import-Module ./Output/PSSymantecSEPM/PSSymantecSEPM.psm1 -Force
-$mod = Get-Module PSSymantecSEPM
-& $mod { $script:SkipCert = $true }
-
-function T {
-    param($Id, $Label, [ScriptBlock]$Action, [ScriptBlock]$Assert)
-    Write-Host "--- $Id : $Label ---" -ForegroundColor Cyan
-    try {
-        $result = & $Action
-
-        if ($result -is [string] -and $result -like "Error:*") {
-            Write-Host "  VERDICT: FAIL (API error: $result)" -ForegroundColor Red
-            return "FAIL"
-        }
-
-        $ok = & $Assert $result
-        if ($ok) { Write-Host "  VERDICT: PASS" -ForegroundColor Green; return "PASS" }
-        else     { Write-Host "  VERDICT: FAIL" -ForegroundColor Red;   return "FAIL" }
-    } catch {
-        $errMsg = $_.Exception.Message
-        Write-Host "  ERROR: $errMsg" -ForegroundColor Red
-        return "FAIL"
-    }
-}
-
-function Skip {
-    param($Id, $Label, $Reason)
-    Write-Host "--- $Id : $Label ---" -ForegroundColor Cyan
-    Write-Host "  SKIP: $Reason" -ForegroundColor Yellow
-    return "SKIP"
-}
+$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
+. "$RepoRoot/Scripts/Smoke/Common.ps1"
 
 $results = @{}
 
