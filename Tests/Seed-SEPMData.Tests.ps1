@@ -293,4 +293,26 @@ Describe 'Seed-SEPMData' {
             ($output -match 'Fingerprints seeded: 2') | Should -Not -BeNullOrEmpty
         }
     }
+
+    Context '-Categories Assignments dispatch' {
+        BeforeAll {
+            $fakeSession = New-TestSession -SkipCert
+            $realModule = Get-Module PSSymantecSEPM
+
+            Mock Import-Module { return $realModule }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                param($Method, $Uri, $Session, $Body, $ContentType)
+            }
+        }
+
+        It 'dispatches to Invoke-SeedAssignments and reports count' {
+            $output = & $script:SeedScriptPath -Categories Assignments
+
+            $output | Should -Not -BeNullOrEmpty
+            ($output -match '=== Seeding Assignments ===') | Should -Not -BeNullOrEmpty
+            ($output -match 'Assignments created: 0') | Should -Not -BeNullOrEmpty
+        }
+    }
 }

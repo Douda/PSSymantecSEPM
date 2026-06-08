@@ -77,6 +77,9 @@ $seedHostGroupsScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-HostGroup
 $seedFingerprintsScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-Fingerprints.ps1'
 . $seedFingerprintsScript
 
+$seedAssignmentsScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-Assignments.ps1'
+. $seedAssignmentsScript
+
 # If no categories specified, default to all
 if (-not $Categories -or $Categories.Count -eq 0) {
     Write-Output 'No categories implemented yet'
@@ -128,5 +131,10 @@ switch -Regex ($Categories) {
         Write-Output '=== Seeding Fingerprints ==='
         $result = Invoke-SeedFingerprints -State $State
         Write-Output "Fingerprints seeded: $($result.FingerprintMap.Count)"
+    }
+    '^Assignments$' {
+        Write-Output '=== Seeding Assignments ==='
+        $result = Invoke-SeedAssignments -State $State
+        Write-Output "Assignments created: $($result.AssignmentCount)"
     }
 }
