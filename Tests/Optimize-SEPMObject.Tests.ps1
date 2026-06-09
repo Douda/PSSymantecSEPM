@@ -212,7 +212,8 @@ Describe 'Optimize-SEPMObject' {
                 $policy = [SEPMPolicyExceptionsStructure]::new()
                 $policy.name = 'TestPolicy'
                 $policy.desc = 'Test Description'
-                $policy.lockedoptions = [PSCustomObject]@{ file = $true; extension = $false }
+                $policy.lockedoptions.file = $true
+                $policy.lockedoptions.extension = $false
                 $policy.enabled = $true
 
                 $result = Optimize-SEPMObject -InputObject $policy
@@ -224,7 +225,7 @@ Describe 'Optimize-SEPMObject' {
                 $result.enabled | Should -Be $true
                 # Class instance cloned to PSCustomObject (no type wrappers)
                 $result.GetType().FullName | Should -Be 'System.Management.Automation.PSCustomObject'
-                # lockedoptions survives because it has NoteProperties
+                # lockedoptions survives because it has entries
                 $result.PSObject.Properties.Name -contains 'lockedoptions' | Should -Be $true
                 $result.lockedoptions.file | Should -Be $true
             }
@@ -238,7 +239,8 @@ Describe 'Optimize-SEPMObject' {
                     $policy = [SEPMPolicyExceptionsStructure]::new()
                     $policy.name = 'TestPolicy'
                     $policy.desc = 'Test Description'
-                    $policy.lockedoptions = [PSCustomObject]@{ file = $true; extension = $false }
+                    $policy.lockedoptions.file = $true
+                    $policy.lockedoptions.extension = $false
                     $policy.enabled = $true
 
                     $result = Optimize-SEPMObject -InputObject $policy

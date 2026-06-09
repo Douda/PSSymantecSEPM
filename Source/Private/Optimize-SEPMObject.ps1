@@ -27,6 +27,32 @@ function Optimize-SEPMObject {
     )
 
     begin {
+        # SEPM domain rules: certain properties should be stripped even when their
+        # wrapper object is non-empty, because their sub-structure is empty.
+        function Test-SEPMPropertyIsEmpty {
+            param([string]$PropertyName, [object]$Value)
+
+            if ($null -eq $Value) { return $true }
+
+            switch ($PropertyName) {
+                'mac' {
+                    if ($Value.files.Count -eq 0) { return $true }
+                }
+                'linux' {
+                    $hasDirs = ($null -ne $Value.directories) -and ($Value.directories.Count -gt 0)
+                    $hasExts = ($null -ne $Value.extension_list) -and
+                               ($null -ne $Value.extension_list.extensions) -and
+                               ($Value.extension_list.extensions.Count -gt 0)
+                    if (-not $hasDirs -and -not $hasExts) { return $true }
+                }
+                'extension_list' {
+                    if ($Value.extensions.Count -eq 0) { return $true }
+                }
+            }
+
+            return $false
+        }
+
         # Recursively clone a PSObject tree (PS 5.1 path when ConvertTo-Json depth is unreliable).
         # Skip ScriptProperty, ParameterizedProperty, CodeProperty, Method to avoid circular
         # references during later JSON serialization.
@@ -86,28 +112,47 @@ function Optimize-SEPMObject {
                 $strip = $true
             }
 
-            # SEPM domain rules — strip properties whose sub-structure is empty
-            # even though the wrapper object itself has properties.
-            if (-not $strip) {
-                switch ($property) {
-                    'mac' {
-                        if ($val.files.Count -eq 0) { $strip = $true }
-                    }
-                    'linux' {
-                        $hasDirs = ($null -ne $val.directories) -and ($val.directories.Count -gt 0)
-                        $hasExts = ($null -ne $val.extension_list) -and
-                                   ($null -ne $val.extension_list.extensions) -and
-                                   ($val.extension_list.extensions.Count -gt 0)
-                        if (-not $hasDirs -and -not $hasExts) { $strip = $true }
-                    }
-                    'extension_list' {
-                        if ($val.extensions.Count -eq 0) { $strip = $true }
-                    }
-                }
+            if (-not $strip -and (Test-SEPMPropertyIsEmpty -PropertyName $property -Value $val)) {
+                $strip = $true
             }
 
             if ($strip) {
                 $obj = $obj | Select-Object -ExcludeProperty $property
+            }
+        }
+
+        # Recursively clean configuration sub-properties.
+        # In the real policy body, mac/linux/extension_list are nested inside
+        # configuration, not top-level. The SEPM API rejects bodies containing
+        # empty arrays in configuration sub-properties.
+        if ($obj.PSObject.Properties.Name -contains 'configuration') {
+            $configProperties = $obj.configuration | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name
+            foreach ($property in $configProperties) {
+                $val = $obj.configuration.$property
+                $stripConfig = $false
+
+                if ($null -eq $val) {
+                    $stripConfig = $true
+                } elseif ($val -is [System.Collections.IList] -and $val.Count -eq 0) {
+                    $stripConfig = $true
+                } elseif ($val -is [System.Collections.IDictionary] -and $val.Count -eq 0) {
+                    $stripConfig = $true
+                } elseif ($val -is [PSCustomObject] -and ($val | Get-Member -MemberType NoteProperty).Count -eq 0) {
+                    $stripConfig = $true
+                }
+
+                if (-not $stripConfig -and (Test-SEPMPropertyIsEmpty -PropertyName $property -Value $val)) {
+                    $stripConfig = $true
+                }
+
+                if ($stripConfig) {
+                    $obj.configuration = $obj.configuration | Select-Object -ExcludeProperty $property
+                }
+            }
+
+            # After cleaning sub-properties, if configuration is now empty, strip it too
+            if (($obj.configuration | Get-Member -MemberType NoteProperty).Count -eq 0) {
+                $obj = $obj | Select-Object -ExcludeProperty 'configuration'
             }
         }
 
