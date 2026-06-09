@@ -83,10 +83,13 @@ function Get-SEPMPolicySnapshot {
             } else {
                 continue
             }
-            # Skip error responses.
-            if ($locationStrings.Count -gt 0 -and $locationStrings[0] -match '^Error') { continue }
+            # Skip error responses and non-location payloads.
+            if ($locationStrings.Count -gt 0 -and $locationStrings[0] -match '^Error|^\s*\{') { continue }
             foreach ($location in $locationStrings) {
-                $locationMap[$location.split('/')[-1]] = $location.split(':')[0]
+                # Only process strings that look like valid location data (contain a path separator).
+                if ($location -match '/') {
+                    $locationMap[$location.split('/')[-1]] = $location.split(':')[0]
+                }
             }
         }
         $snapshot | Add-Member -MemberType NoteProperty -Name 'LocationMap' -Value $locationMap
