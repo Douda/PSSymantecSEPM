@@ -141,6 +141,14 @@ Describe 'Get-SEPComputers' {
         }
     }
 
+    Context 'Source file comment' {
+        It 'Should contain the Sandcastle parallel test B comment on line 1' {
+            $sourcePath = Join-Path -Path $PSScriptRoot -ChildPath '../Source/Public/Get-SEPComputers.ps1'
+            $firstLine = Get-Content -Path $sourcePath -TotalCount 1 -ErrorAction Stop
+            $firstLine | Should -BeExactly '# Sandcastle parallel test B'
+        }
+    }
+
     Context 'URI construction' {
         It 'ComputerName includes computerName query parameter in URI' {
             $fakeSession = New-TestSession -SkipCert
