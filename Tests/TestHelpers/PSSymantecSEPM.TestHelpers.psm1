@@ -369,3 +369,243 @@ function New-DummyPolicySummary {
 
     return $dummyObjects
 }
+
+function New-DummyFirewallPolicy {
+    <#
+    .SYNOPSIS
+        Generates a dummy SEPM Firewall Policy object for testing purposes.
+
+    .DESCRIPTION
+        Generates a dummy SEPM Firewall Policy object matching the shape returned by
+        the SEPM API's /policies/firewall/{id} endpoint.
+
+    .PARAMETER PolicyName
+        The name of the firewall policy.
+
+    .PARAMETER PolicyID
+        The ID of the policy. If omitted, a random 64-char hex ID is generated.
+
+    .EXAMPLE
+        New-DummyFirewallPolicy -PolicyName "Standard Servers - Firewall policy"
+
+        Generates a single dummy firewall policy.
+
+    .EXAMPLE
+        1..3 | ForEach-Object { New-DummyFirewallPolicy -PolicyName "FW Policy $_" }
+
+        Generates 3 dummy firewall policies.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $PolicyName,
+
+        [string] $PolicyID
+    )
+
+    process {
+        $id = if ($PolicyID) { $PolicyID } else {
+            -join ((48..57) + (65..70) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
+        }
+        $lastmodifiedtime = [long]([double]::Parse((Get-Date -UFormat %s)) * 1000)
+
+        $obj = New-Object PSObject -Property @{
+            sources          = [PSCustomObject]@{ type = 'firewall' }
+            configuration    = [PSCustomObject]@{
+                enforced_rules       = @()
+                baseline_rules       = @()
+                ignore_parent_rules  = $false
+                smart_dhcp           = $false
+                smart_dns            = $false
+                smart_wins           = $false
+                token_ring_traffic   = $false
+                netbios_protection   = $false
+                reverse_dns          = $false
+                port_scan            = $false
+                dos                  = $false
+                antimac_spoofing     = $false
+                autoblock            = $false
+                autoblock_duration   = 600
+                stealth_web          = $false
+                antiIP_spoofing      = $false
+                hide_os              = $false
+                windows_firewall     = 'NO_ACTION'
+                windows_firewall_notification = $false
+                endpoint_notification = $null
+                p2p_auth             = $null
+                mac                  = $null
+            }
+            enabled          = $true
+            desc             = "Description of $PolicyName"
+            name             = $PolicyName
+            lastmodifiedtime = $lastmodifiedtime
+            id               = $id
+        }
+        $obj.PSObject.TypeNames.Insert(0, 'SEPM.FirewallPolicy')
+        return $obj
+    }
+}
+
+function New-DummyFirewallRule {
+    <#
+    .SYNOPSIS
+        Generates a dummy firewall rule object for testing purposes.
+    .DESCRIPTION
+        Creates a minimal firewall rule matching the shape from the SEPM API,
+        with optional connections, adapters, applications, and hosts.
+    .PARAMETER Name
+        The rule name.
+    .PARAMETER Action
+        The rule action (ALLOW/BLOCK).
+    .PARAMETER Enabled
+        Whether the rule is enabled.
+    .PARAMETER Uid
+        The rule UID. If omitted, a random 32-char hex ID is generated.
+    .PARAMETER Connections
+        Array of connection objects. Default: empty array.
+    .PARAMETER Adapters
+        Array of adapter objects. Default: empty array.
+    .PARAMETER Applications
+        Array of application objects. Default: null.
+    .PARAMETER Hosts
+        Array of host objects. Default: null.
+    .EXAMPLE
+        New-DummyFirewallRule -Name 'Allow HTTP' -Action 'ALLOW'
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Name,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Action,
+
+        [bool] $Enabled = $true,
+
+        [string] $Uid,
+
+        [object[]] $Connections = @(),
+
+        [object[]] $Adapters = @(),
+
+        [object[]] $Applications = $null,
+
+        [object[]] $Hosts = $null
+    )
+
+    process {
+        $uid = if ($Uid) { $Uid } else {
+            [guid]::NewGuid().ToString('N').Substring(0, 32).ToUpper()
+        }
+
+        return [PSCustomObject]@{
+            name           = $Name
+            uid            = $uid
+            action         = $Action
+            severity       = 3
+            desc           = $null
+            rulestate      = [PSCustomObject]@{ enabled = $Enabled }
+            connections    = $Connections
+            adapters       = $Adapters
+            applications   = $Applications
+            hosts          = $Hosts
+            log_action     = 0
+            packet_capture = $false
+            email_alert    = $false
+            screen_saver   = 'ANY'
+            time_slots     = $null
+        }
+    }
+}
+
+function New-DummyLocation {
+    <#
+    .SYNOPSIS
+        Generates dummy SEPM Location objects for testing purposes.
+
+    .DESCRIPTION
+        Generates dummy location objects matching the shape returned by
+        Get-SEPMLocation.
+
+    .PARAMETER LocationName
+        The location name. Default: 'Default'.
+
+    .PARAMETER LocationID
+        The location ID. If omitted, a random GUID is generated.
+
+    .PARAMETER GroupName
+        The group name. Default: 'My Company'.
+
+    .PARAMETER GroupID
+        The group ID. If omitted, a random GUID is generated.
+
+    .PARAMETER GroupFullPathName
+        The group full path. Default: 'My Company'.
+
+    .EXAMPLE
+        New-DummyLocation -LocationName 'Default' -GroupName 'My Company'
+
+        Generates a single dummy location.
+
+    .EXAMPLE
+        1..3 | ForEach-Object { New-DummyLocation -LocationName "Location $_" }
+
+        Generates 3 dummy locations.
+    #>
+    [CmdletBinding()]
+    param(
+        [string] $LocationName = 'Default',
+        [string] $LocationID,
+        [string] $GroupName = 'My Company',
+        [string] $GroupID,
+        [string] $GroupFullPathName = 'My Company'
+    )
+
+    process {
+        $locId = if ($LocationID) { $LocationID } else { [guid]::NewGuid().ToString() }
+        $grpId = if ($GroupID) { $GroupID } else { [guid]::NewGuid().ToString() }
+
+        return [PSCustomObject]@{
+            locationName      = $LocationName
+            locationId        = $locId
+            groupName         = $GroupName
+            groupId           = $grpId
+            groupFullPathName = $GroupFullPathName
+        }
+    }
+}
+
+function New-DummyPolicySnapshot {
+    <#
+    .SYNOPSIS
+        Generates a dummy SEPM.PolicySnapshot PSObject for testing.
+    .DESCRIPTION
+        Creates a complete Policy Snapshot with FW.Policies, FW.Summary,
+        LocationMap, and FetchedAt. All properties are optional with sensible defaults.
+    .PARAMETER FWPolicies
+        Array of firewall policy objects (from New-DummyFirewallPolicy). Default: empty.
+    .PARAMETER FWSummary
+        Array of policy summary objects (from New-DummyPolicySummary). Default: empty.
+    .PARAMETER LocationMap
+        Hashtable of location ID to location name. Default: @{ 'loc-001' = 'Default' }.
+    .PARAMETER FetchedAt
+        DateTime of snapshot creation. Default: current time.
+    .EXAMPLE
+        $snap = New-DummyPolicySnapshot -FWPolicies @($policy1, $policy2)
+    #>
+    [CmdletBinding()]
+    param(
+        [object[]] $FWPolicies = @(),
+        [object[]] $FWSummary  = @(),
+        [hashtable] $LocationMap = @{ 'loc-001' = 'Default' },
+        [DateTime] $FetchedAt = (Get-Date)
+    )
+
+    $snap = [PSCustomObject]@{
+        FetchedAt   = $FetchedAt
+        LocationMap = $LocationMap
+        FW          = [PSCustomObject]@{ Policies = $FWPolicies; Summary = $FWSummary }
+    }
+    $snap.PSObject.TypeNames.Insert(0, 'SEPM.PolicySnapshot')
+    return $snap
+}
