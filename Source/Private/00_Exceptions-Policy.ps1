@@ -7,35 +7,35 @@ Section : Update Exceptions Policy
 #>
 class SEPMPolicyExceptionsStructure {
     <# Define the class. Try constructors, properties, or methods. #>
-    [object] $configuration
-    [object] $lockedoptions
+    [hashtable] $configuration
+    [hashtable] $lockedoptions
     [Nullable[bool]] $enabled
     [string] $desc
     [string] $name
     SEPMPolicyExceptionsStructure() {
-        $this.configuration = [object]@{
-            files                      = [System.Collections.Generic.List[object]]::new()
-            non_pe_rules               = [System.Collections.Generic.List[object]]::new()
-            directories                = [System.Collections.Generic.List[object]]::new()
-            webdomains                 = [System.Collections.Generic.List[object]]::new()
-            certificates               = [System.Collections.Generic.List[object]]::new()
-            applications               = [System.Collections.Generic.List[object]]::new()
-            denylistrules              = [System.Collections.Generic.List[object]]::new()
-            applications_to_monitor    = [System.Collections.Generic.List[object]]::new()
-            mac                        = [object]@{
-                files = [System.Collections.Generic.List[object]]::new()
+        $this.configuration = @{
+            files                      = [System.Collections.ArrayList]::new()
+            non_pe_rules               = [System.Collections.ArrayList]::new()
+            directories                = [System.Collections.ArrayList]::new()
+            webdomains                 = [System.Collections.ArrayList]::new()
+            certificates               = [System.Collections.ArrayList]::new()
+            applications               = [System.Collections.ArrayList]::new()
+            denylistrules              = [System.Collections.ArrayList]::new()
+            applications_to_monitor    = [System.Collections.ArrayList]::new()
+            mac                        = @{
+                files = [System.Collections.ArrayList]::new()
             }
-            linux                      = [object]@{
-                directories    = [System.Collections.Generic.List[object]]::new()
-                extension_list = [object]::new()
+            linux                      = @{
+                directories    = [System.Collections.ArrayList]::new()
+                extension_list = @{}
             }
-            extension_list             = [object]::new()
-            knownrisks                 = [System.Collections.Generic.List[object]]::new()
-            tamper_files               = [System.Collections.Generic.List[object]]::new()
-            dns_and_host_applications  = [System.Collections.Generic.List[object]]::new()
-            dns_and_host_denylistrules = [System.Collections.Generic.List[object]]::new()
+            extension_list             = @{}
+            knownrisks                 = [System.Collections.ArrayList]::new()
+            tamper_files               = [System.Collections.ArrayList]::new()
+            dns_and_host_applications  = [System.Collections.ArrayList]::new()
+            dns_and_host_denylistrules = [System.Collections.ArrayList]::new()
         }
-        $this.lockedoptions = [object]@{}
+        $this.lockedoptions = @{}
     }
 
     # Method to Update lockedoptions object
