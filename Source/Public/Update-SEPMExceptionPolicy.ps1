@@ -363,132 +363,15 @@ function Update-SEPMExceptionPolicy {
             $ObjBody.desc = $PolicyDescription
         }
 
-        # Serialize body for PATCH
-        if ($PSVersionTable.PSVersion.Major -ge 6) {
-            # PS 7+: Optimize then serialize with full depth
-            $ObjBody = Optimize-ExceptionPolicyStructure -obj $ObjBody
-            $ObjBody = Optimize-ExceptionPolicyStructure -obj $ObjBody
-            $bodyJson = $ObjBody | ConvertTo-Json -Depth 100 -Compress
-        } else {
-            # PS 5.1: Skip Optimize-ExceptionPolicyStructure (its ConvertTo-Json
-            # roundtrip corrupts nested arrays on PS 5.1 due to depth truncation).
-            # Empty-property stripping is handled inline below.
-            $cleanConfig = @{}
-            if ($null -ne $ObjBody.configuration) {
-            # PS 5.1: configuration is [hashtable] (implements IDictionary).
-            # Iterate keys directly instead of using PSObject.Properties.
-            if ($ObjBody.configuration -is [System.Collections.IDictionary]) {
-                foreach ($key in $ObjBody.configuration.Keys) {
-                    $val = $ObjBody.configuration[$key]
-                    $isEmpty = $false
-                    if ($null -eq $val) { $isEmpty = $true }
-                    elseif ($val -is [System.Collections.IList] -and $val.Count -eq 0) { $isEmpty = $true }
-                    elseif ($val -is [System.Collections.IDictionary] -and $val.Count -eq 0) { $isEmpty = $true }
-                    if ($key -eq 'mac' -and $val.files.Count -eq 0) { $isEmpty = $true }
-                    if ($key -eq 'linux') {
-                        $hasLinux = $val.directories.Count -gt 0
-                        if ($val.extension_list -and $val.extension_list.extensions -and $val.extension_list.extensions.Count -gt 0) { $hasLinux = $true }
-                        if (-not $hasLinux) { $isEmpty = $true }
-                    }
-                    if ($key -eq 'extension_list' -and $val.extensions.Count -eq 0) { $isEmpty = $true }
-                    if (-not $isEmpty) { $cleanConfig[$key] = $val }
-                }
-            } else {
-                foreach ($prop in $ObjBody.configuration.PSObject.Properties) {
-                    if ($prop.MemberType -ne 'NoteProperty') { continue }
-                    $val = $prop.Value
-                    $isEmpty = $false
-                    if ($null -eq $val) { $isEmpty = $true }
-                    elseif ($val -is [System.Collections.IList] -and $val.Count -eq 0) { $isEmpty = $true }
-                    elseif ($val -is [System.Collections.IDictionary] -and $val.Count -eq 0) { $isEmpty = $true }
-                    if ($prop.Name -eq 'mac' -and $val.files.Count -eq 0) { $isEmpty = $true }
-                    if ($prop.Name -eq 'linux') {
-                        $hasLinux = $val.directories.Count -gt 0
-                        if ($val.extension_list -and $val.extension_list.extensions -and $val.extension_list.extensions.Count -gt 0) { $hasLinux = $true }
-                        if (-not $hasLinux) { $isEmpty = $true }
-                    }
-                    if ($prop.Name -eq 'extension_list' -and $val.extensions.Count -eq 0) { $isEmpty = $true }
-                    if (-not $isEmpty) { $cleanConfig[$prop.Name] = $val }
-                }
-            }
-            }
-            $bodyObj = [PSCustomObject]@{ name = $ObjBody.name }
-            if ($cleanConfig.Count -gt 0) {
-                $bodyObj | Add-Member -NotePropertyName configuration -NotePropertyValue ([PSCustomObject]$cleanConfig)
-            }
-            if ($null -ne $ObjBody.enabled) { $bodyObj | Add-Member -NotePropertyName enabled -NotePropertyValue $ObjBody.enabled }
-            if ($null -ne $ObjBody.desc)   { $bodyObj | Add-Member -NotePropertyName desc -NotePropertyValue $ObjBody.desc }
-            # PS 5.1 ConvertTo-Json truncates at depth 2. Use a manual
-            # JSON serializer (avoids JavaScriptSerializer PSObject wrapping bugs).
-            function ConvertTo-JsonSafe {
-                param($obj)
-                $sb = New-Object System.Text.StringBuilder
-                $nullRef = [ref]$null
-                function _serialize {
-                    param($o, $sb)
-                    if ($null -eq $o) { [void]$sb.Append('null'); return }
-                    if ($o -is [string]) {
-                        [void]$sb.Append('"')
-                        [void]$sb.Append($o.Replace('\', '\\').Replace('"', '\"').Replace("`n", '\n').Replace("`r", '\r').Replace("`t", '\t'))
-                        [void]$sb.Append('"')
-                        return
-                    }
-                    if ($o -is [bool]) { [void]$sb.Append($o.ToString().ToLowerInvariant()); return }
-                    if ($o -is [int] -or $o -is [long] -or $o -is [double] -or $o -is [decimal]) { [void]$sb.Append($o); return }
-                    # Unwrap PSObject (except PSCustomObject)
-                    if ($o -is [PSObject] -and $o -isnot [PSCustomObject]) {
-                        $baseObj = $o.PSObject.BaseObject
-                        _serialize $baseObj $sb
-                        return
-                    }
-                    if ($o -is [System.Collections.IList]) {
-                        [void]$sb.Append('[')
-                        $first = $true
-                        foreach ($item in $o) {
-                            if (-not $first) { [void]$sb.Append(',') }
-                            _serialize $item $sb
-                            $first = $false
-                        }
-                        [void]$sb.Append(']')
-                        return
-                    }
-                    if ($o -is [System.Collections.IDictionary]) {
-                        [void]$sb.Append('{')
-                        $first = $true
-                        foreach ($key in $o.Keys) {
-                            if (-not $first) { [void]$sb.Append(',') }
-                            _serialize ([string]$key) $sb
-                            [void]$sb.Append(':')
-                            _serialize $o[$key] $sb
-                            $first = $false
-                        }
-                        [void]$sb.Append('}')
-                        return
-                    }
-                    # PSCustomObject / PSObject with NoteProperties
-                    if ($o -is [PSCustomObject] -or $o -is [PSObject]) {
-                        [void]$sb.Append('{')
-                        $first = $true
-                        foreach ($prop in $o.PSObject.Properties) {
-                            if ($prop.MemberType -eq 'NoteProperty') {
-                                if (-not $first) { [void]$sb.Append(',') }
-                                _serialize ([string]$prop.Name) $sb
-                                [void]$sb.Append(':')
-                                _serialize $prop.Value $sb
-                                $first = $false
-                            }
-                        }
-                        [void]$sb.Append('}')
-                        return
-                    }
-                    # Fallback: ToString
-                    _serialize ([string]$o.ToString()) $sb
-                }
-                _serialize $obj $sb
-                return $sb.ToString()
-            }
-            $bodyJson = ConvertTo-JsonSafe $bodyObj
-        }
+        # Serialize body for PATCH.
+        # Optimize-SEPMObject clones the class to a clean PSCustomObject tree
+        # and strips null/empty properties. A single call is sufficient — unlike
+        # the old Optimize-ExceptionPolicyStructure (which recurred into
+        # configuration and required a second pass to strip emergent empty
+        # properties), Optimize-SEPMObject operates on top-level properties only
+        # and does not mutate the tree in a way that requires a second call.
+        $ObjBody = Optimize-SEPMObject -InputObject $ObjBody
+        $bodyJson = ConvertTo-SEPMJson -InputObject $ObjBody -Compress
 
         $patchUri = $URI + "/" + $PolicyID
         $resp = Invoke-SepmApi -Method 'PATCH' -Uri $patchUri -Session $session `
