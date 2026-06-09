@@ -1,12 +1,14 @@
 # Smoke: Update-SEPMFileFingerprintList (PS7)
-$ErrorActionPreference = "Continue"
+# Usage: pwsh -NoProfile -File Scripts/Smoke/Update-SEPMFileFingerprintList/batch.ps7.ps1
+
 $RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
 . "$RepoRoot/Scripts/Smoke/Common.ps1"
 
-Write-Host "=== Smoke: Update-SEPMFileFingerprintList (PS7) ==="
-$pass = 0; $fail = 0
+Write-Host "=== Smoke: Update-SEPMFileFingerprintList (PS7) ===" -ForegroundColor Yellow
 
-# Discovery: find or create a fingerprint list
+$results = @{}
+
+# ── Discovery: find a fingerprint list ──
 $s = Initialize-SEPMSession
 $fps = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/policy-objects/fingerprints" -Headers $s.Headers -SkipCert:$s.SkipCert
 $fpList = $null
@@ -20,89 +22,82 @@ if ($fps.content -and $fps.content.Count -gt 0) {
         $fpId = $fpList.id
         $fpName = $fpList.name
     }
+}
+
+if (-not $fpList) {
+    $results.A1 = Skip "A1" "Update by ID" "No fingerprint lists available"
+    $results.A2 = Skip "A2" "Update by name" "No fingerprint lists available"
+    $results.A3 = Skip "A3" "Non-null output" "No fingerprint lists available"
+    $results.A4 = Skip "A4" "Response has id" "No fingerprint lists available"
+    $results.A5 = Skip "A5" "Error on invalid name" "No fingerprint lists for context"
 } else {
-    Write-Host "SKIP: No fingerprint lists available" -ForegroundColor Yellow
-    exit 0
+    Write-Host "Using fingerprint: $fpName ($fpId)" -ForegroundColor Gray
+    $domainId = '1E814550AC1E00027245A393F26DBE37'
+
+    # ── A1: Update by ID ──
+    $results.A1 = T "A1" "Update by ID" `
+        {
+            $hashes = @('d41d8cd98f00b204e9800998ecf8427e', 'e99a18c428cb38d5f260853678922e03')
+            Update-SEPMFileFingerprintList -FingerprintListID $fpId `
+                -name $fpName -domainId $domainId -HashType 'MD5' `
+                -description 'Smoke test update' -hashlist $hashes
+        } `
+        { param($r) $r -ne $null }
+
+    # ── A2: Update by name ──
+    $results.A2 = T "A2" "Update by name" `
+        {
+            $hashes = @('abc123abc123abc123abc123abc123ab')
+            Update-SEPMFileFingerprintList -FingerprintListName $fpName `
+                -name $fpName -domainId $domainId -HashType 'SHA256' `
+                -description 'Updated via name' -hashlist $hashes
+        } `
+        { param($r) $r -ne $null }
+
+    # ── A3: Non-null output ──
+    $results.A3 = T "A3" "Non-null output" `
+        {
+            Update-SEPMFileFingerprintList -FingerprintListID $fpId `
+                -name $fpName -domainId $domainId -HashType 'SHA256' `
+                -hashlist @('d41d8cd98f00b204e9800998ecf8427e')
+        } `
+        { param($r) $r -ne $null }
+
+    # ── A4: Response has id field, then restore name ──
+    $results.A4 = T "A4" "Response has id" `
+        {
+            $r = Update-SEPMFileFingerprintList -FingerprintListID $fpId `
+                -name "$fpName-v2" -domainId $domainId -HashType 'SHA256' `
+                -hashlist @('e99a18c428cb38d5f260853678922e03')
+            $hasId = [bool]$r.id
+            Update-SEPMFileFingerprintList -FingerprintListID $fpId `
+                -name $fpName -domainId $domainId -HashType 'SHA256' `
+                -hashlist @() | Out-Null
+            $hasId
+        } `
+        { param($r) $r -eq $true }
+
+    # ── A5: Invalid fingerprint list name writes error ──
+    $results.A5 = T "A5" "Error on invalid name" `
+        {
+            $errs = $null
+            Update-SEPMFileFingerprintList -FingerprintListName 'NonExistentFPList_12345' `
+                -name 'Test' -domainId 'd' -HashType 'SHA256' -hashlist @() `
+                -ErrorVariable errs -ErrorAction SilentlyContinue
+            $errs.Count -gt 0
+        } `
+        { param($r) $r -eq $true }
 }
 
-Write-Host "Using fingerprint: $fpName ($fpId)" -ForegroundColor Gray
-
-# Test 1: Update by ID
-try {
-    $hashes = @('d41d8cd98f00b204e9800998ecf8427e', 'e99a18c428cb38d5f260853678922e03')
-    $result = Update-SEPMFileFingerprintList -FingerprintListID $fpId `
-        -name $fpName -domainId '1E814550AC1E00027245A393F26DBE37' `
-        -HashType 'MD5' -description 'Smoke test update' -hashlist $hashes
-    if ($result) {
-        Write-Host "  T1: Update by ID - PASS" -ForegroundColor Green; $pass++
-    } else {
-        Write-Host "  T1: FAIL" -ForegroundColor Red; $fail++
-    }
-} catch {
-    Write-Host "  T1: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
+# === Summary ===
+Write-Host "`n========== SUMMARY (PS7) ==========" -ForegroundColor Yellow
+$pass = 0; $fail = 0; $skip = 0
+foreach ($k in $results.Keys | Sort-Object) {
+    $v = $results[$k]
+    if ($v -eq "PASS") { $pass++; Write-Host "  $k : PASS" -ForegroundColor Green }
+    elseif ($v -eq "SKIP") { $skip++; Write-Host "  $k : SKIP" -ForegroundColor Yellow }
+    else { $fail++; Write-Host "  $k : FAIL" -ForegroundColor Red }
 }
+Write-Host "TOTAL: $($pass+$fail+$skip) tests, $pass pass, $fail fail, $skip skip" -ForegroundColor Yellow
 
-# Test 2: Update by Name
-try {
-    $hashes = @('abc123abc123abc123abc123abc123ab')
-    $result = Update-SEPMFileFingerprintList -FingerprintListName $fpName `
-        -name $fpName -domainId '1E814550AC1E00027245A393F26DBE37' `
-        -HashType 'SHA256' -description 'Updated via name' -hashlist $hashes
-    if ($result) {
-        Write-Host "  T2: Update by name - PASS" -ForegroundColor Green; $pass++
-    } else {
-        Write-Host "  T2: FAIL" -ForegroundColor Red; $fail++
-    }
-} catch {
-    Write-Host "  T2: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
-}
-
-# Test 3: Non-null output
-try {
-    $result = Update-SEPMFileFingerprintList -FingerprintListID $fpId `
-        -name $fpName -domainId '1E814550AC1E00027245A393F26DBE37' `
-        -HashType 'SHA256' -hashlist @('d41d8cd98f00b204e9800998ecf8427e')
-    if ($result -ne $null) {
-        Write-Host "  T3: Non-null output - PASS" -ForegroundColor Green; $pass++
-    } else {
-        Write-Host "  T3: FAIL" -ForegroundColor Red; $fail++
-    }
-} catch {
-    Write-Host "  T3: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
-}
-
-# Test 4: Response has id field
-try {
-    $result = Update-SEPMFileFingerprintList -FingerprintListID $fpId `
-        -name "$fpName-v2" -domainId '1E814550AC1E00027245A393F26DBE37' `
-        -HashType 'SHA256' -hashlist @('e99a18c428cb38d5f260853678922e03')
-    if ($result.id) {
-        Write-Host "  T4: Response has id - PASS" -ForegroundColor Green; $pass++
-    } else {
-        Write-Host "  T4: FAIL" -ForegroundColor Red; $fail++
-    }
-    # Restore name
-    Update-SEPMFileFingerprintList -FingerprintListID $fpId `
-        -name $fpName -domainId '1E814550AC1E00027245A393F26DBE37' `
-        -HashType 'SHA256' -hashlist @() | Out-Null
-} catch {
-    Write-Host "  T4: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
-}
-
-# Test 5: Invalid fingerprint list name
-try {
-    $errors = $null
-    Update-SEPMFileFingerprintList -FingerprintListName 'NonExistentFPList_12345' `
-        -name 'Test' -domainId 'd' -HashType 'SHA256' -hashlist @() -ErrorVariable errors -ErrorAction SilentlyContinue
-    if ($errors.Count -gt 0) {
-        Write-Host "  T5: Error on invalid name - PASS" -ForegroundColor Green; $pass++
-    } else {
-        Write-Host "  T5: FAIL - expected error" -ForegroundColor Red; $fail++
-    }
-} catch {
-    Write-Host "  T5: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
-}
-
-Write-Host "`n=== SUMMARY (PS7) ===" -ForegroundColor Yellow
-Write-Host "TOTAL: $($pass+$fail) tests, $pass pass, $fail fail" -ForegroundColor Yellow
 if ($fail -gt 0) { exit 1 }

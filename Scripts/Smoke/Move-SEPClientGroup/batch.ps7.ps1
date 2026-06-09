@@ -1,107 +1,97 @@
 # Smoke: Move-SEPClientGroup (PS7)
-$ErrorActionPreference = "Continue"
+# Usage: pwsh -NoProfile -File Scripts/Smoke/Move-SEPClientGroup/batch.ps7.ps1
+
 $RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
 . "$RepoRoot/Scripts/Smoke/Common.ps1"
 
-Write-Host "=== Smoke: Move-SEPClientGroup (PS7) ==="
+Write-Host "=== Smoke: Move-SEPClientGroup (PS7) ===" -ForegroundColor Yellow
 
-$pass = 0; $fail = 0
+$results = @{}
 
-# Discovery via direct API
+# ── Discovery: find a computer and a target group ──
 $s = Initialize-SEPMSession
 $content = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/computers?pageSize=5&pageIndex=1&sort=COMPUTER_NAME" -Headers $s.Headers -SkipCert:$s.SkipCert
 $computers = $content.content
 
 if (-not $computers -or $computers.Count -eq 0) {
-    Write-Host "SKIP: No computers found" -ForegroundColor Yellow
-    exit 0
-}
-
-$srcComputer = $null
-foreach ($c in $computers) {
-    $name = if ($c -is [hashtable]) { $c.computerName } else { $c.computerName }
-    if ($name) { $srcComputer = $name; $srcGroupObj = if ($c -is [hashtable]) { $c.group } else { $c.group }; break }
-}
-if (-not $srcComputer) {
-    Write-Host "SKIP: No valid computer name found" -ForegroundColor Yellow
-    exit 0
-}
-$srcGroup = if ($srcGroupObj -is [hashtable]) { $srcGroupObj.name } else { $srcGroupObj.name }
-
-# Get a target group
-$groups = @(Get-SEPMGroups | Where-Object { $_.fullPathName -match 'Workstations' } | Select-Object -First 1)
-$targetGroup = if ($groups.Count -gt 0) { $groups[0].fullPathName } else { 'My Company' }
-
-Write-Host "Moving '$srcComputer' from '$srcGroup' -> '$targetGroup'" -ForegroundColor Gray
-
-# Test 1: Move computer
-try {
-    $result = Move-SEPClientGroup -ComputerName $srcComputer -GroupName $targetGroup
-    if ($result -and $result.computerName) {
-        Write-Host "  T1: Move OK - PASS" -ForegroundColor Green; $pass++
-    } else {
-        Write-Host "  T1: FAIL" -ForegroundColor Red; $fail++
+    $results.A1 = Skip "A1" "Move computer" "No computers found"
+    $results.A2 = Skip "A2" "Move back" "No computers found"
+    $results.A3 = Skip "A3" "Output type" "No computers found"
+    $results.A4 = Skip "A4" "Output fields" "No computers found"
+    $results.A5 = Skip "A5" "Error on invalid" "No computers for context"
+} else {
+    $srcComputer = $null
+    foreach ($c in $computers) {
+        $name = if ($c -is [hashtable]) { $c.computerName } else { $c.computerName }
+        if ($name) { $srcComputer = $name; $srcGroupObj = if ($c -is [hashtable]) { $c.group } else { $c.group }; break }
     }
-} catch {
-    Write-Host "  T1: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
-}
 
-# Test 2: Move back
-Start-Sleep -Seconds 1
-try {
-    $result = Move-SEPClientGroup -ComputerName $srcComputer -GroupName $srcGroup
-    if ($result -and $result.computerName) {
-        Write-Host "  T2: Move back OK - PASS" -ForegroundColor Green; $pass++
+    if (-not $srcComputer) {
+        $results.A1 = Skip "A1" "Move computer" "No valid computer name found"
+        $results.A2 = Skip "A2" "Move back" "No valid computer name found"
+        $results.A3 = Skip "A3" "Output type" "No valid computer name found"
+        $results.A4 = Skip "A4" "Output fields" "No valid computer name found"
+        $results.A5 = Skip "A5" "Error on invalid" "No valid computer name for context"
     } else {
-        Write-Host "  T2: FAIL" -ForegroundColor Red; $fail++
+        $srcGroup = if ($srcGroupObj -is [hashtable]) { $srcGroupObj.name } else { $srcGroupObj.name }
+        $groups = @(Get-SEPMGroups | Where-Object { $_.fullPathName -match 'Workstations' } | Select-Object -First 1)
+        $targetGroup = if ($groups.Count -gt 0) { $groups[0].fullPathName } else { 'My Company' }
+
+        Write-Host "Moving '$srcComputer' from '$srcGroup' -> '$targetGroup'" -ForegroundColor Gray
+
+        # ── A1: Move computer ──
+        $results.A1 = T "A1" "Move computer" `
+            { Move-SEPClientGroup -ComputerName $srcComputer -GroupName $targetGroup } `
+            { param($r) $r -and $r.computerName }
+
+        # ── A2: Move back ──
+        Start-Sleep -Seconds 1
+        $results.A2 = T "A2" "Move back" `
+            { Move-SEPClientGroup -ComputerName $srcComputer -GroupName $srcGroup } `
+            { param($r) $r -and $r.computerName }
+
+        # ── A3: Output type ──
+        $results.A3 = T "A3" "Output type" `
+            {
+                Start-Sleep -Seconds 1
+                $r = Move-SEPClientGroup -ComputerName $srcComputer -GroupName $targetGroup
+                Start-Sleep -Seconds 1
+                Move-SEPClientGroup -ComputerName $srcComputer -GroupName $srcGroup | Out-Null
+                $r.PSObject.TypeNames[0]
+            } `
+            { param($r) $r -eq 'SEPM.MoveClientGroupResponse' }
+
+        # ── A4: Output fields ──
+        $results.A4 = T "A4" "Output fields" `
+            {
+                Start-Sleep -Seconds 1
+                $r = Move-SEPClientGroup -ComputerName $srcComputer -GroupName $targetGroup
+                Start-Sleep -Seconds 1
+                Move-SEPClientGroup -ComputerName $srcComputer -GroupName $srcGroup | Out-Null
+                [bool]($r.computerName -and $r.targetGroup)
+            } `
+            { param($r) $r -eq $true }
+
+        # ── A5: Invalid computer writes error ──
+        $results.A5 = T "A5" "Error on invalid" `
+            {
+                $errs = $null
+                Move-SEPClientGroup -ComputerName 'NonExistentComputerXYZ' -GroupName $targetGroup -ErrorVariable errs -ErrorAction SilentlyContinue
+                $errs.Count -gt 0
+            } `
+            { param($r) $r -eq $true }
     }
-} catch {
-    Write-Host "  T2: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
 }
 
-# Test 3: Output type
-try {
-    Start-Sleep -Seconds 1
-    $result = Move-SEPClientGroup -ComputerName $srcComputer -GroupName $targetGroup
-    if ($result.PSObject.TypeNames[0] -eq 'SEPM.MoveClientGroupResponse') {
-        Write-Host "  T3: Type OK - PASS" -ForegroundColor Green; $pass++
-    } else {
-        Write-Host "  T3: FAIL" -ForegroundColor Red; $fail++
-    }
-    Start-Sleep -Seconds 1
-    Move-SEPClientGroup -ComputerName $srcComputer -GroupName $srcGroup | Out-Null
-} catch {
-    Write-Host "  T3: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
+# === Summary ===
+Write-Host "`n========== SUMMARY (PS7) ==========" -ForegroundColor Yellow
+$pass = 0; $fail = 0; $skip = 0
+foreach ($k in $results.Keys | Sort-Object) {
+    $v = $results[$k]
+    if ($v -eq "PASS") { $pass++; Write-Host "  $k : PASS" -ForegroundColor Green }
+    elseif ($v -eq "SKIP") { $skip++; Write-Host "  $k : SKIP" -ForegroundColor Yellow }
+    else { $fail++; Write-Host "  $k : FAIL" -ForegroundColor Red }
 }
+Write-Host "TOTAL: $($pass+$fail+$skip) tests, $pass pass, $fail fail, $skip skip" -ForegroundColor Yellow
 
-# Test 4: Output fields
-try {
-    Start-Sleep -Seconds 1
-    $result = Move-SEPClientGroup -ComputerName $srcComputer -GroupName $targetGroup
-    if ($result.computerName -and $result.targetGroup) {
-        Write-Host "  T4: Fields OK - PASS" -ForegroundColor Green; $pass++
-    } else {
-        Write-Host "  T4: FAIL" -ForegroundColor Red; $fail++
-    }
-    Start-Sleep -Seconds 1
-    Move-SEPClientGroup -ComputerName $srcComputer -GroupName $srcGroup | Out-Null
-} catch {
-    Write-Host "  T4: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
-}
-
-# Test 5: Invalid computer
-try {
-    $errors = $null
-    Move-SEPClientGroup -ComputerName 'NonExistentComputerXYZ' -GroupName $targetGroup -ErrorVariable errors -ErrorAction SilentlyContinue
-    if ($errors.Count -gt 0) {
-        Write-Host "  T5: Error on invalid - PASS" -ForegroundColor Green; $pass++
-    } else {
-        Write-Host "  T5: FAIL" -ForegroundColor Red; $fail++
-    }
-} catch {
-    Write-Host "  T5: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
-}
-
-Write-Host "`n=== SUMMARY (PS7) ===" -ForegroundColor Yellow
-Write-Host "TOTAL: $($pass+$fail) tests, $pass pass, $fail fail" -ForegroundColor Yellow
 if ($fail -gt 0) { exit 1 }

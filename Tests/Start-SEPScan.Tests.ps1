@@ -95,7 +95,7 @@ Describe 'Start-SEPScan' {
             $fakeSession = New-TestSession
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
 
-            $uidCounter = 0
+            $script:uidCounter = 0
             Mock Get-SEPComputers -ModuleName PSSymantecSEPM {
                 param($ComputerName)
                 $script:uidCounter++

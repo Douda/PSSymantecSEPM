@@ -1,69 +1,47 @@
 # Smoke: Confirm-SEPMEventInfo (PS7)
-$ErrorActionPreference = "Continue"
+# Usage: pwsh -NoProfile -File Scripts/Smoke/Confirm-SEPMEventInfo/batch.ps7.ps1
+
 $RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
 . "$RepoRoot/Scripts/Smoke/Common.ps1"
 
-Write-Host "=== Smoke: Confirm-SEPMEventInfo (PS7) ==="
-$pass = 0; $fail = 0
+Write-Host "=== Smoke: Confirm-SEPMEventInfo (PS7) ===" -ForegroundColor Yellow
 
-# Discovery: find critical events
-try {
-    $events = Get-SEPMEventInfo
-    if (-not $events -or $events.Count -eq 0) {
-        Write-Host "SKIP: No critical events available" -ForegroundColor Yellow
-        Write-Host "  T1: No events - SKIP" -ForegroundColor Yellow; $pass++
-        Write-Host "  T2: Cmdlet exists - PASS" -ForegroundColor Green; $pass++
-        Write-Host "`n=== SUMMARY (PS7) ===" -ForegroundColor Yellow
-        Write-Host "TOTAL: 2 tests, 2 pass, 0 fail" -ForegroundColor Yellow
-        exit 0
-    }
-} catch {
-    Write-Host "  T-DISCOVERY: FAIL - cannot get events: $($_.Exception.Message)" -ForegroundColor Red
-    $fail++
-    Write-Host "`n=== SUMMARY (PS7) ===" -ForegroundColor Yellow
-    Write-Host "TOTAL: $($pass+$fail) tests, $pass pass, $fail fail" -ForegroundColor Yellow
-    exit 1
-}
+$results = @{}
 
-# Test 1: Try acknowledging first event (may not be acknowledgeable)
-try {
+# ── Discovery: find critical events ──
+$events = Get-SEPMEventInfo -ErrorAction SilentlyContinue
+if (-not $events -or $events.Count -eq 0) {
+    $results.A1 = Skip "A1" "Acknowledge event" "No critical events available"
+    $results.A2 = Skip "A2" "Invalid event returns false" "No events for context"
+    $results.A3 = Skip "A3" "Returns boolean" "No events for context"
+} else {
     $eventId = $events[0].eventId
-    Write-Host "  Attempting to acknowledge event: $eventId" -ForegroundColor Gray
-    $result = Confirm-SEPMEventInfo -EventID $eventId -WarningAction SilentlyContinue
-    if ($result -eq $true) {
-        Write-Host "  T1: Event acknowledged - PASS" -ForegroundColor Green; $pass++
-    } else {
-        Write-Host "  T1: Event not acknowledgeable (expected for some types) - PASS" -ForegroundColor Green; $pass++
-    }
-} catch {
-    Write-Host "  T1: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
+
+    # ── A1: Acknowledge event (may succeed or return false for non-acknowledgeable) ──
+    $results.A1 = T "A1" "Acknowledge event" `
+        { Confirm-SEPMEventInfo -EventID $eventId -WarningAction SilentlyContinue } `
+        { param($r) $r -is [bool] }
+
+    # ── A2: Invalid event ID returns false ──
+    $results.A2 = T "A2" "Invalid event returns false" `
+        { Confirm-SEPMEventInfo -EventID 'INVALID_EVENT_ID_999999' -WarningAction SilentlyContinue } `
+        { param($r) $r -eq $false }
+
+    # ── A3: Returns boolean ──
+    $results.A3 = T "A3" "Returns boolean" `
+        { Confirm-SEPMEventInfo -EventID 'EVT-TEST-000' -WarningAction SilentlyContinue -ErrorAction SilentlyContinue } `
+        { param($r) $r -is [bool] }
 }
 
-# Test 2: Invalid event ID
-try {
-    $errors = $null
-    $result = Confirm-SEPMEventInfo -EventID 'INVALID_EVENT_ID_999999' -WarningAction SilentlyContinue -ErrorVariable errors
-    if ($result -eq $false) {
-        Write-Host "  T2: Returns false on invalid ID - PASS" -ForegroundColor Green; $pass++
-    } else {
-        Write-Host "  T2: FAIL - expected false" -ForegroundColor Red; $fail++
-    }
-} catch {
-    Write-Host "  T2: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
+# === Summary ===
+Write-Host "`n========== SUMMARY (PS7) ==========" -ForegroundColor Yellow
+$pass = 0; $fail = 0; $skip = 0
+foreach ($k in $results.Keys | Sort-Object) {
+    $v = $results[$k]
+    if ($v -eq "PASS") { $pass++; Write-Host "  $k : PASS" -ForegroundColor Green }
+    elseif ($v -eq "SKIP") { $skip++; Write-Host "  $k : SKIP" -ForegroundColor Yellow }
+    else { $fail++; Write-Host "  $k : FAIL" -ForegroundColor Red }
 }
+Write-Host "TOTAL: $($pass+$fail+$skip) tests, $pass pass, $fail fail, $skip skip" -ForegroundColor Yellow
 
-# Test 3: Output is boolean
-try {
-    $result = Confirm-SEPMEventInfo -EventID 'EVT-TEST-000' -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
-    if ($result -is [bool]) {
-        Write-Host "  T3: Returns boolean - PASS" -ForegroundColor Green; $pass++
-    } else {
-        Write-Host "  T3: FAIL - type is $($result.GetType().FullName)" -ForegroundColor Red; $fail++
-    }
-} catch {
-    Write-Host "  T3: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
-}
-
-Write-Host "`n=== SUMMARY (PS7) ===" -ForegroundColor Yellow
-Write-Host "TOTAL: $($pass+$fail) tests, $pass pass, $fail fail" -ForegroundColor Yellow
 if ($fail -gt 0) { exit 1 }

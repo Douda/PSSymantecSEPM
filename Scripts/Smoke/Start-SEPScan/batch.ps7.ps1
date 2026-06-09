@@ -1,78 +1,64 @@
 # Smoke: Start-SEPScan (PS7)
-$ErrorActionPreference = "Continue"
+# Usage: pwsh -NoProfile -File Scripts/Smoke/Start-SEPScan/batch.ps7.ps1
+
 $RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
 . "$RepoRoot/Scripts/Smoke/Common.ps1"
 
-Write-Host "=== Smoke: Start-SEPScan (PS7) ==="
-$pass = 0; $fail = 0
+Write-Host "=== Smoke: Start-SEPScan (PS7) ===" -ForegroundColor Yellow
 
-# Discovery: find a computer
-$computers = @(Get-SEPComputers -ComputerName 'WIN-P093KPK2K7Q')
+$results = @{}
+
+# ── Discovery: find a computer ──
+$computers = @(Get-SEPComputers -ComputerName 'WIN-P093KPK2K7Q' -ErrorAction SilentlyContinue)
 if ($computers.Count -eq 0) {
-    Write-Host "SKIP: No computers found" -ForegroundColor Yellow
-    exit 0
-}
-$computerName = $computers[0].computerName
-Write-Host "Using computer: $computerName" -ForegroundColor Gray
+    $results.A1 = Skip "A1" "ActiveScan" "No computers found"
+    $results.A2 = Skip "A2" "FullScan" "No computers found"
+    $results.A3 = Skip "A3" "Pipeline input" "No computers found"
+    $results.A4 = Skip "A4" "Invalid computer" "No computers for context"
+    $results.A5 = Skip "A5" "Non-null output" "No computers found"
+} else {
+    $computerName = $computers[0].computerName
+    Write-Host "Using computer: $computerName" -ForegroundColor Gray
 
-# Test 1: Send ActiveScan
-try {
-    $result = Start-SEPScan -ComputerName $computerName -ActiveScan
-    if ($result) {
-        Write-Host "  T1: ActiveScan command sent - PASS" -ForegroundColor Green; $pass++
-    } else {
-        Write-Host "  T1: FAIL - null response" -ForegroundColor Red; $fail++
-    }
-} catch {
-    Write-Host "  T1: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
-}
+    # ── A1: ActiveScan ──
+    $results.A1 = T "A1" "ActiveScan" `
+        { Start-SEPScan -ComputerName $computerName -ActiveScan } `
+        { param($r) $r -ne $null }
 
-# Test 2: Send FullScan
-try {
-    $result = Start-SEPScan -ComputerName $computerName -FullScan
-    if ($result) {
-        Write-Host "  T2: FullScan command sent - PASS" -ForegroundColor Green; $pass++
-    } else {
-        Write-Host "  T2: FAIL - null response" -ForegroundColor Red; $fail++
-    }
-} catch {
-    Write-Host "  T2: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
-}
+    # ── A2: FullScan ──
+    $results.A2 = T "A2" "FullScan" `
+        { Start-SEPScan -ComputerName $computerName -FullScan } `
+        { param($r) $r -ne $null }
 
-# Test 3: Pipeline input
-try {
-    $result = $computerName | Start-SEPScan -ActiveScan
-    if ($result) {
-        Write-Host "  T3: Pipeline input - PASS" -ForegroundColor Green; $pass++
-    } else {
-        Write-Host "  T3: FAIL" -ForegroundColor Red; $fail++
-    }
-} catch {
-    Write-Host "  T3: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
+    # ── A3: Pipeline input ──
+    $results.A3 = T "A3" "Pipeline input" `
+        { $computerName | Start-SEPScan -ActiveScan } `
+        { param($r) $r -ne $null }
+
+    # ── A4: Invalid computer name (should not throw, returns gracefully) ──
+    $results.A4 = T "A4" "Invalid computer handled" `
+        {
+            $errs = $null
+            Start-SEPScan -ComputerName 'NonExistentComputer12345' -ActiveScan -ErrorVariable errs -ErrorAction SilentlyContinue
+            $true  # The test passes if it doesn't throw; result may be empty
+        } `
+        { param($r) $r -eq $true }
+
+    # ── A5: Non-null output ──
+    $results.A5 = T "A5" "Non-null output" `
+        { Start-SEPScan -ComputerName $computerName -ActiveScan } `
+        { param($r) $r -ne $null }
 }
 
-# Test 4: Invalid computer name
-try {
-    $errors = $null
-    $result = Start-SEPScan -ComputerName 'NonExistentComputer12345' -ActiveScan -ErrorVariable errors -ErrorAction SilentlyContinue
-    # Should not throw but may return empty or error
-    Write-Host "  T4: Invalid computer handled - PASS" -ForegroundColor Green; $pass++
-} catch {
-    Write-Host "  T4: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
+# === Summary ===
+Write-Host "`n========== SUMMARY (PS7) ==========" -ForegroundColor Yellow
+$pass = 0; $fail = 0; $skip = 0
+foreach ($k in $results.Keys | Sort-Object) {
+    $v = $results[$k]
+    if ($v -eq "PASS") { $pass++; Write-Host "  $k : PASS" -ForegroundColor Green }
+    elseif ($v -eq "SKIP") { $skip++; Write-Host "  $k : SKIP" -ForegroundColor Yellow }
+    else { $fail++; Write-Host "  $k : FAIL" -ForegroundColor Red }
 }
+Write-Host "TOTAL: $($pass+$fail+$skip) tests, $pass pass, $fail fail, $skip skip" -ForegroundColor Yellow
 
-# Test 5: Output non-null
-try {
-    $result = Start-SEPScan -ComputerName $computerName -ActiveScan
-    if ($result -ne $null) {
-        Write-Host "  T5: Non-null output - PASS" -ForegroundColor Green; $pass++
-    } else {
-        Write-Host "  T5: FAIL" -ForegroundColor Red; $fail++
-    }
-} catch {
-    Write-Host "  T5: FAIL - $($_.Exception.Message)" -ForegroundColor Red; $fail++
-}
-
-Write-Host "`n=== SUMMARY (PS7) ===" -ForegroundColor Yellow
-Write-Host "TOTAL: $($pass+$fail) tests, $pass pass, $fail fail" -ForegroundColor Yellow
 if ($fail -gt 0) { exit 1 }
