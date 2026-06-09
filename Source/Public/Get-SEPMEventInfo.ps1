@@ -40,6 +40,6 @@ function Get-SEPMEventInfo {
             $_.PSObject.TypeNames.Insert(0, 'SEPM.EventInfo')
         }
 
-        return $resp.criticalEventsInfoList
+        Write-Output $resp.criticalEventsInfoList -NoEnumerate
     }
 }

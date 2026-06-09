@@ -55,6 +55,6 @@ function Get-SEPMGroups {
         } until ($resp.lastPage -eq $true)
 
         # return the response
-        return $allResults
+        Write-Output $allResults -NoEnumerate
     }
 }

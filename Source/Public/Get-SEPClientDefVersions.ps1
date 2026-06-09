@@ -57,6 +57,6 @@ function Get-SEPClientDefVersions {
 
         $list = $resp.clientDefStatusList
         if ($null -eq $list) { return @() }
-        return $list
+        Write-Output $list -NoEnumerate
     }
 }

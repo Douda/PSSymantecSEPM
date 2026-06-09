@@ -25,6 +25,6 @@ function Get-SEPMThreatStats {
 
     process {
         $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
-        return $resp.Stats
+        Write-Output $resp.Stats -NoEnumerate
     }
 }

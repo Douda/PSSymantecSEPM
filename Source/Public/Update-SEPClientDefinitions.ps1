@@ -150,7 +150,7 @@ function Update-SEPClientDefinitions {
             }
             
             # return the response
-            return $AllResp
+            Write-Output $AllResp -NoEnumerate
         }
     }
 }

@@ -103,6 +103,39 @@ Some cmdlets (e.g. `Get-SEPComputers`) paginate through the API using `pageIndex
 - Configuration backup/restore
 - Excel export (firewall policies)
 
+### Output emission: `Write-Output -NoEnumerate` for collections
+
+Cmdlets that return collections (arrays built via `@()`, or API response sub-properties
+extracted as arrays) must use `Write-Output $result -NoEnumerate` instead of bare
+`return $result`. PowerShell unrolls arrays through `return`, causing a single-element
+result to become a scalar — breaking `$result.Count`, pipeline `ForEach-Object`, and
+other array-dependent downstream code.
+
+**Applies to**: cmdlets where the return type is conceptually "a list of X."
+**Does not apply to**: cmdlets returning a single object (hashtable, PSCustomObject,
+boolean, string), even if the object internally contains nested arrays.
+
+Audited 2026-06-09 — 13 cmdlets use this pattern:
+
+| Cmdlet | Returns |
+|---|---|
+| `Get-SEPComputers` | Paginated computer array |
+| `Get-SEPMGroups` | Paginated group array |
+| `Get-SEPMCommandStatus` | Paginated command status array |
+| `Get-SEPGUPList` | GUP array |
+| `Get-SEPMLocation` | Location array |
+| `Get-SEPClientDefVersions` | Definition version array |
+| `Get-SEPClientStatus` | Client status array |
+| `Get-SEPClientVersion` | Client version array |
+| `Get-SEPMEventInfo` | Critical events array |
+| `Get-SEPMPoliciesSummary` | Policy summary array |
+| `Get-SEPMReplicationStatus` | Replication status array |
+| `Get-SEPMThreatStats` | Threat stats array |
+| `Start-SEPScan` | Scan result array |
+| `Update-SEPClientDefinitions` | Update result array |
+
+New cmdlets returning collections should follow this pattern.
+
 ## Dev Environment
 
 ```

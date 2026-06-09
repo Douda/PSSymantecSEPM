@@ -37,6 +37,6 @@ function Get-SEPMReplicationStatus {
             }
         }
 
-        return $resp.replicationStatus
+        Write-Output $resp.replicationStatus -NoEnumerate
     }
 }
