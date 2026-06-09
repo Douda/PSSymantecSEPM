@@ -71,15 +71,16 @@ Describe 'Backup-SEPMConfiguration' {
         }
     }
 
-    Context 'With pipeline' {
+    Context 'Path acceptance' {
         BeforeAll {
-            Set-SepmConfiguration -ServerAddress 'pipeline-test' -Port 8446
+            Set-SepmConfiguration -ServerAddress 'path-accept-test' -Port 8446
         }
 
         It 'Accepts Path parameter and creates backup' {
-            $result = Backup-SEPMConfiguration -Path (Join-Path -Path 'TestDrive:' -ChildPath 'pipeline-backup.json')
+            $backupPath = Join-Path -Path 'TestDrive:' -ChildPath 'backups/path-backup.json'
+            $null = Backup-SEPMConfiguration -Path $backupPath
 
-            Test-Path -Path (Join-Path -Path 'TestDrive:' -ChildPath 'pipeline-backup.json') | Should -Be $true
+            Test-Path -Path $backupPath | Should -Be $true
         }
     }
 }

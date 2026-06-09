@@ -81,7 +81,7 @@ Describe 'Backup-SEPMAuthentication' {
         }
     }
 
-    Context 'Both Credential and AccessToken' {
+    Context 'Backup with both credential and token files present' {
         BeforeAll {
             $dummyCreds = New-Object System.Management.Automation.PSCredential 'BothUser',
                 (ConvertTo-SecureString -String 'BothPass' -AsPlainText -Force)

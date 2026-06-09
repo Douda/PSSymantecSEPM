@@ -23,16 +23,6 @@ Describe 'Reset-SepmConfiguration' {
                 Test-Path -Path $script:configurationFilePath -PathType Leaf | Should -Be $false
             }
         }
-
-        It 'Clears configuration file and sets module state to defaults' {
-            Set-SepmConfiguration -ServerAddress 'custom-server' -Port 9999
-            Reset-SEPMConfiguration
-
-            # File should be gone
-            InModuleScope PSSymantecSEPM {
-                Test-Path -Path $script:configurationFilePath -PathType Leaf | Should -Be $false
-            }
-        }
     }
 
     Context 'Reset when no configuration exists' {

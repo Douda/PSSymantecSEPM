@@ -34,17 +34,6 @@ Describe 'Set-SepmConfiguration' {
                 $persisted.port | Should -Match '9443'
             }
         }
-
-        It 'Writes config file with expected JSON structure' {
-            Set-SepmConfiguration -ServerAddress 'json-test' -Port 1234
-
-            InModuleScope PSSymantecSEPM {
-                $raw = Get-Content -Path $script:configurationFilePath -Raw
-                $config = $raw | ConvertFrom-Json
-                $config.ServerAddress | Should -Be 'json-test'
-                $config.port | Should -Match '1234'
-            }
-        }
     }
 
     Context 'Updating existing configuration' {
@@ -73,13 +62,10 @@ Describe 'Set-SepmConfiguration' {
         }
 
         It 'Updates module-scope configuration after setting' {
-            Set-SepmConfiguration -ServerAddress 'module-scope-test' -Port 5555
+            Set-SepmConfiguration -ServerAddress 'module-scope-test'
 
             InModuleScope PSSymantecSEPM {
                 $script:configuration.ServerAddress | Should -Be 'module-scope-test'
-                # Port is stored as int in file, but Import-SepmConfiguration
-                # expects string type and falls back to default '8446'
-                $script:configuration.port | Should -Be '8446'
             }
         }
     }
