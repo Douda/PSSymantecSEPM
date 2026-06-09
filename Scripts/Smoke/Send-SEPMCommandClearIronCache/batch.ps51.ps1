@@ -5,45 +5,43 @@ $RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
 
 Write-Host "=== Smoke: Send-SEPMCommandClearIronCache (PS5.1) ==="
 
-$pass = 0
-$fail = 0
+$results = @{}
 
-function Assert-NotNull {
+function TE51 {
     param($Id, $Label, [ScriptBlock]$Action)
-    Write-Host "--- $Id : $Label ---"
+    Write-Host "--- $Id : $Label ---" -ForegroundColor Cyan
     try {
         $result = & $Action
-        if ($result -ne $null) {
-            Write-Host "  VERDICT: PASS"
-            $script:pass++
-        } else {
-            Write-Host "  VERDICT: FAIL (null result)"
-            $script:fail++
+        if ($null -eq $result) {
+            Write-Host "  VERDICT: FAIL (null response)" -ForegroundColor Red
+            return "FAIL"
         }
+        Write-Host "  VERDICT: PASS (API reached)" -ForegroundColor Green
+        return "PASS"
     } catch {
-        Write-Host "  ERROR: $($_.Exception.Message)"
-        $script:fail++
+        Write-Host "  VERDICT: FAIL (exception: $($_.Exception.Message))" -ForegroundColor Red
+        return "FAIL"
     }
 }
 
 $sha256Hash = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 $md5Hash = 'd41d8cd98f00b204e9800998ecf8427e'
 
-# A1: ClearIronCache dispatch to non-existent computer with SHA256
-Assert-NotNull "A1" "ClearIronCache dispatch SHA256 to non-existent computer" {
-    Send-SEPMCommandClearIronCache -ComputerName 'NonExistentPC_SmokeTest' -SHA256 $sha256Hash
-}
+$results.A1 = TE51 "A1" "ClearIronCache SHA256 to non-existent computer" `
+    { Send-SEPMCommandClearIronCache -ComputerName 'NonExistentPC_SmokeTest' -SHA256 $sha256Hash }
 
-# A2: ClearIronCache dispatch to non-existent group
-Assert-NotNull "A2" "ClearIronCache dispatch to non-existent group" {
-    Send-SEPMCommandClearIronCache -GroupName 'My Company\NonExistentSmokeGroup'
-}
+$results.A2 = TE51 "A2" "ClearIronCache to non-existent group" `
+    { Send-SEPMCommandClearIronCache -GroupName 'My Company\NonExistentSmokeGroup' }
 
-# A3: ClearIronCache with MD5 hash
-Assert-NotNull "A3" "ClearIronCache dispatch MD5 to non-existent computer" {
-    Send-SEPMCommandClearIronCache -ComputerName 'NonExistentPC_SmokeTest' -MD5 $md5Hash
-}
+$results.A3 = TE51 "A3" "ClearIronCache MD5 to non-existent computer" `
+    { Send-SEPMCommandClearIronCache -ComputerName 'NonExistentPC_SmokeTest' -MD5 $md5Hash }
 
 # Summary
-Write-Host "`n========== SUMMARY (PS5.1) =========="
-Write-Host "TOTAL: $($pass+$fail) tests, $pass pass, $fail fail"
+$pass = ($results.Values | Where-Object { $_ -eq 'PASS' }).Count
+$fail = ($results.Values | Where-Object { $_ -eq 'FAIL' }).Count
+Write-Host "`n=== Results: $pass PASS, $fail FAIL ===" -ForegroundColor $(if ($fail -gt 0) { 'Red' } else { 'Green' })
+
+if ($fail -gt 0) {
+    Write-Error "Smoke tests failed: $fail failure(s)"
+    exit 1
+}
