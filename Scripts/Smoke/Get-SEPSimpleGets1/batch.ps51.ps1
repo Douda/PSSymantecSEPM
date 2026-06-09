@@ -1,4 +1,4 @@
-# Smoke batch: simple GET cmdlets batch 1 (PS5.1)
+﻿# Smoke batch: simple GET cmdlets batch 1 (PS5.1)
 # Covers: Get-SEPClientInfectedStatus, Get-SEPFileDetails, Get-SEPGUPList,
 #         Get-SEPMCommandStatus, Get-SEPMDatabaseInfo, Get-SEPMEventInfo
 # Usage: .\batch.ps51.ps1 (run on Windows VM)
