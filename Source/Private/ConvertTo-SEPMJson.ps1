@@ -50,7 +50,15 @@ function ConvertTo-SEPMJson {
     if ((Get-PSVersionMajor) -ge 6) {
         $json = $InputObject | ConvertTo-Json -Depth $Depth -Compress
     } else {
-        $json = _ConvertTo-JsonSafe -obj $InputObject
+        # PS 5.1: unroll single-element arrays to match PS 7+ pipeline semantics.
+        # In PS 7+, piping a single-element array to ConvertTo-Json unrolls it
+        # (e.g. @(@{a=1}) | ConvertTo-Json produces {"a":1}, not [{"a":1}]).
+        # Without this, -AsArray would double-wrap single-element arrays on PS 5.1.
+        $obj = $InputObject
+        if ($obj -is [System.Collections.IList] -and $obj.Count -eq 1) {
+            $obj = $obj[0]
+        }
+        $json = _ConvertTo-JsonSafe -obj $obj
     }
 
     if ($AsArray) {
