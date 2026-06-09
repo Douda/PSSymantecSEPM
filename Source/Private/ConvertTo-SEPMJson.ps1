@@ -48,10 +48,8 @@ function ConvertTo-SEPMJson {
     )
 
     if ((Get-PSVersionMajor) -ge 6) {
-        # PS 7+: ConvertTo-Json handles arbitrary depth
         $json = $InputObject | ConvertTo-Json -Depth $Depth -Compress
     } else {
-        # PS 5.1: use recursive StringBuilder serializer to avoid depth truncation
         $json = _ConvertTo-JsonSafe -obj $InputObject
     }
 
@@ -74,7 +72,6 @@ function _ConvertTo-JsonSafe {
     #>
     param($obj)
     $sb = New-Object System.Text.StringBuilder
-    $nullRef = [ref]$null
     function _serialize {
         param($o, $sb)
         if ($null -eq $o) { [void]$sb.Append('null'); return }
@@ -116,8 +113,7 @@ function _ConvertTo-JsonSafe {
             [void]$sb.Append('}')
             return
         }
-        # PSCustomObject / PSObject with NoteProperties
-        if ($o -is [PSCustomObject] -or $o -is [PSObject]) {
+        if ($o -is [PSCustomObject]) {
             [void]$sb.Append('{')
             $first = $true
             foreach ($prop in $o.PSObject.Properties) {
