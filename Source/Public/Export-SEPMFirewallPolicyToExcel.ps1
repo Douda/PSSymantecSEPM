@@ -10,6 +10,9 @@ function Export-SEPMFirewallPolicyToExcel {
     .PARAMETER Snapshot
         A SEPM.PolicySnapshot object. Accepts pipeline input. If omitted, calls
         Get-SEPMPolicySnapshot -PolicyType fw internally.
+    .PARAMETER DelayMs
+        Delay in milliseconds between individual policy fetches when fetching
+        a new snapshot internally. Default: 200.
     .EXAMPLE
         Export-SEPMFirewallPolicyToExcel -Path ./fw.xlsx
 
@@ -42,6 +45,9 @@ function Export-SEPMFirewallPolicyToExcel {
         [PSObject]
         $Snapshot,
 
+        [Parameter()]
+        [int]
+        $DelayMs = 200
     )
 
     begin {
@@ -56,7 +62,7 @@ function Export-SEPMFirewallPolicyToExcel {
 
     process {
         if (-not $Snapshot) {
-            $Snapshot = Get-SEPMPolicySnapshot -PolicyType fw
+            $Snapshot = Get-SEPMPolicySnapshot -PolicyType fw -DelayMs $DelayMs
         }
 
         # Sheet 1: Policies
