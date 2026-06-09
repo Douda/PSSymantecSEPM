@@ -1,9 +1,9 @@
-// Parallel Reviewer — implement-then-review, parallel per PR
+// Parallel Reviewer — implement-then-review, parallel per PR with blocker awareness
 //
 // Priority 1 — PR slices: rebases PR branch onto develop, then runs
-//              implement+review for ALL unchecked slices in parallel
-//              (Promise.allSettled), then merges results back sequentially
-//              in checklist order.
+//              implement+review for all UNBLOCKED unchecked slices in parallel
+//              (Promise.allSettled), merges results back sequentially,
+//              then repeats for newly-unblocked slices.
 //
 // Priority 2 — Standalone issues: fallback when no PR slices remain.
 //
@@ -19,6 +19,9 @@ import { execSync } from "child_process";
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
+
+// Maximum rounds for the blocker-aware loop.
+const MAX_ROUNDS = 10;
 
 // Hooks run inside the sandbox before the agent starts each iteration.
 const hooks = {
@@ -84,6 +87,7 @@ function getIssuesInPRs(): Set<number> {
 interface Slice {
   num: number;
   title: string;
+  blockers: number[];  // issue numbers this slice depends on
 }
 
 interface PRTarget {
@@ -93,8 +97,42 @@ interface PRTarget {
 }
 
 /**
- * Find the best PR to work on (same priority logic as before) and return
- * ALL its unchecked ready-for-agent slices in checklist order.
+ * Parse the "Blocked by" section from an issue body.
+ * Returns array of issue numbers that block this slice.
+ * "None" or missing → empty array (unblocked).
+ */
+function parseBlockers(body: string): number[] {
+  const blockedMatch = body.match(/##\s*Blocked\s*by\s*\n([\s\S]*?)(?=\n##|$)/i);
+  if (!blockedMatch) return [];
+
+  const section = blockedMatch[1].trim();
+  if (section.toLowerCase().includes("none")) return [];
+
+  const nums: number[] = [];
+  for (const m of section.matchAll(/#?(\d+)/g)) {
+    nums.push(parseInt(m[1], 10));
+  }
+  return nums;
+}
+
+/**
+ * Get the Set of issue numbers that are checked [x] in the PR checklist.
+ */
+function getCheckedIssues(prBody: string): Set<number> {
+  const checked = new Set<number>();
+  for (const m of prBody.matchAll(/-\s*\[\s*x\s*\]\s*#(\d+)/g)) {
+    checked.add(parseInt(m[1], 10));
+  }
+  return checked;
+}
+
+/**
+ * Find the best PR to work on and return ALL its UNBLOCKED unchecked
+ * ready-for-agent slices in checklist order.
+ *
+ * A slice is unblocked when all its "Blocked by" issues are [x] in the PR.
+ * Blocked slices are logged and skipped — they'll be picked up next round
+ * after their blockers are completed.
  */
 function discoverPRSlices(): PRTarget | null {
   const prsJson = sh(
@@ -122,25 +160,35 @@ function discoverPRSlices(): PRTarget | null {
     const uncheckedMatches = [...pr.body.matchAll(/-\s*\[\s*\]\s*#(\d+)\s*[—\-]\s*(.+)/g)];
     if (uncheckedMatches.length === 0) continue;
 
+    const checkedIssues = getCheckedIssues(pr.body);
+
     const slices: Slice[] = [];
     for (const m of uncheckedMatches) {
       const num = parseInt(m[1], 10);
       const title = m[2].trim();
+
       const labels = sh(`gh issue view ${num} --json labels --jq '.labels[].name'`);
-      if (labels.includes("ready-for-agent")) {
-        slices.push({ num, title });
+      if (!labels.includes("ready-for-agent")) continue;
+
+      const body = sh(`gh issue view ${num} --json body --jq '.body'`);
+      const blockers = parseBlockers(body);
+      const isBlocked = blockers.some((b) => !checkedIssues.has(b));
+      if (isBlocked) {
+        console.log(`  #${num}: blocked by #${blockers.filter((b) => !checkedIssues.has(b)).join(", #")} — skipping`);
+        continue;
       }
+
+      slices.push({ num, title, blockers });
     }
 
     if (slices.length === 0) continue;
 
-    const hasChecked = [...pr.body.matchAll(/-\s*\[\s*x\s*\]\s*#\d+/g)].length > 0;
+    const hasChecked = checkedIssues.size > 0;
     candidates.push({ prNumber: pr.number, prBranch: pr.headRefName, slices, inProgress: hasChecked });
   }
 
   if (candidates.length === 0) return null;
 
-  // Pass 1: in-progress PRs (most remaining first)
   const inProgress = candidates.filter((c) => c.inProgress);
   if (inProgress.length > 0) {
     inProgress.sort((a, b) => b.slices.length - a.slices.length);
@@ -148,14 +196,13 @@ function discoverPRSlices(): PRTarget | null {
     return { prNumber: best.prNumber, prBranch: best.prBranch, slices: best.slices };
   }
 
-  // Pass 2: fresh PRs (most unchecked first)
   candidates.sort((a, b) => b.slices.length - a.slices.length);
   const best = candidates[0];
   return { prNumber: best.prNumber, prBranch: best.prBranch, slices: best.slices };
 }
 
 // ---------------------------------------------------------------------------
-// Standalone-issue discovery (priority 2 — fallback when no PR slices)
+// Standalone-issue discovery (priority 2)
 // ---------------------------------------------------------------------------
 
 interface DiscoveredIssue {
@@ -198,7 +245,6 @@ function updatePRChecklist(prNumber: number, issueNumber: number): void {
   const body = sh(`gh pr view ${prNumber} --json body --jq '.body'`);
   if (!body) return;
 
-  // Replace first - [ ] #N with - [x] #N (word-boundary on issue number)
   const updated = body.replace(
     new RegExp(`(-\\s*\\[\\s*\\]\\s*#${issueNumber}\\b)`),
     (match) => match.replace("[ ]", "[x]"),
@@ -215,192 +261,190 @@ function updatePRChecklist(prNumber: number, issueNumber: number): void {
 }
 
 // ---------------------------------------------------------------------------
-// Main loop: PR mode (parallel) → standalone fallback
+// Main loop
 // ---------------------------------------------------------------------------
 
-// Only one outer iteration now — we process ALL PR slices in one go
 console.log("=== Sandcastle Parallel ===\n");
 
-const prTarget = discoverPRSlices();
+let prTarget = discoverPRSlices();
 
 if (prTarget) {
   // ===================================================================
-  // PR mode — parallel slices
+  // PR mode — blocker-aware rounds
+  //
+  // Each round: rebase → discover UNBLOCKED slices → run in parallel →
+  // merge sequentially. Blocked slices wait until their blockers are
+  // checked [x], then get picked up in the next round.
   // ===================================================================
-  console.log(`PR #${prTarget.prNumber} on branch "${prTarget.prBranch}"`);
-  console.log(`${prTarget.slices.length} unchecked slice(s):`);
-  for (const s of prTarget.slices) {
-    console.log(`  #${s.num} — ${s.title}`);
-  }
-
-  // Rebase PR branch onto latest develop (once, before all parallel work).
   const prevBranch = sh("git branch --show-current") || "develop";
-  sh("git fetch origin develop 2>&1");
-  sh(`git checkout ${prTarget.prBranch} 2>&1`);
-  const rebaseResult = sh(`git rebase origin/develop 2>&1`);
-  if (rebaseResult.toLowerCase().includes("conflict")) {
-    console.error(`ERROR: Rebase conflict on ${prTarget.prBranch}. Aborting.`);
-    console.error(rebaseResult);
-    sh("git rebase --abort 2>&1");
-    sh(`git checkout ${prevBranch} 2>&1`);
-    process.exit(1);
-  }
-  sh(`git push --force-with-lease origin ${prTarget.prBranch} 2>&1`);
-  sh(`git checkout ${prevBranch} 2>&1`);
-  console.log("");
+  let totalMerged = 0;
 
-  // -----------------------------------------------------------------------
-  // Phase: Execute + Review (parallel)
-  //
-  // For each slice, create a sandbox off the PR branch, run implementer
-  // (2 iterations) then reviewer (1 iteration). All slices run concurrently.
-  // -----------------------------------------------------------------------
-  const settled = await Promise.allSettled(
-    prTarget.slices.map(async (slice) => {
-      const branch = `sandcastle/${prTarget.prBranch}/slice-${slice.num}`;
+  for (let round = 1; round <= MAX_ROUNDS; round++) {
+    prTarget = discoverPRSlices();
 
-      const sandbox = await sandcastle.createSandbox({
-        branch,
-        baseBranch: prTarget.prBranch,
-        sandbox: dockerSandbox,
-        hooks,
-        copyToWorktree,
-      });
-
-      let hasCommits = false;
-      let implementCommits: number = 0;
-      let reviewCommits: number = 0;
-
-      try {
-        // Run implementer (2 iterations — room to explore + code)
-        const implement = await sandbox.run({
-          name: "implementer",
-          maxIterations: 2,
-          agent: sandcastle.pi("deepseek-v4-pro"),
-          promptFile: "./.sandcastle/implement-prompt.md",
-          promptArgs: {
-            PR_NUMBER: String(prTarget.prNumber),
-            PR_BRANCH: prTarget.prBranch,
-            ISSUE_NUMBER: String(slice.num),
-            ISSUE_TITLE: slice.title,
-            BASE_BRANCH: prTarget.prBranch,
-          },
-        });
-
-        hasCommits = implement.commits.length > 0;
-        implementCommits = implement.commits.length;
-
-        if (!hasCommits) {
-          console.log(`  #${slice.num}: no commits — skipping`);
-          return { slice, success: false, reason: "no-commits" };
-        }
-
-        console.log(`  #${slice.num}: implemented (${implementCommits} commit(s))`);
-
-        // Run reviewer (cheaper model since it just checks correctness)
-        const review = await sandbox.run({
-          name: "reviewer",
-          maxIterations: 1,
-          agent: sandcastle.pi("deepseek-v4-pro"),
-          promptFile: "./.sandcastle/review-prompt.md",
-          promptArgs: {
-            BRANCH: branch,
-            BASE_BRANCH: prTarget.prBranch,
-          },
-        });
-
-        reviewCommits = review.commits.length;
-        console.log(`  #${slice.num}: reviewed (${reviewCommits} commit(s))`);
-
-        return {
-          slice,
-          sandbox,
-          branch,
-          success: true,
-          implementCommits,
-          reviewCommits,
-        };
-      } catch (e: any) {
-        console.error(`  #${slice.num}: ERROR — ${e.message}`);
-        return { slice, success: false, reason: "exception", error: e.message };
-      } finally {
-        // Don't close sandbox yet — we need it for merge phase
-        // Store sandbox reference in the result for later cleanup
-        if (!hasCommits) {
-          await sandbox.close();
-        }
-      }
-    }),
-  );
-
-  // -----------------------------------------------------------------------
-  // Phase: Merge (sequential, in checklist order)
-  //
-  // Merge each successful sandcastle branch back into the PR branch.
-  // Sequential merges respect dependency order and handle conflicts.
-  // -----------------------------------------------------------------------
-  console.log("\n=== Merging results ===\n");
-
-  let mergeCount = 0;
-  for (const [i, outcome] of settled.entries()) {
-    const slice = prTarget.slices[i]!;
-
-    if (outcome.status === "rejected") {
-      console.error(`  ✗ #${slice.num}: sandbox failed — ${outcome.reason}`);
-      continue;
+    if (!prTarget || prTarget.slices.length === 0) {
+      console.log("No unblocked slices remaining.");
+      break;
     }
 
-    const result = outcome.value as any;
-    if (!result.success) {
-      console.log(`  ✗ #${slice.num}: ${result.reason}`);
-      continue;
+    console.log(`\n=== Round ${round} ===`);
+    console.log(`PR #${prTarget.prNumber} on branch "${prTarget.prBranch}"`);
+    console.log(`${prTarget.slices.length} unblocked slice(s):`);
+    for (const s of prTarget.slices) {
+      console.log(`  #${s.num} — ${s.title}`);
     }
+    console.log("");
 
-    const branch = result.branch as string;
-
-    // Merge sandcastle branch into PR branch
-    console.log(`  Merging #${slice.num} (${branch})...`);
+    // Rebase PR branch onto latest develop.
+    sh("git fetch origin develop 2>&1");
     sh(`git checkout ${prTarget.prBranch} 2>&1`);
-    const mergeResult = sh(`git merge ${branch} --no-ff -m "merge: slice #${slice.num} — ${slice.title}" 2>&1`);
-
-    if (!mergeResult || mergeResult.toLowerCase().includes("conflict")) {
-      console.error(`  ✗ #${slice.num}: MERGE CONFLICT — needs manual resolution`);
-      console.error(mergeResult);
-      sh("git merge --abort 2>&1");
+    const rebaseResult = sh(`git rebase origin/develop 2>&1`);
+    if (rebaseResult.toLowerCase().includes("conflict")) {
+      console.error(`ERROR: Rebase conflict on ${prTarget.prBranch}. Skipping round.`);
+      sh("git rebase --abort 2>&1");
       sh(`git checkout ${prevBranch} 2>&1`);
-      // Close the sandbox for this slice
-      if (result.sandbox) await result.sandbox.close();
       continue;
     }
-
-    mergeCount++;
-
-    // Push after each successful merge so subsequent merges have the latest base
-    sh(`git push origin ${prTarget.prBranch} 2>&1`);
+    sh(`git push --force-with-lease origin ${prTarget.prBranch} 2>&1`);
     sh(`git checkout ${prevBranch} 2>&1`);
 
-    // Update PR checklist
-    updatePRChecklist(prTarget.prNumber, slice.num);
+    // -----------------------------------------------------------------
+    // Phase: Execute + Review (parallel)
+    //
+    // All unblocked slices run concurrently. Each gets its own sandbox
+    // with implementer (2 iters) + reviewer (1 iter).
+    // -----------------------------------------------------------------
+    const settled = await Promise.allSettled(
+      prTarget.slices.map(async (slice) => {
+        const branch = `sandcastle/${prTarget!.prBranch}/slice-${slice.num}`;
 
-    // Close sandbox
-    if (result.sandbox) await result.sandbox.close();
+        const sandbox = await sandcastle.createSandbox({
+          branch,
+          baseBranch: prTarget!.prBranch,
+          sandbox: dockerSandbox,
+          hooks,
+          copyToWorktree,
+        });
 
-    console.log(`  ✓ #${slice.num}: ${result.implementCommits + result.reviewCommits} commit(s) merged`);
+        let hasCommits = false;
+        let implementCommits: number = 0;
+        let reviewCommits: number = 0;
+
+        try {
+          const implement = await sandbox.run({
+            name: "implementer",
+            maxIterations: 2,
+            agent: sandcastle.pi("deepseek-v4-pro"),
+            promptFile: "./.sandcastle/implement-prompt.md",
+            promptArgs: {
+              PR_NUMBER: String(prTarget!.prNumber),
+              PR_BRANCH: prTarget!.prBranch,
+              ISSUE_NUMBER: String(slice.num),
+              ISSUE_TITLE: slice.title,
+              BASE_BRANCH: prTarget!.prBranch,
+            },
+          });
+
+          hasCommits = implement.commits.length > 0;
+          implementCommits = implement.commits.length;
+
+          if (!hasCommits) {
+            console.log(`  #${slice.num}: no commits — skipping`);
+            return { slice, success: false, reason: "no-commits" };
+          }
+
+          console.log(`  #${slice.num}: implemented (${implementCommits} commit(s))`);
+
+          const review = await sandbox.run({
+            name: "reviewer",
+            maxIterations: 1,
+            agent: sandcastle.pi("deepseek-v4-pro"),
+            promptFile: "./.sandcastle/review-prompt.md",
+            promptArgs: {
+              BRANCH: branch,
+              BASE_BRANCH: prTarget!.prBranch,
+            },
+          });
+
+          reviewCommits = review.commits.length;
+          console.log(`  #${slice.num}: reviewed (${reviewCommits} commit(s))`);
+
+          return { slice, sandbox, branch, success: true, implementCommits, reviewCommits };
+        } catch (e: any) {
+          console.error(`  #${slice.num}: ERROR — ${e.message}`);
+          return { slice, success: false, reason: "exception", error: e.message };
+        } finally {
+          if (!hasCommits) await sandbox.close();
+        }
+      }),
+    );
+
+    // -----------------------------------------------------------------
+    // Phase: Merge (sequential, in checklist order)
+    //
+    // Merges respect the PR checklist order. Each merge pushes so
+    // subsequent merges have the latest base. Conflicts abort that
+    // slice but don't block the others.
+    // -----------------------------------------------------------------
+    console.log("\n=== Merging ===\n");
+
+    let mergeCount = 0;
+    for (const [i, outcome] of settled.entries()) {
+      const slice = prTarget.slices[i]!;
+
+      if (outcome.status === "rejected") {
+        console.error(`  ✗ #${slice.num}: sandbox failed — ${outcome.reason}`);
+        continue;
+      }
+
+      const result = outcome.value as any;
+      if (!result.success) {
+        console.log(`  ✗ #${slice.num}: ${result.reason}`);
+        continue;
+      }
+
+      const branch = result.branch as string;
+
+      console.log(`  Merging #${slice.num} (${branch})...`);
+      sh(`git checkout ${prTarget.prBranch} 2>&1`);
+      const mergeResult = sh(
+        `git merge ${branch} --no-ff -m "merge: slice #${slice.num} — ${slice.title}" 2>&1`,
+      );
+
+      if (!mergeResult || mergeResult.toLowerCase().includes("conflict")) {
+        console.error(`  ✗ #${slice.num}: MERGE CONFLICT — needs manual resolution`);
+        sh("git merge --abort 2>&1");
+        sh(`git checkout ${prevBranch} 2>&1`);
+        if (result.sandbox) await result.sandbox.close();
+        continue;
+      }
+
+      mergeCount++;
+      totalMerged++;
+
+      sh(`git push origin ${prTarget.prBranch} 2>&1`);
+      sh(`git checkout ${prevBranch} 2>&1`);
+
+      updatePRChecklist(prTarget.prNumber, slice.num);
+      if (result.sandbox) await result.sandbox.close();
+
+      console.log(`  ✓ #${slice.num}: ${result.implementCommits + result.reviewCommits} commit(s) merged`);
+    }
+
+    console.log(`\nRound ${round}: ${mergeCount}/${prTarget.slices.length} merged (total: ${totalMerged})`);
   }
 
-  console.log(`\n${mergeCount}/${prTarget.slices.length} slice(s) merged successfully.`);
-
-  // Check if all slices are done
+  // Final status
   const remaining = discoverPRSlices();
   if (remaining && remaining.slices.length > 0) {
-    console.log(`\n${remaining.slices.length} slice(s) still unchecked (likely failed).`);
+    console.log(`\n${remaining.slices.length} slice(s) still unchecked (failed or still blocked).`);
     console.log("Run sandcastle again to retry.");
-  } else if (!remaining) {
+  } else {
     console.log("\n🎉 All PR slices complete.");
   }
 } else {
   // ===================================================================
-  // Standalone mode (fallback — unchanged sequential logic)
+  // Standalone mode (fallback)
   // ===================================================================
   console.log("No PR slices found. Checking standalone issues...");
 
@@ -413,13 +457,7 @@ if (prTarget) {
       `gh issue edit ${standaloneIssue.issueNumber} --add-label sandcastle-in-progress 2>&1`,
     );
     if (!addLabel.ok) {
-      console.error(
-        `ERROR: Failed to add sandcastle-in-progress label to #${standaloneIssue.issueNumber}: ${addLabel.out}`,
-      );
-      console.error("Skipping issue — label may not exist. Create it with:");
-      console.error(
-        `  gh label create sandcastle-in-progress --color "F9A825" --description "Sandcastle is currently working on this issue"`,
-      );
+      console.error(`ERROR: Failed to add sandcastle-in-progress label.`);
       process.exit(1);
     }
 
