@@ -10,8 +10,6 @@ function Export-SEPMFirewallPolicyToExcel {
     .PARAMETER Snapshot
         A SEPM.PolicySnapshot object. Accepts pipeline input. If omitted, calls
         Get-SEPMPolicySnapshot -PolicyType fw internally.
-    .PARAMETER SkipCertificateCheck
-        Bypasses certificate validation for self-signed SEPM certificates.
     .EXAMPLE
         Export-SEPMFirewallPolicyToExcel -Path ./fw.xlsx
 
@@ -44,9 +42,6 @@ function Export-SEPMFirewallPolicyToExcel {
         [PSObject]
         $Snapshot,
 
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
     )
 
     begin {
