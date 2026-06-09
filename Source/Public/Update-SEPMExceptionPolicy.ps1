@@ -364,12 +364,9 @@ function Update-SEPMExceptionPolicy {
         }
 
         # Serialize body for PATCH.
-        # Optimize-SEPMObject clones the class to a clean PSCustomObject tree
-        # and strips null/empty properties. A single call is sufficient — unlike
-        # the old Optimize-ExceptionPolicyStructure (which recurred into
-        # configuration and required a second pass to strip emergent empty
-        # properties), Optimize-SEPMObject operates on top-level properties only
-        # and does not mutate the tree in a way that requires a second call.
+        # Optimize-SEPMObject clones the class to a clean PSCustomObject tree,
+        # strips null/empty top-level properties and configuration sub-properties,
+        # and applies SEPM domain rules (mac, linux, extension_list).
         $ObjBody = Optimize-SEPMObject -InputObject $ObjBody
         $bodyJson = ConvertTo-SEPMJson -InputObject $ObjBody -Compress
 

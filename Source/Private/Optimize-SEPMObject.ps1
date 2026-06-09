@@ -27,6 +27,32 @@ function Optimize-SEPMObject {
     )
 
     begin {
+        # SEPM domain rules: certain properties should be stripped even when their
+        # wrapper object is non-empty, because their sub-structure is empty.
+        function Test-SEPMPropertyIsEmpty {
+            param([string]$PropertyName, [object]$Value)
+
+            if ($null -eq $Value) { return $true }
+
+            switch ($PropertyName) {
+                'mac' {
+                    if ($Value.files.Count -eq 0) { return $true }
+                }
+                'linux' {
+                    $hasDirs = ($null -ne $Value.directories) -and ($Value.directories.Count -gt 0)
+                    $hasExts = ($null -ne $Value.extension_list) -and
+                               ($null -ne $Value.extension_list.extensions) -and
+                               ($Value.extension_list.extensions.Count -gt 0)
+                    if (-not $hasDirs -and -not $hasExts) { return $true }
+                }
+                'extension_list' {
+                    if ($Value.extensions.Count -eq 0) { return $true }
+                }
+            }
+
+            return $false
+        }
+
         # Recursively clone a PSObject tree (PS 5.1 path when ConvertTo-Json depth is unreliable).
         # Skip ScriptProperty, ParameterizedProperty, CodeProperty, Method to avoid circular
         # references during later JSON serialization.
@@ -86,24 +112,8 @@ function Optimize-SEPMObject {
                 $strip = $true
             }
 
-            # SEPM domain rules — strip properties whose sub-structure is empty
-            # even though the wrapper object itself has properties.
-            if (-not $strip) {
-                switch ($property) {
-                    'mac' {
-                        if ($val.files.Count -eq 0) { $strip = $true }
-                    }
-                    'linux' {
-                        $hasDirs = ($null -ne $val.directories) -and ($val.directories.Count -gt 0)
-                        $hasExts = ($null -ne $val.extension_list) -and
-                                   ($null -ne $val.extension_list.extensions) -and
-                                   ($val.extension_list.extensions.Count -gt 0)
-                        if (-not $hasDirs -and -not $hasExts) { $strip = $true }
-                    }
-                    'extension_list' {
-                        if ($val.extensions.Count -eq 0) { $strip = $true }
-                    }
-                }
+            if (-not $strip -and (Test-SEPMPropertyIsEmpty -PropertyName $property -Value $val)) {
+                $strip = $true
             }
 
             if ($strip) {
@@ -131,22 +141,8 @@ function Optimize-SEPMObject {
                     $stripConfig = $true
                 }
 
-                if (-not $stripConfig) {
-                    switch ($property) {
-                        'mac' {
-                            if ($val.files.Count -eq 0) { $stripConfig = $true }
-                        }
-                        'linux' {
-                            $hasDirs = ($null -ne $val.directories) -and ($val.directories.Count -gt 0)
-                            $hasExts = ($null -ne $val.extension_list) -and
-                                       ($null -ne $val.extension_list.extensions) -and
-                                       ($val.extension_list.extensions.Count -gt 0)
-                            if (-not $hasDirs -and -not $hasExts) { $stripConfig = $true }
-                        }
-                        'extension_list' {
-                            if ($val.extensions.Count -eq 0) { $stripConfig = $true }
-                        }
-                    }
+                if (-not $stripConfig -and (Test-SEPMPropertyIsEmpty -PropertyName $property -Value $val)) {
+                    $stripConfig = $true
                 }
 
                 if ($stripConfig) {
