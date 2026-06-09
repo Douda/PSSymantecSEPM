@@ -6,7 +6,6 @@ Structure follows the API documentation : https://apidocs.securitycloud.symantec
 Section : Update Exceptions Policy
 #>
 class SEPMPolicyExceptionsStructure {
-    <# Define the class. Try constructors, properties, or methods. #>
     [hashtable] $configuration
     [hashtable] $lockedoptions
     [Nullable[bool]] $enabled
@@ -50,7 +49,6 @@ class SEPMPolicyExceptionsStructure {
         [Nullable[bool]] $dnshostfile = $null,
         [Nullable[bool]] $certificate = $null
     ) {
-        # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $knownrisks) { $this.lockedoptions.knownrisks = $knownrisks }
         if ($null -ne $extension) { $this.lockedoptions.extension = $extension }
         if ($null -ne $file) { $this.lockedoptions.file = $file }
@@ -82,10 +80,8 @@ class SEPMPolicyExceptionsStructure {
         [Nullable[bool]] $securityrisk = $null,
         [Nullable[bool]] $recursive = $null
     ) {
-        # Create an empty hashtable
         $HashTable = @{}
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $sonar) { $HashTable['sonar'] = $sonar }
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($scancategory)) { $HashTable['scancategory'] = $scancategory }
@@ -95,20 +91,16 @@ class SEPMPolicyExceptionsStructure {
         if ($null -ne $securityrisk) { $HashTable['securityrisk'] = $securityrisk }
         if ($null -ne $recursive) { $HashTable['recursive'] = $recursive }
 
-        # Create an empty hashtable for 'rulestate'
         $rulestate = @{}
 
-        # Add 'enabled' to 'rulestate' only if it's not $null
         if ($null -ne $rulestate_enabled) {
             $rulestate['enabled'] = $rulestate_enabled
         }
 
-        # Add 'source' to 'rulestate' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($rulestate_source)) {
             $rulestate['source'] = $rulestate_source
         }
 
-        # Add 'rulestate' to the main hashtable only if it's not empty
         if ($rulestate.Count -gt 0) {
             $HashTable['rulestate'] = [PSCustomObject]$rulestate
         }
@@ -123,7 +115,7 @@ class SEPMPolicyExceptionsStructure {
         $this.configuration.files.Add($file)
     }
 
-    # Method to create a file hashtable
+    # Method to create a non-PE file exception hashtable
     [hashtable] CreateNonPEFilesHashTable(
         [Nullable[bool]] $deleted = $null,
         [Nullable[bool]] $rulestate_enabled = $null,
@@ -191,16 +183,13 @@ class SEPMPolicyExceptionsStructure {
         [string] $directory = "",
         [Nullable[bool]] $recursive = $null
     ) {
-        # Create an empty hashtable
         $HashTable = @{}
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($scancategory)) { $HashTable['scancategory'] = $scancategory }
         if (![string]::IsNullOrEmpty($scantype)) { $HashTable['scantype'] = $scantype }
         if ($null -ne $recursive) { $HashTable['recursive'] = $recursive }
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty or throw an error
         if (![string]::IsNullOrEmpty($pathvariable)) {
             $HashTable['pathvariable'] = $pathvariable
         } else {
@@ -213,20 +202,16 @@ class SEPMPolicyExceptionsStructure {
             throw "The 'directory' parameter is mandatory and cannot be $null or empty."
         }
 
-        # Create an empty hashtable for 'rulestate'
         $rulestate = @{}
 
-        # Add 'enabled' to 'rulestate' only if it's not $null
         if ($null -ne $rulestate_enabled) {
             $rulestate['enabled'] = $rulestate_enabled
         }
 
-        # Add 'source' to 'rulestate' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($rulestate_source)) {
             $rulestate['source'] = $rulestate_source
         }
 
-        # Add 'rulestate' to the main hashtable only if it's not empty
         if ($rulestate.Count -gt 0) {
             $HashTable['rulestate'] = [PSCustomObject]$rulestate
         }
@@ -246,32 +231,19 @@ class SEPMPolicyExceptionsStructure {
         [Nullable[bool]] $deleted = $null,
         [Nullable[bool]] $rulestate_enabled = $null,
         [string] $rulestate_source = "PSSymantecSEPM",
-        # $extensions is a PSOBject list
         [string] $scancategory = "",
         [PSObject[]] $extensions = @()
     ) {
-        # return @{
-        #     deleted     = $deleted
-        #     rulestate   = [PSCustomObject]@{
-        #         enabled = $rulestate_enabled
-        #         source  = $rulestate_source
-        #     }
-        #     extensions  = $extensions
-        # }
 
-        # Create an empty hashtable
         $HashTable = @{}
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($extensions)) { $HashTable['extensions'] = $extensions }
         if (![string]::IsNullOrEmpty($scancategory)) { $HashTable['scancategory'] = $scancategory }
 
-        # Verify if $Extensions is not an empty list
         if ($extensions.Count -eq 0) {
             throw "The 'extensions' parameter is mandatory and cannot be an empty list."
         } else {
-            # Verify if $Extensions is not an empty list
             foreach ($extension in $extensions) {
                 if ([string]::IsNullOrEmpty($extension)) {
                     throw "The 'extensions' parameter is mandatory and cannot be an empty list."
@@ -279,24 +251,18 @@ class SEPMPolicyExceptionsStructure {
             }
         }
 
-        # Add 'extensions' to the main hashtable
         $HashTable['extensions'] = $extensions
 
-        # RULESTATE
-        # Create an empty hashtable for 'rulestate'
         $rulestate = @{}
 
-        # Add 'enabled' to 'rulestate' only if it's not $null
         if ($null -ne $rulestate_enabled) {
             $rulestate['enabled'] = $rulestate_enabled
         }
 
-        # Add 'source' to 'rulestate' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($rulestate_source)) {
             $rulestate['source'] = $rulestate_source
         }
 
-        # Add 'rulestate' to the main hashtable only if it's not empty
         if ($rulestate.Count -gt 0) {
             $HashTable['rulestate'] = [PSCustomObject]$rulestate
         }
@@ -318,10 +284,8 @@ class SEPMPolicyExceptionsStructure {
         [string] $rulestate_source = "PSSymantecSEPM",
         [string] $domain = ""
     ) {
-        # Create an empty hashtable
         $HashTable = @{}
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if ([string]::IsNullOrEmpty($domain)) {
             throw "The 'domain' parameter is mandatory and cannot be $null or empty."
@@ -329,21 +293,16 @@ class SEPMPolicyExceptionsStructure {
             $HashTable['domain'] = $domain
         }
 
-        # RULESTATE
-        # Create an empty hashtable for 'rulestate'
         $rulestate = @{}
 
-        # Add 'enabled' to 'rulestate' only if it's not $null
         if ($null -ne $rulestate_enabled) {
             $rulestate['enabled'] = $rulestate_enabled
         }
 
-        # Add 'source' to 'rulestate' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($rulestate_source)) {
             $rulestate['source'] = $rulestate_source
         }
 
-        # Add 'rulestate' to the main hashtable only if it's not empty
         if ($rulestate.Count -gt 0) {
             $HashTable['rulestate'] = [PSCustomObject]$rulestate
         }
@@ -368,50 +327,38 @@ class SEPMPolicyExceptionsStructure {
         [string] $signature_company_name = "",
         [string] $signature_issuer = ""
     ) {
-        # Create an empty hashtable
         $HashTable = @{}
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($signature_company_name)) { $HashTable['signature_company_name'] = $signature_company_name }
         if (![string]::IsNullOrEmpty($signature_issuer)) { $HashTable['signature_issuer'] = $signature_issuer }
 
-        # SIGNATURE FINGERPRINT
-        # Create an empty hashtable for 'signature_fingerprint'
         $signature_fingerprint = @{}
 
-        # Add 'algorithm' to 'signature_fingerprint' or throw an error if it's $null or empty
         if ([string]::IsNullOrEmpty($signature_fingerprint_algorith)) {
             throw "The 'algorithm' parameter is mandatory and cannot be $null or empty."
         } else {
             $signature_fingerprint['algorithm'] = $signature_fingerprint_algorith
         }
 
-        # Add 'value' to 'signature_fingerprint' or throw an error if it's $null or empty
         if ([string]::IsNullOrEmpty($signature_fingerprint_value)) {
             throw "The 'value' parameter is mandatory and cannot be $null or empty."
         } else {
             $signature_fingerprint['value'] = $signature_fingerprint_value
         }
 
-        # Add 'signature_fingerprint' to the main hashtable
         $HashTable['signature_fingerprint'] = [PSCustomObject]$signature_fingerprint
         
-        # RULESTATE
-        # Create an empty hashtable for 'rulestate'
         $rulestate = @{}
 
-        # Add 'enabled' to 'rulestate' only if it's not $null
         if ($null -ne $rulestate_enabled) {
             $rulestate['enabled'] = $rulestate_enabled
         }
 
-        # Add 'source' to 'rulestate' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($rulestate_source)) {
             $rulestate['source'] = $rulestate_source
         }
 
-        # Add 'rulestate' to the main hashtable only if it's not empty
         if ($rulestate.Count -gt 0) {
             $HashTable['rulestate'] = [PSCustomObject]$rulestate
         }
@@ -440,90 +387,56 @@ class SEPMPolicyExceptionsStructure {
         [string] $processfile_directory = "",
         [string] $action = ""
     ) {
-        # return @{
-        #     deleted     = $deleted
-        #     rulestate   = [PSCustomObject]@{
-        #         enabled = $rulestate_enabled
-        #         source  = $rulestate_source
-        #     }
-        #     processfile = [PSCustomObject]@{
-        #         sha2        = $processfile_sha2
-        #         md5         = $processfile_md5
-        #         name        = $processfile_name
-        #         company     = $processfile_company
-        #         size        = $processfile_size
-        #         description = $processfile_description
-        #         directory   = $processfile_directory
-        #     }
-        #     action      = $action
-        # }
 
-        # Create an empty hashtable
         $HashTable = @{}
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($action)) { $HashTable['action'] = $action }
         
-        # RULESTATE
-        # Create an empty hashtable for 'rulestate'
         $rulestate = @{}
 
-        # Add 'enabled' to 'rulestate' only if it's not $null
         if ($null -ne $rulestate_enabled) {
             $rulestate['enabled'] = $rulestate_enabled
         }
 
-        # Add 'source' to 'rulestate' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($rulestate_source)) {
             $rulestate['source'] = $rulestate_source
         }
 
-        # Add 'rulestate' to the main hashtable only if it's not empty
         if ($rulestate.Count -gt 0) {
             $HashTable['rulestate'] = [PSCustomObject]$rulestate
         }
 
-        # PROCESSFILE
-        # Create an empty hashtable for 'processfile'
         $processfile = @{}
 
-        # Add 'sha2' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_sha2)) {
             $processfile['sha2'] = $processfile_sha2
         }
 
-        # Add 'md5' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_md5)) {
             $processfile['md5'] = $processfile_md5
         }
 
-        # Add 'name' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_name)) {
             $processfile['name'] = $processfile_name
         }
 
-        # Add 'company' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_company)) {
             $processfile['company'] = $processfile_company
         }
 
-        # Add 'size' to 'processfile' only if it's not $null or empty
         if ($null -ne $processfile_size) {
             $processfile['size'] = $processfile_size
         }
 
-        # Add 'description' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_description)) {
             $processfile['description'] = $processfile_description
         }
 
-        # Add 'directory' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_directory)) {
             $processfile['directory'] = $processfile_directory
         }
 
-        # Add 'processfile' to the main hashtable
         $HashTable['processfile'] = [PSCustomObject]$processfile
 
         return $HashTable
@@ -550,90 +463,56 @@ class SEPMPolicyExceptionsStructure {
         [string] $processfile_directory = "",
         [string] $action = ""
     ) {
-        # return  @{
-        #     deleted     = $deleted
-        #     rulestate   = [PSCustomObject]@{
-        #         enabled = $rulestate_enabled
-        #         source  = $rulestate_source
-        #     }
-        #     processfile = [PSCustomObject]@{
-        #         sha2        = $processfile_sha2
-        #         md5         = $processfile_md5
-        #         name        = $processfile_name
-        #         company     = $processfile_company
-        #         size        = $processfile_size
-        #         description = $processfile_description
-        #         directory   = $processfile_directory
-        #     }
-        #     action      = $action
-        # }
 
-        # Create an empty hashtable
         $HashTable = @{}
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($action)) { $HashTable['action'] = $action }
 
-        # RULESTATE
-        # Create an empty hashtable for 'rulestate'
         $rulestate = @{}
 
-        # Add 'enabled' to 'rulestate' only if it's not $null
         if ($null -ne $rulestate_enabled) {
             $rulestate['enabled'] = $rulestate_enabled
         }
 
-        # Add 'source' to 'rulestate' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($rulestate_source)) {
             $rulestate['source'] = $rulestate_source
         }
 
-        # Add 'rulestate' to the main hashtable only if it's not empty
         if ($rulestate.Count -gt 0) {
             $HashTable['rulestate'] = [PSCustomObject]$rulestate
         }
 
-        # PROCESSFILE
-        # Create an empty hashtable for 'processfile'
         $processfile = @{}
 
-        # Add 'sha2' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_sha2)) {
             $processfile['sha2'] = $processfile_sha2
         }
 
-        # Add 'md5' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_md5)) {
             $processfile['md5'] = $processfile_md5
         }
 
-        # Add 'name' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_name)) {
             $processfile['name'] = $processfile_name
         }
 
-        # Add 'company' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_company)) {
             $processfile['company'] = $processfile_company
         }
 
-        # Add 'size' to 'processfile' only if it's not $null or empty
         if ($null -ne $processfile_size) {
             $processfile['size'] = $processfile_size
         }
 
-        # Add 'description' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_description)) {
             $processfile['description'] = $processfile_description
         }
 
-        # Add 'directory' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_directory)) {
             $processfile['directory'] = $processfile_directory
         }
 
-        # Add 'processfile' to the main hashtable
         $HashTable['processfile'] = [PSCustomObject]$processfile
 
         return $HashTable
@@ -653,37 +532,22 @@ class SEPMPolicyExceptionsStructure {
         [string] $rulestate_source = "PSSymantecSEPM",
         [string] $name = ""
     ) {
-        # return @{
-        #     deleted   = $deleted
-        #     rulestate = [PSCustomObject]@{
-        #         enabled = $rulestate_enabled
-        #         source  = $rulestate_source
-        #     }
-        #     name      = $name
-        # }
 
-        # Create an empty hashtable
         $HashTable = @{}
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($name)) { $HashTable['name'] = $name }
 
-        # RULESTATE
-        # Create an empty hashtable for 'rulestate'
         $rulestate = @{}
 
-        # Add 'enabled' to 'rulestate' only if it's not $null
         if ($null -ne $rulestate_enabled) {
             $rulestate['enabled'] = $rulestate_enabled
         }
 
-        # Add 'source' to 'rulestate' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($rulestate_source)) {
             $rulestate['source'] = $rulestate_source
         }
 
-        # Add 'rulestate' to the main hashtable only if it's not empty
         if ($rulestate.Count -gt 0) {
             $HashTable['rulestate'] = [PSCustomObject]$rulestate
         }
@@ -706,39 +570,23 @@ class SEPMPolicyExceptionsStructure {
         [string] $pathvariable = "",
         [string] $path = ""
     ) {
-        # return @{
-        #     deleted     = $deleted
-        #     rulestate   = [PSCustomObject]@{
-        #         enabled = $rulestate_enabled
-        #         source  = $rulestate_source
-        #     }
-        #     pathvariable = $pathvariable
-        #     path        = $path
-        # }
 
-        # Create an empty hashtable
         $HashTable = @{}
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($pathvariable)) { $HashTable['pathvariable'] = $pathvariable }
         if (![string]::IsNullOrEmpty($path)) { $HashTable['path'] = $path }
 
-        # RULESTATE
-        # Create an empty hashtable for 'rulestate'
         $rulestate = @{}
 
-        # Add 'enabled' to 'rulestate' only if it's not $null
         if ($null -ne $rulestate_enabled) {
             $rulestate['enabled'] = $rulestate_enabled
         }
 
-        # Add 'source' to 'rulestate' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($rulestate_source)) {
             $rulestate['source'] = $rulestate_source
         }
 
-        # Add 'rulestate' to the main hashtable only if it's not empty
         if ($rulestate.Count -gt 0) {
             $HashTable['rulestate'] = [PSCustomObject]$rulestate
         }
@@ -763,27 +611,13 @@ class SEPMPolicyExceptionsStructure {
         [string] $directory = "",
         [Nullable[bool]] $recursive = $null
     ) {
-        # return @{
-        #     deleted     = $deleted
-        #     rulestate   = [PSCustomObject]@{
-        #         enabled = $rulestate_enabled
-        #         source  = $rulestate_source
-        #     }
-        #     scancategory = $scancategory
-        #     pathvariable = $pathvariable
-        #     directory   = $directory
-        #     recursive   = $recursive
-        # }
 
-        # Create an empty hashtable
         $HashTable = @{}
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($scancategory)) { $HashTable['scancategory'] = $scancategory }
         if ($null -ne $recursive) { $HashTable['recursive'] = $recursive }
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty or throw an error
         if (![string]::IsNullOrEmpty($pathvariable)) {
             $HashTable['pathvariable'] = $pathvariable
         } else {
@@ -796,21 +630,16 @@ class SEPMPolicyExceptionsStructure {
             throw "The 'directory' parameter is mandatory and cannot be $null or empty."
         }
 
-        # RULESTATE
-        # Create an empty hashtable for 'rulestate'
         $rulestate = @{}
 
-        # Add 'enabled' to 'rulestate' only if it's not $null
         if ($null -ne $rulestate_enabled) {
             $rulestate['enabled'] = $rulestate_enabled
         }
 
-        # Add 'source' to 'rulestate' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($rulestate_source)) {
             $rulestate['source'] = $rulestate_source
         }
 
-        # Add 'rulestate' to the main hashtable only if it's not empty
         if ($rulestate.Count -gt 0) {
             $HashTable['rulestate'] = [PSCustomObject]$rulestate
         }
@@ -830,32 +659,19 @@ class SEPMPolicyExceptionsStructure {
         [Nullable[bool]] $deleted = $null,
         [Nullable[bool]] $rulestate_enabled = $null,
         [string] $rulestate_source = "PSSymantecSEPM",
-        # $extensions is a PSOBject list
         [string] $scancategory = "",
         [PSObject[]] $extensions = @()
     ) {
-        # return @{
-        #     deleted     = $deleted
-        #     rulestate   = [PSCustomObject]@{
-        #         enabled = $rulestate_enabled
-        #         source  = $rulestate_source
-        #     }
-        #     extensions  = $extensions
-        # }
 
-        # Create an empty hashtable
         $HashTable = @{}
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($extensions)) { $HashTable['extensions'] = $extensions }
         if (![string]::IsNullOrEmpty($scancategory)) { $HashTable['scancategory'] = $scancategory }
 
-        # Verify if $Extensions is not an empty list
         if ($extensions.Count -eq 0) {
             throw "The 'extensions' parameter is mandatory and cannot be an empty list."
         } else {
-            # Verify if $Extensions is not an empty list
             foreach ($extension in $extensions) {
                 if ([string]::IsNullOrEmpty($extension)) {
                     throw "The 'extensions' parameter is mandatory and cannot be an empty list."
@@ -863,24 +679,18 @@ class SEPMPolicyExceptionsStructure {
             }
         }
 
-        # Add 'extensions' to the main hashtable
         $HashTable['extensions'] = $extensions
 
-        # RULESTATE
-        # Create an empty hashtable for 'rulestate'
         $rulestate = @{}
 
-        # Add 'enabled' to 'rulestate' only if it's not $null
         if ($null -ne $rulestate_enabled) {
             $rulestate['enabled'] = $rulestate_enabled
         }
 
-        # Add 'source' to 'rulestate' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($rulestate_source)) {
             $rulestate['source'] = $rulestate_source
         }
 
-        # Add 'rulestate' to the main hashtable only if it's not empty
         if ($rulestate.Count -gt 0) {
             $HashTable['rulestate'] = [PSCustomObject]$rulestate
         }
@@ -892,7 +702,6 @@ class SEPMPolicyExceptionsStructure {
     [void] AddLinuxExtensionList(
         [hashtable] $linux_extension_list # Use CreateLinuxExtensionListHashtable method
     ) {
-        # $this.configuration.linux.extension_list.Add($linux_extension_list)
         $this.configuration.linux.extension_list = $linux_extension_list
     }
 
@@ -906,62 +715,40 @@ class SEPMPolicyExceptionsStructure {
         [string] $threat_name = "",
         [string] $action = ""
     ) {
-        # return @{
-        #     deleted     = $deleted
-        #     rulestate   = [PSCustomObject]@{
-        #         enabled = $rulestate_enabled
-        #         source  = $rulestate_source
-        #     }
-        #     threat_id   = $threat_id
-        #     threat_name = $threat_name
-        #     action      = $action
-        # }
 
-        # Create an empty hashtable
         $HashTable = @{}
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($action)) { $HashTable['action'] = $action }
 
-        # RULESTATE
-        # Create an empty hashtable for 'rulestate'
         $rulestate = @{}
 
-        # Add 'enabled' to 'rulestate' only if it's not $null
         if ($null -ne $rulestate_enabled) {
             $rulestate['enabled'] = $rulestate_enabled
         }
 
-        # Add 'source' to 'rulestate' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($rulestate_source)) {
             $rulestate['source'] = $rulestate_source
         }
 
-        # Add 'rulestate' to the main hashtable only if it's not empty
         if ($rulestate.Count -gt 0) {
             $HashTable['rulestate'] = [PSCustomObject]$rulestate
         }
 
-        # THREAT
-        # Create an empty hashtable for 'threat'
         $threat = @{}
 
-        # Add 'id' to 'threat' only if it's not $null or empty or throw an error
         if (![string]::IsNullOrEmpty($threat_id)) {
             $threat['id'] = $threat_id
         } else {
             throw "The 'id' parameter is mandatory and cannot be $null or empty."
         }
 
-        # Add 'name' to 'threat' only if it's not $null or empty or throw an error
         if (![string]::IsNullOrEmpty($threat_name)) {
             $threat['name'] = $threat_name
         } else {
             throw "The 'name' parameter is mandatory and cannot be $null or empty."
         }
 
-        # Add 'threat' to the main hashtable
         $HashTable['threat'] = [PSCustomObject]$threat
 
         return $HashTable
@@ -987,24 +774,9 @@ class SEPMPolicyExceptionsStructure {
         [Nullable[bool]] $securityrisk = $null,
         [Nullable[bool]] $recursive = $null
     ) {
-        # return @{
-        #     sonar              = $sonar
-        #     deleted            = $deleted
-        #     rulestate          = [PSCustomObject]@{
-        #         enabled = $rulestate_enabled
-        #         source  = $rulestate_source
-        #     }
-        #     scancategory       = $scancategory
-        #     pathvariable       = $pathvariable
-        #     applicationcontrol = $applicationcontrol
-        #     securityrisk       = $securityrisk
-        #     recursive          = $recursive
-        # }
 
-        # Create an empty hashtable
         $HashTable = @{}
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $sonar) { $HashTable['sonar'] = $sonar }
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($scancategory)) { $HashTable['scancategory'] = $scancategory }
@@ -1014,21 +786,16 @@ class SEPMPolicyExceptionsStructure {
         if ($null -ne $securityrisk) { $HashTable['securityrisk'] = $securityrisk }
         if ($null -ne $recursive) { $HashTable['recursive'] = $recursive }
 
-        # RULESTATE
-        # Create an empty hashtable for 'rulestate'
         $rulestate = @{}
 
-        # Add 'enabled' to 'rulestate' only if it's not $null
         if ($null -ne $rulestate_enabled) {
             $rulestate['enabled'] = $rulestate_enabled
         }
 
-        # Add 'source' to 'rulestate' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($rulestate_source)) {
             $rulestate['source'] = $rulestate_source
         }
 
-        # Add 'rulestate' to the main hashtable only if it's not empty
         if ($rulestate.Count -gt 0) {
             $HashTable['rulestate'] = [PSCustomObject]$rulestate
         }
@@ -1057,90 +824,56 @@ class SEPMPolicyExceptionsStructure {
         [string] $processfile_directory = "",
         [string] $action = ""
     ) {
-        # return @{
-        #     deleted     = $deleted
-        #     rulestate   = [PSCustomObject]@{
-        #         enabled = $rulestate_enabled
-        #         source  = $rulestate_source
-        #     }
-        #     processfile = [PSCustomObject]@{
-        #         sha2        = $processfile_sha2
-        #         md5         = $processfile_md5
-        #         name        = $processfile_name
-        #         company     = $processfile_company
-        #         size        = $processfile_size
-        #         description = $processfile_description
-        #         directory   = $processfile_directory
-        #     }
-        #     action      = $action
-        # }
 
-        # Create an empty hashtable
         $HashTable = @{}
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($action)) { $HashTable['action'] = $action }
 
-        # RULESTATE
-        # Create an empty hashtable for 'rulestate'
         $rulestate = @{}
 
-        # Add 'enabled' to 'rulestate' only if it's not $null
         if ($null -ne $rulestate_enabled) {
             $rulestate['enabled'] = $rulestate_enabled
         }
 
-        # Add 'source' to 'rulestate' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($rulestate_source)) {
             $rulestate['source'] = $rulestate_source
         }
 
-        # Add 'rulestate' to the main hashtable only if it's not empty
         if ($rulestate.Count -gt 0) {
             $HashTable['rulestate'] = [PSCustomObject]$rulestate
         }
 
-        # PROCESSFILE
-        # Create an empty hashtable for 'processfile'
         $processfile = @{}
 
-        # Add 'sha2' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_sha2)) {
             $processfile['sha2'] = $processfile_sha2
         }
 
-        # Add 'md5' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_md5)) {
             $processfile['md5'] = $processfile_md5
         }
 
-        # Add 'name' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_name)) {
             $processfile['name'] = $processfile_name
         }
 
-        # Add 'company' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_company)) {
             $processfile['company'] = $processfile_company
         }
 
-        # Add 'size' to 'processfile' only if it's not $null or empty
         if ($null -ne $processfile_size) {
             $processfile['size'] = $processfile_size
         }
 
-        # Add 'description' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_description)) {
             $processfile['description'] = $processfile_description
         }
 
-        # Add 'directory' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_directory)) {
             $processfile['directory'] = $processfile_directory
         }
 
-        # Add 'processfile' to the main hashtable
         $HashTable['processfile'] = [PSCustomObject]$processfile
 
         return $HashTable
@@ -1167,90 +900,56 @@ class SEPMPolicyExceptionsStructure {
         [string] $processfile_directory = "",
         [string] $action = ""
     ) {
-        # return @{
-        #     deleted     = $deleted
-        #     rulestate   = [PSCustomObject]@{
-        #         enabled = $rulestate_enabled
-        #         source  = $rulestate_source
-        #     }
-        #     processfile = [PSCustomObject]@{
-        #         sha2        = $processfile_sha2
-        #         md5         = $processfile_md5
-        #         name        = $processfile_name
-        #         company     = $processfile_company
-        #         size        = $processfile_size
-        #         description = $processfile_description
-        #         directory   = $processfile_directory
-        #     }
-        #     action      = $action
-        # }
 
-        # Create an empty hashtable
         $HashTable = @{}
 
-        # Add key/value pairs to the hashtable only if the value is not $null or empty
         if ($null -ne $deleted) { $HashTable['deleted'] = $deleted }
         if (![string]::IsNullOrEmpty($action)) { $HashTable['action'] = $action }
 
-        # RULESTATE
-        # Create an empty hashtable for 'rulestate'
         $rulestate = @{}
 
-        # Add 'enabled' to 'rulestate' only if it's not $null
         if ($null -ne $rulestate_enabled) {
             $rulestate['enabled'] = $rulestate_enabled
         }
 
-        # Add 'source' to 'rulestate' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($rulestate_source)) {
             $rulestate['source'] = $rulestate_source
         }
 
-        # Add 'rulestate' to the main hashtable only if it's not empty
         if ($rulestate.Count -gt 0) {
             $HashTable['rulestate'] = [PSCustomObject]$rulestate
         }
 
-        # PROCESSFILE
-        # Create an empty hashtable for 'processfile'
         $processfile = @{}
 
-        # Add 'sha2' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_sha2)) {
             $processfile['sha2'] = $processfile_sha2
         }
 
-        # Add 'md5' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_md5)) {
             $processfile['md5'] = $processfile_md5
         }
 
-        # Add 'name' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_name)) {
             $processfile['name'] = $processfile_name
         }
 
-        # Add 'company' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_company)) {
             $processfile['company'] = $processfile_company
         }
 
-        # Add 'size' to 'processfile' only if it's not $null or empty
         if ($null -ne $processfile_size) {
             $processfile['size'] = $processfile_size
         }
 
-        # Add 'description' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_description)) {
             $processfile['description'] = $processfile_description
         }
 
-        # Add 'directory' to 'processfile' only if it's not $null or empty
         if (![string]::IsNullOrEmpty($processfile_directory)) {
             $processfile['directory'] = $processfile_directory
         }
 
-        # Add 'processfile' to the main hashtable
         $HashTable['processfile'] = [PSCustomObject]$processfile
 
         return $HashTable

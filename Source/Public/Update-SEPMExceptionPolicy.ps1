@@ -375,10 +375,8 @@ function Update-SEPMExceptionPolicy {
             # Empty-property stripping is handled inline below.
             $cleanConfig = @{}
             if ($null -ne $ObjBody.configuration) {
-            # PS 5.1: configuration is [object] wrapping a hashtable.
-            # PSObject.Properties exposes intrinsic members (IsReadOnly, Keys,
-            # Count, etc.), not the hashtable's own key-value pairs.
-            # Detect IDictionary and iterate keys directly.
+            # PS 5.1: configuration is [hashtable] (implements IDictionary).
+            # Iterate keys directly instead of using PSObject.Properties.
             if ($ObjBody.configuration -is [System.Collections.IDictionary]) {
                 foreach ($key in $ObjBody.configuration.Keys) {
                     $val = $ObjBody.configuration[$key]
