@@ -4,9 +4,12 @@ Pester 5's guidance is to avoid `InModuleScope` — it prevents proper testing o
 published functions, slows Discovery, and couples tests to module internals.
 We're eliminating it entirely: private functions are tested through the public
 cmdlets that call them, using `-ModuleName` on Mock to intercept module-internal
-calls. One exception: `Invoke-ABRestMethod` retains InModuleScope inside It blocks
-because its PS-version branching and certificate-bypass fallback are implementation
-details with no observable public behavior.
+calls. Three exceptions retain InModuleScope: `Invoke-SepmApi` (transport layer with
+PS-version branching, certificate-bypass logic, and return-type coercion),
+`Initialize-SEPMSession` (auth bootstrap that manipulates module-scoped state and
+calls `Test-SEPMAccessToken`), and `TestHelpers` (test infrastructure lifecycle —
+`Initialize-TestEnvironment`/`Clear-TestEnvironment` — used for setup and teardown,
+not test assertions).
 
 ## Considered alternatives
 
