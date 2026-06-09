@@ -9,30 +9,17 @@ Write-Host "=== Smoke: Update-SEPClientDefinitions (PS7) ==="
 
 $results = @{}
 
-# A1: ComputerName path - dispatch to non-existent computer
-Write-Host "--- A1 : UpdateDefinitions to non-existent computer ---" -ForegroundColor Cyan
-try {
-    $r = Update-SEPClientDefinitions -ComputerName 'NonExistentPC_SmokeTest'
-    if ($r -ne $null) { Write-Host "  VERDICT: PASS (API responded)" -ForegroundColor Green; $results.A1 = "PASS" }
-    else { Write-Host "  VERDICT: FAIL (no response)" -ForegroundColor Red; $results.A1 = "FAIL" }
-} catch { Write-Host "  ERROR: $($_.Exception.Message)" -ForegroundColor Red; $results.A1 = "FAIL" }
+$results.A1 = T "A1" "UpdateDefinitions to non-existent computer" `
+    { Update-SEPClientDefinitions -ComputerName 'NonExistentPC_SmokeTest' } `
+    { param($r) $r -ne $null }
 
-# A2: GroupName path - non-existent group (no computers match, no dispatch needed)
-Write-Host "--- A2 : UpdateDefinitions to non-existent group ---" -ForegroundColor Cyan
-try {
-    $r = Update-SEPClientDefinitions -GroupName 'My Company\NonExistentSmokeGroup'
-    # Empty result is expected - no matching computers means no commands dispatched
-    Write-Host "  VERDICT: PASS (no matching targets - no dispatch needed)" -ForegroundColor Green
-    $results.A2 = "PASS"
-} catch { Write-Host "  ERROR: $($_.Exception.Message)" -ForegroundColor Red; $results.A2 = "FAIL" }
+$results.A2 = T "A2" "UpdateDefinitions to non-existent group (no matching targets)" `
+    { Update-SEPClientDefinitions -GroupName 'My Company\NonExistentSmokeGroup' } `
+    { param($r) $true }
 
-# A3: GroupName path with IncludeSubGroups
-Write-Host "--- A3 : UpdateDefinitions with IncludeSubGroups ---" -ForegroundColor Cyan
-try {
-    $r = Update-SEPClientDefinitions -GroupName 'My Company\NonExistentSmokeGroup' -IncludeSubGroups
-    Write-Host "  VERDICT: PASS (no matching targets - no dispatch needed)" -ForegroundColor Green
-    $results.A3 = "PASS"
-} catch { Write-Host "  ERROR: $($_.Exception.Message)" -ForegroundColor Red; $results.A3 = "FAIL" }
+$results.A3 = T "A3" "UpdateDefinitions with IncludeSubGroups (no matching targets)" `
+    { Update-SEPClientDefinitions -GroupName 'My Company\NonExistentSmokeGroup' -IncludeSubGroups } `
+    { param($r) $true }
 
 # Summary
 Write-Host "`n========== SUMMARY (PS7) ==========" -ForegroundColor Yellow

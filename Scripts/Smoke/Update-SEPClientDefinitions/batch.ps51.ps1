@@ -10,26 +10,33 @@ Write-Host "=== Smoke: Update-SEPClientDefinitions (PS5.1) ==="
 $pass = 0
 $fail = 0
 
-# A1: ComputerName path - dispatch to non-existent computer
-Write-Host "--- A1 : UpdateDefinitions dispatch to non-existent computer ---"
-try {
-    $result = Update-SEPClientDefinitions -ComputerName 'NonExistentPC_SmokeTest'
-    if ($result -ne $null) {
-        Write-Host "  VERDICT: PASS"
-        $pass++
-    } else {
-        Write-Host "  VERDICT: FAIL (null result)"
-        $fail++
+function Assert-NotNull {
+    param($Id, $Label, [ScriptBlock]$Action)
+    Write-Host "--- $Id : $Label ---"
+    try {
+        $result = & $Action
+        if ($result -ne $null) {
+            Write-Host "  VERDICT: PASS"
+            $script:pass++
+        } else {
+            Write-Host "  VERDICT: FAIL (null result)"
+            $script:fail++
+        }
+    } catch {
+        Write-Host "  ERROR: $($_.Exception.Message)"
+        $script:fail++
     }
-} catch {
-    Write-Host "  ERROR: $($_.Exception.Message)"
-    $fail++
+}
+
+# A1: ComputerName path - dispatch to non-existent computer
+Assert-NotNull "A1" "UpdateDefinitions dispatch to non-existent computer" {
+    Update-SEPClientDefinitions -ComputerName 'NonExistentPC_SmokeTest'
 }
 
 # A2: GroupName path - non-existent group (no dispatch needed)
 Write-Host "--- A2 : UpdateDefinitions dispatch to non-existent group ---"
 try {
-    $result = Update-SEPClientDefinitions -GroupName 'My Company\NonExistentSmokeGroup'
+    Update-SEPClientDefinitions -GroupName 'My Company\NonExistentSmokeGroup' | Out-Null
     Write-Host "  VERDICT: PASS (no matching targets)"
     $pass++
 } catch {
@@ -40,7 +47,7 @@ try {
 # A3: GroupName with IncludeSubGroups
 Write-Host "--- A3 : UpdateDefinitions with IncludeSubGroups ---"
 try {
-    $result = Update-SEPClientDefinitions -GroupName 'My Company\NonExistentSmokeGroup' -IncludeSubGroups
+    Update-SEPClientDefinitions -GroupName 'My Company\NonExistentSmokeGroup' -IncludeSubGroups | Out-Null
     Write-Host "  VERDICT: PASS (no matching targets)"
     $pass++
 } catch {
