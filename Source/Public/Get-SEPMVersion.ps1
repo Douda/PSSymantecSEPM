@@ -1,4 +1,3 @@
-# Sandcastle parallel test A
 Function Get-SEPMVersion {
     <# 
     .SYNOPSIS
