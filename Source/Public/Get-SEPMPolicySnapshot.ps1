@@ -46,6 +46,14 @@ function Get-SEPMPolicySnapshot {
             })
         }
 
+        # Warn about unimplemented policy types
+        $implemented = @('fw')
+        foreach ($type in $PolicyType) {
+            if ($type -notin $implemented) {
+                Write-Warning "Policy type '$type' is not yet implemented. Snapshot will not include $type data."
+            }
+        }
+
         # Build location map: locationId → locationName
         $locationMap = @{}
         foreach ($g in $groups) {
