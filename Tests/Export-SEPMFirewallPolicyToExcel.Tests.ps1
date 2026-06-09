@@ -30,12 +30,7 @@ Describe 'Export-SEPMFirewallPolicyToExcel' {
                 (New-DummyFirewallRule -Name 'Baseline Block All' -Action 'BLOCK' -Uid 'BBB001')
             )
 
-            $snapshot = [PSCustomObject]@{
-                FetchedAt   = Get-Date
-                LocationMap = $locMap
-                FW          = [PSCustomObject]@{ Policies = @($fwPolicy1); Summary = @() }
-            }
-            $snapshot.PSObject.TypeNames.Insert(0, 'SEPM.PolicySnapshot')
+            $snapshot = New-DummyPolicySnapshot -FWPolicies @($fwPolicy1) -LocationMap $locMap
 
             Mock Get-SEPMPolicySnapshot -ModuleName PSSymantecSEPM { return $snapshot }
         }
@@ -81,12 +76,7 @@ Describe 'Export-SEPMFirewallPolicyToExcel' {
             $fwPolicy1.configuration.netbios_protection = $false
             $fwPolicy1.configuration.token_ring_traffic = $false
 
-            $snapshot = [PSCustomObject]@{
-                FetchedAt   = Get-Date
-                LocationMap = $locMap
-                FW          = [PSCustomObject]@{ Policies = @($fwPolicy1); Summary = @() }
-            }
-            $snapshot.PSObject.TypeNames.Insert(0, 'SEPM.PolicySnapshot')
+            $snapshot = New-DummyPolicySnapshot -FWPolicies @($fwPolicy1) -LocationMap $locMap
 
             Mock Get-SEPMPolicySnapshot -ModuleName PSSymantecSEPM { return $snapshot }
 
@@ -152,12 +142,7 @@ Describe 'Export-SEPMFirewallPolicyToExcel' {
                 (New-DummyFirewallRule -Name 'Baseline Block' -Action 'BLOCK' -Uid 'RULBASE')
             )
 
-            $snapshot = [PSCustomObject]@{
-                FetchedAt   = Get-Date
-                LocationMap = $locMap
-                FW          = [PSCustomObject]@{ Policies = @($fwPolicy1); Summary = @() }
-            }
-            $snapshot.PSObject.TypeNames.Insert(0, 'SEPM.PolicySnapshot')
+            $snapshot = New-DummyPolicySnapshot -FWPolicies @($fwPolicy1) -LocationMap $locMap
 
             Mock Get-SEPMPolicySnapshot -ModuleName PSSymantecSEPM { return $snapshot }
 
@@ -212,12 +197,7 @@ Describe 'Export-SEPMFirewallPolicyToExcel' {
                 [PSCustomObject]@{ groupId = 'group-2'; locationIds = @('loc-ccc'); defaultLocationId = 'loc-ccc'; groupNameFullPath = 'My Company\Servers' }
             )
 
-            $snapshot = [PSCustomObject]@{
-                FetchedAt   = Get-Date
-                LocationMap = $locMap
-                FW          = [PSCustomObject]@{ Policies = @($fwPolicy1); Summary = @($summary) }
-            }
-            $snapshot.PSObject.TypeNames.Insert(0, 'SEPM.PolicySnapshot')
+            $snapshot = New-DummyPolicySnapshot -FWPolicies @($fwPolicy1) -FWSummary @($summary) -LocationMap $locMap
 
             Mock Get-SEPMPolicySnapshot -ModuleName PSSymantecSEPM { return $snapshot }
 
@@ -284,12 +264,7 @@ Describe 'Export-SEPMFirewallPolicyToExcel' {
             )
             $fwPolicy1.configuration.baseline_rules = @()
 
-            $snapshot = [PSCustomObject]@{
-                FetchedAt   = Get-Date
-                LocationMap = $locMap
-                FW          = [PSCustomObject]@{ Policies = @($fwPolicy1); Summary = @() }
-            }
-            $snapshot.PSObject.TypeNames.Insert(0, 'SEPM.PolicySnapshot')
+            $snapshot = New-DummyPolicySnapshot -FWPolicies @($fwPolicy1) -LocationMap $locMap
 
             Mock Get-SEPMPolicySnapshot -ModuleName PSSymantecSEPM { return $snapshot }
 
@@ -364,12 +339,7 @@ Describe 'Export-SEPMFirewallPolicyToExcel' {
                 (New-DummyFirewallRule -Name 'Lots Of Things Rule' -Action 'ALLOW' -Uid 'TRUNC001' -Connections $connections -Adapters $adapters -Applications $apps -Hosts $hosts)
             )
 
-            $snapshot = [PSCustomObject]@{
-                FetchedAt   = Get-Date
-                LocationMap = $locMap
-                FW          = [PSCustomObject]@{ Policies = @($fwPolicy1); Summary = @() }
-            }
-            $snapshot.PSObject.TypeNames.Insert(0, 'SEPM.PolicySnapshot')
+            $snapshot = New-DummyPolicySnapshot -FWPolicies @($fwPolicy1) -LocationMap $locMap
 
             Mock Get-SEPMPolicySnapshot -ModuleName PSSymantecSEPM { return $snapshot }
 
@@ -392,12 +362,7 @@ Describe 'Export-SEPMFirewallPolicyToExcel' {
                 (New-DummyFirewallRule -Name 'Allow DNS' -Action 'ALLOW' -Uid 'PIP001')
             )
 
-            $script:pipelineSnapshot = [PSCustomObject]@{
-                FetchedAt   = Get-Date
-                LocationMap = $locMap
-                FW          = [PSCustomObject]@{ Policies = @($fwPolicy1); Summary = @() }
-            }
-            $script:pipelineSnapshot.PSObject.TypeNames.Insert(0, 'SEPM.PolicySnapshot')
+            $script:pipelineSnapshot = New-DummyPolicySnapshot -FWPolicies @($fwPolicy1) -LocationMap $locMap
 
             Mock Get-SEPMPolicySnapshot -ModuleName PSSymantecSEPM {
                 throw 'Get-SEPMPolicySnapshot should not be called in pipeline mode'

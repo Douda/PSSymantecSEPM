@@ -574,3 +574,38 @@ function New-DummyLocation {
         }
     }
 }
+
+function New-DummyPolicySnapshot {
+    <#
+    .SYNOPSIS
+        Generates a dummy SEPM.PolicySnapshot PSObject for testing.
+    .DESCRIPTION
+        Creates a complete Policy Snapshot with FW.Policies, FW.Summary,
+        LocationMap, and FetchedAt. All properties are optional with sensible defaults.
+    .PARAMETER FWPolicies
+        Array of firewall policy objects (from New-DummyFirewallPolicy). Default: empty.
+    .PARAMETER FWSummary
+        Array of policy summary objects (from New-DummyPolicySummary). Default: empty.
+    .PARAMETER LocationMap
+        Hashtable of location ID to location name. Default: @{ 'loc-001' = 'Default' }.
+    .PARAMETER FetchedAt
+        DateTime of snapshot creation. Default: current time.
+    .EXAMPLE
+        $snap = New-DummyPolicySnapshot -FWPolicies @($policy1, $policy2)
+    #>
+    [CmdletBinding()]
+    param(
+        [object[]] $FWPolicies = @(),
+        [object[]] $FWSummary  = @(),
+        [hashtable] $LocationMap = @{ 'loc-001' = 'Default' },
+        [DateTime] $FetchedAt = (Get-Date)
+    )
+
+    $snap = [PSCustomObject]@{
+        FetchedAt   = $FetchedAt
+        LocationMap = $LocationMap
+        FW          = [PSCustomObject]@{ Policies = $FWPolicies; Summary = $FWSummary }
+    }
+    $snap.PSObject.TypeNames.Insert(0, 'SEPM.PolicySnapshot')
+    return $snap
+}

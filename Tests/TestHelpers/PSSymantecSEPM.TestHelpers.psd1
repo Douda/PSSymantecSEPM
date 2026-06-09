@@ -14,6 +14,7 @@
         'New-DummyFirewallPolicy'
         'New-DummyLocation'
         'New-DummyFirewallRule'
+        'New-DummyPolicySnapshot'
     )
     PrivateData       = @{
         PSData = @{
