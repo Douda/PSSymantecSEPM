@@ -14,6 +14,17 @@ $SHA256_HASHES = @(
     'a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a'
 )
 
+function Assert-FingerprintListDeleted {
+    <#
+    .SYNOPSIS
+        Verifies a fingerprint list was deleted by checking the API returns an error.
+    #>
+    param([string]$ListName)
+    Start-Sleep -Milliseconds 1500
+    $check = Get-SEPMFileFingerprintList -FingerprintListName $ListName
+    return ($check -is [string]) -and $check -like 'Error:*'
+}
+
 $results = @{}
 
 # Clean up any leftover from previous runs
@@ -49,10 +60,8 @@ $results.A3 = T "A3" "Get by ID" `
 # A4: Delete by name
 Write-Host "--- A4 : Delete by name ---" -ForegroundColor Cyan
 try {
-    $remResult = Remove-SEPMFileFingerprintList -FingerprintListName $TEST_LIST_NAME
-    Start-Sleep -Milliseconds 1000
-    $check = Get-SEPMFileFingerprintList -FingerprintListName $TEST_LIST_NAME
-    if ($check -is [string] -and $check -like 'Error:*') {
+    Remove-SEPMFileFingerprintList -FingerprintListName $TEST_LIST_NAME | Out-Null
+    if (Assert-FingerprintListDeleted $TEST_LIST_NAME) {
         Write-Host "  VERDICT: PASS (list removed)" -ForegroundColor Green
         $results.A4 = "PASS"
     } else {
@@ -67,12 +76,10 @@ try {
 # A5: Delete by ID (create first, then delete by ID)
 Write-Host "--- A5 : Delete by ID ---" -ForegroundColor Cyan
 try {
-    $created2 = Add-SEPMFileFingerprintList -name 'SmokeFingerprint2' -domainId $DOMAIN_ID -HashType 'SHA256' -description 'Smoke test 2' -hashlist @('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+    $created2 = Add-SEPMFileFingerprintList -name 'SmokeFingerprint2' -domainId $DOMAIN_ID -HashType 'SHA256' -description 'Smoke test 2' -hashlist @($SHA256_HASHES[0])
     $id2 = $created2.id
-    $remResult2 = Remove-SEPMFileFingerprintList -FingerprintListID $id2
-    Start-Sleep -Milliseconds 1000
-    $check2 = Get-SEPMFileFingerprintList -FingerprintListName 'SmokeFingerprint2'
-    if ($check2 -is [string] -and $check2 -like 'Error:*') {
+    Remove-SEPMFileFingerprintList -FingerprintListID $id2 | Out-Null
+    if (Assert-FingerprintListDeleted 'SmokeFingerprint2') {
         Write-Host "  VERDICT: PASS (deleted by ID)" -ForegroundColor Green
         $results.A5 = "PASS"
     } else {
@@ -84,7 +91,7 @@ try {
     $results.A5 = "FAIL"
 }
 
-# A6: Get nonexistent name (expects API error - cannot use T helper)
+# A6: Get nonexistent name (expects API error — T helper treats error strings as FAIL)
 Write-Host "--- A6 : Get nonexistent name ---" -ForegroundColor Cyan
 try {
     $r = Get-SEPMFileFingerprintList -FingerprintListName 'NonExistentFingerprint'
@@ -100,11 +107,10 @@ try {
     $results.A6 = "FAIL"
 }
 
-# A7: Remove nonexistent
+# A7: Remove nonexistent (should not throw)
 Write-Host "--- A7 : Remove nonexistent ---" -ForegroundColor Cyan
 try {
-    # Ensure clean state
-    try { Remove-SEPMFileFingerprintList -FingerprintListName 'NonExistentFP' | Out-Null } catch { }
+    Remove-SEPMFileFingerprintList -FingerprintListName 'NonExistentFP' -ErrorAction SilentlyContinue | Out-Null
     Write-Host "  VERDICT: PASS (no exception on remove attempt)" -ForegroundColor Green
     $results.A7 = "PASS"
 } catch {
