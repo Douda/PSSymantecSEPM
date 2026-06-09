@@ -87,7 +87,7 @@ function New-SEPMGroup {
 
         $patchUri = $URI + "/$ParentGroupID"
         $resp = Invoke-SepmApi -Method 'POST' -Uri $patchUri -Session $session `
-            -Body ($body | ConvertTo-Json) -ContentType 'application/json'
+            -Body (ConvertTo-SEPMJson -InputObject $body) -ContentType 'application/json'
         return $resp
     }
 }

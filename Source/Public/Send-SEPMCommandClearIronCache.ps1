@@ -163,7 +163,7 @@ function Send-SEPMCommandClearIronCache {
         }
 
         $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session `
-            -Body ($body | ConvertTo-Json) -ContentType 'application/json'
+            -Body (ConvertTo-SEPMJson -InputObject $body) -ContentType 'application/json'
 
         # return the response
         return $resp
