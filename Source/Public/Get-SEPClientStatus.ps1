@@ -27,6 +27,6 @@ function Get-SEPClientStatus {
 
         $list = $resp.clientCountStatsList
         if ($null -eq $list) { return @() }
-        return $list
+        Write-Output $list -NoEnumerate
     }
 }

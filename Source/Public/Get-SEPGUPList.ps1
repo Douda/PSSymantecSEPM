@@ -33,6 +33,6 @@ function Get-SEPGUPList {
     process {
         $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
-        return $resp
+        Write-Output $resp -NoEnumerate
     }
 }

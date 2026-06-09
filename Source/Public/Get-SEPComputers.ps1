@@ -152,6 +152,6 @@ function Get-SEPComputers {
         }
 
         # return the response
-        return $allResults
+        Write-Output $allResults -NoEnumerate
     }
 }

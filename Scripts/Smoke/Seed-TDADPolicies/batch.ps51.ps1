@@ -1,4 +1,4 @@
-# Smoke verification for TDADPolicies seed (PS5.1)
+﻿# Smoke verification for TDADPolicies seed (PS5.1)
 # Run via: python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\smoke-tdad.ps1'
 
 $ErrorActionPreference = "Continue"

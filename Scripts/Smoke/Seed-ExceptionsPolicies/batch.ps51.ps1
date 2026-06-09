@@ -1,4 +1,4 @@
-# Smoke verification for ExceptionsPolicies seed (PS5.1)
+﻿# Smoke verification for ExceptionsPolicies seed (PS5.1)
 # Usage: deployed to C:\Users\smokeuser\Desktop\Shared\ and run via WinRM
 
 $ErrorActionPreference = "Continue"

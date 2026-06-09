@@ -13,36 +13,28 @@ Source/
 │   └── Exceptions-Policy.ps1    # PowerShell class for policy exception payloads
 ├── Private/                     # Internal helpers (not exported)
 │   ├── Build-SEPMQueryURI.ps1
-│   ├── Import-SepmConfiguration.ps1
-│   ├── Initialize-PolicyExceptionStructure.ps1
-│   ├── Invoke-ABRestMethod.ps1
-│   ├── Optimize-ExceptionPolicyStructure.ps1
-│   ├── Read-SepmConfiguration.ps1
-│   ├── Remove-NestedNullOrEmptyProperties.ps1
-│   ├── Resolve-PropertyValue.ps1
-│   ├── Save-SepmConfiguration.ps1
-│   ├── Skip-Cert.ps1            # PS 5.1 cert bypass via Add-Type C#
-│   ├── Test-PropertyExists.ps1
-│   ├── Test-SEPMAccessToken.ps1
-│   └── Test-SEPMCertificate.ps1
-├── Public/                      # Exported cmdlets (~45 files)
+│   ├── Invoke-SepmApi.ps1       # Unified REST transport (ADR-0003)
+│   ├── Initialize-SEPMSession.ps1
+│   ├── Get-SEPMAccessToken.ps1
+│   ├── ... (24 files total)
+│   └── Skip-Cert.ps1            # PS 5.1 cert bypass via Add-Type C#
+├── Public/                      # Exported cmdlets (55 files)
 │   ├── Get-SEPComputers.ps1     # Paginated, filterable by name or group
 │   ├── Set-SepmAuthentication.ps1
 │   ├── Get-SEPMAccessToken.ps1
-│   ├── Add-SEPMWindowsFileException.ps1
-│   ├── Get-SEPMExceptionPolicy.ps1
+│   ├── Update-SEPMExceptionPolicy.ps1
 │   └── ... (one file per cmdlet)
-├── To_Update/                   # Unfinished cmdlets (Get-SEPFileContent, Get-TDADPolicy, Update-SEPMExceptionPolicy)
 ├── en-US/about_PSSymantecSEPM.help.txt
 └── build.psd1                   # ModuleBuilder config
 Tests/
-├── Config/                      # Pester bootstrap (init, before/after all, test env setup)
-├── Build-SEPMQueryURI.Tests.ps1
+├── TestHelpers/                 # Test infrastructure module
+│   ├── PSSymantecSEPM.TestHelpers.psd1
+│   └── PSSymantecSEPM.TestHelpers.psm1
+├── fixtures/                    # JSON response fixtures for seed tests
 ├── Get-SEPComputers.Tests.ps1
-├── Get-SEPMAccessToken.Tests.ps1
-├── Set-SEPMAuthentication.Tests.ps1
-├── ... (one test file per module function)
-└── DummyDataGenerator.ps1       # Test fixtures for SEPM API responses
+├── Get-SEPMVersion.Tests.ps1
+├── Seed-SEPMData.Tests.ps1
+└── ... (35+ test files, one per cmdlet/private function)
 Scripts/
 ├── Smoke/                        # Live smoke tests (per cmdlet)
 │   └── Update-SEPMExceptionPolicy/
@@ -70,7 +62,12 @@ Scripts/
 
 Tokens expire after a time window (returned by API). `Test-SEPMAccessToken` validates expiry before use.
 
-### REST layer (Invoke-ABRestMethod)
+### REST layer (Invoke-SepmApi)
+Single unified transport (ADR-0003). Two parameter sets:
+- **`-Session`**: Extracts `Headers` and `SkipCert` from a session object (created by `Initialize-SEPMSession`)
+- **`-Headers`/`-SkipCert`**: Manual overrides for auth bootstrap (`Get-SEPMAccessToken`)
+
+Returns `[hashtable]` uniformly across PS versions via `ConvertTo-Hashtable`.
 Branches on `$PSVersionTable.PSVersion.Major`:
 - **PS 6+**: Uses `Invoke-RestMethod -SkipCertificateCheck`
 - **PS 5.1**: Uses `Skip-Cert` C# callback via `Add-Type`
@@ -90,22 +87,54 @@ Some cmdlets (e.g. `Get-SEPComputers`) paginate through the API using `pageIndex
 
 ### Known issues
 - **Test-SEPMCertificate.ps1** — entirely commented out (commit `e1f2178`). Self-signed certs are never detected automatically. The `-SkipCertificateCheck` parameter on each cmdlet works, but there's no automatic fallback.
-- **No Update-SEPMExceptionPolicy** — the `To_Update/` folder has a skeleton but it's not wired into the module. Exception policies can be read (Get) but not written (Update).
-- **Several policy types have no cmdlets**: AV, ADC, HI, HID, LU, LUCONTENT, MEM, MSL, NTR, UPGRADE — only `Get` exists for `exceptions`, `fw`, `ips`.
-- **Tests reference PS 4.7.2–5.0** — `RequiredModules.psd1` now targets `5.*` but tests haven't been migrated.
 
 ### What works
 - Authentication against SEPM (token-based)
 - Computer inventory (list, filter by name/group, paginate)
 - Client status, version, definition versions, infected status
 - Groups (list, create, remove)
-- Policies (exception, firewall, IPS — read only)
+- Policies (exception, firewall, IPS — read/write)
 - Policy exception mutations (add/remove file, folder, extension exceptions)
 - Commands (active scan, full scan, quarantine, get file, clear iron cache)
 - GUPs, domains, admins, database info, license, replication status, threat stats
 - Move clients between groups
 - Location management (list, get XML)
 - File fingerprint list management
+- Configuration backup/restore
+- Excel export (firewall policies)
+
+### Output emission: `Write-Output -NoEnumerate` for collections
+
+Cmdlets that return collections (arrays built via `@()`, or API response sub-properties
+extracted as arrays) must use `Write-Output $result -NoEnumerate` instead of bare
+`return $result`. PowerShell unrolls arrays through `return`, causing a single-element
+result to become a scalar — breaking `$result.Count`, pipeline `ForEach-Object`, and
+other array-dependent downstream code.
+
+**Applies to**: cmdlets where the return type is conceptually "a list of X."
+**Does not apply to**: cmdlets returning a single object (hashtable, PSCustomObject,
+boolean, string), even if the object internally contains nested arrays.
+
+Audited 2026-06-09 — 13 cmdlets use this pattern:
+
+| Cmdlet | Returns |
+|---|---|
+| `Get-SEPComputers` | Paginated computer array |
+| `Get-SEPMGroups` | Paginated group array |
+| `Get-SEPMCommandStatus` | Paginated command status array |
+| `Get-SEPGUPList` | GUP array |
+| `Get-SEPMLocation` | Location array |
+| `Get-SEPClientDefVersions` | Definition version array |
+| `Get-SEPClientStatus` | Client status array |
+| `Get-SEPClientVersion` | Client version array |
+| `Get-SEPMEventInfo` | Critical events array |
+| `Get-SEPMPoliciesSummary` | Policy summary array |
+| `Get-SEPMReplicationStatus` | Replication status array |
+| `Get-SEPMThreatStats` | Threat stats array |
+| `Start-SEPScan` | Scan result array |
+| `Update-SEPClientDefinitions` | Update result array |
+
+New cmdlets returning collections should follow this pattern.
 
 ## Dev Environment
 
@@ -200,11 +229,12 @@ python3 Scripts/invoke-winrm.py 'C:\Users\<username>\Desktop\Shared\test-module.
 - Runner: `python3 Scripts/invoke-winrm.py '<path-to-ps1-on-vm>'`
 
 ### Encoding
-- **Windows PowerShell 5.1 requires UTF-8 with BOM.** Files written to the shared volume (`/home/douda/Windows/`) that are meant to run on the Windows VM must have a UTF-8 BOM prefix (`\xef\xbb\xbf`). Without it, Unicode characters get mangled and the parser breaks on special characters.
+- **ModuleBuilder handles BOM** for the assembled `.psm1` — source files in `Source/` can be UTF-8 without BOM. The assembled module works correctly on both PS versions.
+- **Standalone scripts deployed to the Windows VM** must have a UTF-8 BOM prefix (`\xef\xbb\xbf`) if they contain non-ASCII characters (special chars, Unicode). Without it, the PS 5.1 parser mangles them. Smoke scripts (`Scripts/Smoke/<Cmdlet>/batch.ps51.ps1`) are deployed with BOM via `[System.Text.UTF8Encoding]::new(\$true)`.
 - PowerShell 7+ (in the devcontainer) handles UTF-8 without BOM fine.
 
 ### Path separators
-- All `Join-Path -ChildPath` calls must use forward slashes (`Tests/Config/Common-Init.ps1`) — backslashes break on Linux.
+- All `Join-Path -ChildPath` calls must use forward slashes — backslashes break on Linux.
 - Already fixed across all test files.
 
 ### Certificate handling
@@ -215,7 +245,18 @@ python3 Scripts/invoke-winrm.py 'C:\Users\<username>\Desktop\Shared\test-module.
 ### Build system
 - `ModuleBuilder` assembles split source into a single `.psm1`. Always rebuild after adding new source files.
 - The `zz_` prefix convention ensures init runs last.
-- `RequiredModules.psd1` lists build/test dependencies.
+- `RequiredModules.psd1` at repo root lists build/test dependencies (`ModuleBuilder`, `Configuration`, `Pester 5.*`, `PSScriptAnalyzer`).
+
+### Test architecture
+- **TestHelpers module** (`Tests/TestHelpers/`) provides `Initialize-TestEnvironment` (builds+imports module, redirects file paths to `TestDrive:`, resets module state) and `Clear-TestEnvironment` (removes module, cleans up). Also exports `New-TestSession` for creating mock session objects.
+- **Seam layers** for mocking (see `boundary-mocking.md`):
+  - **Auth seam**: Mock `Initialize-SEPMSession` — returns a `New-TestSession` object. All cmdlets call this for auth.
+  - **Transport seam**: Mock `Invoke-SepmApi` — returns a `[hashtable]` fixture. All cmdlets call this for HTTP.
+  - **File seam**: Paths redirected to `TestDrive:` by `Initialize-TestEnvironment`. No direct filesystem access in tests.
+  - **HTTP seam**: Not tested at unit level — smoke tests cover the live API.
+- **InModuleScope** is reserved for transport/auth/tooling layer tests only: `Invoke-SepmApi`, `Initialize-SEPMSession`, and TestHelpers lifecycle functions.
+- **PS version strategy**: Unit tests mock `$PSVersionTable.PSVersion.Major` where needed to exercise PS 5.1 vs 7+ code paths. Transport tests (`Invoke-SepmApi`) test both branches. Most cmdlet tests don't branch on PS version — the transport layer abstracts it away.
+- **Seed tests** (`Seed-*.Tests.ps1`) validate that `Seed-SEPMData` correctly populates the SEPM VM with test data. They hit the live API.
 
 ## Agent skills
 

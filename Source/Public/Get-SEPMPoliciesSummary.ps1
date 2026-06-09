@@ -106,6 +106,6 @@ function Get-SEPMPoliciesSummary {
         }
             
         # return the response
-        return $resp.content
+        Write-Output $resp.content -NoEnumerate
     }
 }

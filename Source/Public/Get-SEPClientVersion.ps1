@@ -38,6 +38,6 @@ function Get-SEPClientVersion {
 
         $list = $resp.clientVersionList
         if ($null -eq $list) { return @() }
-        return $list
+        Write-Output $list -NoEnumerate
     }
 }

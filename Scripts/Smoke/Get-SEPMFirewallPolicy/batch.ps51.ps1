@@ -1,4 +1,4 @@
-# Smoke verification for Get-SEPMFirewallPolicy -All (PS5.1)
+﻿# Smoke verification for Get-SEPMFirewallPolicy -All (PS5.1)
 # Deploy to C:\Users\smokeuser\Desktop\Shared\ via BOM-encoded write, then:
 #   python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\smoke-get-sepmfirewallpolicy.ps1'
 

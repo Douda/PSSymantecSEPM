@@ -70,6 +70,13 @@ function Initialize-TestEnvironment {
     Reset-SEPMConfiguration
     Clear-SEPMAuthentication
 
+    Write-Verbose "Redirecting file paths to TestDrive for test isolation"
+    InModuleScope PSSymantecSEPM {
+        $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
+        $script:credentialsFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+        $script:accessTokenFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
+    }
+
     return @{
         ConfigBackup  = $configBackup
         CredsBackup   = $credsBackup

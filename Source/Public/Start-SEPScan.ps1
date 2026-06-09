@@ -176,7 +176,7 @@ function Start-SEPScan {
             }
             
             # return the response
-            return $AllResp
+            Write-Output $AllResp -NoEnumerate
         }
     }
 }

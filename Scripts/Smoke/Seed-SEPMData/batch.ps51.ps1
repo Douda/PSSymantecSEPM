@@ -1,4 +1,4 @@
-# Smoke verification for Seed-SEPMData orchestrator (PS5.1)
+﻿# Smoke verification for Seed-SEPMData orchestrator (PS5.1)
 # Deploy to shared volume, then run via:
 #   python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\smoke-seed.batch.ps1'
 
