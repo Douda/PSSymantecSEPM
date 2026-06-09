@@ -446,6 +446,78 @@ function New-DummyFirewallPolicy {
     }
 }
 
+function New-DummyFirewallRule {
+    <#
+    .SYNOPSIS
+        Generates a dummy firewall rule object for testing purposes.
+    .DESCRIPTION
+        Creates a minimal firewall rule matching the shape from the SEPM API,
+        with optional connections, adapters, applications, and hosts.
+    .PARAMETER Name
+        The rule name.
+    .PARAMETER Action
+        The rule action (ALLOW/BLOCK).
+    .PARAMETER Enabled
+        Whether the rule is enabled.
+    .PARAMETER Uid
+        The rule UID. If omitted, a random 32-char hex ID is generated.
+    .PARAMETER Connections
+        Array of connection objects. Default: empty array.
+    .PARAMETER Adapters
+        Array of adapter objects. Default: empty array.
+    .PARAMETER Applications
+        Array of application objects. Default: null.
+    .PARAMETER Hosts
+        Array of host objects. Default: null.
+    .EXAMPLE
+        New-DummyFirewallRule -Name 'Allow HTTP' -Action 'ALLOW'
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Name,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Action,
+
+        [bool] $Enabled = $true,
+
+        [string] $Uid,
+
+        [object[]] $Connections = @(),
+
+        [object[]] $Adapters = @(),
+
+        [object[]] $Applications = $null,
+
+        [object[]] $Hosts = $null
+    )
+
+    process {
+        $uid = if ($Uid) { $Uid } else {
+            [guid]::NewGuid().ToString('N').Substring(0, 32).ToUpper()
+        }
+
+        return [PSCustomObject]@{
+            name           = $Name
+            uid            = $uid
+            action         = $Action
+            severity       = 3
+            desc           = $null
+            rulestate      = [PSCustomObject]@{ enabled = $Enabled }
+            connections    = $Connections
+            adapters       = $Adapters
+            applications   = $Applications
+            hosts          = $Hosts
+            log_action     = 0
+            packet_capture = $false
+            email_alert    = $false
+            screen_saver   = 'ANY'
+            time_slots     = $null
+        }
+    }
+}
+
 function New-DummyLocation {
     <#
     .SYNOPSIS
