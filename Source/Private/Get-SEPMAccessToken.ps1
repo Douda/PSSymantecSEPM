@@ -84,7 +84,7 @@ function Get-SEPMAccessToken {
 
     # Invoke the request and SkipCert if needed (Manual parameter set — no session exists yet)
     $Response = Invoke-SepmApi -Method POST -Uri $URI_Authenticate `
-        -Body ($body | ConvertTo-Json) -ContentType 'application/json' `
+        -Body (ConvertTo-SEPMJson -InputObject $body) -ContentType 'application/json' `
         -Headers @{} -SkipCert $script:SkipCert
 
     # Sort the response
