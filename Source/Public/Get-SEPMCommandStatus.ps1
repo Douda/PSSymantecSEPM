@@ -73,10 +73,10 @@ function Get-SEPMCommandStatus {
         } until ($resp.lastPage -eq $true)
 
         # Add a PSTypeName to the object 
-        $allresults | ForEach-Object {
+        $allResults | ForEach-Object {
             $_.PSTypeNames.Insert(0, "SEPM.CommandStatus")
         }
     
-        return $allResults
+        Write-Output $allResults -NoEnumerate
     }
 }
