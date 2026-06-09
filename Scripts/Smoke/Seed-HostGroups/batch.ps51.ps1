@@ -1,4 +1,4 @@
-# Smoke verification for HostGroups seed (PS 5.1)
+﻿# Smoke verification for HostGroups seed (PS 5.1)
 # Usage: via WinRM — python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\smoke-hostgroups.ps1'
 
 $ErrorActionPreference = "Continue"

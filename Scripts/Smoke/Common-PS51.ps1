@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Shared initialization for all PSSymantecSEPM smoke scripts (PS5.1).
 

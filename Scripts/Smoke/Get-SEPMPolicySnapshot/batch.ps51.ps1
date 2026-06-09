@@ -1,4 +1,4 @@
-# Smoke verification for Get-SEPMPolicySnapshot (PS5.1)
+﻿# Smoke verification for Get-SEPMPolicySnapshot (PS5.1)
 # Usage: python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\smoke-get-sepmPolicySnapshot.ps1'
 
 [CmdletBinding()]param()
