@@ -1,11 +1,10 @@
-$ErrorActionPreference = "Continue"
+﻿$ErrorActionPreference = "Continue"
 $RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
 . "$RepoRoot\Common-PS51.ps1"
 
 Write-Host "=== Smoke: Send-SEPMCommandFullScan (PS5.1) ==="
 
 $results = @{}
-$fail = 0
 
 function TE51 {
     param($Id, $Label, [ScriptBlock]$Action)
@@ -14,14 +13,12 @@ function TE51 {
         $result = & $Action
         if ($null -eq $result) {
             Write-Host "  VERDICT: FAIL (null response)" -ForegroundColor Red
-            $script:fail++
             return "FAIL"
         }
         Write-Host "  VERDICT: PASS (API reached)" -ForegroundColor Green
         return "PASS"
     } catch {
         Write-Host "  VERDICT: FAIL (exception: $($_.Exception.Message))" -ForegroundColor Red
-        $script:fail++
         return "FAIL"
     }
 }
@@ -36,8 +33,10 @@ $results.B3 = TE51 "B3" "FullScan via pipeline reaches API" `
     { 'NonExistentComputer12345' | Send-SEPMCommandFullScan }
 
 $pass = ($results.Values | Where-Object { $_ -eq 'PASS' }).Count
+$fail = ($results.Values | Where-Object { $_ -eq 'FAIL' }).Count
 Write-Host "`n=== Results: $pass PASS, $fail FAIL ===" -ForegroundColor $(if ($fail -gt 0) { 'Red' } else { 'Green' })
 
 if ($fail -gt 0) {
-    throw "Smoke tests failed: $fail failure(s)"
+    Write-Error "Smoke tests failed: $fail failure(s)"
+    exit 1
 }
