@@ -32,6 +32,8 @@ function Get-SEPMPolicySnapshot {
     begin {
         $snapshot = [PSCustomObject]@{}
         $snapshot.PSObject.TypeNames.Insert(0, 'SEPM.PolicySnapshot')
+        $session = Initialize-SEPMSession
+        $groups  = Get-SEPMGroups
     }
 
     process {
@@ -45,8 +47,6 @@ function Get-SEPMPolicySnapshot {
         }
 
         # Build location map: locationId → locationName
-        $groups = Get-SEPMGroups
-        $session = Initialize-SEPMSession
         $locationMap = @{}
         foreach ($g in $groups) {
             # Skip groups with non-string IDs (API returns hashtable IDs for some groups).
