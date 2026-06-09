@@ -5,6 +5,8 @@ Describe 'Restore-SEPMAuthentication' {
     BeforeAll {
         Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
         $script:TestState = Initialize-TestEnvironment
+        $script:CredsPath = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+        $script:TokenPath = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
     }
 
     AfterAll {
@@ -21,11 +23,9 @@ Describe 'Restore-SEPMAuthentication' {
 
             Restore-SEPMAuthentication -Path $sourcePath -Credential
 
-            InModuleScope PSSymantecSEPM {
-                Test-Path -Path $script:credentialsFilePath -PathType Leaf | Should -Be $true
-                $restored = Import-Clixml -Path $script:credentialsFilePath
-                $restored.UserName | Should -Be 'RestoredUser'
-            }
+            Test-Path -Path $script:CredsPath -PathType Leaf | Should -Be $true
+            $restored = Import-Clixml -Path $script:CredsPath
+            $restored.UserName | Should -Be 'RestoredUser'
         }
     }
 
@@ -38,11 +38,9 @@ Describe 'Restore-SEPMAuthentication' {
 
             Restore-SEPMAuthentication -Path $sourcePath -AccessToken
 
-            InModuleScope PSSymantecSEPM {
-                Test-Path -Path $script:accessTokenFilePath -PathType Leaf | Should -Be $true
-                $restored = Import-Clixml -Path $script:accessTokenFilePath
-                $restored.Token | Should -Be 'restored-token'
-            }
+            Test-Path -Path $script:TokenPath -PathType Leaf | Should -Be $true
+            $restored = Import-Clixml -Path $script:TokenPath
+            $restored.Token | Should -Be 'restored-token'
         }
     }
 
@@ -64,13 +62,12 @@ Describe 'Restore-SEPMAuthentication' {
 
     Context 'Overwrite existing file' {
         It 'Overwrites existing credential file with restored file' {
-            InModuleScope PSSymantecSEPM {
-                $parent = Split-Path -Path $script:credentialsFilePath -Parent
-                $null = New-Item -Path $parent -ItemType Directory -Force
-                $oldCreds = New-Object System.Management.Automation.PSCredential 'OldUser',
-                    (ConvertTo-SecureString -String 'OldPass' -AsPlainText -Force)
-                $oldCreds | Export-Clixml -Path $script:credentialsFilePath
-            }
+            # Stage an old credential file directly on TestDrive
+            $parent = Split-Path -Path $script:CredsPath -Parent
+            $null = New-Item -Path $parent -ItemType Directory -Force
+            $oldCreds = New-Object System.Management.Automation.PSCredential 'OldUser',
+                (ConvertTo-SecureString -String 'OldPass' -AsPlainText -Force)
+            $oldCreds | Export-Clixml -Path $script:CredsPath
 
             $sourcePath = Join-Path -Path 'TestDrive:' -ChildPath 'sources/new-creds.xml'
             $null = New-Item -Path (Split-Path -Path $sourcePath -Parent) -ItemType Directory -Force
@@ -80,10 +77,8 @@ Describe 'Restore-SEPMAuthentication' {
 
             Restore-SEPMAuthentication -Path $sourcePath -Credential
 
-            InModuleScope PSSymantecSEPM {
-                $restored = Import-Clixml -Path $script:credentialsFilePath
-                $restored.UserName | Should -Be 'NewUser'
-            }
+            $restored = Import-Clixml -Path $script:CredsPath
+            $restored.UserName | Should -Be 'NewUser'
         }
     }
 }

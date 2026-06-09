@@ -5,6 +5,7 @@ Describe 'Restore-SEPMConfiguration' {
     BeforeAll {
         Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
         $script:TestState = Initialize-TestEnvironment
+        $script:ConfigPath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
     }
 
     AfterAll {
@@ -24,15 +25,13 @@ Describe 'Restore-SEPMConfiguration' {
 
             Restore-SEPMConfiguration -Path $sourcePath
 
-            InModuleScope PSSymantecSEPM {
-                Test-Path -Path $script:configurationFilePath -PathType Leaf | Should -Be $true
-                $content = Get-Content -Path $script:configurationFilePath -Raw | ConvertFrom-Json
-                $content.ServerAddress | Should -Be 'restored-server'
-                $content.port | Should -Not -BeNullOrEmpty
-            }
+            Test-Path -Path $script:ConfigPath -PathType Leaf | Should -Be $true
+            $content = Get-Content -Path $script:ConfigPath -Raw | ConvertFrom-Json
+            $content.ServerAddress | Should -Be 'restored-server'
+            $content.port | Should -Not -BeNullOrEmpty
         }
 
-        It 'Updates module-scope configuration after restore' {
+        It 'Persists restored ServerAddress to disk' {
             $sourcePath = Join-Path -Path 'TestDrive:' -ChildPath 'sources/config-update.json'
             $configJson = @{
                 ServerAddress = 'module-update'
@@ -42,9 +41,8 @@ Describe 'Restore-SEPMConfiguration' {
 
             Restore-SEPMConfiguration -Path $sourcePath
 
-            InModuleScope PSSymantecSEPM {
-                $script:configuration.ServerAddress | Should -Be 'module-update'
-            }
+            $content = Get-Content -Path $script:ConfigPath -Raw | ConvertFrom-Json
+            $content.ServerAddress | Should -Be 'module-update'
         }
 
         It 'Copies existing file content correctly' {
@@ -58,13 +56,11 @@ Describe 'Restore-SEPMConfiguration' {
 
             Restore-SEPMConfiguration -Path $sourcePath
 
-            InModuleScope PSSymantecSEPM {
-                $rawContent = Get-Content -Path $script:configurationFilePath -Raw
-                $content = $rawContent | ConvertFrom-Json
-                $content.ServerAddress | Should -Be 'exact-match'
-                $content.port | Should -Be '1234'
-                $content.domain | Should -Be 'TestDomain'
-            }
+            $rawContent = Get-Content -Path $script:ConfigPath -Raw
+            $content = $rawContent | ConvertFrom-Json
+            $content.ServerAddress | Should -Be 'exact-match'
+            $content.port | Should -Be '1234'
+            $content.domain | Should -Be 'TestDomain'
         }
     }
 

@@ -5,6 +5,7 @@ Describe 'Backup-SEPMConfiguration' {
     BeforeAll {
         Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
         $script:TestState = Initialize-TestEnvironment
+        $script:ConfigPath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
     }
 
     AfterAll {
@@ -35,10 +36,10 @@ Describe 'Backup-SEPMConfiguration' {
 
     Context 'Without existing configuration' {
         BeforeAll {
-            InModuleScope PSSymantecSEPM {
-                if (Test-Path -Path $script:configurationFilePath -PathType Leaf) {
-                    Remove-Item -Path $script:configurationFilePath -Force
-                }
+            # Remove config file directly from TestDrive — Initialize-TestEnvironment
+            # already redirected $script:configurationFilePath to this path.
+            if (Test-Path -Path $script:ConfigPath -PathType Leaf) {
+                Remove-Item -Path $script:ConfigPath -Force
             }
         }
 

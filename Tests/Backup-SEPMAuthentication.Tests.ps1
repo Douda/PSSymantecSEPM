@@ -5,6 +5,8 @@ Describe 'Backup-SEPMAuthentication' {
     BeforeAll {
         Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
         $script:TestState = Initialize-TestEnvironment
+        $script:CredsPath = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+        $script:TokenPath = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
     }
 
     AfterAll {
@@ -13,14 +15,13 @@ Describe 'Backup-SEPMAuthentication' {
 
     Context 'Credential backup' {
         BeforeAll {
-            # Create a credential file on TestDrive at the module's expected path
+            # Write fixture credential directly to TestDrive — Initialize-TestEnvironment
+            # already redirected $script:credentialsFilePath to this path.
             $dummyCreds = New-Object System.Management.Automation.PSCredential 'TestUser',
                 (ConvertTo-SecureString -String 'TestPass' -AsPlainText -Force)
-            InModuleScope PSSymantecSEPM -Parameters @{ credential = $dummyCreds } {
-                $parent = Split-Path -Path $script:credentialsFilePath -Parent
-                $null = New-Item -Path $parent -ItemType Directory -Force
-                $credential | Export-Clixml -Path $script:credentialsFilePath
-            }
+            $parent = Split-Path -Path $script:CredsPath -Parent
+            $null = New-Item -Path $parent -ItemType Directory -Force
+            $dummyCreds | Export-Clixml -Path $script:CredsPath
         }
 
         It 'Backs up credentials file when -Credential is used' {
@@ -41,10 +42,8 @@ Describe 'Backup-SEPMAuthentication' {
         It 'Does not create backup when credentials file doesnt exist' {
             $emptyBackupPath = Join-Path -Path 'TestDrive:' -ChildPath 'backups/no-cred-backup.xml'
 
-            InModuleScope PSSymantecSEPM {
-                if (Test-Path -Path $script:credentialsFilePath) {
-                    Remove-Item -Path $script:credentialsFilePath -Force
-                }
+            if (Test-Path -Path $script:CredsPath) {
+                Remove-Item -Path $script:CredsPath -Force
             }
 
             $null = Backup-SEPMAuthentication -Path $emptyBackupPath -Credentials
@@ -54,15 +53,15 @@ Describe 'Backup-SEPMAuthentication' {
 
     Context 'AccessToken backup' {
         BeforeAll {
-            InModuleScope PSSymantecSEPM {
-                $parent = Split-Path -Path $script:accessTokenFilePath -Parent
-                $null = New-Item -Path $parent -ItemType Directory -Force
-                $fakeToken = [PSCustomObject]@{
-                    Token           = 'fake-token-value'
-                    TokenExpiration = (Get-Date).AddHours(1)
-                }
-                $fakeToken | Export-Clixml -Path $script:accessTokenFilePath
+            # Write fixture token directly to TestDrive — Initialize-TestEnvironment
+            # already redirected $script:accessTokenFilePath to this path.
+            $parent = Split-Path -Path $script:TokenPath -Parent
+            $null = New-Item -Path $parent -ItemType Directory -Force
+            $fakeToken = [PSCustomObject]@{
+                Token           = 'fake-token-value'
+                TokenExpiration = (Get-Date).AddHours(1)
             }
+            $fakeToken | Export-Clixml -Path $script:TokenPath
         }
 
         It 'Backs up access token file when -AccessToken is used' {
@@ -83,20 +82,15 @@ Describe 'Backup-SEPMAuthentication' {
 
     Context 'Backup with both credential and token files present' {
         BeforeAll {
+            $parent = Split-Path -Path $script:CredsPath -Parent
+            $null = New-Item -Path $parent -ItemType Directory -Force
+
             $dummyCreds = New-Object System.Management.Automation.PSCredential 'BothUser',
                 (ConvertTo-SecureString -String 'BothPass' -AsPlainText -Force)
-            InModuleScope PSSymantecSEPM -Parameters @{ credential = $dummyCreds } {
-                $parent = Split-Path -Path $script:credentialsFilePath -Parent
-                $null = New-Item -Path $parent -ItemType Directory -Force
-                $credential | Export-Clixml -Path $script:credentialsFilePath
-            }
+            $dummyCreds | Export-Clixml -Path $script:CredsPath
 
-            InModuleScope PSSymantecSEPM {
-                $parent = Split-Path -Path $script:accessTokenFilePath -Parent
-                $null = New-Item -Path $parent -ItemType Directory -Force
-                $fakeToken = [PSCustomObject]@{ Token = 'both-token'; TokenExpiration = (Get-Date).AddHours(2) }
-                $fakeToken | Export-Clixml -Path $script:accessTokenFilePath
-            }
+            $fakeToken = [PSCustomObject]@{ Token = 'both-token'; TokenExpiration = (Get-Date).AddHours(2) }
+            $fakeToken | Export-Clixml -Path $script:TokenPath
         }
 
         It 'Backs up both files when both switches are used' {

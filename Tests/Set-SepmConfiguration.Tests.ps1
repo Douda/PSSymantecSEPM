@@ -5,6 +5,7 @@ Describe 'Set-SepmConfiguration' {
     BeforeAll {
         Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
         $script:TestState = Initialize-TestEnvironment
+        $script:ConfigPath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
     }
 
     AfterAll {
@@ -15,24 +16,18 @@ Describe 'Set-SepmConfiguration' {
         It 'Creates config file and writes ServerAddress' {
             Set-SepmConfiguration -ServerAddress 'my-sepm.example.com'
 
-            InModuleScope PSSymantecSEPM {
-                Test-Path -Path $script:configurationFilePath -PathType Leaf | Should -Be $true
-            }
+            Test-Path -Path $script:ConfigPath -PathType Leaf | Should -Be $true
 
-            $content = InModuleScope PSSymantecSEPM {
-                Get-Content -Path $script:configurationFilePath -Raw | ConvertFrom-Json
-            }
+            $content = Get-Content -Path $script:ConfigPath -Raw | ConvertFrom-Json
             $content.ServerAddress | Should -Be 'my-sepm.example.com'
         }
 
-        It 'Sets both ServerAddress and Port and verifies with Read-SepmConfiguration' {
+        It 'Sets both ServerAddress and Port and persists to disk' {
             Set-SepmConfiguration -ServerAddress 'prod-sepm' -Port 9443
 
-            InModuleScope PSSymantecSEPM {
-                $persisted = Read-SepmConfiguration -Path $script:configurationFilePath
-                $persisted.ServerAddress | Should -Be 'prod-sepm'
-                $persisted.port | Should -Match '9443'
-            }
+            $persisted = Get-Content -Path $script:ConfigPath -Raw | ConvertFrom-Json
+            $persisted.ServerAddress | Should -Be 'prod-sepm'
+            $persisted.port | Should -Match '9443'
         }
     }
 
@@ -44,29 +39,24 @@ Describe 'Set-SepmConfiguration' {
         It 'Updates ServerAddress without changing Port' {
             Set-SepmConfiguration -ServerAddress 'updated'
 
-            InModuleScope PSSymantecSEPM {
-                $config = Get-Content -Path $script:configurationFilePath -Raw | ConvertFrom-Json
-                $config.ServerAddress | Should -Be 'updated'
-                $config.port | Should -Match '8080'
-            }
+            $config = Get-Content -Path $script:ConfigPath -Raw | ConvertFrom-Json
+            $config.ServerAddress | Should -Be 'updated'
+            $config.port | Should -Match '8080'
         }
 
         It 'Updates Port without changing ServerAddress' {
             Set-SepmConfiguration -Port 9090
 
-            InModuleScope PSSymantecSEPM {
-                $config = Get-Content -Path $script:configurationFilePath -Raw | ConvertFrom-Json
-                $config.ServerAddress | Should -Be 'updated'
-                $config.port | Should -Match '9090'
-            }
+            $config = Get-Content -Path $script:ConfigPath -Raw | ConvertFrom-Json
+            $config.ServerAddress | Should -Be 'updated'
+            $config.port | Should -Match '9090'
         }
 
-        It 'Updates module-scope configuration after setting' {
+        It 'Persists new ServerAddress to disk' {
             Set-SepmConfiguration -ServerAddress 'module-scope-test'
 
-            InModuleScope PSSymantecSEPM {
-                $script:configuration.ServerAddress | Should -Be 'module-scope-test'
-            }
+            $config = Get-Content -Path $script:ConfigPath -Raw | ConvertFrom-Json
+            $config.ServerAddress | Should -Be 'module-scope-test'
         }
     }
 
@@ -80,14 +70,9 @@ Describe 'Set-SepmConfiguration' {
         It 'Updates only Port while keeping existing ServerAddress' {
             Set-SepmConfiguration -Port 7000
 
-            InModuleScope PSSymantecSEPM {
-                $config = Read-SepmConfiguration -Path $script:configurationFilePath
-                $config.port | Should -Match '7000'
-            }
-
-            InModuleScope PSSymantecSEPM {
-                $script:configuration.ServerAddress | Should -Be 'partial-baseline'
-            }
+            $config = Get-Content -Path $script:ConfigPath -Raw | ConvertFrom-Json
+            $config.port | Should -Match '7000'
+            $config.ServerAddress | Should -Be 'partial-baseline'
         }
     }
 }

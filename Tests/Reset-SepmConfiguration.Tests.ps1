@@ -5,6 +5,7 @@ Describe 'Reset-SepmConfiguration' {
     BeforeAll {
         Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
         $script:TestState = Initialize-TestEnvironment
+        $script:ConfigPath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
     }
 
     AfterAll {
@@ -19,18 +20,14 @@ Describe 'Reset-SepmConfiguration' {
         It 'Removes the configuration file from disk' {
             Reset-SEPMConfiguration
 
-            InModuleScope PSSymantecSEPM {
-                Test-Path -Path $script:configurationFilePath -PathType Leaf | Should -Be $false
-            }
+            Test-Path -Path $script:ConfigPath -PathType Leaf | Should -Be $false
         }
     }
 
     Context 'Reset when no configuration exists' {
         BeforeAll {
-            InModuleScope PSSymantecSEPM {
-                if (Test-Path -Path $script:configurationFilePath -PathType Leaf) {
-                    Remove-Item -Path $script:configurationFilePath -Force
-                }
+            if (Test-Path -Path $script:ConfigPath -PathType Leaf) {
+                Remove-Item -Path $script:ConfigPath -Force
             }
         }
 
@@ -44,18 +41,12 @@ Describe 'Reset-SepmConfiguration' {
             Set-SepmConfiguration -ServerAddress 'ephemeral' -Port 8446
 
             # Verify file exists before reset
-            $fileExistedBefore = InModuleScope PSSymantecSEPM {
-                Test-Path -Path $script:configurationFilePath -PathType Leaf
-            }
-            $fileExistedBefore | Should -Be $true
+            Test-Path -Path $script:ConfigPath -PathType Leaf | Should -Be $true
 
             Reset-SEPMConfiguration
 
             # Verify file is gone after reset
-            $fileExistsAfter = InModuleScope PSSymantecSEPM {
-                Test-Path -Path $script:configurationFilePath -PathType Leaf
-            }
-            $fileExistsAfter | Should -Be $false
+            Test-Path -Path $script:ConfigPath -PathType Leaf | Should -Be $false
         }
     }
 }
