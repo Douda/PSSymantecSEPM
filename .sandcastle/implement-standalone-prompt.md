@@ -32,7 +32,7 @@ Implement the requirements from the issue above.
 
 3. **Explore** — read the issue's agent brief carefully. Read the relevant source files and existing tests.
 
-4. **Plan** — decide what to change. Keep the change as small as possible. Present your plan before coding.
+4. **Plan** — decide what to change. Keep the change as small as possible. Briefly state your plan, then proceed immediately. Do NOT ask for approval — this is an autonomous pipeline with no interactive user.
 
 5. **Execute (TDD)**:
    - RED: write ONE failing test that describes expected behavior

@@ -317,7 +317,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
 
       if (hasCommits) {
         console.log(`\nMerging ${branch} into ${prSlice.prBranch}...`);
-        sh(`git branch -f ${prSlice.prBranch} ${branch} 2>&1`);
+        sh(`git update-ref refs/heads/${prSlice.prBranch} ${branch} 2>&1`);
         console.log(`PR branch ${prSlice.prBranch} updated.`);
 
         console.log(`  git push origin ${prSlice.prBranch}`);
@@ -414,7 +414,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
 
       if (hasCommits) {
         console.log(`\nMerging ${branch} into develop...`);
-        sh(`git branch -f develop ${branch} 2>&1`);
+        sh(`git update-ref refs/heads/develop ${branch} 2>&1`);
         console.log("develop updated.");
 
         console.log("  git push origin develop");
