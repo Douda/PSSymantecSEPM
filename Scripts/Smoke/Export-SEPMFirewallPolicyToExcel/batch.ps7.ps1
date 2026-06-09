@@ -1,6 +1,8 @@
 # Smoke verification for Export-SEPMFirewallPolicyToExcel (PS7)
 # Usage: pwsh -NoProfile -File Scripts/Smoke/Export-SEPMFirewallPolicyToExcel/batch.ps7.ps1
 
+[CmdletBinding()]param()
+
 $ErrorActionPreference = "Continue"
 $RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
 . "$RepoRoot/Scripts/Smoke/Common.ps1"

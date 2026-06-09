@@ -1,3 +1,5 @@
+[CmdletBinding()]param()
+
 $ErrorActionPreference = "Continue"
 $RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
 . "$RepoRoot\Common-PS51.ps1"

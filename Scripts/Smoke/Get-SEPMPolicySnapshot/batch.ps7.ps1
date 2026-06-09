@@ -1,6 +1,8 @@
 # Smoke verification for Get-SEPMPolicySnapshot (PS7)
 # Usage: pwsh -NoProfile -File Scripts/Smoke/Get-SEPMPolicySnapshot/batch.ps7.ps1
 
+[CmdletBinding()]param()
+
 $RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
 . "$RepoRoot/Scripts/Smoke/Common.ps1"
 

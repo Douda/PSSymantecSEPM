@@ -2,6 +2,8 @@
 # Deploy to C:\Users\smokeuser\Desktop\Shared\ via BOM-encoded write, then:
 #   python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\smoke-get-sepmfirewallpolicy.ps1'
 
+[CmdletBinding()]param()
+
 $ErrorActionPreference = "Continue"
 $RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
 . "$RepoRoot\Common-PS51.ps1"

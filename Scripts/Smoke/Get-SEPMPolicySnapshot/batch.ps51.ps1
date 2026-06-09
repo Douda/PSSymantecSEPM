@@ -1,6 +1,8 @@
 # Smoke verification for Get-SEPMPolicySnapshot (PS5.1)
 # Usage: python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\smoke-get-sepmPolicySnapshot.ps1'
 
+[CmdletBinding()]param()
+
 $ErrorActionPreference = "Continue"
 $RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
 . "$RepoRoot\Common-PS51.ps1"
