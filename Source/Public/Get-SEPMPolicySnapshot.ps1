@@ -1,19 +1,20 @@
 function Get-SEPMPolicySnapshot {
     <#
     .SYNOPSIS
-        Creates a snapshot of policies, summaries, and location mappings.
+        Get a snapshot of SEPM policies and their location mappings.
     .DESCRIPTION
-        Creates a SEPM.PolicySnapshot PSObject containing full policy objects,
-        policy summaries, and a location-id-to-name map for the specified policy types.
+        Assembles a multi-source policy snapshot into a single PSObject.
+        Fetches full policies, summaries, and location mappings for the
+        specified policy types. Designed for extensibility — adding a
+        new policy type adds a property to the snapshot.
     .PARAMETER PolicyType
         The policy types to include in the snapshot. Valid values: fw, ips, exceptions.
     .PARAMETER DelayMs
         Delay in milliseconds between individual policy fetches. Default: 200.
-        Forwarded to Get-SEPMFirewallPolicy -All.
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMPolicySnapshot -PolicyType fw
 
-        Creates a snapshot containing firewall policies, summaries, and location map.
+        Returns a snapshot with FW policies, FW summaries, and location map.
 #>
 
     [CmdletBinding()]
@@ -29,39 +30,63 @@ function Get-SEPMPolicySnapshot {
     )
 
     begin {
-        $snap = New-Object PSObject
-        $snap.PSObject.TypeNames.Insert(0, 'SEPM.PolicySnapshot')
-
-        # Build LocationMap once — shared across all policy types
-        $locationMap = @{}
-        Get-SEPMGroups | Get-SEPMLocation | ForEach-Object {
-            $locationMap[$_.locationId] = $_.locationName
-        }
+        $snapshot = [PSCustomObject]@{}
+        $snapshot.PSObject.TypeNames.Insert(0, 'SEPM.PolicySnapshot')
     }
 
     process {
-        $snap | Add-Member -MemberType NoteProperty -Name 'FetchedAt' -Value (Get-Date)
-        $snap | Add-Member -MemberType NoteProperty -Name 'LocationMap' -Value $locationMap
-
-        foreach ($type in $PolicyType) {
-            $typeObject = New-Object PSObject
-            $typeUpper = $type.ToUpper()
-
-            switch ($type) {
-                'fw' {
-                    $typeObject | Add-Member -MemberType NoteProperty -Name 'Policies' -Value (Get-SEPMFirewallPolicy -All -DelayMs $DelayMs)
-                    $typeObject | Add-Member -MemberType NoteProperty -Name 'Summary' -Value (Get-SEPMPoliciesSummary -PolicyType fw)
-                }
-                default {
-                    # Future policy types (ips, exceptions) — empty placeholders
-                    $typeObject | Add-Member -MemberType NoteProperty -Name 'Policies' -Value @()
-                    $typeObject | Add-Member -MemberType NoteProperty -Name 'Summary'  -Value @()
-                }
-            }
-
-            $snap | Add-Member -MemberType NoteProperty -Name $typeUpper -Value $typeObject
+        if ('fw' -in $PolicyType) {
+            $fwPolicies = Get-SEPMFirewallPolicy -All -DelayMs $DelayMs
+            $fwSummary  = Get-SEPMPoliciesSummary -PolicyType fw
+            $snapshot | Add-Member -MemberType NoteProperty -Name 'FW' -Value ([PSCustomObject]@{
+                Policies = $fwPolicies
+                Summary  = $fwSummary
+            })
         }
 
-        return $snap
+        # Build location map: locationId → locationName
+        $groups = Get-SEPMGroups
+        $session = Initialize-SEPMSession
+        $locationMap = @{}
+        foreach ($g in $groups) {
+            # Skip groups with non-string IDs (API returns hashtable IDs for some groups).
+            if ($g.id -isnot [string]) { continue }
+            $locUri = $session.BaseURLv1 + '/groups/' + $g.id + '/locations'
+            $qs = @{ hasName = $true }
+            $locUri = Build-SEPMQueryURI -BaseURI $locUri -QueryStrings $qs
+            try {
+                $resp = Invoke-SepmApi -Method GET -Uri $locUri -Session $session
+            } catch {
+                continue
+            }
+            # Normalize response to string array (Invoke-SepmApi returns Object[],
+            # hashtable, or string depending on response shape).
+            if ($resp -is [array] -and $resp -isnot [string]) {
+                $locationStrings = $resp
+            } elseif ($resp -is [string]) {
+                $locationStrings = @($resp)
+            } elseif ($resp -is [hashtable]) {
+                $locationStrings = @()
+                foreach ($key in $resp.Keys) {
+                    if ($key -is [int] -or $key -match '^\d+$') {
+                        $locationStrings += $resp[$key]
+                    }
+                }
+            } else {
+                continue
+            }
+            # Skip error responses.
+            if ($locationStrings.Count -gt 0 -and $locationStrings[0] -match '^Error') { continue }
+            foreach ($location in $locationStrings) {
+                $locationMap[$location.split('/')[-1]] = $location.split(':')[0]
+            }
+        }
+        $snapshot | Add-Member -MemberType NoteProperty -Name 'LocationMap' -Value $locationMap
+
+        $snapshot | Add-Member -MemberType NoteProperty -Name 'FetchedAt' -Value ([DateTime]::Now)
+    }
+
+    end {
+        return $snapshot
     }
 }

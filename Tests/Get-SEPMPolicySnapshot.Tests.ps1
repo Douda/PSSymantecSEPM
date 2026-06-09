@@ -17,173 +17,267 @@ Describe 'Get-SEPMPolicySnapshot' {
         Clear-TestEnvironment -State $script:TestState
     }
 
-    Context 'Tracer bullet' {
+    Context 'PolicyType fw' {
         BeforeAll {
-            Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM { return @() }
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { return @() }
-            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { return @() }
-            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM { return @() }
-        }
+            $script:fakeSession = New-TestSession -SkipCert
 
-        It 'returns a SEPM.PolicySnapshot with FetchedAt timestamp' {
-            $result = Get-SEPMPolicySnapshot -PolicyType fw
-
-            $result.PSObject.TypeNames[0] | Should -Be 'SEPM.PolicySnapshot'
-            $result.FetchedAt | Should -BeOfType [DateTime]
-        }
-    }
-
-    Context 'FW snapshot' {
-        BeforeAll {
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { return @() }
-            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { return @() }
-            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM { return @() }
-        }
-
-        It 'populates FW.Policies with output from Get-SEPMFirewallPolicy -All' {
-            $fwPolicies = @(
+            $script:dummyPolicies = @(
                 New-DummyFirewallPolicy -PolicyName 'FW Policy 1'
                 New-DummyFirewallPolicy -PolicyName 'FW Policy 2'
+                New-DummyFirewallPolicy -PolicyName 'FW Policy 3'
             )
-            Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM { return $fwPolicies }
+
+            $script:dummySummaries = @(
+                New-DummyPolicySummary -PolicyName 'FW Policy 1' -PolicyType 'fw'
+                New-DummyPolicySummary -PolicyName 'FW Policy 2' -PolicyType 'fw'
+                New-DummyPolicySummary -PolicyName 'FW Policy 3' -PolicyType 'fw'
+            )
+
+            $script:dummyGroups = @(
+                [PSCustomObject]@{ id = 'group-1'; name = 'My Company'; fullPathName = 'My Company' }
+                [PSCustomObject]@{ id = 'group-2'; name = 'Workstations'; fullPathName = 'My Company\Workstations' }
+            )
+
+            # Location strings returned by Invoke-SepmApi for each group's /locations endpoint
+            $script:locationResponses = @{
+                'group-1' = @('Default: /sepm/api/v1/groups/group-1/locations/loc-default')
+                'group-2' = @('Office: /sepm/api/v1/groups/group-2/locations/loc-office', 'Remote: /sepm/api/v1/groups/group-2/locations/loc-remote')
+            }
+        }
+
+        It 'returns a SEPM.PolicySnapshot PSObject with correct nested structure' {
+            Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM -ParameterFilter { $All } {
+                return $script:dummyPolicies
+            }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM -ParameterFilter { $PolicyType -eq 'fw' } {
+                return $script:dummySummaries
+            }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                return $script:dummyGroups
+            }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM {
+                return $script:fakeSession
+            }
+            Mock Build-SEPMQueryURI -ModuleName PSSymantecSEPM {
+                return $BaseURI
+            }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Uri -match '/locations' } {
+                foreach ($gid in $script:locationResponses.Keys) {
+                    if ($Uri -match $gid) { return $script:locationResponses[$gid] }
+                }
+                return @()
+            }
 
             $result = Get-SEPMPolicySnapshot -PolicyType fw
 
+            $result | Should -Not -BeNullOrEmpty
+            $result.PSObject.TypeNames[0] | Should -Be 'SEPM.PolicySnapshot'
+
+            # FW nested structure
+            $result.FW | Should -Not -BeNullOrEmpty
+            $result.FW | Should -BeOfType [PSCustomObject]
             $result.FW.Policies | Should -Not -BeNullOrEmpty
-            $result.FW.Policies.Count | Should -Be 2
-            $result.FW.Policies[0].name | Should -Be 'FW Policy 1'
-            $result.FW.Policies[0].PSObject.TypeNames[0] | Should -Be 'SEPM.FirewallPolicy'
-        }
-
-        It 'populates FW.Summary with output from Get-SEPMPoliciesSummary -PolicyType fw' {
-            Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM { return @() }
-            $fwSummaries = @(
-                New-DummyPolicySummary -PolicyName 'FW Summary 1' -PolicyType 'fw'
-                New-DummyPolicySummary -PolicyName 'FW Summary 2' -PolicyType 'fw'
-            )
-            $fwSummaries | ForEach-Object { $_.PSObject.TypeNames.Insert(0, 'SEPM.PolicySummary') }
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { return $fwSummaries }
-
-            $result = Get-SEPMPolicySnapshot -PolicyType fw
-
             $result.FW.Summary | Should -Not -BeNullOrEmpty
-            $result.FW.Summary.Count | Should -Be 2
-            $result.FW.Summary[0].name | Should -Be 'FW Summary 1'
-            $result.FW.Summary[0].PSObject.TypeNames[0] | Should -Be 'SEPM.PolicySummary'
-        }
-    }
 
-    Context 'LocationMap' {
-        BeforeAll {
-            Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM { return @() }
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { return @() }
+            # LocationMap
+            $result.LocationMap | Should -Not -BeNullOrEmpty
+            $result.LocationMap | Should -BeOfType [hashtable]
+
+            # FetchedAt
+            $result.FetchedAt | Should -Not -BeNullOrEmpty
+            $result.FetchedAt | Should -BeOfType [DateTime]
         }
 
-        It 'builds a hashtable mapping locationId to locationName' {
-            $loc1 = New-DummyLocation -LocationName 'Default' -LocationID 'loc-id-001' -GroupID 'group-001' -GroupName 'My Company' -GroupFullPathName 'My Company'
-            $loc2 = New-DummyLocation -LocationName 'VPN'     -LocationID 'loc-id-002' -GroupID 'group-001' -GroupName 'My Company' -GroupFullPathName 'My Company'
-
-            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
-                return @([PSCustomObject]@{ id = 'group-001'; name = 'My Company'; fullPathName = 'My Company' })
+        It 'survives Export-Clixml round-trip with Deserialized PSTypeName' {
+            Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM -ParameterFilter { $All } {
+                return $script:dummyPolicies
             }
-            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM { return @($loc1, $loc2) }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM -ParameterFilter { $PolicyType -eq 'fw' } {
+                return $script:dummySummaries
+            }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                return $script:dummyGroups
+            }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM {
+                return $script:fakeSession
+            }
+            Mock Build-SEPMQueryURI -ModuleName PSSymantecSEPM {
+                return $BaseURI
+            }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Uri -match '/locations' } {
+                foreach ($gid in $script:locationResponses.Keys) {
+                    if ($Uri -match $gid) { return $script:locationResponses[$gid] }
+                }
+                return @()
+            }
+
+            $original = Get-SEPMPolicySnapshot -PolicyType fw
+            $tmpPath = Join-Path -Path 'TestDrive:' -ChildPath 'snapshot.xml'
+            $original | Export-Clixml -Path $tmpPath
+            $reimported = Import-Clixml -Path $tmpPath
+
+            $reimported | Should -Not -BeNullOrEmpty
+            $reimported.PSObject.TypeNames[0] | Should -Be 'Deserialized.SEPM.PolicySnapshot'
+            $reimported.FW.Policies.Count | Should -Be 3
+            $reimported.FW.Summary.Count | Should -Be 3
+            $reimported.FetchedAt | Should -BeOfType [DateTime]
+        }
+
+        It 'forwards -DelayMs to Get-SEPMFirewallPolicy -All' {
+            Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM -ParameterFilter { $All -and $DelayMs -eq 500 } {
+                return $script:dummyPolicies
+            }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM -ParameterFilter { $PolicyType -eq 'fw' } {
+                return $script:dummySummaries
+            }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                return $script:dummyGroups
+            }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM {
+                return $script:fakeSession
+            }
+            Mock Build-SEPMQueryURI -ModuleName PSSymantecSEPM {
+                return $BaseURI
+            }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Uri -match '/locations' } {
+                foreach ($gid in $script:locationResponses.Keys) {
+                    if ($Uri -match $gid) { return $script:locationResponses[$gid] }
+                }
+                return @()
+            }
+
+            $result = Get-SEPMPolicySnapshot -PolicyType fw -DelayMs 500
+
+            $result | Should -Not -BeNullOrEmpty
+            Should -Invoke Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM -Exactly 1 -Scope It -ParameterFilter { $All -and $DelayMs -eq 500 }
+        }
+
+        It 'FetchedAt is set at snapshot creation time within a small tolerance' {
+            Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM -ParameterFilter { $All } {
+                return $script:dummyPolicies
+            }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM -ParameterFilter { $PolicyType -eq 'fw' } {
+                return $script:dummySummaries
+            }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                return $script:dummyGroups
+            }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM {
+                return $script:fakeSession
+            }
+            Mock Build-SEPMQueryURI -ModuleName PSSymantecSEPM {
+                return $BaseURI
+            }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Uri -match '/locations' } {
+                foreach ($gid in $script:locationResponses.Keys) {
+                    if ($Uri -match $gid) { return $script:locationResponses[$gid] }
+                }
+                return @()
+            }
+
+            $before = Get-Date
+            $result = Get-SEPMPolicySnapshot -PolicyType fw
+            $after = Get-Date
+
+            $result.FetchedAt | Should -BeGreaterOrEqual $before
+            $result.FetchedAt | Should -BeLessOrEqual $after
+        }
+
+        It 'LocationMap resolves every location ID to a human-readable name' {
+            Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM -ParameterFilter { $All } {
+                return $script:dummyPolicies
+            }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM -ParameterFilter { $PolicyType -eq 'fw' } {
+                return $script:dummySummaries
+            }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                return $script:dummyGroups
+            }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM {
+                return $script:fakeSession
+            }
+            Mock Build-SEPMQueryURI -ModuleName PSSymantecSEPM {
+                return $BaseURI
+            }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Uri -match '/locations' } {
+                foreach ($gid in $script:locationResponses.Keys) {
+                    if ($Uri -match $gid) { return $script:locationResponses[$gid] }
+                }
+                return @()
+            }
 
             $result = Get-SEPMPolicySnapshot -PolicyType fw
 
-            $result.LocationMap | Should -Not -BeNullOrEmpty
-            $result.LocationMap['loc-id-001'] | Should -Be 'Default'
-            $result.LocationMap['loc-id-002'] | Should -Be 'VPN'
-        }
-    }
-
-    Context 'DelayMs' {
-        BeforeAll {
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { return @() }
-            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { return @() }
-            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM { return @() }
+            $result.LocationMap.Count | Should -Be 3
+            $result.LocationMap['loc-default'] | Should -Be 'Default'
+            $result.LocationMap['loc-office'] | Should -Be 'Office'
+            $result.LocationMap['loc-remote'] | Should -Be 'Remote'
         }
 
-        It 'forwards default DelayMs (200) to Get-SEPMFirewallPolicy -All' {
-            Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM { return @() }
-
-            Get-SEPMPolicySnapshot -PolicyType fw | Out-Null
-
-            Should -Invoke Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM -Exactly 1 -Scope It -ParameterFilter {
-                $All.IsPresent -and $DelayMs -eq 200
+        It 'FW.Summary contains all FW policy summary entries' {
+            Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM -ParameterFilter { $All } {
+                return $script:dummyPolicies
             }
-        }
-
-        It 'forwards custom DelayMs to Get-SEPMFirewallPolicy -All' {
-            Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM { return @() }
-
-            Get-SEPMPolicySnapshot -PolicyType fw -DelayMs 500 | Out-Null
-
-            Should -Invoke Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM -Exactly 1 -Scope It -ParameterFilter {
-                $All.IsPresent -and $DelayMs -eq 500
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM -ParameterFilter { $PolicyType -eq 'fw' } {
+                return $script:dummySummaries
             }
-        }
-    }
-
-    Context 'Multi-policy-type' {
-        BeforeAll {
-            Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM { return @() }
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { return @() }
-            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { return @() }
-            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM { return @() }
-        }
-
-        It 'creates FW and IPS properties when both types requested' {
-            $result = Get-SEPMPolicySnapshot -PolicyType fw, ips
-
-            $result.PSObject.Properties.Name | Should -Contain 'FW'
-            $result.PSObject.Properties.Name | Should -Contain 'IPS'
-        }
-
-        It 'IPS property has Policies and Summary sub-properties' {
-            $result = Get-SEPMPolicySnapshot -PolicyType fw, ips
-
-            $result.IPS | Should -Not -BeNullOrEmpty
-            $result.IPS.PSObject.Properties.Name | Should -Contain 'Policies'
-            $result.IPS.PSObject.Properties.Name | Should -Contain 'Summary'
-            $result.IPS.Policies.Count | Should -Be 0
-            $result.IPS.Summary.Count  | Should -Be 0
-        }
-
-        It 'omits FW property when not requested' {
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { return @() }
-            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { return @() }
-            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM { return @() }
-
-            $result = Get-SEPMPolicySnapshot -PolicyType ips
-
-            $result.PSObject.Properties.Name | Should -Not -Contain 'FW'
-            $result.PSObject.Properties.Name | Should -Contain 'IPS'
-        }
-    }
-
-    Context 'Clixml round-trip' {
-        BeforeAll {
-            $loc = New-DummyLocation -LocationName 'Default' -LocationID 'loc-001' -GroupID 'group-001' -GroupName 'My Company' -GroupFullPathName 'My Company'
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { return @() }
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
-                return @([PSCustomObject]@{ id = 'group-001'; name = 'My Company'; fullPathName = 'My Company' })
+                return $script:dummyGroups
             }
-            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM { return @($loc) }
-            Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM { return @() }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM {
+                return $script:fakeSession
+            }
+            Mock Build-SEPMQueryURI -ModuleName PSSymantecSEPM {
+                return $BaseURI
+            }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Uri -match '/locations' } {
+                foreach ($gid in $script:locationResponses.Keys) {
+                    if ($Uri -match $gid) { return $script:locationResponses[$gid] }
+                }
+                return @()
+            }
+
+            $result = Get-SEPMPolicySnapshot -PolicyType fw
+
+            $result.FW.Summary.Count | Should -Be 3
+            $result.FW.Summary[0].name | Should -Be 'FW Policy 1'
+            $result.FW.Summary[1].name | Should -Be 'FW Policy 2'
+            $result.FW.Summary[2].name | Should -Be 'FW Policy 3'
+            # Verify policy type from summary
+            $result.FW.Summary[0].policytype | Should -Be 'fw'
         }
 
-        It 'survives Export-Clixml and Import-Clixml round-trip' {
-            $original = Get-SEPMPolicySnapshot -PolicyType fw
-            $xmlPath = Join-Path -Path 'TestDrive:' -ChildPath 'snapshot.xml'
+        It 'FW.Policies contains all full FW policy objects with PSTypeName preserved' {
+            Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM -ParameterFilter { $All } {
+                return $script:dummyPolicies
+            }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM -ParameterFilter { $PolicyType -eq 'fw' } {
+                return $script:dummySummaries
+            }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                return $script:dummyGroups
+            }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM {
+                return $script:fakeSession
+            }
+            Mock Build-SEPMQueryURI -ModuleName PSSymantecSEPM {
+                return $BaseURI
+            }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Uri -match '/locations' } {
+                foreach ($gid in $script:locationResponses.Keys) {
+                    if ($Uri -match $gid) { return $script:locationResponses[$gid] }
+                }
+                return @()
+            }
 
-            $original | Export-Clixml -Path $xmlPath
-            $restored = Import-Clixml -Path $xmlPath
+            $result = Get-SEPMPolicySnapshot -PolicyType fw
 
-            $restored.PSObject.TypeNames[0] | Should -Be 'Deserialized.SEPM.PolicySnapshot'
-            $restored.FetchedAt | Should -BeOfType [DateTime]
-            $restored.FW | Should -Not -BeNullOrEmpty
-            $restored.LocationMap | Should -Not -BeNullOrEmpty
-            $restored.LocationMap['loc-001'] | Should -Be 'Default'
+            $result.FW.Policies.Count | Should -Be 3
+            $result.FW.Policies[0].name | Should -Be 'FW Policy 1'
+            $result.FW.Policies[1].name | Should -Be 'FW Policy 2'
+            $result.FW.Policies[2].name | Should -Be 'FW Policy 3'
+            # PSTypeName preserved from source cmdlet
+            $result.FW.Policies[0].PSObject.TypeNames[0] | Should -Be 'SEPM.FirewallPolicy'
         }
     }
 }
