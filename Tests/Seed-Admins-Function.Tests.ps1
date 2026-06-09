@@ -6,12 +6,6 @@ Describe 'Invoke-SeedAdmins' {
         Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
         $script:TestState = Initialize-TestEnvironment
 
-        InModuleScope PSSymantecSEPM {
-            $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
-            $script:credentialsFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
-            $script:accessTokenFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
-        }
-
         $script:SeedScriptPath = Join-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -ChildPath 'Scripts/Seed-Admins.ps1'
     }
 

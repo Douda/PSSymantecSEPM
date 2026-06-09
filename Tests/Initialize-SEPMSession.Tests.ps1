@@ -14,10 +14,6 @@ Describe 'Initialize-SEPMSession' {
     Context 'Session creation' {
         BeforeAll {
             InModuleScope PSSymantecSEPM {
-                $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
-                $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
-                $script:accessTokenFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
-
                 $script:configuration = [PSCustomObject]@{
                     ServerAddress = 'FakeServer01'
                     port          = '1234'
@@ -62,10 +58,6 @@ Describe 'Initialize-SEPMSession' {
     Context 'Session caching' {
         BeforeAll {
             InModuleScope PSSymantecSEPM {
-                $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
-                $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
-                $script:accessTokenFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
-
                 $script:configuration = [PSCustomObject]@{
                     ServerAddress = 'FakeServer01'
                     port          = '1234'
@@ -111,10 +103,6 @@ Describe 'Initialize-SEPMSession' {
     Context 'Token expiry renewal' {
         BeforeAll {
             InModuleScope PSSymantecSEPM {
-                $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
-                $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
-                $script:accessTokenFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
-
                 $script:configuration = [PSCustomObject]@{
                     ServerAddress = 'FakeServer01'
                     port          = '1234'
@@ -178,10 +166,6 @@ Describe 'Initialize-SEPMSession' {
     Context 'Disk-cached token' {
         BeforeAll {
             InModuleScope PSSymantecSEPM {
-                $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
-                $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
-                $script:accessTokenFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
-
                 $script:configuration = [PSCustomObject]@{
                     ServerAddress = 'FakeServer01'
                     port          = '1234'
@@ -226,10 +210,6 @@ Describe 'Initialize-SEPMSession' {
     Context 'Missing configuration' {
         BeforeAll {
             InModuleScope PSSymantecSEPM {
-                $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
-                $script:credentialsFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
-                $script:accessTokenFilePath  = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
-
                 $script:configuration = [PSCustomObject]@{
                     ServerAddress = ''
                     port          = '8446'

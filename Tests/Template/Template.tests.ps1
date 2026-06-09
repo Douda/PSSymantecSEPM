@@ -17,17 +17,12 @@ param()
 
 Describe 'MyPublicCommand' {
     BeforeAll {
-        # Import TestHelpers and initialize the test environment
+        # Import TestHelpers and initialize the test environment.
+        # Initialize-TestEnvironment builds+imports the module, resets state,
+        # and redirects file paths to TestDrive: automatically.
         $testHelpersRoot = Join-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -ChildPath 'TestHelpers'
         Import-Module -Name (Join-Path -Path $testHelpersRoot -ChildPath 'PSSymantecSEPM.TestHelpers.psd1') -Force
         $script:TestState = Initialize-TestEnvironment
-
-        # Override file paths to isolate from real config (TestDrive: is Pester's temp filesystem)
-        InModuleScope PSSymantecSEPM {
-            $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
-            $script:credentialsFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
-            $script:accessTokenFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
-        }
     }
 
     AfterAll {
@@ -55,17 +50,12 @@ Describe 'MyPublicCommand' {
 
 Describe 'MyPrivateFunction' {
     BeforeAll {
-        # Import TestHelpers and initialize the test environment
+        # Import TestHelpers and initialize the test environment.
+        # Initialize-TestEnvironment builds+imports the module, resets state,
+        # and redirects file paths to TestDrive: automatically.
         $testHelpersRoot = Join-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -ChildPath 'TestHelpers'
         Import-Module -Name (Join-Path -Path $testHelpersRoot -ChildPath 'PSSymantecSEPM.TestHelpers.psd1') -Force
         $script:TestState = Initialize-TestEnvironment
-
-        # Override file paths to isolate from real config
-        InModuleScope PSSymantecSEPM {
-            $script:configurationFilePath = Join-Path -Path 'TestDrive:' -ChildPath 'config.json'
-            $script:credentialsFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
-            $script:accessTokenFilePath   = Join-Path -Path 'TestDrive:' -ChildPath 'token.xml'
-        }
     }
 
     AfterAll {
