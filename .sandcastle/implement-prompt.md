@@ -41,14 +41,27 @@ Implement **one vertical slice** from the issue above. This slice is a tracer bu
    - REPEAT: one test → one impl at a time for each remaining behavior
    - REFACTOR: only when all tests are GREEN
 
-6. **Verify** — run the full quality checks before committing:
+6. **Verify (unit)** — run the full quality checks before committing:
    ```
    Build-ModuleLocal
    Invoke-Pester -Path ./Tests -Output Detailed
    ```
    Fix ALL failures — not just those in your slice. Pre-existing test failures inherited from the base branch must be resolved.
 
-7. **Commit** — a single git commit. Use conventional commit format:
+7. **Verify (smoke)** — follow tdd-ps skill step 5 (Live Smoke Test):
+   - **PS7**: deploy module, run `Scripts/Smoke/<CmdletName>/batch.ps7.ps1` locally
+   - **PS5.1**: deploy smoke script with UTF-8 BOM to `/home/douda/Windows/`, run via `python3 Scripts/invoke-winrm.py`
+   - Fix any real-API failures before committing. Smoke catches type mismatches, encoding bugs, and API shape changes that mocks miss.
+   - PS5.1 smoke scripts MUST be written with UTF-8 BOM:
+     ```bash
+     pwsh -NoProfile -Command "
+       \$bom = [System.Text.UTF8Encoding]::new(\$true)
+       \$c = Get-Content ./Scripts/Smoke/<CmdletName>/batch.ps51.ps1 -Raw
+       [System.IO.File]::WriteAllText('/home/douda/Windows/smoke-<cmdlet>.ps1', \$c, \$bom)
+     "
+     ```
+
+8. **Commit** — a single git commit. Use conventional commit format:
    ```
    type(scope): description
 
@@ -56,20 +69,20 @@ Implement **one vertical slice** from the issue above. This slice is a tracer bu
    ```
    Examples: `feat(auth): ...`, `fix(computers): ...`, `refactor(core): ...`
 
-8. **Verify PR is still open** — before updating the checklist, confirm the PR hasn't been merged:
+9. **Verify PR is still open** — before updating the checklist, confirm the PR hasn't been merged:
    ```bash
    gh pr view {{PR_NUMBER}} --json state --jq '.state'
    ```
    If the output is `MERGED`, the PR was closed mid-run. Do NOT update the checklist — instead, warn in the commit message that the PR was merged prematurely and signal COMPLETE.
 
-9. **Update PR checklist** — mark this slice as done in the PR description:
+10. **Update PR checklist** — mark this slice as done in the PR description:
    ```bash
    gh pr view {{PR_NUMBER}} --json body --jq '.body' > /tmp/pr-body.md
    sed -i 's/- \[ \] #{{ISSUE_NUMBER}} /- [x] #{{ISSUE_NUMBER}} /' /tmp/pr-body.md
    gh pr edit {{PR_NUMBER}} --body-file /tmp/pr-body.md
    ```
 
-10. **Do NOT close the issue** and do **NOT push**. All work stays local.
+11. **Do NOT close the issue** and do **NOT push**. All work stays local.
 
 ## Rules
 

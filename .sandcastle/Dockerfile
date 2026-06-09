@@ -6,6 +6,8 @@ RUN apt-get update && apt-get install -y \
   curl \
   jq \
   ripgrep \
+  python3 \
+  python3-pip \
   && rm -rf /var/lib/apt/lists/*
 
 # Install PowerShell 7 via Microsoft package repository
@@ -25,6 +27,9 @@ RUN pwsh -NoProfile -Command "\
   Install-Module -Name ModuleBuilder -Force -Scope AllUsers; \
   Install-Module -Name Configuration -Force -Scope AllUsers; \
   Install-Module -Name PSScriptAnalyzer -Force -Scope AllUsers"
+
+# Python deps for PS5.1 smoke testing (WinRM)
+RUN pip3 install --break-system-packages pywinrm
 
 # Install GitHub CLI
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \

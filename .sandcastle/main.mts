@@ -36,6 +36,12 @@ const hooks = {
 // Copy node_modules from the host into the worktree (harmless for PowerShell projects).
 const copyToWorktree = ["node_modules"];
 
+// Docker sandbox config: host network + shared volume for PS5.1 smoke deployment.
+const dockerSandbox = docker({
+  network: "host",
+  mounts: [{ hostPath: "/home/douda/Windows", sandboxPath: "/home/douda/Windows" }],
+});
+
 // ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
@@ -262,7 +268,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
     const sandbox = await sandcastle.createSandbox({
       branch,
       baseBranch: prSlice.prBranch,
-      sandbox: docker(),
+      sandbox: dockerSandbox,
       hooks,
       copyToWorktree,
     });
@@ -353,7 +359,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
     const sandbox = await sandcastle.createSandbox({
       branch,
       baseBranch: "develop",
-      sandbox: docker(),
+      sandbox: dockerSandbox,
       hooks,
       copyToWorktree,
     });
