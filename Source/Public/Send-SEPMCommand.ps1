@@ -5,12 +5,14 @@ function Send-SEPMCommand {
     .DESCRIPTION
         Sends a command to SEP endpoints through the command queue.
         Supports ActiveScan, FullScan, Quarantine, UpdateContent, GetFile,
-        and ClearIronCache via -ComputerName.
+        and ClearIronCache via -ComputerName or -GroupName.
     .PARAMETER Type
         The type of command to send (ActiveScan, FullScan, Quarantine, UpdateContent,
         GetFile, ClearIronCache).
     .PARAMETER ComputerName
         The name of the computer(s) to send the command to.
+    .PARAMETER GroupName
+        The full path name of the group to send the command to (e.g. "My Company\Workstations").
     .PARAMETER Undo
         When used with -Type Quarantine, unquarantines the endpoint instead of quarantining.
     .PARAMETER FilePath
@@ -33,7 +35,7 @@ function Send-SEPMCommand {
         Send-SEPMCommand -Type ClearIronCache -ComputerName "PC1" -SHA256 <64-char-hash>
     #>
 
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'ComputerName')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateSet('ActiveScan', 'FullScan', 'Quarantine', 'UpdateContent', 'GetFile', 'ClearIronCache')]
@@ -47,6 +49,12 @@ function Send-SEPMCommand {
         )]
         [Alias("Hostname", "DeviceName", "Device", "Computer")]
         [string[]]$ComputerName,
+
+        [Parameter(
+            Mandatory = $true,
+            ParameterSetName = 'GroupName'
+        )]
+        [string]$GroupName,
 
         [Parameter()]
         [switch]$Undo,
@@ -69,6 +77,7 @@ function Send-SEPMCommand {
 
     begin {
         $session = Initialize-SEPMSession
+        $accumulatedComputerNames = @()
 
         $hashParamSpecs = @{
             SHA256 = @{ Length = 64; HashType = 'sha256' }
@@ -96,16 +105,30 @@ function Send-SEPMCommand {
     }
 
     process {
-        $targets = Resolve-SepmCommandTarget -ComputerName $ComputerName
+        if ($PSCmdlet.ParameterSetName -eq 'ComputerName') {
+            $accumulatedComputerNames += $ComputerName
+        }
+    }
 
-        $queryStrings = @{
-            computer_ids = $targets.computer_ids
+    end {
+        if ($PSCmdlet.ParameterSetName -eq 'ComputerName') {
+            $targets = Resolve-SepmCommandTarget -ComputerName $accumulatedComputerNames
+        } else {
+            $targets = Resolve-SepmCommandTarget -GroupName $GroupName
+        }
+
+        $queryStrings = @{}
+        if ($targets.computer_ids.Count -gt 0) {
+            $queryStrings.computer_ids = $targets.computer_ids
+        }
+        if ($targets.group_ids.Count -gt 0) {
+            $queryStrings.group_ids = $targets.group_ids
         }
 
         $commandEntry = $commandRegistry[$Type]
 
         $commonParams = @('ErrorAction', 'WarningAction', 'Verbose', 'Debug', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction')
-        $alwaysValid = @('Type', 'ComputerName') + $commonParams
+        $alwaysValid = @('Type', 'ComputerName', 'GroupName') + $commonParams
         $allowedParamNames = if ($commandEntry.ContainsKey('Params')) { $commandEntry.Params.Keys } else { @() }
         foreach ($boundParam in $PSBoundParameters.Keys) {
             if ($boundParam -in $alwaysValid) { continue }

@@ -97,6 +97,130 @@ Describe 'Send-SEPMCommand' {
         }
     }
 
+    Context 'GroupName dispatch' {
+        BeforeAll {
+            Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
+                return @{ computer_ids = @(); group_ids = @('GROUP-456') }
+            }
+        }
+
+        It 'includes group_ids in query params' {
+            Send-SEPMCommand -Type ActiveScan -GroupName 'My Company\Workstations'
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and $Uri -match '/command-queue/activescan' -and $Uri -match 'group_ids=GROUP-456'
+            }
+        }
+    }
+
+    Context 'pipeline input' {
+        BeforeAll {
+            Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
+                return @{ computer_ids = @('ID-PIPE-A', 'ID-PIPE-B'); group_ids = @() }
+            }
+        }
+
+        It 'accumulates pipeline input and dispatches once' {
+            'PC-A', 'PC-B' | Send-SEPMCommand -Type ActiveScan
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly
+        }
+
+        It 'includes both computer IDs in query params' {
+            'PC-A', 'PC-B' | Send-SEPMCommand -Type ActiveScan
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and $Uri -match '/command-queue/activescan' -and $Uri -match 'ID-PIPE-A' -and $Uri -match 'ID-PIPE-B'
+            }
+        }
+
+        It 'resolves accumulated names via Resolve-SepmCommandTarget' {
+            'X', 'Y' | Send-SEPMCommand -Type FullScan
+
+            Should -Invoke Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $ComputerName.Count -eq 2 -and $ComputerName[0] -eq 'X' -and $ComputerName[1] -eq 'Y'
+            }
+        }
+    }
+
+    Context 'unmatched names' {
+        BeforeAll {
+            Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
+                param($ComputerName)
+                $found = @()
+                $missing = @()
+                $mockComputers = @{
+                    'PC1' = 'ABC123'
+                    'PC2' = 'DEF456'
+                }
+                foreach ($name in $ComputerName) {
+                    if ($mockComputers.ContainsKey($name)) {
+                        $found += $mockComputers[$name]
+                    } else {
+                        $missing += $name
+                    }
+                }
+                if ($missing.Count -gt 0) {
+                    Write-Error "The following names were not found: $($missing -join ', ')"
+                }
+                return @{
+                    computer_ids = $found
+                    group_ids    = @()
+                }
+            }
+        }
+
+        It 'emits non-terminating error for unmatched names while dispatching matched ones' {
+            $result = Send-SEPMCommand -Type ActiveScan -ComputerName 'PC1', 'NonexistentPC' -ErrorAction SilentlyContinue -ErrorVariable sepErrors
+
+            $sepErrors.Count | Should -Be 1
+            $sepErrors[0].Exception.Message | Should -Match 'NonexistentPC'
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and $Uri -match '/command-queue/activescan' -and $Uri -match 'ABC123'
+            }
+        }
+
+        It 'emits non-terminating error listing all unmatched names when none found' {
+            Send-SEPMCommand -Type FullScan -ComputerName 'NonexistentPC', 'GhostPC' -ErrorAction SilentlyContinue -ErrorVariable sepErrors
+
+            $sepErrors.Count | Should -Be 1
+            $sepErrors[0].Exception.Message | Should -Match 'NonexistentPC'
+            $sepErrors[0].Exception.Message | Should -Match 'GhostPC'
+        }
+    }
+
+    Context 'output consistency' {
+        BeforeAll {
+            Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
+                return @{ computer_ids = @('SINGLE-ID'); group_ids = @() }
+            }
+        }
+
+        It 'returns array for single ComputerName result' {
+            $result = Send-SEPMCommand -Type ActiveScan -ComputerName 'PC1'
+            $result | Should -Not -BeNullOrEmpty
+            $result.Count | Should -Be 1
+        }
+
+        It 'returns array for single GroupName result' {
+            Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
+                return @{ computer_ids = @(); group_ids = @('GRP-SINGLE') }
+            }
+
+            $result = Send-SEPMCommand -Type ActiveScan -GroupName 'My Company\Workstations'
+            $result | Should -Not -BeNullOrEmpty
+            $result.Count | Should -Be 1
+        }
+    }
+
+    Context 'parameter set exclusivity' {
+        It 'rejects -ComputerName and -GroupName together' {
+            { Send-SEPMCommand -Type ActiveScan -ComputerName 'PC1' -GroupName 'My Company\Workstations' -ErrorAction Stop } |
+                Should -Throw
+        }
+    }
+
     Context 'runtime validation' {
         It 'rejects -FilePath with -Type ActiveScan' {
             { Send-SEPMCommand -Type ActiveScan -ComputerName 'PC1' -FilePath 'C:\x.exe' -ErrorAction Stop } |

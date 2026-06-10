@@ -62,6 +62,18 @@ $results.I2 = T "I2" "ClearIronCache MD5 with non-existent computer" `
     { Send-SEPMCommand -Type ClearIronCache -ComputerName 'NonExistentPC_Smoke' -MD5 'd41d8cd98f00b204e9800998ecf8427e' } `
     { param($r) $r -ne $null }
 
+$results.GRP1 = T "GRP1" "ActiveScan via GroupName" `
+    { Send-SEPMCommand -Type ActiveScan -GroupName 'My Company\APJ' } `
+    { param($r) $r -ne $null }
+
+$results.GRP2 = T "GRP2" "FullScan via GroupName" `
+    { Send-SEPMCommand -Type FullScan -GroupName 'My Company\APJ' } `
+    { param($r) $r -ne $null }
+
+$results.PIPE1 = T "PIPE1" "ActiveScan multiple computers via pipeline" `
+    { 'WIN-P093KPK2K7Q', 'NonExistentComputer12345' | Send-SEPMCommand -Type ActiveScan } `
+    { param($r) $r -ne $null }
+
 # === Summary ===
 Write-Host "`n========== SUMMARY (PS7) ==========" -ForegroundColor Yellow
 $pass = 0; $fail = 0; $skip = 0
