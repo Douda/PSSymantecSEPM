@@ -1,3 +1,5 @@
+#Requires -Modules ImportExcel
+
 function Export-SEPMFirewallPolicyToExcel {
     <#
     .SYNOPSIS
