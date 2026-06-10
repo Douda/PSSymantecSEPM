@@ -41,7 +41,14 @@ _Avoid_: Exclusion policy, whitelist, allowlist
 A single entry within an Exceptions Policy — a specific file path, folder path,
 file extension, or tamper-protection bypass that tells the scanning engines to
 skip that item.
-_Avoid_: Exception, exclusion, exception entry
+_Avoid_: Exception, exclusion
+
+**Exception Entry**:
+An in-memory hashtable representing an Exception Rule before serialization to the
+SEPM API. Produced by `Build-ExceptionEntry` from a schema-driven factory and
+stored in `SEPMPolicyExceptionsStructure.configuration`. Not a domain concept —
+this is the module's internal wire format.
+_Avoid_: Exception rule, policy entry
 
 **Command**:
 An asynchronous action dispatched through SEPM to one or more Clients. The SEPM
