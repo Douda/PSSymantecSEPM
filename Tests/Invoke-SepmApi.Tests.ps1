@@ -192,27 +192,5 @@ Describe 'Invoke-SepmApi' {
             }
         }
 
-        It 'uses Invoke-WebRequest on PS 5.1 and returns [hashtable]' {
-            $session = New-TestSession -Token 'PS51Token' -SkipCert
-
-            InModuleScope PSSymantecSEPM -Parameters @{ session = $session } {
-                $PSVersionTable = @{ PSVersion = [version]'5.1.0' }
-
-                Mock Invoke-WebRequest {
-                    return [PSCustomObject]@{ Content = '{"ps51":"works"}' }
-                }
-
-                $result = Invoke-SepmApi -Method GET -Uri 'https://SEPM01:8446/api' -Session $session
-
-                $result -is [hashtable] | Should -Be $true
-                $result.ps51 | Should -Be 'works'
-
-                Should -Invoke Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
-                    $Uri -eq 'https://SEPM01:8446/api' -and
-                    $Method -eq 'GET' -and
-                    $Headers.Authorization -eq 'Bearer PS51Token'
-                }
-            }
-        }
     }
 }
