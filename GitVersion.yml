@@ -7,11 +7,11 @@ branches:
   main:
     increment: Minor
   pull-request:
-    tag: rc
+    label: rc
     increment: Patch
   develop:
     mode: ContinuousDeployment
-    tag: beta
+    label: beta
     increment: Patch
 ignore:
   sha: []
