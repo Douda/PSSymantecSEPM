@@ -1,20 +1,27 @@
-# Eliminate InModuleScope; test private functions through public cmdlet interface
+# InModuleScope: test private functions indirectly except when PS-branching or module state forces direct access
 
-Pester 5's guidance is to avoid `InModuleScope` — it prevents proper testing of
-published functions, slows Discovery, and couples tests to module internals.
-We're eliminating it entirely: private functions are tested through the public
-cmdlets that call them, using `-ModuleName` on Mock to intercept module-internal
-calls. Three exceptions retain InModuleScope: `Invoke-SepmApi` (transport layer with
-PS-version branching, certificate-bypass logic, and return-type coercion),
-`Initialize-SEPMSession` (auth bootstrap that manipulates module-scoped state and
-calls `Test-SEPMAccessToken`), and `TestHelpers` (test infrastructure lifecycle —
-`Initialize-TestEnvironment`/`Clear-TestEnvironment` — used for setup and teardown,
-not test assertions).
+Private functions are tested through the public cmdlets that call them, using
+`Mock -ModuleName` to intercept module-internal dependencies. This keeps tests
+focused on public behaviour and avoids coupling to implementation details.
 
-## Considered alternatives
+Two narrow criteria grant an exception — a private function may use InModuleScope
+for direct unit testing when:
 
-- **Move InModuleScope inside It blocks for all private functions.** Rejected — this
-  still couples tests to module internals and contradicts the Pester 5 guidance.
-- **Promote private functions to public to test them directly.** Rejected — most
-  private functions have no standalone value to end users (e.g., `Build-SEPMQueryURI`
-  is an implementation detail of the URL construction).
+1. **PS-version branching** — the function contains `$PSVersionTable.PSVersion.Major`
+   checks that create distinct code paths for PS 5.1 vs PS 7+. Testing both
+   branches through a public cmdlet would require complex mock scaffolding that
+   obscures the actual test intent.
+
+2. **Module-scoped state** — the function reads or writes `$script:` variables
+   that don't exist outside the module. These can't be exercised at all without
+   InModuleScope.
+
+If neither criterion applies, test the function indirectly through its public
+callers. When you need to verify a private function was called or control its
+return value, use `Mock -FunctionName -ModuleName PSSymantecSEPM`.
+
+Functions currently meeting these criteria:
+- `Invoke-SepmApi` — PS-version branching (criteria 1)
+- `Initialize-SEPMSession` — module-scoped state (criteria 2)
+- `ConvertTo-SEPMJson` — PS-version branching (criteria 1)
+- `Optimize-SEPMObject` — PS-version branching (criteria 1)
