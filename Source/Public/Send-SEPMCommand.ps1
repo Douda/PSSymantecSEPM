@@ -70,23 +70,25 @@ function Send-SEPMCommand {
     begin {
         $session = Initialize-SEPMSession
 
+        $hashParamSpecs = @{
+            SHA256 = @{ Length = 64; HashType = 'sha256' }
+            MD5    = @{ Length = 32; HashType = 'md5' }
+            SHA1   = @{ Length = 40; HashType = 'sha1' }
+        }
+
         $commandRegistry = @{
             ActiveScan     = @{ Path = 'activescan' }
             FullScan       = @{ Path = 'fullscan' }
             Quarantine     = @{ Path = 'quarantine'; Params = @{ Undo = @{ Key = 'undo' } } }
             UpdateContent  = @{ Path = 'updatecontent' }
             GetFile        = @{ Path = 'files'; Params = @{
-                FilePath = @{ Key = 'file_path'; Required = $true }
-                SHA256   = @{ Key = 'sha256'; Length = 64 }
-                MD5      = @{ Key = 'md5'; Length = 32 }
-                SHA1     = @{ Key = 'sha1'; Length = 40 }
+                FilePath = @{ Key = 'file_path' }
+                SHA256   = @{ Key = 'sha256' } + $hashParamSpecs.SHA256
+                MD5      = @{ Key = 'md5' } + $hashParamSpecs.MD5
+                SHA1     = @{ Key = 'sha1' } + $hashParamSpecs.SHA1
                 Source   = @{ Key = 'source'; ValidateSet = @('FILESYSTEM', 'QUARANTINE', 'BOTH') }
             }}
-            ClearIronCache  = @{ Path = 'ironcache'; Params = @{
-                SHA256 = @{ Length = 64 }
-                MD5    = @{ Length = 32 }
-                SHA1   = @{ Length = 40 }
-            }; Body = {
+            ClearIronCache  = @{ Path = 'ironcache'; Params = $hashParamSpecs; Body = {
                 param($HashType, $HashValue)
                 @{ hashType = $HashType; data = @($HashValue) }
             }}
@@ -102,7 +104,6 @@ function Send-SEPMCommand {
 
         $commandEntry = $commandRegistry[$Type]
 
-        # Validate: every bound param must be allowed for this command type
         $commonParams = @('ErrorAction', 'WarningAction', 'Verbose', 'Debug', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction')
         $alwaysValid = @('Type', 'ComputerName') + $commonParams
         $allowedParamNames = if ($commandEntry.ContainsKey('Params')) { $commandEntry.Params.Keys } else { @() }
@@ -119,9 +120,7 @@ function Send-SEPMCommand {
             }
         }
 
-        # Serialize params to query strings (for types without Body) or JSON body
         $body = $null
-        $queryParamKeys = @{}
 
         if ($commandEntry.ContainsKey('Params')) {
             foreach ($paramName in $commandEntry.Params.Keys) {
@@ -129,42 +128,34 @@ function Send-SEPMCommand {
                     $paramMeta = $commandEntry.Params[$paramName]
                     $paramValue = $PSBoundParameters[$paramName]
 
-                    # Validate length constraint
                     if ($paramMeta.ContainsKey('Length')) {
                         if ($paramValue.Length -ne $paramMeta.Length) {
                             throw "-$paramName must be exactly $($paramMeta.Length) characters, got $($paramValue.Length)"
                         }
                     }
 
-                    # Validate ValidateSet constraint
                     if ($paramMeta.ContainsKey('ValidateSet')) {
                         if ($paramValue -notin $paramMeta.ValidateSet) {
                             throw "-$paramName must be one of: $($paramMeta.ValidateSet -join ', ')"
                         }
                     }
 
-                    # Route to query params or body
                     if ($paramMeta.ContainsKey('Key')) {
-                        $queryParamKeys[$paramMeta.Key] = $paramValue
+                        $queryStrings[$paramMeta.Key] = $paramValue
                     }
                 }
             }
         }
 
-        # Build body from Body scriptblock (ClearIronCache)
         if ($commandEntry.ContainsKey('Body')) {
-            $hashType = $null
-            $hashValue = $null
-            if ($PSBoundParameters.ContainsKey('SHA256')) { $hashType = 'sha256'; $hashValue = $PSBoundParameters['SHA256'] }
-            elseif ($PSBoundParameters.ContainsKey('MD5')) { $hashType = 'md5'; $hashValue = $PSBoundParameters['MD5'] }
-            elseif ($PSBoundParameters.ContainsKey('SHA1')) { $hashType = 'sha1'; $hashValue = $PSBoundParameters['SHA1'] }
-            $bodyHashtable = & $commandEntry.Body $hashType $hashValue
-            $body = ConvertTo-SEPMJson -InputObject $bodyHashtable -Compress
-        }
-
-        # Merge query params: computer_ids + command-specific params
-        foreach ($key in $queryParamKeys.Keys) {
-            $queryStrings[$key] = $queryParamKeys[$key]
+            foreach ($paramName in $commandEntry.Params.Keys) {
+                if ($PSBoundParameters.ContainsKey($paramName)) {
+                    $hashType = $commandEntry.Params[$paramName].HashType
+                    $hashValue = $PSBoundParameters[$paramName]
+                    $body = ConvertTo-SEPMJson -InputObject (& $commandEntry.Body $hashType $hashValue) -Compress
+                    break
+                }
+            }
         }
 
         $URI = $session.BaseURLv1 + '/command-queue/' + $commandEntry.Path
