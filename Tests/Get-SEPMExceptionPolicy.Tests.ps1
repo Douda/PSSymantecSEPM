@@ -186,8 +186,8 @@ Describe 'Get-SEPMExceptionPolicy' {
 
             $result | Should -Not -BeNullOrEmpty
             $result.Count | Should -Be 3
-            ($result | Where-Object { $_.Platform -eq 'Windows' }).Count | Should -Be 2
-            ($result | Where-Object { $_.Platform -eq 'Mac' }).Count | Should -Be 1
+            @($result | Where-Object { $_.Platform -eq 'Windows' }).Count | Should -Be 2
+            @($result | Where-Object { $_.Platform -eq 'Mac' }).Count | Should -Be 1
             ($result | Where-Object { $_.Platform -eq 'Windows' })[0].path | Should -Be 'C:\Temp\File5.exe'
             ($result | Where-Object { $_.Platform -eq 'Mac' })[0].path | Should -Be '/Applications/test/SONAR'
         }
@@ -197,8 +197,8 @@ Describe 'Get-SEPMExceptionPolicy' {
 
             $result | Should -Not -BeNullOrEmpty
             $result.Count | Should -Be 3
-            ($result | Where-Object { $_.Platform -eq 'Windows' }).Count | Should -Be 2
-            ($result | Where-Object { $_.Platform -eq 'Linux' }).Count | Should -Be 1
+            @($result | Where-Object { $_.Platform -eq 'Windows' }).Count | Should -Be 2
+            @($result | Where-Object { $_.Platform -eq 'Linux' }).Count | Should -Be 1
         }
 
         It 'lists webdomains as flattened objects' {
@@ -213,15 +213,15 @@ Describe 'Get-SEPMExceptionPolicy' {
             $result = Get-SEPMExceptionPolicy -PolicyName 'Test Exceptions' -List extensions
 
             $result | Should -Not -BeNullOrEmpty
-            ($result | Where-Object { $_.Platform -eq 'Windows' }).Count | Should -Be 2
-            ($result | Where-Object { $_.Platform -eq 'Linux' }).Count | Should -Be 1
+            @($result | Where-Object { $_.Platform -eq 'Windows' }).Count | Should -Be 2
+            @($result | Where-Object { $_.Platform -eq 'Linux' }).Count | Should -Be 1
         }
 
         It 'lists tamper files as flattened objects' {
             $result = Get-SEPMExceptionPolicy -PolicyName 'Test Exceptions' -List tamper
 
             $result | Should -Not -BeNullOrEmpty
-            $result.Count | Should -Be 1
+            @($result).Count | Should -Be 1
             $result[0].path | Should -Be 'C:\Program Files\App\app.exe'
         }
     }
