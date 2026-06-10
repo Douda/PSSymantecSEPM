@@ -17,7 +17,7 @@
 
 ## Path Separators
 
-- All `Join-Path -ChildPath` calls must use **forward slashes** (`Tests/Config/Common-Init.ps1`) — backslashes break on Linux.
+- All `Join-Path -ChildPath` calls must use **forward slashes** — backslashes break on Linux.
 - Use `Join-Path` or `[System.IO.Path]::Combine()` — never hardcode `\`.
 
 ## Certificate Handling
@@ -55,8 +55,8 @@ Required on all exported functions. Minimum sections:
 
 - One test file per function under `Tests/`, named `FunctionName.Tests.ps1`
 - Pester `Describe` / `Context` / `It` blocks
-- Test config/bootstrap in `Tests/Config/`
-- `DummyDataGenerator.ps1` provides SEPM API response fixtures
+- Test lifecycle/bootstrap via `Tests/TestHelpers/` module (`Initialize-TestEnvironment`, `Clear-TestEnvironment`, `New-TestSession`)
+- JSON fixtures in `Tests/fixtures/` for SEPM API response data
 - Run: `Invoke-Pester -Path ./Tests -Output Detailed`
 - Run single file: `Invoke-Pester -Path ./Tests/Get-SEPComputers.Tests.ps1 -Output Detailed`
 
@@ -71,7 +71,7 @@ Required on all exported functions. Minimum sections:
 ## Architecture
 
 - **Auth flow**: token → script scope → disk cache → credentials → POST /identity/authenticate
-- **REST layer**: `Invoke-ABRestMethod` branches on PS version for cert handling
+- **REST layer**: `Invoke-SepmApi` branches on PS version for cert handling
 - **Configuration**: `~/.config/PSSymantecSEPM/config.json` + encrypted `creds.xml`
 - **Token cache**: `~/.local/share/PSSymantecSEPM/accessToken.xml` (Export-Clixml)
 - **Pagination**: cmdlets loop `pageIndex`/`pageSize` until `lastPage == true`
