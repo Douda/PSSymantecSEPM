@@ -12,6 +12,12 @@ Describe 'ConvertTo-SEPMJson' {
     }
 
     Context 'PS 7+ path: basic serialization with depth' {
+        BeforeAll {
+            InModuleScope PSSymantecSEPM {
+                Mock Get-PSVersionMajor { return 7 }
+            }
+        }
+
         It 'serializes nested objects at depth > 2 without truncation' {
             InModuleScope PSSymantecSEPM {
                 $input = @{ a = @{ b = @{ c = 1 } } }

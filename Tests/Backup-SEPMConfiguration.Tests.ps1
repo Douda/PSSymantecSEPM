@@ -49,8 +49,8 @@ Describe 'Backup-SEPMConfiguration' {
 
             Test-Path -Path $backupPath -PathType Leaf | Should -Be $true
             $content = Get-Content -Path $backupPath -Raw
-            # Empty config produces empty JSON object
-            $content.Trim() | Should -Be '{}'
+            # Empty config produces empty JSON object (normalize line endings for PS 5.1)
+            $content.Trim() -replace '\s' | Should -Be '{}'
         }
     }
 

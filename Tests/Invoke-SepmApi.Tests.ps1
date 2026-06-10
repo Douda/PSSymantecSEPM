@@ -16,6 +16,8 @@ Describe 'Invoke-SepmApi' {
             $session = New-TestSession -ServerAddress 'SEPM01' -Port '8446' -Token 'TestToken123' -SkipCert
 
             InModuleScope PSSymantecSEPM -Parameters @{ session = $session } {
+                $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
+
                 Mock Invoke-RestMethod {
                     return '{"API_SEQUENCE":"240604011","API_VERSION":"14.3.9000","version":"14.3.25029.9000"}'
                 }
@@ -34,6 +36,8 @@ Describe 'Invoke-SepmApi' {
             $session = New-TestSession -ServerAddress 'SEPM01' -Port '8446' -Token 'AuthHeaderToken'
 
             InModuleScope PSSymantecSEPM -Parameters @{ session = $session } {
+                $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
+
                 Mock Invoke-RestMethod { return '{"ok":true}' }
 
                 Invoke-SepmApi -Method GET -Uri 'https://SEPM01:8446/sepm/api/v1/test' -Session $session | Out-Null
@@ -48,6 +52,8 @@ Describe 'Invoke-SepmApi' {
             $badSession = [PSCustomObject]@{ SkipCert = $false }
 
             InModuleScope PSSymantecSEPM -Parameters @{ badSession = $badSession } {
+                $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
+
                 { Invoke-SepmApi -Method GET -Uri 'https://example.com' -Session $badSession } |
                     Should -Throw -ExpectedMessage '*Headers*'
             }
@@ -57,6 +63,8 @@ Describe 'Invoke-SepmApi' {
             $badSession = [PSCustomObject]@{ Headers = @{ Authorization = 'Bearer x' } }
 
             InModuleScope PSSymantecSEPM -Parameters @{ badSession = $badSession } {
+                $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
+
                 { Invoke-SepmApi -Method GET -Uri 'https://example.com' -Session $badSession } |
                     Should -Throw -ExpectedMessage '*SkipCert*'
             }
@@ -66,6 +74,8 @@ Describe 'Invoke-SepmApi' {
     Context 'Manual parameter set' {
         It 'uses Headers and SkipCert from parameters' {
             InModuleScope PSSymantecSEPM {
+                $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
+
                 Mock Invoke-RestMethod { return '{"manual":"ok"}' }
 
                 $result = Invoke-SepmApi -Method GET -Uri 'https://example.com/api' `
@@ -79,6 +89,8 @@ Describe 'Invoke-SepmApi' {
 
         It 'passes custom headers to Invoke-RestMethod' {
             InModuleScope PSSymantecSEPM {
+                $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
+
                 Mock Invoke-RestMethod { return '{}' }
 
                 Invoke-SepmApi -Method GET -Uri 'https://example.com/api' `
@@ -94,6 +106,8 @@ Describe 'Invoke-SepmApi' {
 
         It 'calls Invoke-RestMethod without -SkipCertificateCheck when SkipCert is $false' {
             InModuleScope PSSymantecSEPM {
+                $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
+
                 Mock Invoke-RestMethod { return '{}' } -ParameterFilter { $SkipCertificateCheck -eq $false -or -not $PSBoundParameters.ContainsKey('SkipCertificateCheck') }
 
                 Invoke-SepmApi -Method GET -Uri 'https://example.com/api' `
@@ -106,6 +120,8 @@ Describe 'Invoke-SepmApi' {
 
         It 'calls Invoke-RestMethod with -SkipCertificateCheck when SkipCert is $true' {
             InModuleScope PSSymantecSEPM {
+                $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
+
                 Mock Invoke-RestMethod { return '{}' }
 
                 Invoke-SepmApi -Method GET -Uri 'https://example.com/api' `
@@ -122,6 +138,8 @@ Describe 'Invoke-SepmApi' {
             $session = New-TestSession -Token 'BodyTestToken'
 
             InModuleScope PSSymantecSEPM -Parameters @{ session = $session } {
+                $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
+
                 Mock Invoke-RestMethod { return '{"posted":true}' }
 
                 $result = Invoke-SepmApi -Method POST -Uri 'https://SEPM01:8446/sepm/api/v1/resource' `
@@ -143,6 +161,8 @@ Describe 'Invoke-SepmApi' {
             $session = New-TestSession -Token 'ReturnTypeToken'
 
             InModuleScope PSSymantecSEPM -Parameters @{ session = $session } {
+                $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
+
                 Mock Invoke-RestMethod { return '{"a":1,"b":2}' }
 
                 $result = Invoke-SepmApi -Method GET -Uri 'https://SEPM01:8446/api' -Session $session
@@ -157,6 +177,8 @@ Describe 'Invoke-SepmApi' {
             $session = New-TestSession -Token 'PSCustomReturnToken'
 
             InModuleScope PSSymantecSEPM -Parameters @{ session = $session } {
+                $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
+
                 Mock Invoke-RestMethod { return [PSCustomObject]@{ x = 10; y = 20 } }
 
                 $result = Invoke-SepmApi -Method GET -Uri 'https://SEPM01:8446/api' -Session $session
