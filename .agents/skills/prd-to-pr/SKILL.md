@@ -44,7 +44,7 @@ gh issue edit <PRD_NUMBER> --body "..."
 
 ### 3. Create the branch with an empty commit
 
-Branch name: `{PRD_NUMBER}-{title-slug}` (lowercase, hyphens, no special chars).
+Branch name: `{PRD_NUMBER}-{short-slug}` where `short-slug` is a 3–5 word summary of the PRD title, lowercased and hyphenated (no special chars). Keep it recognizable, not cryptic. Max ~40 chars for the slug portion.
 
 Create the branch from `dev`, add an empty commit so the PR is immediately creatable, then switch back to `dev`:
 
