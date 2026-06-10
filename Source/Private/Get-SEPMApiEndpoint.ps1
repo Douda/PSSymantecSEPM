@@ -1,3 +1,17 @@
+# The declarative endpoint registry maps each exported cmdlet name to its
+# API contract (version, HTTP method, path). Initialized once at module
+# import. See docs/adr/0008-endpoint-registry.md.
+if (-not $script:_endpointRegistry) {
+    $script:_endpointRegistry = @{
+        'Get-SEPMVersion' = @{
+            OperationName = 'Get-SEPMVersion'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/version'
+        }
+    }
+}
+
 function Get-SEPMApiEndpoint {
     <#
     .SYNOPSIS
@@ -23,15 +37,6 @@ function Get-SEPMApiEndpoint {
         [Parameter(Mandatory = $true)]
         [string]$OperationName
     )
-
-    $script:_endpointRegistry = @{
-        'Get-SEPMVersion' = @{
-            OperationName = 'Get-SEPMVersion'
-            Version       = '1.0'
-            Method        = 'GET'
-            Path          = '/version'
-        }
-    }
 
     if (-not $script:_endpointRegistry.ContainsKey($OperationName)) {
         throw "No endpoint registered for operation '$OperationName'."

@@ -9,9 +9,6 @@ function Invoke-SepmEndpoint {
         Uri, and Session. This is the single entry point all public cmdlets use to reach
         the transport layer.
 
-        Future slices will add pagination dispatch, QueryParams, BodyParams, and {id}
-        path templating here.
-
     .PARAMETER Endpoint
         A hashtable from the endpoint registry with at least Method, Version, and Path.
 
