@@ -64,7 +64,7 @@ Describe 'Restore-SEPMAuthentication' {
         It 'Overwrites existing credential file with restored file' {
             # Stage an old credential file directly on TestDrive
             $parent = Split-Path -Path $script:CredsPath -Parent
-            $null = New-Item -Path $parent -ItemType Directory -Force
+            $null = New-Item -Path $parent -ItemType Directory -Force -ErrorAction SilentlyContinue
             $oldCreds = New-Object System.Management.Automation.PSCredential 'OldUser',
                 (ConvertTo-SecureString -String 'OldPass' -AsPlainText -Force)
             $oldCreds | Export-Clixml -Path $script:CredsPath
