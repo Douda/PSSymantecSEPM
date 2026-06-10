@@ -57,22 +57,13 @@ function Resolve-SepmEndpoint {
     # Resolve query params from registry mapping + caller extras
     $queryParams = @{}
 
-    if ($Endpoint.QueryParams) {
-        # Explicit mapping: API key -> PS param name
-        if ($BoundParameters) {
-            foreach ($apiKey in $Endpoint.QueryParams.Keys) {
-                $paramName = $Endpoint.QueryParams[$apiKey]
-                if ($BoundParameters.ContainsKey($paramName)) {
-                    $queryParams[$apiKey] = $BoundParameters[$paramName]
-                }
-            }
-        }
-        # Same-name fallback: API key matches a bound parameter name
-        if ($BoundParameters) {
-            foreach ($apiKey in $Endpoint.QueryParams.Keys) {
-                if (-not $queryParams.ContainsKey($apiKey) -and $BoundParameters.ContainsKey($apiKey)) {
-                    $queryParams[$apiKey] = $BoundParameters[$apiKey]
-                }
+    if ($Endpoint.QueryParams -and $BoundParameters) {
+        foreach ($apiKey in $Endpoint.QueryParams.Keys) {
+            $paramName = $Endpoint.QueryParams[$apiKey]
+            if ($BoundParameters.ContainsKey($paramName)) {
+                $queryParams[$apiKey] = $BoundParameters[$paramName]
+            } elseif ($BoundParameters.ContainsKey($apiKey)) {
+                $queryParams[$apiKey] = $BoundParameters[$apiKey]
             }
         }
     }

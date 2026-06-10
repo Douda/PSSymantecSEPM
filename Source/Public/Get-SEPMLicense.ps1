@@ -36,9 +36,6 @@ function Get-SEPMLicense {
 
     [CmdletBinding()]
     param (
-        # Skip certificate check
-
-
         # Summary
         [Parameter()]
         [switch]
