@@ -1,10 +1,10 @@
-# Build-ExceptionEntry — schema-driven exception entry constructor.
+# Schema-driven exception entry constructor.
 #
 # Takes a type name, properties hashtable, and schema, and returns a validated
 # Exception Entry hashtable ready for insertion into a SEPMExceptionPolicy.
 #
-# This is a pure function — it does not read module-scoped state. The caller
-# owns the schema and passes it via the -Schema parameter.
+# Pure function — does not read module-scoped state. The caller owns the schema
+# and passes it via the -Schema parameter.
 
 $script:_ExceptionSchema = @{
     Files = @{
@@ -260,6 +260,40 @@ $script:_ExceptionSchema = @{
     }
 }
 
+function Copy-SchemaFields {
+    param([hashtable]$Source, [hashtable]$Target, [hashtable]$FieldDefs)
+
+    foreach ($fieldName in $FieldDefs.Keys) {
+        if ($Source.ContainsKey($fieldName)) {
+            $value = $Source[$fieldName]
+            if ($null -ne $value) {
+                if ($value -is [string]) {
+                    if (-not [string]::IsNullOrEmpty($value)) {
+                        $Target[$fieldName] = $value
+                    }
+                } else {
+                    $Target[$fieldName] = $value
+                }
+            }
+        }
+    }
+}
+
+function Assert-RequiredFields {
+    param([hashtable]$Target, [array]$Required, [string]$Context)
+
+    $missing = @()
+    foreach ($reqField in $Required) {
+        if (-not $Target.ContainsKey($reqField)) {
+            $missing += $reqField
+        }
+    }
+    if ($missing.Count -gt 0) {
+        $missingList = ($missing | ForEach-Object { "'$_'" }) -join ', '
+        throw "Missing required field $missingList for $Context."
+    }
+}
+
 function Build-ExceptionEntry {
     [CmdletBinding()]
     param (
@@ -281,36 +315,18 @@ function Build-ExceptionEntry {
 
     $result = @{}
 
-    # Copy fields from properties based on the schema
-    foreach ($fieldName in $entryDef.Fields.Keys) {
-        if ($Properties.ContainsKey($fieldName)) {
-            $value = $Properties[$fieldName]
-            if ($null -ne $value) {
-                if ($value -is [string]) {
-                    if (-not [string]::IsNullOrEmpty($value)) {
-                        $result[$fieldName] = $value
-                    }
-                } else {
-                    $result[$fieldName] = $value
-                }
-            }
-        }
-    }
+    Copy-SchemaFields -Source $Properties -Target $result -FieldDefs $entryDef.Fields
 
     # Build rulestate
     $defaultRulestate = [PSCustomObject]@{ source = 'PSSymantecSEPM' }
     if ($Properties.ContainsKey('rulestate') -and $null -ne $Properties['rulestate']) {
-        # Full override: caller provides complete rulestate hashtable
         $result['rulestate'] = [PSCustomObject]$Properties['rulestate']
     } elseif ($Properties.ContainsKey('rulestate_enabled') -and $null -ne $Properties['rulestate_enabled']) {
-        # Partial merge: add enabled to default rulestate
-        $merged = [PSCustomObject]@{
+        $result['rulestate'] = [PSCustomObject]@{
             source  = 'PSSymantecSEPM'
             enabled = $Properties['rulestate_enabled']
         }
-        $result['rulestate'] = $merged
     } else {
-        # Default: source only
         $result['rulestate'] = $defaultRulestate
     }
 
@@ -323,37 +339,13 @@ function Build-ExceptionEntry {
     if ($entryDef.ContainsKey('SubObjects') -and $null -ne $entryDef.SubObjects) {
         foreach ($subObjName in $entryDef.SubObjects.Keys) {
             if ($Properties.ContainsKey($subObjName) -and $null -ne $Properties[$subObjName]) {
-                $subProps = $Properties[$subObjName]
                 $subDef = $entryDef.SubObjects[$subObjName]
                 $subResult = @{}
 
-                # Copy sub-object fields
-                foreach ($subFieldName in $subDef.Fields.Keys) {
-                    if ($subProps.ContainsKey($subFieldName)) {
-                        $subValue = $subProps[$subFieldName]
-                        if ($null -ne $subValue) {
-                            if ($subValue -is [string]) {
-                                if (-not [string]::IsNullOrEmpty($subValue)) {
-                                    $subResult[$subFieldName] = $subValue
-                                }
-                            } else {
-                                $subResult[$subFieldName] = $subValue
-                            }
-                        }
-                    }
-                }
+                Copy-SchemaFields -Source $Properties[$subObjName] -Target $subResult -FieldDefs $subDef.Fields
 
-                # Validate required fields in sub-object
-                $subMissing = @()
-                foreach ($subReqField in $subDef.Required) {
-                    if (-not $subResult.ContainsKey($subReqField)) {
-                        $subMissing += $subReqField
-                    }
-                }
-                if ($subMissing.Count -gt 0) {
-                    $subMissingList = ($subMissing | ForEach-Object { "'$_'" }) -join ', '
-                    throw "Missing required field $subMissingList for sub-object '$subObjName' in type '$Type'."
-                }
+                Assert-RequiredFields -Target $subResult -Required $subDef.Required `
+                    -Context "sub-object '$subObjName' in type '$Type'"
 
                 $result[$subObjName] = [PSCustomObject]$subResult
             }
@@ -373,17 +365,8 @@ function Build-ExceptionEntry {
         }
     }
 
-    # Validate required fields are present
-    $missing = @()
-    foreach ($reqField in $entryDef.Required) {
-        if (-not $result.ContainsKey($reqField)) {
-            $missing += $reqField
-        }
-    }
-    if ($missing.Count -gt 0) {
-        $missingList = ($missing | ForEach-Object { "'$_'" }) -join ', '
-        throw "Missing required field $missingList for type '$Type'."
-    }
+    Assert-RequiredFields -Target $result -Required $entryDef.Required `
+        -Context "type '$Type'"
 
     return $result
 }
