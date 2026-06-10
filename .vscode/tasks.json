@@ -23,7 +23,7 @@
             "args": [
                 "-NoProfile",
                 "-Command",
-                "Invoke-Pester '${workspaceFolder}/Tests' -Output Detailed"
+                "Invoke-Pester '${workspaceFolder}/Tests' -Output Normal"
             ],
             "group": {
                 "kind": "test",
@@ -38,7 +38,7 @@
             "args": [
                 "-NoProfile",
                 "-Command",
-                "Invoke-Pester '${file}' -Output Detailed"
+                "Invoke-Pester '${file}' -Output Normal"
             ],
             "group": "test",
             "problemMatcher": []

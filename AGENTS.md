@@ -191,10 +191,10 @@ Import-Module ./Output/PSSymantecSEPM/PSSymantecSEPM.psm1 -Force
 Build-ModuleLocal
 
 # Run tests
-Invoke-Pester -Path ./Tests -Output Detailed
+Invoke-Pester -Path ./Tests -Output Normal
 
 # Run single test file
-Invoke-Pester -Path ./Tests/Get-SEPComputers.Tests.ps1 -Output Detailed
+Invoke-Pester -Path ./Tests/Get-SEPComputers.Tests.ps1 -Output Normal
 
 # Configure & auth against local VM
 Set-SepmConfiguration -ServerAddress "host.docker.internal" -Port 8446
