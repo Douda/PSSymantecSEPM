@@ -4,7 +4,7 @@
 
 .DESCRIPTION
     Reads Source/Seed/Admins.psd1 and creates administrator accounts
-    on the SEPM server via POST to /api/v1/admin-users. Idempotent —
+    on the SEPM server via POST to /api/v1/admin-users. Idempotent --
     skips admins whose loginName already exists.
 
     On -Force: warns that admin deletion is not supported (no DELETE
@@ -45,6 +45,7 @@ function Invoke-SeedAdmins {
     $data = Import-PowerShellDataFile -Path (Join-Path -Path $seedDir -ChildPath 'Admins.psd1') -ErrorAction Stop
 
     $session = $State.Session
+    $baseUrl = $session.BaseURLv1
 
     # Helper: call Invoke-SepmApi through module scope (live) or directly (tests with Mock)
     function _InvokeApi {
@@ -71,13 +72,13 @@ function Invoke-SeedAdmins {
     # State table: loginName -> admin ID
     $adminMap = @{}
 
-    # ── Force reset: warn and skip admin deletion ──
+    # ------ Force reset: warn and skip admin deletion ------
     if ($State.Force) {
         Write-Warning 'Force mode: Administrators cannot be deleted via SEPM REST API (no DELETE endpoint). Skipping admin deletion.'
     }
 
-    # ── Get existing admins (for idempotency check) ──
-    $existingAdmins = _InvokeApi -Method GET -Uri "$($session.BaseURLv1)/admin-users" -Session $session
+    # ------ Get existing admins (for idempotency check) ------
+    $existingAdmins = _InvokeApi -Method GET -Uri "$baseUrl/admin-users" -Session $session
 
     # Build lookup: loginName -> id from existing admins
     $existingLookup = @{}
@@ -91,10 +92,10 @@ function Invoke-SeedAdmins {
         }
     }
 
-    # ── Create each admin (skip existing) ──
+    # ------ Create each admin (skip existing) ------
     foreach ($entry in $data.Admins) {
         if ($existingLookup.ContainsKey($entry.loginName)) {
-            # Already exists — use existing ID
+            # Already exists -- use existing ID
             $adminMap[$entry.loginName] = $existingLookup[$entry.loginName]
             continue
         }
@@ -114,7 +115,7 @@ function Invoke-SeedAdmins {
             notifyAdminOfLockedState = $false
         } | ConvertTo-Json
 
-        $uri = "$($session.BaseURLv1)/admin-users"
+        $uri = "$baseUrl/admin-users"
         $resp = _InvokeApi -Method POST -Uri $uri -Session $session -Body $body
 
         # POST returns the full object with ID

@@ -5,7 +5,7 @@
 .DESCRIPTION
     Reads Source/Seed/HostGroups.psd1 and creates host group policy components
     on the SEPM server via POST to /api/v1/policies/policy-objects/hostgroups.
-    Idempotent — skips host groups whose name already exists.
+    Idempotent -- skips host groups whose name already exists.
 
     On -Force: deletes existing seed host groups by name lookup before recreating.
 
@@ -44,6 +44,7 @@ function Invoke-SeedHostGroups {
     $data = Import-PowerShellDataFile -Path (Join-Path -Path $seedDir -ChildPath 'HostGroups.psd1') -ErrorAction Stop
 
     $session = $State.Session
+    $baseUrl = $session.BaseURLv1
 
     # Helper: call Invoke-SepmApi through module scope (live) or directly (tests with Mock)
     function _InvokeApi {
@@ -69,12 +70,12 @@ function Invoke-SeedHostGroups {
     # State table: host group name -> ID
     $hostGroupMap = @{}
 
-    # ── Force reset: delete existing seed host groups ──
+    # ------ Force reset: delete existing seed host groups ------
     $forceResetNames = [System.Collections.Generic.List[string]]::new()
     if ($State.Force) {
         $seedNames = $data.HostGroups.Name
 
-        $currentResp = _InvokeApi -Method GET -Uri "$($session.BaseURLv1)/policies/policy-objects/hostgroups/summary" -Session $session
+        $currentResp = _InvokeApi -Method GET -Uri "$baseUrl/policies/policy-objects/hostgroups/summary" -Session $session
         $currentContent = if ($currentResp -and $currentResp.ContainsKey('content')) {
             $currentResp.content
         } else {
@@ -85,7 +86,7 @@ function Invoke-SeedHostGroups {
             $existing = $currentContent | Where-Object { $_.name -eq $hgName } | Select-Object -First 1
             if ($existing -and $existing.id) {
                 $null = $forceResetNames.Add($hgName)
-                $delResp = _InvokeApi -Method DELETE -Uri "$($session.BaseURLv1)/policies/policy-objects/hostgroups/$($existing.id)" `
+                $delResp = _InvokeApi -Method DELETE -Uri "$baseUrl/policies/policy-objects/hostgroups/$($existing.id)" `
                     -Session $session
                 if ($delResp -is [string] -and $delResp -like 'Error:*') {
                     Write-Warning "Failed to delete host group '$hgName': $delResp. Will recreate anyway."
@@ -94,8 +95,8 @@ function Invoke-SeedHostGroups {
         }
     }
 
-    # ── Get existing host groups for idempotency check ──
-    $existingResp = _InvokeApi -Method GET -Uri "$($session.BaseURLv1)/policies/policy-objects/hostgroups/summary" -Session $session
+    # ------ Get existing host groups for idempotency check ------
+    $existingResp = _InvokeApi -Method GET -Uri "$baseUrl/policies/policy-objects/hostgroups/summary" -Session $session
     $existingContent = if ($existingResp -and $existingResp.ContainsKey('content')) {
         $existingResp.content
     } else {
@@ -116,7 +117,7 @@ function Invoke-SeedHostGroups {
         $existingLookup.Remove($name)
     }
 
-    # ── Create each host group ──
+    # ------ Create each host group ------
     foreach ($entry in $data.HostGroups) {
         if ($existingLookup.ContainsKey($entry.Name)) {
             $hostGroupMap[$entry.Name] = $existingLookup[$entry.Name]
@@ -128,11 +129,11 @@ function Invoke-SeedHostGroups {
             hosts = $entry.Hosts
         } | ConvertTo-Json -Depth 10 -Compress
 
-        $createUri = "$($session.BaseURLv1)/policies/policy-objects/hostgroups"
+        $createUri = "$baseUrl/policies/policy-objects/hostgroups"
         $null = _InvokeApi -Method POST -Uri $createUri -Session $session -Body $postBody
 
         # GET summary to retrieve server-assigned ID
-        $summaryResp = _InvokeApi -Method GET -Uri "$($session.BaseURLv1)/policies/policy-objects/hostgroups/summary" -Session $session
+        $summaryResp = _InvokeApi -Method GET -Uri "$baseUrl/policies/policy-objects/hostgroups/summary" -Session $session
         $summaryContent = if ($summaryResp -and $summaryResp.ContainsKey('content')) {
             $summaryResp.content
         } else {

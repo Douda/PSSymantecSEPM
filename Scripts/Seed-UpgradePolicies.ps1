@@ -5,7 +5,7 @@
 .DESCRIPTION
     Reads Source/Seed/UpgradePolicies.psd1 and creates Upgrade policies
     on the SEPM server via POST to /api/v1/policies/upgrade followed by
-    PATCH with full configuration. Idempotent — skips policies whose name
+    PATCH with full configuration. Idempotent -- skips policies whose name
     already exists.
 
     On -Force: deletes existing seed policies by name lookup before recreating.
@@ -45,6 +45,7 @@ function Invoke-SeedUpgradePolicies {
     $data = Import-PowerShellDataFile -Path (Join-Path -Path $seedDir -ChildPath 'UpgradePolicies.psd1') -ErrorAction Stop
 
     $session = $State.Session
+    $baseUrl = $session.BaseURLv1
 
     # Helper: call Invoke-SepmApi through module scope (live) or directly (tests with Mock)
     function _InvokeApi {
@@ -70,12 +71,12 @@ function Invoke-SeedUpgradePolicies {
     # State table: policy name -> policy ID
     $policyMap = @{}
 
-    # ── Force reset: delete existing seed policies ──
+    # ------ Force reset: delete existing seed policies ------
     if ($State.Force) {
         $seedNames = $data.Policies.Name
 
         # Get current policies to find IDs
-        $currentPolicies = _InvokeApi -Method GET -Uri "$($session.BaseURLv1)/policies/summary/upgrade" -Session $session
+        $currentPolicies = _InvokeApi -Method GET -Uri "$baseUrl/policies/summary/upgrade" -Session $session
         $currentContent = if ($currentPolicies -and $currentPolicies.ContainsKey('content')) {
             $currentPolicies.content
         } else {
@@ -87,17 +88,17 @@ function Invoke-SeedUpgradePolicies {
             if ($existing -and $existing.id) {
                 # Disable first (required for unassigned deletion)
                 $disableBody = @{ name = $policyName; enabled = $false } | ConvertTo-Json
-                _InvokeApi -Method PATCH -Uri "$($session.BaseURLv1)/policies/upgrade/$($existing.id)" `
+                _InvokeApi -Method PATCH -Uri "$baseUrl/policies/upgrade/$($existing.id)" `
                     -Session $session -Body $disableBody
 
-                _InvokeApi -Method DELETE -Uri "$($session.BaseURLv1)/policies/upgrade/$($existing.id)" `
+                _InvokeApi -Method DELETE -Uri "$baseUrl/policies/upgrade/$($existing.id)" `
                     -Session $session
             }
         }
     }
 
-    # ── Get existing policies for idempotency check ──
-    $existingPolicies = _InvokeApi -Method GET -Uri "$($session.BaseURLv1)/policies/summary/upgrade" -Session $session
+    # ------ Get existing policies for idempotency check ------
+    $existingPolicies = _InvokeApi -Method GET -Uri "$baseUrl/policies/summary/upgrade" -Session $session
     $existingContent = if ($existingPolicies -and $existingPolicies.ContainsKey('content')) {
         $existingPolicies.content
     } else {
@@ -114,7 +115,7 @@ function Invoke-SeedUpgradePolicies {
         }
     }
 
-    # ── Create each policy ──
+    # ------ Create each policy ------
     foreach ($entry in $data.Policies) {
         if ($existingLookup.ContainsKey($entry.Name)) {
             $policyMap[$entry.Name] = $existingLookup[$entry.Name]
@@ -130,11 +131,11 @@ function Invoke-SeedUpgradePolicies {
             configuration = $config
         } | ConvertTo-Json -Depth 10 -Compress
 
-        $createUri = "$($session.BaseURLv1)/policies/upgrade"
+        $createUri = "$baseUrl/policies/upgrade"
         $null = _InvokeApi -Method POST -Uri $createUri -Session $session -Body $postBody
 
         # Step 2: GET summary to retrieve server-assigned ID (POST returns empty body)
-        $summaryResp = _InvokeApi -Method GET -Uri "$($session.BaseURLv1)/policies/summary/upgrade" -Session $session
+        $summaryResp = _InvokeApi -Method GET -Uri "$baseUrl/policies/summary/upgrade" -Session $session
         $summaryContent = if ($summaryResp -and $summaryResp.ContainsKey('content')) {
             $summaryResp.content
         } else {

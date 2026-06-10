@@ -6,7 +6,7 @@
     Reads Source/Seed/Fingerprints.psd1 and creates fingerprint lists
     on the SEPM server via POST to /api/v1/policy-objects/fingerprints.
     Retrieves the Default domain ID at runtime via GET /api/v1/domains.
-    Idempotent — skips fingerprint lists whose name already exists.
+    Idempotent -- skips fingerprint lists whose name already exists.
 
     On -Force: deletes existing seed fingerprint lists by name lookup before recreating.
 
@@ -45,6 +45,7 @@ function Invoke-SeedFingerprints {
     $data = Import-PowerShellDataFile -Path (Join-Path -Path $seedDir -ChildPath 'Fingerprints.psd1') -ErrorAction Stop
 
     $session = $State.Session
+    $baseUrl = $session.BaseURLv1
 
     # Helper: call Invoke-SepmApi through module scope (live) or directly (tests with Mock)
     function _InvokeApi {
@@ -67,23 +68,23 @@ function Invoke-SeedFingerprints {
         }
     }
 
-    # ── Get Default domain ID ──
-    $domainsResp = _InvokeApi -Method GET -Uri "$($session.BaseURLv1)/domains" -Session $session
+    # ------ Get Default domain ID ------
+    $domainsResp = _InvokeApi -Method GET -Uri "$baseUrl/domains" -Session $session
     $defaultDomain = $domainsResp | Where-Object { $_.name -eq 'Default' } | Select-Object -First 1
     $domainId = if ($defaultDomain) { $defaultDomain.id } else { $null }
 
     # State table: fingerprint list name -> ID
     $fingerprintMap = @{}
 
-    # ── Force reset: delete existing seed fingerprint lists ──
+    # ------ Force reset: delete existing seed fingerprint lists ------
     $forceResetNames = [System.Collections.Generic.List[string]]::new()
     if ($State.Force) {
         $seedNames = $data.Fingerprints.Name
         foreach ($fpName in $seedNames) {
-            $existing = _InvokeApi -Method GET -Uri "$($session.BaseURLv1)/policy-objects/fingerprints?name=$([System.Uri]::EscapeDataString($fpName))" -Session $session
+            $existing = _InvokeApi -Method GET -Uri "$baseUrl/policy-objects/fingerprints?name=$([System.Uri]::EscapeDataString($fpName))" -Session $session
             if ($existing -and $existing.id) {
                 $null = $forceResetNames.Add($fpName)
-                $delResp = _InvokeApi -Method DELETE -Uri "$($session.BaseURLv1)/policy-objects/fingerprints/$($existing.id)" -Session $session
+                $delResp = _InvokeApi -Method DELETE -Uri "$baseUrl/policy-objects/fingerprints/$($existing.id)" -Session $session
                 if ($delResp -is [string] -and $delResp -like 'Error:*') {
                     Write-Warning "Failed to delete fingerprint list '$fpName': $delResp. Will recreate anyway."
                 }
@@ -91,10 +92,10 @@ function Invoke-SeedFingerprints {
         }
     }
 
-    # ── Create each fingerprint list ──
+    # ------ Create each fingerprint list ------
     foreach ($entry in $data.Fingerprints) {
         # Check idempotency
-        $existing = _InvokeApi -Method GET -Uri "$($session.BaseURLv1)/policy-objects/fingerprints?name=$([System.Uri]::EscapeDataString($entry.Name))" -Session $session
+        $existing = _InvokeApi -Method GET -Uri "$baseUrl/policy-objects/fingerprints?name=$([System.Uri]::EscapeDataString($entry.Name))" -Session $session
         if ($existing -and $existing.id -and $entry.Name -notin $forceResetNames) {
             $fingerprintMap[$entry.Name] = $existing.id
             continue
@@ -109,7 +110,7 @@ function Invoke-SeedFingerprints {
             data        = $entry.Data
         } | ConvertTo-Json -Depth 10 -Compress
 
-        $createUri = "$($session.BaseURLv1)/policy-objects/fingerprints"
+        $createUri = "$baseUrl/policy-objects/fingerprints"
         $createResp = _InvokeApi -Method POST -Uri $createUri -Session $session -Body $postBody
 
         if ($createResp -and $createResp.id) {

@@ -8,7 +8,7 @@
     *\Servers) and policies by name. Resolves names against the state tables
     populated by prior seed functions (GroupMap, ExceptionPolicyMap, etc.).
 
-    Assignments are idempotent — PUT is upsert by nature.
+    Assignments are idempotent -- PUT is upsert by nature.
 
 .PARAMETER State
     Shared state hashtable from the orchestrator. Must contain at least:
@@ -43,6 +43,7 @@ function Invoke-SeedAssignments {
     $data = Import-PowerShellDataFile -Path (Join-Path -Path $seedDir -ChildPath 'Assignments.psd1') -ErrorAction Stop
 
     $session = $State.Session
+    $baseUrl = $session.BaseURLv1
 
     # Helper: call Invoke-SepmApi through module scope (live) or directly (tests with Mock)
     function _InvokeApi {
@@ -64,7 +65,7 @@ function Invoke-SeedAssignments {
         }
     }
 
-    # Policy type → State map key lookup
+    # Policy type -> State map key lookup
     $policyMapLookup = @{
         exceptions = 'ExceptionPolicyMap'
         mem        = 'MEMPolicyMap'
@@ -88,7 +89,7 @@ function Invoke-SeedAssignments {
                 $_ -ne $parentPath -and $_ -like "$parentPath\*"
             }
             if ($hasChildren) {
-                Write-Verbose "Skipping '$parentPath' — has subgroup children in GroupMap"
+                Write-Verbose "Skipping '$parentPath' -- has subgroup children in GroupMap"
                 return $false
             }
             return $true
@@ -111,7 +112,7 @@ function Invoke-SeedAssignments {
             }
             foreach ($groupPath in $matchingGroups) {
                 $groupId = $State.GroupMap[$groupPath]
-                $uri = "$($session.BaseURLv1)/groups/$groupId/system-lockdown/fingerprints/$fpId"
+                $uri = "$baseUrl/groups/$groupId/system-lockdown/fingerprints/$fpId"
                 $null = _InvokeApi -Method PUT -Uri $uri -Session $session
                 $assignmentCount++
             }
@@ -131,7 +132,7 @@ function Invoke-SeedAssignments {
 
         foreach ($groupPath in $matchingGroups) {
             $groupId = $State.GroupMap[$groupPath]
-            $uri = "$($session.BaseURLv1)/groups/$groupId/locations/default/policies/$policyType"
+            $uri = "$baseUrl/groups/$groupId/locations/default/policies/$policyType"
             $body = @{ id = $policyId } | ConvertTo-Json -Compress
             $null = _InvokeApi -Method PUT -Uri $uri -Session $session -Body $body
             $assignmentCount++

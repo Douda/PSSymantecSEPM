@@ -50,7 +50,7 @@ if ($Force) {
     $State.Force = $true
 }
 
-# ── Dispatch ──
+# ------ Dispatch ------
 
 # Dot-source seed function scripts
 $seedGroupsScript = Join-Path -Path $PSScriptRoot -ChildPath 'Seed-Groups.ps1'

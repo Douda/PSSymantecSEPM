@@ -5,7 +5,7 @@
 .DESCRIPTION
     Reads Source/Seed/Groups.psd1 and creates the full nested group hierarchy
     on the SEPM server. Containers (nodes with children) get inheritance enabled;
-    leaves do not. Idempotent — skips groups that already exist.
+    leaves do not. Idempotent -- skips groups that already exist.
 
 .PARAMETER State
     Shared state hashtable from the orchestrator. Must contain at least:
@@ -53,7 +53,7 @@ function Invoke-SeedGroups {
     # Get all existing groups (for idempotency check)
     $existingGroups = Get-SEPMGroups
 
-    # ── Force reset: delete existing seed groups bottom-up ──
+    # ------ Force reset: delete existing seed groups bottom-up ------
     if ($State.Force) {
         # Collect all seed fullPathNames from the data tree
         function Collect-Paths {
