@@ -53,41 +53,6 @@ function Optimize-SEPMObject {
             return $false
         }
 
-        # Recursively clone a PSObject tree (PS 5.1 path when ConvertTo-Json depth is unreliable).
-        # Skip ScriptProperty, ParameterizedProperty, CodeProperty, Method to avoid circular
-        # references during later JSON serialization.
-        function Clone-PSObjectTree {
-            param([object]$node)
-
-            if ($null -eq $node) { return $null }
-
-            if ($node -is [string] -or $node -is [bool] -or $node -is [int] -or $node -is [long] -or $node -is [double]) {
-                return $node
-            }
-
-            if ($node -is [System.Collections.IList] -and $node -isnot [string]) {
-                $arr = @()
-                foreach ($item in $node) { $arr += Clone-PSObjectTree $item }
-                return $arr
-            }
-
-            if ($node -is [System.Collections.IDictionary]) {
-                $o = New-Object PSObject
-                foreach ($key in $node.Keys) {
-                    $o | Add-Member -NotePropertyName $key -NotePropertyValue (Clone-PSObjectTree $node[$key]) -Force
-                }
-                return $o
-            }
-
-            $safeTypes = @('NoteProperty', 'Property')
-            $o = New-Object PSObject
-            foreach ($prop in $node.PSObject.Properties) {
-                if ($prop.MemberType -in $safeTypes) {
-                    $o | Add-Member -NotePropertyName $prop.Name -NotePropertyValue (Clone-PSObjectTree $prop.Value) -Force
-                }
-            }
-            return $o
-        }
     }
 
     process {
