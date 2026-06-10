@@ -103,8 +103,9 @@ function Invoke-SepmApi {
             try {
                 return $resp | ConvertFrom-Json -AsHashtable -Depth 100 -ErrorAction Stop
             } catch {
-                Write-Warning "ConvertFrom-Json -AsHashtable failed: $_"
-                return $resp
+                # PS 5.1: -AsHashtable not available, parse to PSCustomObject first
+                Write-Verbose "ConvertFrom-Json -AsHashtable unavailable, using ConvertFrom-Json + ConvertTo-Hashtable"
+                $resp = $resp | ConvertFrom-Json
             }
         }
         # Convert to hashtable for uniform return type (handles PSCustomObject, arrays, and scalars)
