@@ -174,7 +174,11 @@ function Get-SEPMExceptionPolicy {
             }
             "webdomains" {
                 $result = $resp.configuration.webdomains | ConvertTo-FlatObject
-                Write-Output $result -NoEnumerate
+                if ($result -is [array]) {
+                    Write-Output $result -NoEnumerate
+                } else {
+                    $result
+                }
             }
             "extensions" {
                 $extensions = @()
@@ -195,7 +199,11 @@ function Get-SEPMExceptionPolicy {
             }
             "tamper" {
                 $result = $resp.configuration.tamper_files | ConvertTo-FlatObject
-                Write-Output $result -NoEnumerate
+                if ($result -is [array]) {
+                    Write-Output $result -NoEnumerate
+                } else {
+                    $result
+                }
             }
             Default { return $resp }
         }
