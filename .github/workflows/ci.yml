@@ -19,6 +19,20 @@ jobs:
         with:
           versionSpec: '6.0.x'
 
+      - name: Run GitVersion (diagnostics)
+        shell: bash
+        run: |
+          echo "=== Git config (showconfig) ==="
+          dotnet-gitversion /showconfig || true
+          echo "=== Git log (last 5 commits) ==="
+          git log --oneline -5
+          echo "=== Git tags ==="
+          git tag -l
+          echo "=== GitVersion diagnostics ==="
+          dotnet-gitversion /diag 2>&1 || true
+          echo "=== GitVersion JSON ==="
+          dotnet-gitversion /output json 2>&1 || true
+
       - name: Run GitVersion
         id: gitversion
         uses: gittools/actions/gitversion/execute@v3
