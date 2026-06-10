@@ -33,25 +33,19 @@ function Send-SEPMCommand {
     begin {
         $session = Initialize-SEPMSession
 
-        $script:CommandRegistry = @{
+        $commandRegistry = @{
             ActiveScan = @{ Path = 'activescan' }
         }
     }
 
     process {
-        $entry = $script:CommandRegistry[$Type]
-
-        # Resolve target computer names to IDs
         $targets = Resolve-SepmCommandTarget -ComputerName $ComputerName
 
-        # Build the URI
-        $URI = $session.BaseURLv1 + "/command-queue/" + $entry.Path
-        $QueryStrings = @{
+        $URI = $session.BaseURLv1 + '/command-queue/' + $commandRegistry[$Type].Path
+        $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings @{
             computer_ids = $targets.computer_ids
         }
-        $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-        # POST to the command queue
         $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session
 
         Write-Output $resp -NoEnumerate

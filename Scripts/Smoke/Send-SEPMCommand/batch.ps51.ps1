@@ -2,41 +2,31 @@
 $RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
 . "$RepoRoot\Common-PS51.ps1"
 
-Write-Host "=== Smoke: Send-SEPMCommand (PS5.1) ==="
+Write-Host "=== Smoke: Send-SEPMCommand (PS5.1) ===" -ForegroundColor Yellow
 
 $results = @{}
 
-function TE51 {
-    param($Id, $Label, [ScriptBlock]$Action)
-    Write-Host "--- $Id : $Label ---" -ForegroundColor Cyan
-    try {
-        $result = & $Action
-        if ($null -eq $result) {
-            Write-Host "  VERDICT: FAIL (null response)" -ForegroundColor Red
-            return "FAIL"
-        }
-        Write-Host "  VERDICT: PASS (API reached)" -ForegroundColor Green
-        return "PASS"
-    } catch {
-        Write-Host "  VERDICT: FAIL (exception: $($_.Exception.Message))" -ForegroundColor Red
-        return "FAIL"
-    }
+$results.A1 = T "A1" "ActiveScan with real computer" `
+    { Send-SEPMCommand -Type ActiveScan -ComputerName 'WIN-P093KPK2K7Q' } `
+    { param($r) $r -ne $null }
+
+$results.A2 = T "A2" "ActiveScan with non-existent computer" `
+    { Send-SEPMCommand -Type ActiveScan -ComputerName 'NonExistentComputer12345' } `
+    { param($r) $r -ne $null }
+
+$results.A3 = T "A3" "ActiveScan via pipeline" `
+    { 'WIN-P093KPK2K7Q' | Send-SEPMCommand -Type ActiveScan } `
+    { param($r) $r -ne $null }
+
+# === Summary ===
+Write-Host "`n========== SUMMARY (PS5.1) ==========" -ForegroundColor Yellow
+$pass = 0; $fail = 0; $skip = 0
+foreach ($k in $results.Keys | Sort-Object) {
+    $v = $results[$k]
+    if ($v -eq "PASS") { $pass++; Write-Host "  $k : PASS" -ForegroundColor Green }
+    elseif ($v -eq "SKIP") { $skip++; Write-Host "  $k : SKIP" -ForegroundColor Yellow }
+    else { $fail++; Write-Host "  $k : FAIL" -ForegroundColor Red }
 }
+Write-Host "TOTAL: $($pass+$fail+$skip) tests, $pass pass, $fail fail, $skip skip" -ForegroundColor Yellow
 
-$results.A1 = TE51 "A1" "ActiveScan with real computer reaches API" `
-    { Send-SEPMCommand -Type ActiveScan -ComputerName 'WIN-P093KPK2K7Q' }
-
-$results.A2 = TE51 "A2" "ActiveScan with non-existent computer reaches API" `
-    { Send-SEPMCommand -Type ActiveScan -ComputerName 'NonExistentComputer12345' }
-
-$results.A3 = TE51 "A3" "ActiveScan via pipeline reaches API" `
-    { 'WIN-P093KPK2K7Q' | Send-SEPMCommand -Type ActiveScan }
-
-$pass = ($results.Values | Where-Object { $_ -eq 'PASS' }).Count
-$fail = ($results.Values | Where-Object { $_ -eq 'FAIL' }).Count
-Write-Host "`n=== Results: $pass PASS, $fail FAIL ===" -ForegroundColor $(if ($fail -gt 0) { 'Red' } else { 'Green' })
-
-if ($fail -gt 0) {
-    Write-Error "Smoke tests failed: $fail failure(s)"
-    exit 1
-}
+if ($fail -gt 0) { exit 1 }

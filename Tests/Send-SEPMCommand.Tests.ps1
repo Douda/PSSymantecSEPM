@@ -5,24 +5,22 @@ Describe 'Send-SEPMCommand' {
     BeforeAll {
         Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
         $script:TestState = Initialize-TestEnvironment
+
+        $script:TestSession = New-TestSession
+        Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:TestSession }
+        Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
+            return @{ computer_ids = @('ABC123'); group_ids = @() }
+        }
+        Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            return @{ command_id = 'CMD-001' }
+        }
     }
 
     AfterAll {
         Clear-TestEnvironment -State $script:TestState
     }
 
-    Context '-Type ActiveScan -ComputerName with single PC' {
-        BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
-                return @{ computer_ids = @('ABC123'); group_ids = @() }
-            }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                return @{ command_id = 'CMD-001' }
-            }
-        }
-
+    Context 'single computer dispatch' {
         It 'POSTs to the correct activescan endpoint with computer_ids' {
             Send-SEPMCommand -Type ActiveScan -ComputerName 'PC1'
 
@@ -30,21 +28,14 @@ Describe 'Send-SEPMCommand' {
                 $Method -eq 'POST' -and $Uri -match '/command-queue/activescan' -and $Uri -match 'computer_ids=ABC123'
             }
         }
-    }
 
-    Context 'returns array via Write-Output -NoEnumerate' {
-        BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
-                return @{ computer_ids = @('ABC123'); group_ids = @() }
-            }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                return @{ command_id = 'CMD-001' }
-            }
+        It 'bootstraps authentication via Initialize-SEPMSession' {
+            Send-SEPMCommand -Type ActiveScan -ComputerName 'PC1'
+
+            Should -Invoke Initialize-SEPMSession -ModuleName PSSymantecSEPM -Times 1 -Exactly
         }
 
-        It 'returns the response without unrolling' {
+        It 'returns the response via Write-Output -NoEnumerate' {
             $result = Send-SEPMCommand -Type ActiveScan -ComputerName 'PC1'
             $result | Should -Not -BeNullOrEmpty
             $result.Count | Should -Be 1
@@ -52,54 +43,10 @@ Describe 'Send-SEPMCommand' {
         }
     }
 
-    Context 'auth bootstrap' {
+    Context 'multiple computer dispatch' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
-                return @{ computer_ids = @('ABC123'); group_ids = @() }
-            }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                return @{ command_id = 'CMD-001' }
-            }
-        }
-
-        It 'calls Initialize-SEPMSession in begin block' {
-            Send-SEPMCommand -Type ActiveScan -ComputerName 'PC1'
-
-            Should -Invoke Initialize-SEPMSession -ModuleName PSSymantecSEPM -Times 1 -Exactly
-        }
-    }
-
-    Context '-Type ValidateSet' {
-        BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
-                return @{ computer_ids = @('ABC123'); group_ids = @() }
-            }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                return @{ command_id = 'CMD-001' }
-            }
-        }
-
-        It 'accepts ActiveScan as a valid -Type value' {
-            { Send-SEPMCommand -Type ActiveScan -ComputerName 'PC1' -ErrorAction Stop } | Should -Not -Throw
-            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
-                $Uri -match '/command-queue/activescan'
-            }
-        }
-    }
-
-    Context '-Type ActiveScan -ComputerName with multiple PCs' {
-        BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
                 return @{ computer_ids = @('ID-001', 'ID-002'); group_ids = @() }
-            }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                return @{ command_id = 'CMD-002' }
             }
         }
 
