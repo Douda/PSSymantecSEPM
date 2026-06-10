@@ -4,7 +4,7 @@ assembly-informational-format: '{NuGetVersionV2}+Build.{env:BUILDCOUNT ?? 0}.Dat
 
 commit-message-incrementing: MergeMessageOnly
 branches:
-  master:
+  main:
     increment: Minor
   pull-request:
     tag: rc
