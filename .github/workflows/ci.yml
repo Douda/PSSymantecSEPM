@@ -117,4 +117,6 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
+          $ProgressPreference = 'SilentlyContinue'
+          Install-Module -Name ImportExcel -Force -Scope CurrentUser -ErrorAction Stop
           Publish-Module -Path ./Output/PSSymantecSEPM/ -NuGetApiKey ${{ secrets.PSGALLERY_API_KEY }} -Force
