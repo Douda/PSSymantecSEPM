@@ -12,15 +12,4 @@ if (Test-Path "$API_PATH\API_KEY_PS_Gallery.xml") {
 
 # Publish Module
 # $MajorMinorPatch = dotnet-gitversion | ConvertFrom-Json | Select-Object -Expand MajorMinorPatch
-# switch ($true) {
-#     { $isLinux } {
-#         $MajorMinorPatch = gitversion | ConvertFrom-Json | Select-Object -ExpandProperty MajorMinorPatch
-#     }
-#     { $isWindows } {
-#         $MajorMinorPatch = dotnet-gitversion | ConvertFrom-Json | Select-Object -ExpandProperty MajorMinorPatch
-#     }
-#     default {
-#         Write-Host "Invalid platform"
-#     }
-# }
 Publish-Module -Path "$ModuleDevPath\Output\PSSymantecSEPM\" -NuGetApiKey $API_KEY -Verbose
