@@ -30,17 +30,16 @@ jobs:
           echo "=== Patched GitVersion.yml ==="
           cat GitVersion.yml
           set +e
-          JSON=$(dotnet-gitversion /output json /config GitVersion.yml 2>&1)
+          JSON=$(dotnet-gitversion /output json /showvariable SemVer 2>/dev/null)
           GITV_EXIT=$?
           set -e
           echo "GitVersion exit code: $GITV_EXIT"
-          echo "GitVersion output: $JSON"
-          SEMVER=$(echo "$JSON" | jq -r '.SemVer // empty')
-          if [ -z "$SEMVER" ]; then
+          echo "SemVer: $JSON"
+          if [ -z "$JSON" ] || [ "$GITV_EXIT" != "0" ]; then
             echo "GitVersion failed, using fallback version 0.12.3"
-            SEMVER="0.12.3"
+            JSON="0.12.3"
           fi
-          echo "SemVer=$SEMVER" >> $GITHUB_OUTPUT
+          echo "SemVer=$JSON" >> $GITHUB_OUTPUT
 
       - name: Build Module
         shell: pwsh
