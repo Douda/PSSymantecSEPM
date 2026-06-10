@@ -1,0 +1,118 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup GitVersion
+        uses: gittools/actions/gitversion/setup@v3
+        with:
+          versionSpec: '6.0.x'
+
+      - name: Run GitVersion
+        id: gitversion
+        shell: bash
+        run: |
+          # Fix GitVersion 6.x config incompatibility: tag -> label
+          sed -i 's/    tag: rc/    label: rc/' GitVersion.yml
+          sed -i 's/    tag: beta/    label: beta/' GitVersion.yml
+          sed -i 's/  master:/  main:/' GitVersion.yml
+          echo "=== Patched GitVersion.yml ==="
+          cat GitVersion.yml
+          set +e
+          JSON=$(dotnet-gitversion /output json /showvariable SemVer 2>/dev/null)
+          GITV_EXIT=$?
+          set -e
+          echo "GitVersion exit code: $GITV_EXIT"
+          echo "SemVer: $JSON"
+          if [ -z "$JSON" ] || [ "$GITV_EXIT" != "0" ]; then
+            echo "GitVersion failed, using fallback version 0.12.3"
+            JSON="0.12.3"
+          fi
+          echo "SemVer=$JSON" >> $GITHUB_OUTPUT
+
+      - name: Build Module
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ProgressPreference = 'SilentlyContinue'
+          Install-Module -Name ModuleBuilder, Configuration -Force -Scope CurrentUser -ErrorAction Stop
+          Build-Module -SourcePath ./Source/PSSymantecSEPM.psd1 -SemVer ${{ steps.gitversion.outputs.SemVer }}
+
+      - name: Upload module artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: module
+          path: ./Output/PSSymantecSEPM/
+
+  test-ps7:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download module artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: module
+          path: ./Output/PSSymantecSEPM/
+
+      - name: Run Pester tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ProgressPreference = 'SilentlyContinue'
+          Install-Module -Name Pester -RequiredVersion 5.7.1 -Force -Scope CurrentUser -ErrorAction Stop
+          Install-Module -Name ImportExcel -Force -Scope CurrentUser -ErrorAction Stop
+          Import-Module ./Output/PSSymantecSEPM/PSSymantecSEPM.psm1 -Force
+          Invoke-Pester -Path ./Tests/ -ExcludePath '*Template*' -CI
+
+  test-ps51:
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download module artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: module
+          path: ./Output/PSSymantecSEPM/
+
+      - name: Run Pester tests
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ProgressPreference = 'SilentlyContinue'
+          Install-Module -Name Pester -RequiredVersion 5.7.1 -Force -Scope CurrentUser -ErrorAction Stop
+          Install-Module -Name ImportExcel -Force -Scope CurrentUser -ErrorAction Stop
+          function global:Get-Credential { throw "Get-Credential invoked in CI - this should not happen" }
+          Import-Module ./Output/PSSymantecSEPM/PSSymantecSEPM.psm1 -Force
+          Invoke-Pester -Path ./Tests/ -ExcludePath '*Template*' -CI
+
+  publish:
+    needs: [test-ps7, test-ps51]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download module artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: module
+          path: ./Output/PSSymantecSEPM/
+
+      - name: Publish to PSGallery
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Publish-Module -Path ./Output/PSSymantecSEPM/ -NuGetApiKey ${{ secrets.PSGALLERY_API_KEY }} -Force
