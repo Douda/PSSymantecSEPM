@@ -10,7 +10,7 @@ function Send-SEPMCommand {
         The type of command to send (ActiveScan, FullScan, Quarantine, UpdateContent,
         GetFile, ClearIronCache).
     .PARAMETER ComputerName
-        The name of the computer(s) to send the command to.
+        The name of the computer(s) to send the command to. Accepts pipeline input.
     .PARAMETER GroupName
         The full path name of the group to send the command to (e.g. "My Company\Workstations").
     .PARAMETER Undo
@@ -33,6 +33,10 @@ function Send-SEPMCommand {
         Send-SEPMCommand -Type GetFile -ComputerName "PC1" -SHA256 <64-char-hash> -FilePath "C:\Temp\malware.exe"
     .EXAMPLE
         Send-SEPMCommand -Type ClearIronCache -ComputerName "PC1" -SHA256 <64-char-hash>
+    .EXAMPLE
+        Send-SEPMCommand -Type ActiveScan -GroupName 'My Company\Workstations'
+    .EXAMPLE
+        'PC1', 'PC2' | Send-SEPMCommand -Type FullScan
     #>
 
     [CmdletBinding(DefaultParameterSetName = 'ComputerName')]
@@ -111,11 +115,13 @@ function Send-SEPMCommand {
     }
 
     end {
+        $resolveParams = @{}
         if ($PSCmdlet.ParameterSetName -eq 'ComputerName') {
-            $targets = Resolve-SepmCommandTarget -ComputerName $accumulatedComputerNames
+            $resolveParams.ComputerName = $accumulatedComputerNames
         } else {
-            $targets = Resolve-SepmCommandTarget -GroupName $GroupName
+            $resolveParams.GroupName = $GroupName
         }
+        $targets = Resolve-SepmCommandTarget @resolveParams
 
         $queryStrings = @{}
         if ($targets.computer_ids.Count -gt 0) {

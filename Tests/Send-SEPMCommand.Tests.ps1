@@ -144,33 +144,12 @@ Describe 'Send-SEPMCommand' {
     }
 
     Context 'unmatched names' {
-        BeforeAll {
-            Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
-                param($ComputerName)
-                $found = @()
-                $missing = @()
-                $mockComputers = @{
-                    'PC1' = 'ABC123'
-                    'PC2' = 'DEF456'
-                }
-                foreach ($name in $ComputerName) {
-                    if ($mockComputers.ContainsKey($name)) {
-                        $found += $mockComputers[$name]
-                    } else {
-                        $missing += $name
-                    }
-                }
-                if ($missing.Count -gt 0) {
-                    Write-Error "The following names were not found: $($missing -join ', ')"
-                }
-                return @{
-                    computer_ids = $found
-                    group_ids    = @()
-                }
-            }
-        }
-
         It 'emits non-terminating error for unmatched names while dispatching matched ones' {
+            Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
+                Write-Error "The following names were not found: NonexistentPC"
+                return @{ computer_ids = @('ABC123'); group_ids = @() }
+            }
+
             $result = Send-SEPMCommand -Type ActiveScan -ComputerName 'PC1', 'NonexistentPC' -ErrorAction SilentlyContinue -ErrorVariable sepErrors
 
             $sepErrors.Count | Should -Be 1
@@ -182,6 +161,11 @@ Describe 'Send-SEPMCommand' {
         }
 
         It 'emits non-terminating error listing all unmatched names when none found' {
+            Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
+                Write-Error "The following names were not found: NonexistentPC, GhostPC"
+                return @{ computer_ids = @(); group_ids = @() }
+            }
+
             Send-SEPMCommand -Type FullScan -ComputerName 'NonexistentPC', 'GhostPC' -ErrorAction SilentlyContinue -ErrorVariable sepErrors
 
             $sepErrors.Count | Should -Be 1

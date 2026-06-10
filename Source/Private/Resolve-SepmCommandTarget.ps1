@@ -29,14 +29,7 @@ function Resolve-SepmCommandTarget {
     )
 
     if ($PSCmdlet.ParameterSetName -eq 'GroupName') {
-        $allGroups = Get-SEPMGroups
-        $group = $null
-        foreach ($g in $allGroups) {
-            if ($g.fullPathName -eq $GroupName) {
-                $group = $g
-                break
-            }
-        }
+        $group = Get-SEPMGroups | Where-Object { $_.fullPathName -eq $GroupName } | Select-Object -First 1
         if (-not $group) {
             Write-Error "Group not found: $GroupName"
             return @{
