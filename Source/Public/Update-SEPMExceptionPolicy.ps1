@@ -207,6 +207,10 @@ function Update-SEPMExceptionPolicy {
 
         # Dispatch hashtable: parameter set name → scriptblock
         $PSBP = $PSBoundParameters
+
+        # Iterate bound scan-type parameters to set booleans and scancategory.
+        # $PSBP.Keys enumerates all bound param names; only scan-type case
+        # labels match, so unrelated params (PolicyName, Path, etc.) fall through.
         $dispatch = @{
             'WindowsFile' = {
                 $props = @{

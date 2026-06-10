@@ -81,7 +81,8 @@ class SEPMPolicyExceptionsStructure {
     ) {
         $entryDef = $script:_ExceptionSchema[$Type]
         if ($null -eq $entryDef) {
-            throw "Unknown exception entry type '$Type'."
+            $validTypes = ($script:_ExceptionSchema.Keys | Sort-Object) -join ', '
+            throw "Unknown exception entry type '$Type'. Valid types: $validTypes"
         }
 
         $configPath = $entryDef.ConfigPath
