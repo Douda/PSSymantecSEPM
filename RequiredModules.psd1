@@ -5,5 +5,5 @@
     Configuration = "1.*"
     Pester        = "5.*"
     PSScriptAnalyzer = "1.*"
-    # ImportExcel = "7.8.*"  # Needed for Export-SEPMExceptionPolicyToExcel
+    ImportExcel = "7.*"      # Needed for Export-SEPMFirewallPolicyToExcel tests
 }
