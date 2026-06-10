@@ -97,9 +97,15 @@ Describe 'Move-SEPClientGroup' {
             $script:errors = @()
             Move-SEPClientGroup -ComputerName 'MyComputer' -GroupName 'My Company\BadGroup' -ErrorAction SilentlyContinue -ErrorVariable script:errors
 
-            # Error is captured; StopUpstreamCommandsException in PS 5.1 may
-            # alter the error record text, so just check count > 0
             @($script:errors).Count | Should -BeGreaterThan 0
+            # PS 5.1 wraps non-terminating errors in StopUpstreamCommandsException;
+            # the real error text is in InnerException.Message
+            $actualMessage = if ($script:errors[0].Exception.InnerException) {
+                $script:errors[0].Exception.InnerException.Message
+            } else {
+                $script:errors[0].Exception.Message
+            }
+            $actualMessage | Should -Match 'Group'
         }
     }
 
