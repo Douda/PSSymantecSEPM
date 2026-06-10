@@ -32,10 +32,10 @@ function Get-SEPClientInfectedStatus {
     process {
         if ($clean) {
             $non_infected = Get-SEPComputers | Where-Object { $_.infected -ne 1 }
-            return $non_infected
+            Write-Output $non_infected -NoEnumerate
         } else {
             $infected = Get-SEPComputers | Where-Object { $_.infected -eq 1 }
-            return $Infected
+            Write-Output $Infected -NoEnumerate
         }
     }
 }
