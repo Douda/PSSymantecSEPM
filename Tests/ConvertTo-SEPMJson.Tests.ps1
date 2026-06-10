@@ -52,7 +52,7 @@ Describe 'ConvertTo-SEPMJson' {
         It 'PS 7+: -AsArray wraps single object in JSON array brackets' {
             InModuleScope PSSymantecSEPM {
                 $input = [PSCustomObject]@{ key = 'value' }
-                $result = ConvertTo-SEPMJson -InputObject $input -Depth 10 -AsArray
+                $result = ConvertTo-SEPMJson -InputObject $input -Depth 10 -AsArray -Compress
 
                 $result | Should -BeExactly '[{"key":"value"}]'
             }
