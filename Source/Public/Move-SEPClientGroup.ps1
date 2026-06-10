@@ -84,7 +84,7 @@ function Move-SEPClientGroup {
             }
         ) 
 
-        $bodyJson = '[' + (($body | ConvertTo-Json) -join ',') + ']'
+        $bodyJson = ConvertTo-SEPMJson -InputObject $body -AsArray
         $resp = Invoke-SepmApi -Method 'PATCH' -Uri $URI -Session $session `
             -Body $bodyJson -ContentType 'application/json'
 
