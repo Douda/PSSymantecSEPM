@@ -80,19 +80,11 @@ Describe 'Send-SEPMCommand' {
     }
 
     Context 'Quarantine dispatch' {
-        It 'POSTs to the correct quarantine endpoint with computer_ids' {
+        It 'POSTs to the correct quarantine endpoint with computer_ids and no undo' {
             Send-SEPMCommand -Type Quarantine -ComputerName 'PC1'
 
             Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
-                $Method -eq 'POST' -and $Uri -match '/command-queue/quarantine' -and $Uri -match 'computer_ids=ABC123'
-            }
-        }
-
-        It 'does not include undo in query params when -Undo is not specified' {
-            Send-SEPMCommand -Type Quarantine -ComputerName 'PC1'
-
-            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
-                $Method -eq 'POST' -and $Uri -notmatch 'undo='
+                $Method -eq 'POST' -and $Uri -match '/command-queue/quarantine' -and $Uri -match 'computer_ids=ABC123' -and $Uri -notmatch 'undo='
             }
         }
 

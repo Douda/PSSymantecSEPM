@@ -4,7 +4,6 @@ function Send-SEPMCommand {
         Sends a command to SEP endpoints through the command queue.
     .DESCRIPTION
         Sends a command to SEP endpoints through the command queue.
-        Uses a registry-driven dispatch to select the target endpoint based on -Type.
         Supports ActiveScan, FullScan, Quarantine, and UpdateContent via -ComputerName.
     .PARAMETER Type
         The type of command to send (ActiveScan, FullScan, Quarantine, UpdateContent).
@@ -55,16 +54,16 @@ function Send-SEPMCommand {
             computer_ids = $targets.computer_ids
         }
 
-        $entry = $commandRegistry[$Type]
-        if ($entry.ContainsKey('Params')) {
-            foreach ($paramName in $entry.Params.Keys) {
+        $commandEntry = $commandRegistry[$Type]
+        if ($commandEntry.ContainsKey('Params')) {
+            foreach ($paramName in $commandEntry.Params.Keys) {
                 if ($PSBoundParameters.ContainsKey($paramName)) {
-                    $queryStrings[$entry.Params[$paramName]] = $PSBoundParameters[$paramName]
+                    $queryStrings[$commandEntry.Params[$paramName]] = $PSBoundParameters[$paramName]
                 }
             }
         }
 
-        $URI = $session.BaseURLv1 + '/command-queue/' + $entry.Path
+        $URI = $session.BaseURLv1 + '/command-queue/' + $commandEntry.Path
         $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $queryStrings
 
         $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session
