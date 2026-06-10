@@ -117,7 +117,7 @@ function Optimize-SEPMObject {
             }
 
             if ($strip) {
-                $obj = $obj | Select-Object -ExcludeProperty $property
+                $null = $obj.PSObject.Properties.Remove($property)
             }
         }
 
@@ -146,13 +146,13 @@ function Optimize-SEPMObject {
                 }
 
                 if ($stripConfig) {
-                    $obj.configuration = $obj.configuration | Select-Object -ExcludeProperty $property
+                    $null = $obj.configuration.PSObject.Properties.Remove($property)
                 }
             }
 
             # After cleaning sub-properties, if configuration is now empty, strip it too
             if (($obj.configuration | Get-Member -MemberType NoteProperty).Count -eq 0) {
-                $obj = $obj | Select-Object -ExcludeProperty 'configuration'
+                $null = $obj.PSObject.Properties.Remove('configuration')
             }
         }
 
