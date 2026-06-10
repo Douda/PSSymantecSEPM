@@ -12,8 +12,6 @@ function Move-SEPClientGroup {
         Specifies the group full path name for which you want to get the information
         Full path name is the group name with the parent groups separated by backslash
         "My Company\EMEA\Workstations"
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         Move-SEPClientGroup -ComputerName "MyComputer" -GroupName "My Company\EMEA\Workstations"
 
@@ -31,9 +29,7 @@ function Move-SEPClientGroup {
     [CmdletBinding()]
     param (
         # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck,
+
 
         # ComputerName
         [Parameter(
@@ -55,38 +51,30 @@ function Move-SEPClientGroup {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/computers"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/computers"
+
         # Get all groups from SEPM
         $allGroups = Get-SEPMGroups
     }
 
     process {
         # Get the computer hardwareID
-        $hardwareKey = Get-SEPComputers -ComputerName $ComputerName | Select-Object -ExpandProperty hardwareKey
+        $computer = Get-SEPComputers -ComputerName $ComputerName | Select-Object -First 1
+        $hardwareKey = if ($computer) { $computer.hardwareKey } else { $null }
         if ([string]::IsNullOrEmpty($hardwareKey)) {
             $message = "HardwareKey of computer $ComputerName not found. Please check the computer name and try again."
-            Write-Error $message
+            Write-Error $message -ErrorAction Continue
             return
         }
 
         # Get the group ID of the destination group
-        $groupID = $allGroups | Where-Object { $_.fullPathName -eq $GroupName } | Select-Object -ExpandProperty id
+        $group = $allGroups | Where-Object { $_.fullPathName -eq $GroupName } | Select-Object -First 1
+        $groupID = if ($group) { $group.id } else { $null }
         if ([string]::IsNullOrEmpty($groupID)) {
             $message = "Group $GroupName not found. Please check the group name and try again."
             $message += "Following group format is expected: 'My Company\group\subgroup'"
-            Write-Error $message
+            Write-Error $message -ErrorAction Continue
             return
         }
 
@@ -100,21 +88,9 @@ function Move-SEPClientGroup {
             }
         ) 
 
-        # prepare the parameters
-        $params = @{
-            Method      = 'PATCH'
-            Uri         = $URI
-            headers     = $headers
-            contenttype = 'application/json'
-            body        = $body | ForEach-Object { ConvertTo-Json @( $_ ) } # This way converts to JSON as array
-        }
-    
-        # Invoke the request
-        try {
-            $resp = Invoke-ABRestMethod -params $params
-        } catch {
-            Write-Warning -Message "Error: $_"
-        }
+        $bodyJson = ConvertTo-SEPMJson -InputObject $body -AsArray
+        $resp = Invoke-SepmApi -Method 'PATCH' -Uri $URI -Session $session `
+            -Body $bodyJson -ContentType 'application/json'
 
         $fullResponse = [PSCustomObject]@{
             computerName        = $ComputerName

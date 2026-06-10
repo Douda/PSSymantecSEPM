@@ -4,8 +4,6 @@ function Get-SEPMLicense {
         Get SEP License Info
     .DESCRIPTION
         Get SEP License Info
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .PARAMETER Summary
         Get the summary of the license information
     .EXAMPLE
@@ -39,9 +37,7 @@ function Get-SEPMLicense {
     [CmdletBinding()]
     param (
         # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck,
+
 
         # Summary
         [Parameter()]
@@ -50,43 +46,19 @@ function Get-SEPMLicense {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/licenses"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/licenses"
+
     }
 
     process {
         #If the -Summary switch is used, then we will only return the summary of the license information
         if ($Summary) {
-            $URI = $script:BaseURLv1 + "/licenses/summary"
+            $URI = $session.BaseURLv1 + "/licenses/summary"
         }
 
-        # prepare the parameters
-        $params = @{
-            Method  = 'GET'
-            Uri     = $URI
-            headers = $headers
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
-        # Add a PSTypeName to the object
-        if ($Summary) {
-            $resp.PSObject.TypeNames.Insert(0, 'SEPM.LicenseSummaryInfo')
-        } else {
-            $resp.PSObject.TypeNames.Insert(0, 'SEPM.LicenseInfo')
-        }
-        
         return $resp
     }
 }

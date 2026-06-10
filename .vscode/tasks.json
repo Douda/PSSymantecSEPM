@@ -1,0 +1,58 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Module",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-NoProfile",
+                "-Command",
+                "Build-Module -SourcePath '${workspaceFolder}/Source/PSSymantecSEPM.psd1' -SemVer 0.0.1 -OutputDirectory '${workspaceFolder}/Output'; Write-Host 'Build complete'"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run All Tests",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-NoProfile",
+                "-Command",
+                "Invoke-Pester '${workspaceFolder}/Tests' -Output Normal"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Tests (Current File)",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-NoProfile",
+                "-Command",
+                "Invoke-Pester '${file}' -Output Normal"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "Static Analysis (PSScriptAnalyzer)",
+            "type": "shell",
+            "command": "pwsh",
+            "args": [
+                "-NoProfile",
+                "-Command",
+                "Invoke-ScriptAnalyzer -Path '${workspaceFolder}/Source' -Recurse -Severity @('Error', 'Warning')"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

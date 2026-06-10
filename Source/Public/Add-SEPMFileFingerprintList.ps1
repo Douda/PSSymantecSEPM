@@ -17,8 +17,6 @@ function Add-SEPMFileFingerprintList {
     .PARAMETER hashlist
         The hash list to add to the blacklist
         Can be generated using Get-FileHash or takes a string array of hashes
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         $DomainId = Get-SEPMDomain | Where-Object { $_.name -eq "Default" }
         $HashList = ls -file C:\Users\$env:USERNAME\Downloads\*.exe | Get-FileHash -algorithm SHA256
@@ -45,31 +43,16 @@ function Add-SEPMFileFingerprintList {
         [string]$description,
 
         [Parameter()]
-        $hashlist,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $hashlist
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+
     }
 
     process {
-        $URI = $script:BaseURLv1 + "/policy-objects/fingerprints"
+        $URI = $session.BaseURLv1 + "/policy-objects/fingerprints"
 
         # Construct the body & required fields
         $body = @{
@@ -80,15 +63,8 @@ function Add-SEPMFileFingerprintList {
             data        = $hashlist
         }
 
-        $params = @{
-            Method      = 'POST'
-            Uri         = $URI
-            headers     = $headers
-            Body        = $body | ConvertTo-Json
-            ContentType = 'application/json'
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session `
+            -Body (ConvertTo-SEPMJson -InputObject $body) -ContentType 'application/json'
         return $resp
     }
 }

@@ -1,51 +1,40 @@
 [CmdletBinding()]
 param()
 
-# Build & Load the module
-$moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-. (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-Init.ps1')
+Describe 'Set-SEPMAuthentication' {
+    BeforeAll {
+        Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
+        $script:TestState = Initialize-TestEnvironment
+    }
 
-Describe 'Get-SEPComputers' {
-    InModuleScope PSSymantecSEPM { 
-        BeforeAll {
-            # This is common test code setup logic for all Pester test files
-            $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-BeforeAll.ps1')
+    AfterAll {
+        Clear-TestEnvironment -State $script:TestState
+    }
 
-            # Load Pester test environment setup
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-TestEnvironmentSetup.ps1')
+    It 'saves credential to disk' {
+        $credsPath = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
+        $dummyCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList 'FakeDummyUser',
+            (ConvertTo-SecureString -String 'FakeDummyPassword' -AsPlainText -Force)
 
-            # Load the dummy data generator functions
-            # . (Join-Path -Path $moduleRootPath -ChildPath 'Tests/DummyDataGenerator.ps1')
+        Set-SEPMAuthentication -Credentials $dummyCreds
 
-            # Mock Get-Credential to return dummy credentials
-            Mock Get-Credential { 
-                $creds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList 'FakeDummyUser', 
-                    (ConvertTo-SecureString -String 'FakeDummyPassword' -AsPlainText -Force)
-                return $creds
-            }
-            
-        }
+        $savedCreds = Import-Clixml -Path $credsPath
+        $savedCreds | Should -BeOfType [System.Management.Automation.PSCredential]
+        $savedCreds.UserName | Should -Be 'FakeDummyUser'
+    }
 
-        AfterAll {
-            # This is common test code teardown logic for all Pester test files
-            $moduleRootPath = Split-Path -Path $PSScriptRoot -Parent
-            . (Join-Path -Path $moduleRootPath -ChildPath 'Tests\Config\Common-AfterAll.ps1')
-        }
+    It 'overwrites previously saved credential on disk' {
+        $credsPath = Join-Path -Path 'TestDrive:' -ChildPath 'creds.xml'
 
-        It 'Should have credential loaded in memory' {
-            Set-SEPMAuthentication -Credentials (Get-Credential)
-            $script:Credential | Should -Not -BeNullOrEmpty
-            $script:Credential.UserName | Should -Be 'FakeDummyUser'
-            $script:Credential | Should -BeOfType [System.Management.Automation.PSCredential]
-        }
+        $creds1 = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList 'UserOne',
+            (ConvertTo-SecureString -String 'PassOne' -AsPlainText -Force)
+        Set-SEPMAuthentication -Credentials $creds1
 
-        It 'Should have credential saved to disk' {
-            Set-SEPMAuthentication -Credentials (Get-Credential)
-            $TestCreds = Import-Clixml -Path $script:credentialsFilePath
-            $TestCreds | Should -BeOfType [System.Management.Automation.PSCredential]
-            $TestCreds.UserName | Should -Be 'FakeDummyUser'
-        }
+        $creds2 = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList 'UserTwo',
+            (ConvertTo-SecureString -String 'PassTwo' -AsPlainText -Force)
+        Set-SEPMAuthentication -Credentials $creds2
+
+        $savedCreds = Import-Clixml -Path $credsPath
+        $savedCreds.UserName | Should -Be 'UserTwo'
     }
 }
-

@@ -7,9 +7,7 @@ function Get-SEPFileDetails {
     .PARAMETER FileID
         The ID of the file to get the details of
         Is a required parameter
-        Can be found in the command ID of the response from Send-SEPMCommandGetFile
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
+        Can be found in the command ID of the response from Send-SEPMCommand -Type GetFile
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPFileDetails -FileID 12345678901234567890123456789
 
@@ -22,28 +20,13 @@ function Get-SEPFileDetails {
     param (
         [Parameter()]
         [string]
-        $FileID,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $FileID
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/command-queue/file/$FileID/details"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/command-queue/file/$FileID/details"
+
     }
 
     process {
@@ -55,13 +38,7 @@ function Get-SEPFileDetails {
         # Construct the URI
         $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-        $params = @{
-            Method  = 'GET'
-            Uri     = $URI
-            headers = $headers
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
         return $resp
     }
 }

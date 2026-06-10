@@ -8,8 +8,6 @@ function Get-SEPMFileFingerprintList {
         The name of the file fingerprint list
     .PARAMETER FingerprintListID
         The ID of the file fingerprint list
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMFileFingerprintList -FingerprintListName "Fingerprint list for workstations"
 
@@ -49,34 +47,19 @@ function Get-SEPMFileFingerprintList {
             ValueFromPipelineByPropertyName = $true
         )]
         [string]
-        $FingerprintListID,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $FingerprintListID
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
+        $session = Initialize-SEPMSession
         
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+
     }
 
     process {
 
         if ($FingerprintListName) {
-            $URI = $script:BaseURLv1 + "/policy-objects/fingerprints"
+            $URI = $session.BaseURLv1 + "/policy-objects/fingerprints"
             # URI query strings
             $QueryStrings = @{
                 name = $FingerprintListName
@@ -85,26 +68,13 @@ function Get-SEPMFileFingerprintList {
             # Construct the URI
             $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-            $params = @{
-                Method  = 'GET'
-                Uri     = $URI
-                headers = $headers
-            }
-    
-            $resp = Invoke-ABRestMethod -params $params
+            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
         }
 
         if ($FingerprintListID) {
-            $URI = $script:BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"
-            
-            # prepare the parameters
-            $params = @{
-                Method  = 'GET'
-                Uri     = $URI
-                headers = $headers
-            }
-    
-            $resp = Invoke-ABRestMethod -params $params
+            $URI = $session.BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"
+
+            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
         }
         
         # return the response

@@ -32,7 +32,7 @@ function Backup-SEPMAuthentication {
     )
 
     # Make sure that the path that we're going to be storing the file exists.
-    $null = New-Item -Path (Split-Path -Path $Path -Parent) -ItemType Directory -Force
+    $null = New-Item -Path (Split-Path -Path $Path -Parent) -ItemType Directory -Force -ErrorAction SilentlyContinue
 
     if ($Credentials) {
         if (Test-Path -Path $script:credentialsFilePath -PathType Leaf) {

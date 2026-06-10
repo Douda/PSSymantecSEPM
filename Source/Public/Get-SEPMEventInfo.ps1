@@ -5,8 +5,6 @@ function Get-SEPMEventInfo {
     .DESCRIPTION
         Gets the information about the computers in a specified domain. 
         A system administrator account is required for this REST API.
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> $SEPMEvents = Get-SEPMEventInfo
 
@@ -26,44 +24,22 @@ function Get-SEPMEventInfo {
 #>
 
     [CmdletBinding()]
-    param (
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
-    )
+    param()
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/events/critical"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/events/critical"
+
     }
 
     process {
-        # prepare the parameters
-        $params = @{
-            Method  = 'GET'
-            Uri     = $URI
-            headers = $headers
-        }
-
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
         # Add a PSTypeName to the object
         $resp.criticalEventsInfoList | ForEach-Object {
             $_.PSObject.TypeNames.Insert(0, 'SEPM.EventInfo')
         }
 
-        return $resp.criticalEventsInfoList
+        Write-Output $resp.criticalEventsInfoList -NoEnumerate
     }
 }

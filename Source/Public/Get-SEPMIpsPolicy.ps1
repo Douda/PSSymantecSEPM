@@ -19,8 +19,6 @@ function Get-SEPMIpsPolicy {
     .PARAMETER PolicyName
         The name of the policy to get the details of
         Is a required parameter
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMIpsPolicy -PolicyName "Intrusion Prevention policy PRODUCTION"
 
@@ -44,36 +42,22 @@ function Get-SEPMIpsPolicy {
         )]
         [Alias("Policy_Name")]
         [String]
-        $PolicyName,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $PolicyName
     )
 
     begin {
-                # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/policies/ips"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+                $URI = $session.BaseURLv1 + "/policies/ips"
+
         # Stores the policy summary for all policies only once
         $policies = Get-SEPMPoliciesSummary
     }
 
     process {
         # Get Policy ID from policy name
-        $policyID = $policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -ExpandProperty id
-        $policy_type = $policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -ExpandProperty policytype
+        $policy = $policies | Where-Object { $_.name -eq $PolicyName }
+        $policyID = $policy.id
+        $policy_type = $policy.policytype
 
         if ($policy_type -ne "ips") {
             $message = "policy type is not of type IPS or does not exist - Please verify the policy name"
@@ -84,15 +68,7 @@ function Get-SEPMIpsPolicy {
         # Updating URI with policy ID
         $URI = $URI + "/" + $policyID
         
-        # prepare the parameters
-        $params = @{
-            Method          = 'GET'
-            Uri             = $URI
-            headers         = $headers
-            UseBasicParsing = $true
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
         return $resp
     }
 }

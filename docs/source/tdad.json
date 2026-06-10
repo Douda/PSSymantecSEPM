@@ -1,0 +1,248 @@
+{
+  "basePath": "/sepm/api/v1",
+  "definitions": {
+    "AdDomainPolicies": {
+      "type": "object",
+      "properties": {
+        "ad_domain_policies": {
+          "items": {
+            "$ref": "#/definitions/Policy"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "properties": {
+        "ad_domain_uid": {
+          "type": "string"
+        },
+        "mask_data": {
+          "type": "string"
+        },
+        "policy_uid": {
+          "type": "string"
+        },
+        "users": {
+          "items": {
+            "$ref": "#/definitions/User"
+          },
+          "type": "array"
+        },
+        "whitelist_data": {
+          "type": "string"
+        }
+      }
+    },
+    "User": {
+      "type": "object",
+      "properties": {
+        "logon_name": {
+          "type": "string"
+        },
+        "password": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    }
+  },
+  "host": "",
+  "info": {
+    "description": "This page documents the REST APIs that perform Symantec Endpoint Protection Manager operations.",
+    "title": "Symantec Endpoint Protection Manager API Reference",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/tdad": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Gets all Threat Defense for Active Directory policies.",
+        "tags": [
+          "Symantec Endpoint Protection Manager Threat Defense for Active Directory related operations."
+        ]
+      },
+      "post": {
+        "description": "",
+        "operationId": "Post Policy",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/AdDomainPolicies"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Creates a new TDAD Global.",
+        "tags": [
+          "Symantec Endpoint Protection Manager Threat Defense for Active Directory related operations."
+        ]
+      },
+      "put": {
+        "description": "",
+        "operationId": "Put Policy",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/AdDomainPolicies"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Updates an existing Threat Defense for Active Directory policy.",
+        "tags": [
+          "Symantec Endpoint Protection Manager Threat Defense for Active Directory related operations."
+        ]
+      },
+      "delete": {
+        "description": "",
+        "operationId": "Delete Policy",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Deletes all Threat Defense for Active Directory data.",
+        "tags": [
+          "Symantec Endpoint Protection Manager Threat Defense for Active Directory related operations."
+        ]
+      },
+      "patch": {
+        "description": "",
+        "operationId": "Patch Policy",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/AdDomainPolicies"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Updates an existing Threat Defense for Active Directory policy.",
+        "tags": [
+          "Symantec Endpoint Protection Manager Threat Defense for Active Directory related operations."
+        ]
+      }
+    },
+    "/api/v1/tdad/{adDomainUid}/{policyUid}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy",
+        "parameters": [
+          {
+            "name": "adDomainUid",
+            "in": "path",
+            "description": "The Active Directory domain UID.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "policyUid",
+            "in": "path",
+            "description": "The policy uid for the given AD domain",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Gets a Threat Defense for Active Directory policy for the specified Active Directory domain UID and policy UID.",
+        "tags": [
+          "Symantec Endpoint Protection Manager Threat Defense for Active Directory related operations."
+        ]
+      },
+      "delete": {
+        "description": "",
+        "operationId": "Delete Policy",
+        "parameters": [
+          {
+            "name": "adDomainUid",
+            "in": "path",
+            "description": "The Active Directory domain UID.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "policyUid",
+            "in": "path",
+            "description": "The policy uid for the given AD domain.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Deletes the Threat Defense for Active Directory data for the specified Active Directory domain UID and policy UID.",
+        "tags": [
+          "Symantec Endpoint Protection Manager Threat Defense for Active Directory related operations."
+        ]
+      }
+    }
+  },
+  "schemes": [
+    "https"
+  ],
+  "swagger": "2.0",
+  "tags": [
+    {
+      "name": "Symantec Endpoint Protection Manager Threat Defense for Active Directory related operations."
+    }
+  ]
+}

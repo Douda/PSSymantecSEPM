@@ -12,8 +12,6 @@ function Get-SEPClientInfectedStatus {
         List of SEP Clients with Infected status
     .PARAMETER Clean
         If specified, returns SEP Clients with Clean status
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         Get-SEPClientInfectedStatus
 
@@ -28,27 +26,16 @@ function Get-SEPClientInfectedStatus {
     param (
         [Parameter()]
         [switch]
-        $Clean,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $Clean
     )
-
-    begin {
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-    }
 
     process {
         if ($clean) {
-            $non_infected = Get-SEPComputers | Where-Object { $_.infected -ne 1 }
-            return $non_infected
+            $non_infected = @(Get-SEPComputers | Where-Object { $_.infected -ne 1 })
+            Write-Output $non_infected -NoEnumerate
         } else {
-            $infected = Get-SEPComputers | Where-Object { $_.infected -eq 1 }
-            return $Infected
+            $infected = @(Get-SEPComputers | Where-Object { $_.infected -eq 1 })
+            Write-Output $Infected -NoEnumerate
         }
     }
 }

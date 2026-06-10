@@ -4,8 +4,6 @@ function Get-SEPClientDefVersions {
         Gets a list of clients for a group by content version.
     .DESCRIPTION
         Gets a list of clients for a group by content version.
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPClientDefVersions
 
@@ -46,44 +44,19 @@ function Get-SEPClientDefVersions {
 #>
 
     [CmdletBinding()]
-    param (
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
-    )
+    param()
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/stats/client/content"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/stats/client/content"
+
     }
 
     process {
-        # prepare the parameters
-        $params = @{
-            Method  = 'GET'
-            Uri     = $URI
-            headers = $headers
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
-        # Add a PSTypeName to the object
-        $resp.clientDefStatusList | ForEach-Object {
-            $_.PSTypeNames.Insert(0, "SEP.clientDefStatusList")
-        }
-
-        return $resp.clientDefStatusList
+        $list = $resp.clientDefStatusList
+        if ($null -eq $list) { return @() }
+        Write-Output $list -NoEnumerate
     }
 }
