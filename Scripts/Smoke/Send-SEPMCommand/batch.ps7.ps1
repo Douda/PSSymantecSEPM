@@ -42,6 +42,26 @@ $results.U2 = T "U2" "UpdateContent with non-existent computer" `
     { Send-SEPMCommand -Type UpdateContent -ComputerName 'NonExistentComputer12345' } `
     { param($r) $r -ne $null }
 
+$results.G1 = T "G1" "GetFile SHA256 with non-existent computer" `
+    { Send-SEPMCommand -Type GetFile -ComputerName 'NonExistentPC_Smoke' -SHA256 'ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890' -FilePath 'C:\Temp\malware.exe' } `
+    { param($r) $r -ne $null }
+
+$results.G2 = T "G2" "GetFile MD5 with non-existent computer" `
+    { Send-SEPMCommand -Type GetFile -ComputerName 'NonExistentPC_Smoke' -MD5 'ABCDEF1234567890ABCDEF1234567890' -FilePath 'C:\Temp\test.dll' } `
+    { param($r) $r -ne $null }
+
+$results.G3 = T "G3" "GetFile SHA1 with non-existent computer" `
+    { Send-SEPMCommand -Type GetFile -ComputerName 'NonExistentPC_Smoke' -SHA1 'ABCDEF1234567890ABCDEF1234567890ABCDEF12' -FilePath 'C:\Temp\binary.sys' -Source 'BOTH' } `
+    { param($r) $r -ne $null }
+
+$results.I1 = T "I1" "ClearIronCache SHA256 with non-existent computer" `
+    { Send-SEPMCommand -Type ClearIronCache -ComputerName 'NonExistentPC_Smoke' -SHA256 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' } `
+    { param($r) $r -ne $null }
+
+$results.I2 = T "I2" "ClearIronCache MD5 with non-existent computer" `
+    { Send-SEPMCommand -Type ClearIronCache -ComputerName 'NonExistentPC_Smoke' -MD5 'd41d8cd98f00b204e9800998ecf8427e' } `
+    { param($r) $r -ne $null }
+
 # === Summary ===
 Write-Host "`n========== SUMMARY (PS7) ==========" -ForegroundColor Yellow
 $pass = 0; $fail = 0; $skip = 0
