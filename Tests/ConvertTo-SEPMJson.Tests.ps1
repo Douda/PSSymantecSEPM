@@ -15,9 +15,22 @@ Describe 'ConvertTo-SEPMJson' {
         It 'serializes nested objects at depth > 2 without truncation' {
             InModuleScope PSSymantecSEPM {
                 $input = @{ a = @{ b = @{ c = 1 } } }
-                $result = ConvertTo-SEPMJson -InputObject $input -Depth 10
+                $result = ConvertTo-SEPMJson -InputObject $input -Depth 10 -Compress
 
                 $result | Should -BeExactly '{"a":{"b":{"c":1}}}'
+            }
+        }
+
+        It 'without -Compress produces pretty-printed output on PS 7+' {
+            InModuleScope PSSymantecSEPM {
+                $input = [PSCustomObject]@{ a = 1; b = 2 }
+                $result = ConvertTo-SEPMJson -InputObject $input -Depth 10
+
+                # Pretty-printed JSON has newlines and indentation
+                $result | Should -Match '\n'
+                $result | Should -Match '  '
+                $result | Should -Match '"a"'
+                $result | Should -Match '"b"'
             }
         }
     }
@@ -58,6 +71,17 @@ Describe 'ConvertTo-SEPMJson' {
 
         It '-AsArray with an already-serialized array input preserves array' {
             InModuleScope PSSymantecSEPM {
+                $input = @(1, 2, 3)
+                $result = ConvertTo-SEPMJson -InputObject $input -Depth 10 -AsArray -Compress
+
+                $result | Should -BeExactly '[[1,2,3]]'
+            }
+        }
+
+        It 'PS 5.1: -AsArray with multi-element array preserves array' {
+            InModuleScope PSSymantecSEPM {
+                Mock Get-PSVersionMajor { return 5 }
+
                 $input = @(1, 2, 3)
                 $result = ConvertTo-SEPMJson -InputObject $input -Depth 10 -AsArray -Compress
 
@@ -127,12 +151,13 @@ Describe 'ConvertTo-SEPMJson' {
             }
         }
 
-        It 'PS 5.1: -Compress does not add whitespace (serializer is inherently compact)' {
+        It 'PS 5.1: output is always compact — even without -Compress (known limitation)' {
             InModuleScope PSSymantecSEPM {
                 Mock Get-PSVersionMajor { return 5 }
 
                 $input = [PSCustomObject]@{ a = 1; b = 2 }
-                $result = ConvertTo-SEPMJson -InputObject $input -Depth 10 -Compress
+                # No -Compress flag — PS 5.1 serializer is inherently compact
+                $result = ConvertTo-SEPMJson -InputObject $input -Depth 10
 
                 $result | Should -Not -Match '\n'
                 $result | Should -BeExactly '{"a":1,"b":2}'

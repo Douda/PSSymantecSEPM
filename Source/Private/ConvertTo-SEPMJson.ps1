@@ -30,6 +30,8 @@ function ConvertTo-SEPMJson {
 
     .PARAMETER Compress
         If set, produces compact JSON (no whitespace). Default: pretty-printed.
+        On PS 5.1, output is always compact — the manual serializer does not
+        implement whitespace formatting.
 
     .PARAMETER AsArray
         If set, wraps the output in a JSON array [ ... ].
@@ -48,17 +50,17 @@ function ConvertTo-SEPMJson {
     )
 
     if ((Get-PSVersionMajor) -ge 6) {
-        $json = $InputObject | ConvertTo-Json -Depth $Depth -Compress
-    } else {
-        # PS 5.1: unroll single-element arrays to match PS 7+ pipeline semantics.
-        # In PS 7+, piping a single-element array to ConvertTo-Json unrolls it
-        # (e.g. @(@{a=1}) | ConvertTo-Json produces {"a":1}, not [{"a":1}]).
-        # Without this, -AsArray would double-wrap single-element arrays on PS 5.1.
-        $obj = $InputObject
-        if ($obj -is [System.Collections.IList] -and $obj.Count -eq 1) {
-            $obj = $obj[0]
+        # Use parameter binding (not pipeline) to preserve arrays intact.
+        # Pipeline would unroll arrays, breaking -AsArray for multi-element inputs.
+        if ($Compress) {
+            $json = ConvertTo-Json -InputObject $InputObject -Depth $Depth -Compress
+        } else {
+            $json = ConvertTo-Json -InputObject $InputObject -Depth $Depth
         }
-        $json = _ConvertTo-JsonSafe -obj $obj
+    } else {
+        # PS 5.1: _ConvertTo-JsonSafe always produces compact output.
+        # Pretty-printing is not implemented — no SEPM caller needs it.
+        $json = _ConvertTo-JsonSafe -obj $InputObject
     }
 
     if ($AsArray) {
@@ -77,7 +79,10 @@ function _ConvertTo-JsonSafe {
     .NOTES
         Float values use .ToString(). NaN, Infinity, or -Infinity produce
         invalid JSON — no current SEPM request body contains float fields.
+        Output is always compact (no whitespace). Pretty-printing is not
+        implemented — no SEPM caller needs it.
     #>
+    [CmdletBinding()]
     param($obj)
     $sb = New-Object System.Text.StringBuilder
     function _serialize {
