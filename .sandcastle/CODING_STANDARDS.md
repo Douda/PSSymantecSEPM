@@ -57,8 +57,8 @@ Required on all exported functions. Minimum sections:
 - Pester `Describe` / `Context` / `It` blocks
 - Test lifecycle/bootstrap via `Tests/TestHelpers/` module (`Initialize-TestEnvironment`, `Clear-TestEnvironment`, `New-TestSession`)
 - JSON fixtures in `Tests/fixtures/` for SEPM API response data
-- Run: `Invoke-Pester -Path ./Tests -Output Detailed`
-- Run single file: `Invoke-Pester -Path ./Tests/Get-SEPComputers.Tests.ps1 -Output Detailed`
+- Run: `Invoke-Pester -Path ./Tests -Output Normal`
+- Run single file: `Invoke-Pester -Path ./Tests/Get-SEPComputers.Tests.ps1 -Output Normal`
 
 ## Module Build
 

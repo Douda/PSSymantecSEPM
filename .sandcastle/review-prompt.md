@@ -52,7 +52,7 @@ If you find improvements to make:
 2. Run tests and build to verify nothing is broken:
    ```
    Build-ModuleLocal
-   Invoke-Pester -Path ./Tests -Output Detailed
+   Invoke-Pester -Path ./Tests -Output Normal
    ```
    Fix ALL failures, including any pre-existing ones inherited from the base branch.
 3. Commit describing the refinements

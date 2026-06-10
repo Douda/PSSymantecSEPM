@@ -12,14 +12,14 @@
             "name": "Run All Tests",
             "type": "PowerShell",
             "request": "launch",
-            "script": "Invoke-Pester '${workspaceFolder}/Tests' -Output Detailed",
+            "script": "Invoke-Pester '${workspaceFolder}/Tests' -Output Normal",
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
             "name": "Run Pester (Current File)",
             "type": "PowerShell",
             "request": "launch",
-            "script": "Invoke-Pester '${file}' -Output Detailed",
+            "script": "Invoke-Pester '${file}' -Output Normal",
             "internalConsoleOptions": "openOnSessionStart"
         },
         {

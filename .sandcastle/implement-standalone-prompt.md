@@ -43,7 +43,7 @@ Implement the requirements from the issue above.
 6. **Verify (unit)** — run the full quality checks before committing:
    ```
    Build-ModuleLocal
-   Invoke-Pester -Path ./Tests -Output Detailed
+   Invoke-Pester -Path ./Tests -Output Normal
    ```
    Fix ALL failures — not just those in your slice. Pre-existing test failures inherited from the base branch must be resolved.
 

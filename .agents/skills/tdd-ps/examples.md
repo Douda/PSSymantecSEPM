@@ -70,7 +70,7 @@ Describe 'Get-SEPMThreatStats' {
 Run it:
 
 ```powershell
-Invoke-Pester ./Tests/Get-SEPMThreatStats.Tests.ps1 -Output Detailed
+Invoke-Pester ./Tests/Get-SEPMThreatStats.Tests.ps1 -Output Normal
 ```
 
 **Result**: RED — `Get-SEPMThreatStats` doesn't exist yet.
@@ -139,7 +139,7 @@ Rebuild the module and run the test:
 ```powershell
 Build-Module -SourcePath ./Source/PSSymantecSEPM.psd1 -SemVer 0.0.1
 Import-Module ./Output/PSSymantecSEPM/PSSymantecSEPM.psm1 -Force
-Invoke-Pester ./Tests/Get-SEPMThreatStats.Tests.ps1 -Output Detailed
+Invoke-Pester ./Tests/Get-SEPMThreatStats.Tests.ps1 -Output Normal
 ```
 
 **Result**: GREEN. The tracer bullet works.
@@ -181,7 +181,7 @@ The `begin` block in `Get-SEPMThreatStats` is identical to the one in `Get-SEPCl
 Run the full test suite to make sure nothing broke:
 
 ```powershell
-Invoke-Pester ./Tests -Output Detailed
+Invoke-Pester ./Tests -Output Normal
 ```
 
 ## The complete test file
