@@ -19,11 +19,11 @@ Function Get-SEPMVersion {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + '/version'
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMVersion'
     }
 
     process {
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
         return $resp
     }
 }
