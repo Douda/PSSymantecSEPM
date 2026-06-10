@@ -58,4 +58,50 @@ Describe 'Send-SEPMCommand' {
             }
         }
     }
+
+    Context 'FullScan dispatch' {
+        It 'POSTs to the correct fullscan endpoint with computer_ids' {
+            Send-SEPMCommand -Type FullScan -ComputerName 'PC1'
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and $Uri -match '/command-queue/fullscan' -and $Uri -match 'computer_ids=ABC123'
+            }
+        }
+    }
+
+    Context 'UpdateContent dispatch' {
+        It 'POSTs to the correct updatecontent endpoint with computer_ids' {
+            Send-SEPMCommand -Type UpdateContent -ComputerName 'PC1'
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and $Uri -match '/command-queue/updatecontent' -and $Uri -match 'computer_ids=ABC123'
+            }
+        }
+    }
+
+    Context 'Quarantine dispatch' {
+        It 'POSTs to the correct quarantine endpoint with computer_ids' {
+            Send-SEPMCommand -Type Quarantine -ComputerName 'PC1'
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and $Uri -match '/command-queue/quarantine' -and $Uri -match 'computer_ids=ABC123'
+            }
+        }
+
+        It 'does not include undo in query params when -Undo is not specified' {
+            Send-SEPMCommand -Type Quarantine -ComputerName 'PC1'
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and $Uri -notmatch 'undo='
+            }
+        }
+
+        It 'includes undo=True in query params when -Undo switch is used' {
+            Send-SEPMCommand -Type Quarantine -ComputerName 'PC1' -Undo
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and $Uri -match '/command-queue/quarantine' -and $Uri -match 'computer_ids=ABC123' -and $Uri -match 'undo=True'
+            }
+        }
+    }
 }
