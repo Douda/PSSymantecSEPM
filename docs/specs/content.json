@@ -1,0 +1,68 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "SEPM CONTENT API",
+    "version": "v1",
+    "description": "Self-contained OpenAPI 2.0 specification for SEPM content endpoints."
+  },
+  "basePath": "/sepm/api/v1",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/api/v1/content/avdef/latest": {
+      "get": {
+        "description": "",
+        "operationId": "Get AV Def Latest Info",
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/LatestRevisionInfo"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets the latest revision information for antivirus definitions from Symantec Security Response.",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "LatestRevisionInfo": {
+      "type": "object",
+      "required": [
+        "contentName",
+        "publishedBySEPM",
+        "publishedBySymantec"
+      ],
+      "properties": {
+        "contentName": {
+          "description": "Refers to Virus and Spyware Protection definitions.",
+          "type": "string"
+        },
+        "publishedBySEPM": {
+          "description": "The latest Virus and Spyware Protection definition revision version available from Symantec Endpoint Protection Manager.",
+          "type": "string"
+        },
+        "publishedBySymantec": {
+          "description": "The latest Virus and Spyware Protection definition revision version available from Symantec.",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

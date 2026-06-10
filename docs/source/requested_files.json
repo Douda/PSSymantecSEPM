@@ -1,0 +1,157 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "This page documents the REST APIs that perform Symantec Endpoint Protection Manager operations.",
+    "version": "v1",
+    "title": "Symantec Endpoint Protection Manager API Reference"
+  },
+  "tags": [
+    {
+      "name": "production"
+    }
+  ],
+  "paths": {
+    "/api/v1/requested-files/{sha256}/content": {
+      "get": {
+        "tags": [
+          "production"
+        ],
+        "summary": "Gets the binary file content for a given SHA value. A system administrator account is required for this REST API.",
+        "description": "",
+        "operationId": "Get Binary File Content For Sha256",
+        "parameters": [
+          {
+            "name": "sha256",
+            "in": "path",
+            "description": "The SHA256  value which to get the binary content.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/HttpServletResponse"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result."
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "410": {
+            "description": "Cannot find the specified object."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "HttpServletResponse": {
+      "type": "object",
+      "properties": {
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "outputStream": {
+          "$ref": "#/definitions/ServletOutputStream"
+        },
+        "bufferSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "writer": {
+          "$ref": "#/definitions/PrintWriter"
+        },
+        "committed": {
+          "type": "boolean",
+          "default": false
+        },
+        "characterEncoding": {
+          "type": "string"
+        }
+      }
+    },
+    "Locale": {
+      "type": "object",
+      "properties": {
+        "language": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "script": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        },
+        "extensionKeys": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "unicodeLocaleAttributes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "unicodeLocaleKeys": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "iso3Language": {
+          "type": "string"
+        },
+        "iso3Country": {
+          "type": "string"
+        },
+        "displayLanguage": {
+          "type": "string"
+        },
+        "displayScript": {
+          "type": "string"
+        },
+        "displayCountry": {
+          "type": "string"
+        },
+        "displayVariant": {
+          "type": "string"
+        }
+      }
+    },
+    "PrintWriter": {
+      "type": "object"
+    },
+    "ServletOutputStream": {
+      "type": "object"
+    }
+  }
+}

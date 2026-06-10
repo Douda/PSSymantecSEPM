@@ -4,8 +4,6 @@ function Get-SEPMLocation {
         Gets a list of locations for a specific group
     .DESCRIPTION
         Gets a list of locations for a specific group
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .PARAMETER GroupID
         Mandatory parameter for the group ID
     .INPUTS
@@ -43,9 +41,7 @@ function Get-SEPMLocation {
     [CmdletBinding()]
     param (
         # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck,
+
 
         # GroupID
         [Parameter(
@@ -58,18 +54,8 @@ function Get-SEPMLocation {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+
         $allGroupsInfo = Get-SEPMGroups
     }
 
@@ -77,33 +63,39 @@ function Get-SEPMLocation {
         # Get Group info
         $groupInfo = $allGroupsInfo | Where-Object { $_.id -eq $GroupID }
 
-        $URI = $script:BaseURLv1 + "/groups" + "/$GroupID/locations"
+        $URI = $session.BaseURLv1 + "/groups" + "/$GroupID/locations"
         $locationList = @()
-
-        # prepare the parameters
-        $params = @{
-            Method  = 'GET'
-            Uri     = $URI
-            headers = $headers
-        }
 
         # QueryString parameters
         $QueryStrings = @{
             hasName = $true
         }
-    
+
         # Invoke the request
         $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-        $params = @{
-            Method  = 'GET'
-            Uri     = $URI
-            headers = $headers
+
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+
+        # Normalize response to string array (Invoke-SepmApi returns Object[] for arrays,
+        # hashtable or string for single values)
+        if ($resp -is [array] -and $resp -isnot [string]) {
+            $locationStrings = $resp
+        } elseif ($resp -is [string]) {
+            $locationStrings = @($resp)
+        } elseif ($resp -is [hashtable]) {
+            # Legacy: hashtable with numeric keys (pre-ConvertTo-Hashtable fix)
+            $locationStrings = @()
+            foreach ($key in $resp.Keys) {
+                if ($key -is [int] -or $key -match '^\d+$') {
+                    $locationStrings += $resp[$key]
+                }
+            }
+        } else {
+            $locationStrings = @()
         }
-                
-        $resp = Invoke-ABRestMethod -params $params
 
         # parse response and add group information to the list
-        foreach ($location in $resp) {
+        foreach ($location in $locationStrings) {
             $locationList += [PSCustomObject]@{
                 locationName      = $location.split(":")[0]
                 locationId        = $location.split("/")[-1]
@@ -113,12 +105,7 @@ function Get-SEPMLocation {
             }
         }
 
-        # Add a PSTypeName to the object
-        $locationList | ForEach-Object {
-            $_.PSObject.TypeNames.Insert(0, 'SEPM.GroupLocationInfo')
-        }
-
-        # return the response
-        return $locationList
+        # return the response (use -NoEnumerate to prevent single-element unrolling)
+        Write-Output $locationList -NoEnumerate
     }
 }

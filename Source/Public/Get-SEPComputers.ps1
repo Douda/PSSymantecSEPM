@@ -59,27 +59,12 @@ function Get-SEPComputers {
             ParameterSetName = 'GroupName'
         )]
         [switch]
-        $IncludeSubGroups,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $IncludeSubGroups
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+
     }
 
     process {
@@ -87,7 +72,7 @@ function Get-SEPComputers {
         # Using computer name API call
         if ($ComputerName) {
             $allResults = @()
-            $URI = $script:BaseURLv1 + "/computers"
+            $URI = $session.BaseURLv1 + "/computers"
 
             # URI query strings
             $QueryStrings = @{
@@ -97,14 +82,8 @@ function Get-SEPComputers {
             # Construct the URI
             $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
 
-            # Invoke the request params
-            $params = @{
-                Method  = 'GET'
-                Uri     = $URI
-                headers = $headers
-            }
-
-            $allResults = (Invoke-ABRestMethod -params $params).content
+            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+            $allResults = $resp.content
 
             # Filtering
             $allResults = $allResults | Where-Object { $_.computerName -like $ComputerName }
@@ -113,7 +92,7 @@ function Get-SEPComputers {
         # Using computer name API call then filtering
         elseif ($GroupName) {
             $allResults = @()
-            $URI = $script:BaseURLv1 + "/computers"
+            $URI = $session.BaseURLv1 + "/computers"
 
             # URI query strings
             $QueryStrings = @{
@@ -125,17 +104,10 @@ function Get-SEPComputers {
 
             # Construct the URI
             $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-    
-            do {
-                # Invoke the request params
-                $params = @{
-                    Method  = 'GET'
-                    Uri     = $URI
-                    headers = $headers
-                }
 
-                $resp = Invoke-ABRestMethod -params $params
-                
+            do {
+                $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+
                 # Process the response
                 $allResults += $resp.content
 
@@ -155,7 +127,7 @@ function Get-SEPComputers {
         # No parameters
         else {
             $allResults = @()
-            $URI = $script:BaseURLv1 + "/computers"
+            $URI = $session.BaseURLv1 + "/computers"
 
             # URI query strings
             $QueryStrings = @{
@@ -166,16 +138,9 @@ function Get-SEPComputers {
 
             # Construct the URI
             $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-    
-            do {
-                # Invoke the request params
-                $params = @{
-                    Method  = 'GET'
-                    Uri     = $URI
-                    headers = $headers
-                }
 
-                $resp = Invoke-ABRestMethod -params $params
+            do {
+                $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
                 # Process the response
                 $allResults += $resp.content
@@ -186,12 +151,7 @@ function Get-SEPComputers {
             } until ($resp.lastPage -eq $true)
         }
 
-        # Add a PSTypeName to the object 
-        $allresults | ForEach-Object {
-            $_.PSTypeNames.Insert(0, "SEP.Computer")
-        }
-
         # return the response
-        return $allResults
+        Write-Output $allResults -NoEnumerate
     }
 }

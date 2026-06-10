@@ -4,8 +4,6 @@ function Get-SEPGUPList {
         Gets a list of group update providers
     .DESCRIPTION
         Gets a list of SEP clients acting as group update providers
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPGUPList
 
@@ -24,44 +22,17 @@ function Get-SEPGUPList {
 #>
 
     [CmdletBinding()]
-    param (
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
-    )
+    param()
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/gup/status"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/gup/status"
+
     }
 
     process {
-        # prepare the parameters
-        $params = @{
-            Method  = 'GET'
-            Uri     = $URI
-            headers = $headers
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
-        # Add a PSTypeName to the object 
-        $resp | ForEach-Object {
-            $_.PSTypeNames.Insert(0, "SEP.GUPList")
-        }
-
-        return $resp
+        Write-Output $resp -NoEnumerate
     }
 }

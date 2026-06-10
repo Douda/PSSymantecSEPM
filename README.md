@@ -57,10 +57,9 @@ PS C:\PSSymantecSEPM> Get-Command -Module PSSymantecSEPM | Select-Object -Proper
 | Get-TDADPolicy                    | Move-SEPClientGroup                  |
 | Remove-SEPMFileFingerprintList    | Remove-SEPMWindowsExtensionException |
 | Remove-SEPMWindowsFileException   | Remove-SEPMWindowsFolderException    |
-| Reset-SEPMConfiguration           | Send-SEPMCommandGetFile              |
-| Send-SEPMCommandQuarantine        | Set-SEPMAuthentication               |
-| Set-SEPMConfiguration             | Start-SEPMReplication                |
-| Start-SEPScan                     | Update-SEPClient                     |
+| Reset-SEPMConfiguration           | Send-SEPMCommand                     |
+| Set-SEPMAuthentication            | Set-SEPMConfiguration                |
+| Start-SEPMReplication             | Update-SEPMExceptionPolicy           |
 | Update-SEPMFileFingerprintList    |                                      |
 
 Every command has a help page, eg. `Get-Help Get-SEPComputers`
@@ -273,6 +272,66 @@ ModuleBuilder will automatically apply the next semver version
 if you have installed [gitversion](https://gitversion.readthedocs.io/en/latest/).
 
 To manually create a new version run `Build-Module .\Source -SemVer 0.0.2`
+
+## Development with Dev Container (Linux / VS Code)
+
+This project includes a [devcontainer](.devcontainer/devcontainer.json) configuration for a
+**fully isolated, disposable development environment** using Docker. No PowerShell modules or
+tools are installed on your host machine.
+
+### Prerequisites
+- [Docker](https://docs.docker.com/engine/install/) (Docker Engine on Linux, Docker Desktop on Windows/Mac)
+- [VS Code](https://code.visualstudio.com/) with the **Dev Containers** extension (`ms-vscode-remote.remote-containers`)
+
+### Quick Start
+
+```bash
+# 1. Open repo in VS Code
+cd PSSymantecSEPM
+code .
+
+# 2. When prompted "Folder contains a dev container config", click "Reopen in Container"
+#    Or press F1 → "Dev Containers: Reopen in Container"
+
+# 3. Once the container is built, the module is auto-compiled.
+#    Verify:
+Get-Module -ListAvailable PSSymantecSEPM
+```
+
+### Container Features
+- **PowerShell 7+** with all dev modules pre-installed
+- **`curl` + `jq`** for API debugging
+- **Built-in pwsh profile** with helper `Build-ModuleLocal` function
+- **VS Code extensions**: PowerShell, Pester, GitLens, Todo Tree, indent-rainbow
+- **Tasks** (`Ctrl+Shift+B`): Build, Run Tests, Static Analysis
+- **Launch configs** (F5): Build & Import, Run Tests
+
+### Building & Testing Inside Container
+
+```powershell
+# Build the module (also runs automatically on container start)
+Build-Module -SourcePath ./Source/PSSymantecSEPM.psd1 -SemVer 0.0.1
+
+# Import the built module
+Import-Module ./Output/PSSymantecSEPM/PSSymantecSEPM.psm1 -Force
+
+# Or use the profile helper:
+Build-ModuleLocal
+
+# Run tests
+Invoke-Pester -Path ./Tests -Output Detailed
+```
+
+### Configuring for Your SEPM Server
+
+```powershell
+Set-SepmConfiguration -ServerAddress "192.168.x.x" -Port 8446
+Set-SEPMAuthentication
+Get-SEPMVersion
+```
+
+> **Tip**: Set `SEPM_SERVER` and `SEPM_PORT` environment variables on your host before
+> launching the container — they get passed through automatically.
 
 ## Additional Information
 

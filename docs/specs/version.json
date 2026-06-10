@@ -1,0 +1,47 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "SEPM VERSION API",
+    "version": "v1",
+    "description": "Self-contained OpenAPI 2.0 specification for SEPM version endpoints."
+  },
+  "basePath": "/sepm/api/v1",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/api/v1/version": {
+      "get": {
+        "description": "",
+        "operationId": "Get Version",
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets the current version of Symantec Endpoint Protection Manager.",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  }
+}

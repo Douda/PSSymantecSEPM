@@ -4,8 +4,6 @@ function Get-SEPMReplicationStatus {
         Get Replication Status
     .DESCRIPTION
         Get Replication Status
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMReplicationStatus
 
@@ -17,38 +15,16 @@ function Get-SEPMReplicationStatus {
 #>
 
     [CmdletBinding()]
-    param (
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
-    )
+    param()
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/replication/status"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/replication/status"
+
     }
 
     process {
-        # prepare the parameters
-        $params = @{
-            Method  = 'GET'
-            Uri     = $URI
-            headers = $headers
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
         # Add a PSTypeName to the object
         $resp.replicationStatus | ForEach-Object {
@@ -61,6 +37,6 @@ function Get-SEPMReplicationStatus {
             }
         }
 
-        return $resp.replicationStatus
+        Write-Output $resp.replicationStatus -NoEnumerate
     }
 }

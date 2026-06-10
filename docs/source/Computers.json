@@ -1,0 +1,1109 @@
+{
+  "basePath": "/sepm/api/v1",
+  "definitions": {
+    "BulkResponse": {
+      "type": "object",
+      "properties": {
+        "responseCode": {
+          "type": "string"
+        },
+        "responseMessage": {
+          "type": "string"
+        }
+      }
+    },
+    "Computer": {
+      "type": "object",
+      "properties": {
+        "agentId": {
+          "type": "string"
+        },
+        "agentTimeStamp": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "agentType": {
+          "type": "string"
+        },
+        "agentUsn": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "agentVersion": {
+          "type": "string"
+        },
+        "apOnOff": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "atpDeviceId": {
+          "type": "string"
+        },
+        "atpServer": {
+          "type": "string"
+        },
+        "attributeExtension": {
+          "type": "string"
+        },
+        "avDefsetRevision": {
+          "type": "string"
+        },
+        "avDefsetSequence": {
+          "type": "string"
+        },
+        "avDefsetVersion": {
+          "type": "string"
+        },
+        "avEngineOnOff": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "bashStatus": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "behavioralAnalysisDefsetVersion": {
+          "type": "string"
+        },
+        "biosVersion": {
+          "type": "string"
+        },
+        "bwf": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "cidsBrowserFfOnOff": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "cidsBrowserIeOnOff": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "cidsDefsetVersion": {
+          "type": "string"
+        },
+        "cidsDrvMulfCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "cidsDrvOnOff": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "cidsEngineVersion": {
+          "type": "string"
+        },
+        "cidsSilentMode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "computerDescription": {
+          "type": "string"
+        },
+        "computerName": {
+          "type": "string"
+        },
+        "computerTimeStamp": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "computerUsn": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "contentUpdate": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "creationTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "currentClientId": {
+          "type": "string"
+        },
+        "daOnOff": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "deleted": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "department": {
+          "type": "string"
+        },
+        "deploymentMessage": {
+          "type": "string"
+        },
+        "deploymentPreVersion": {
+          "type": "string"
+        },
+        "deploymentRunningVersion": {
+          "type": "string"
+        },
+        "deploymentStatus": {
+          "type": "string"
+        },
+        "deploymentTargetVersion": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "dhcpServer": {
+          "type": "string"
+        },
+        "diskDrive": {
+          "type": "string"
+        },
+        "dnsServers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "domainOrWorkgroup": {
+          "type": "string"
+        },
+        "edrStatus": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "elamOnOff": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "email": {
+          "type": "string"
+        },
+        "employeeNumber": {
+          "type": "string"
+        },
+        "employeeStatus": {
+          "type": "string"
+        },
+        "encryptedDevicePassword": {
+          "type": "string"
+        },
+        "fbwf": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "firewallOnOff": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "freeDisk": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "freeMem": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "gateways": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "group": {
+          "$ref": "#/definitions/GroupSummary"
+        },
+        "groupUpdateProvider": {
+          "type": "boolean"
+        },
+        "hardwareKey": {
+          "type": "string"
+        },
+        "homePhone": {
+          "type": "string"
+        },
+        "hypervisorVendorId": {
+          "type": "string"
+        },
+        "idsChecksum": {
+          "type": "string"
+        },
+        "idsSerialNo": {
+          "type": "string"
+        },
+        "idsVersion": {
+          "type": "string"
+        },
+        "infected": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "installType": {
+          "type": "string"
+        },
+        "ipAddresses": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "isGrace": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "isNpvdiClient": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "jobTitle": {
+          "type": "string"
+        },
+        "kernel": {
+          "type": "string"
+        },
+        "lastConnectedIpAddr": {
+          "type": "string"
+        },
+        "lastDeploymentTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lastDownloadTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lastHeuristicThreatTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lastScanTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lastServerId": {
+          "type": "string"
+        },
+        "lastServerName": {
+          "type": "string"
+        },
+        "lastSiteId": {
+          "type": "string"
+        },
+        "lastSiteName": {
+          "type": "string"
+        },
+        "lastUpdateTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lastVirusTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "licenseExpiry": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "licenseId": {
+          "type": "string"
+        },
+        "licenseStatus": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "logicalCpus": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "loginDomain": {
+          "type": "string"
+        },
+        "logonUserName": {
+          "type": "string"
+        },
+        "macAddresses": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "majorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "memory": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "minorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "mobilePhone": {
+          "type": "string"
+        },
+        "officePhone": {
+          "type": "string"
+        },
+        "onlineStatus": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "operatingSystem": {
+          "type": "string"
+        },
+        "osBitness": {
+          "type": "string"
+        },
+        "osElamStatus": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "osFlavorNumber": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "osFunction": {
+          "enum": [
+            "Unknown",
+            "Workstation",
+            "DomainController",
+            "Server"
+          ],
+          "type": "string"
+        },
+        "osLanguage": {
+          "type": "string"
+        },
+        "osMajor": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "osMinor": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "osName": {
+          "type": "string"
+        },
+        "osServicePack": {
+          "type": "string"
+        },
+        "osVersion": {
+          "type": "string"
+        },
+        "patternIdx": {
+          "type": "string"
+        },
+        "pepOnOff": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "physicalCpus": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "processorClock": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "processorType": {
+          "type": "string"
+        },
+        "profileChecksum": {
+          "type": "string"
+        },
+        "profileSerialNo": {
+          "type": "string"
+        },
+        "profileVersion": {
+          "type": "string"
+        },
+        "pskVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "ptpOnOff": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "publicKey": {
+          "type": "string"
+        },
+        "quarantineCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "quarantineDesc": {
+          "type": "string"
+        },
+        "quarantineStatus": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "rebootReason": {
+          "type": "string"
+        },
+        "rebootRequired": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "securityVirtualAppliance": {
+          "type": "string"
+        },
+        "serialNumber": {
+          "type": "string"
+        },
+        "snacLicenseId": {
+          "type": "string"
+        },
+        "subnetMasks": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "svaId": {
+          "type": "string"
+        },
+        "tamperOnOff": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "tdadGlobalDataDownloadTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "tdadGlobalDataProcessingDoneTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "tdadOnOff": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "tdadStatusId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "telemetryHwid": {
+          "type": "string"
+        },
+        "telemetryMid": {
+          "type": "string"
+        },
+        "timeZone": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "tmpDevice": {
+          "type": "string"
+        },
+        "totalDiskSpace": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "tpmDevice": {
+          "type": "string"
+        },
+        "uniqueId": {
+          "type": "string"
+        },
+        "uuid": {
+          "type": "string"
+        },
+        "uwf": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "virtualizationPlatform": {
+          "type": "string"
+        },
+        "vsicStatus": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "winServers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "worstInfectionIdx": {
+          "type": "string"
+        },
+        "writeFiltersStatus": {
+          "type": "string"
+        },
+        "wssStatus": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "ComputerPayload": {
+      "type": "object",
+      "required": [
+        "deviceId",
+        "devicePassword",
+        "hardwareKey",
+        "publicKey"
+      ],
+      "properties": {
+        "deviceId": {
+          "description": "The computer's device ID, generated by Symantec Advanced Threat Protection.",
+          "maxLength": 36,
+          "minLength": 1,
+          "type": "string"
+        },
+        "devicePassword": {
+          "description": "The computer's password, generated by Symantec Advanced Threat Protection.",
+          "maxLength": 1024,
+          "minLength": 1,
+          "type": "string"
+        },
+        "hardwareKey": {
+          "description": "The computer's hardware key.",
+          "type": "string"
+        },
+        "objectValid": {
+          "description": "For internal use by Symantec Endpoint Protection Manager.",
+          "type": "boolean"
+        },
+        "publicKey": {
+          "description": "The computer's public key.",
+          "maxLength": 512,
+          "minLength": 1,
+          "type": "string"
+        }
+      }
+    },
+    "DomainSummary": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "GroupSummary": {
+      "type": "object",
+      "properties": {
+        "domain": {
+          "$ref": "#/definitions/DomainSummary"
+        },
+        "externalReferenceId": {
+          "type": "string"
+        },
+        "fullPathName": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
+      }
+    },
+    "Page": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "items": {
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "firstPage": {
+          "type": "boolean"
+        },
+        "lastPage": {
+          "type": "boolean"
+        },
+        "number": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "numberOfElements": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "size": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "sort": {
+          "$ref": "#/definitions/Sort"
+        },
+        "totalElements": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "totalPages": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "PageObject": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "items": {
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "firstPage": {
+          "type": "boolean"
+        },
+        "lastPage": {
+          "type": "boolean"
+        },
+        "number": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "numberOfElements": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "size": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "sort": {
+          "$ref": "#/definitions/Sort"
+        },
+        "totalElements": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "totalPages": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "Sort": {
+      "type": "object"
+    }
+  },
+  "host": "",
+  "info": {
+    "description": "This page documents the REST APIs that perform Symantec Endpoint Protection Manager operations.",
+    "title": "Symantec Endpoint Protection Manager API Reference",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/computers": {
+      "get": {
+        "description": "",
+        "operationId": "Get Computers",
+        "parameters": [
+          {
+            "name": "computerName",
+            "in": "query",
+            "description": "The host name of computer. Wild card is supported as '*'.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "computer_id",
+            "in": "query",
+            "description": "The computer GUID. When computer_id is used the query will ignore all other query conditions except \"domain\", \"feature\" and \"verbose\" and return the current active one record.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "The domain from which to get computer information.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "feature",
+            "in": "query",
+            "description": "List of features to return opstate information in reduced mode.Possible values are av, mem, fw, ips, tdad",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "hardware_key",
+            "in": "query",
+            "description": "The computer hardware key. When hardware_key is used and computer_id is empty the query will ignore all other query conditions except \"domain\", \"feature\" and \"verbose\" and return the current active one record.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "lastUpdate",
+            "in": "query",
+            "description": "Indicates when a computer last updated its status. The default value of 0 gets all the results.",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "mac",
+            "in": "query",
+            "description": "The MAC address of computer. Wild card is supported as '*'.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Specifies whether the results are in ascending order (ASC) or descending order (DESC).",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "os",
+            "in": "query",
+            "description": "The list of OS to filter. Possible values are CentOs, Debian, Fedora, MacOSX, Oracle, OSX, RedHat, SUSE, Ubuntu, Win10, Win2K, Win7, Win8, Win81, WinEmb7, WinEmb8, WinEmb81, WinFundamental, WinNT, Win2K3, Win2K8, Win2K8R2, Win2K12, Win2K12R2, Win2K16, WinVista, WinXP, WinXPEmb, WinXPProf64",
+            "required": false,
+            "type": "array",
+            "items": {
+              "enum": [
+                "CentOs",
+                "Debian",
+                "Fedora",
+                "MacOSX",
+                "Oracle",
+                "OSX",
+                "RedHat",
+                "SUSE",
+                "Ubuntu",
+                "Win10",
+                "Win11",
+                "Win2K",
+                "Win7",
+                "Win8",
+                "Win81",
+                "WinEmb7",
+                "WinEmb8",
+                "WinEmb81",
+                "WinFundamental",
+                "WinNT",
+                "Win2K3",
+                "Win2K8",
+                "Win2K8R2",
+                "Win2K12",
+                "Win2K12R2",
+                "Win2K16",
+                "Win2K19",
+                "Win2K22",
+                "WinVista",
+                "WinXP",
+                "WinXPEmb",
+                "WinXPProf64"
+              ],
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "description": "The index page used for returned results. The default page index is 1.",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "The number of results to include on each page. The default is 20.",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "The column by which the results are sorted. Possible values are COMPUTER_NAME (Default value), COMPUTER_ID, COMPUTER_DOMAIN_NAME, or DOMAIN_ID.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "verbose",
+            "in": "query",
+            "description": "Returns a reduced set of computer information if true.",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/PageObject"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets the information about the computers in a specified domain. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "patch": {
+        "description": "",
+        "operationId": "Move Clients",
+        "parameters": [
+          {
+            "description": "Information of a computer.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/Computer"
+              },
+              "type": "array"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/BulkResponse"
+              },
+              "type": "array"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "409": {
+            "description": "The request could not be completed due to a conflict with the current state of the source or target group."
+          },
+          "410": {
+            "description": "Cannot find the specified object."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "checks and moves a client to the specified group. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/computers/delete": {
+      "post": {
+        "description": "",
+        "operationId": "Delete Clients",
+        "parameters": [
+          {
+            "description": "Information of a computer.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/Computer"
+              },
+              "type": "array"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The web service successfully processed the web request.",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/BulkResponse"
+              },
+              "type": "array"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "410": {
+            "description": "Cannot find the specified object."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Deletes list of existing computers. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/computers/enroll": {
+      "post": {
+        "description": "",
+        "operationId": "Enroll",
+        "parameters": [
+          {
+            "description": "The device ID and encrypted device password to upload to Symantec Endpoint Protection Manager for enrollment.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/ComputerPayload"
+              },
+              "type": "array"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "410": {
+            "description": "Cannot find the specified object."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Updates the device ID and encrypted device password for a specified computer.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/computers/enroll/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Enroll",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The enrollment job for which the status is needed.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets the status of the enrollment job.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/computers/{id}": {
+      "delete": {
+        "description": "",
+        "operationId": "Delete Computer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the computer to delete.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The web service successfully processed the web request.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "410": {
+            "description": "Cannot find the specified object."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Deletes an existing computer. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "schemes": [
+    "https"
+  ],
+  "swagger": "2.0",
+  "tags": [
+    {
+      "name": "production"
+    }
+  ]
+}

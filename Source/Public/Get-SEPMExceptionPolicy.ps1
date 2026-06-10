@@ -12,8 +12,6 @@ function Get-SEPMExceptionPolicy {
         List a specific exception category
         Valid values are "files", "directories", "webdomains"
         # TODO : add all the other exception types in example
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMExceptionPolicy -PolicyName "Standard Servers - Exception policy"
 
@@ -82,11 +80,6 @@ function Get-SEPMExceptionPolicy {
         [String]
         $PolicyName,
 
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck,
-
         # List a specific exception category
         [Parameter()]
         [ValidateSet("files", "directories", "webdomains", "extensions", "tamper")]
@@ -95,28 +88,19 @@ function Get-SEPMExceptionPolicy {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
+        $session = Initialize-SEPMSession
         # BaseURL V2
-        $URI = $script:BaseURLv2 + "/policies/exceptions"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $URI = $session.BaseURLv2 + "/policies/exceptions"
+
         # Stores the policy summary for all policies only once
         $policies = Get-SEPMPoliciesSummary
     }
 
     process {
         # Get Policy ID from policy name
-        $policyID = $policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -ExpandProperty id
-        $policy_type = $policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -ExpandProperty policytype
+        $policy = $policies | Where-Object { $_.name -eq $PolicyName }
+        $policyID = $policy.id
+        $policy_type = $policy.policytype
 
         if ($policy_type -ne "exceptions") {
             $message = "policy type is not of type EXCEPTIONS or does not exist - Please verify the policy name"
@@ -127,19 +111,9 @@ function Get-SEPMExceptionPolicy {
         # Updating URI with policy ID
         $URI = $URI + "/" + $policyID
         
-        # prepare the parameters
-        $params = @{
-            Method          = 'GET'
-            Uri             = $URI
-            headers         = $headers
-            UseBasicParsing = $true
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
-        
-        # JSON response to convert to PSObject
-        $resp = $resp | ConvertFrom-Json -AsHashtable -Depth 100
-        
+        # Use Invoke-SepmApi with session (handles PS5.1 + PS7 transport and deserialization)
+        $resp = Invoke-SepmApi -Method 'GET' -Uri $URI -Session $session
+
         # Add a PSTypeName to the object
         $resp.PSObject.TypeNames.Insert(0, 'SEPM.ExceptionPolicy')
 

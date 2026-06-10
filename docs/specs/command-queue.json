@@ -1,0 +1,1241 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "SEPM COMMAND-QUEUE API",
+    "version": "v1",
+    "description": "Self-contained OpenAPI 2.0 specification for SEPM command-queue endpoints."
+  },
+  "basePath": "/sepm/api/v1",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/api/v1/command-queue/activescan": {
+      "post": {
+        "description": "",
+        "operationId": "Active Scan",
+        "parameters": [
+          {
+            "name": "computer_ids",
+            "in": "query",
+            "description": "The list of computers on which to run the command.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "group_ids",
+            "in": "query",
+            "description": "The list of groups on which to run the command.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "power",
+            "in": "query",
+            "description": "Specify whether to run an aggressive scan.",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Sends a command from Symantec Endpoint Protection Manager to Symantec Endpoint Protection endpoints to request an active scan on the endpoint. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/baseline": {
+      "post": {
+        "deprecated": true,
+        "description": "",
+        "operationId": "Get Baseline Command",
+        "parameters": [
+          {
+            "name": "computer_ids",
+            "in": "query",
+            "description": "The list of computer IDs from which to request the baseline information.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "group_ids",
+            "in": "query",
+            "description": "The list of group IDs from which to request the baseline information.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Sends a command from Symantec Endpoint Protection Manager to Symantec Endpoint Protection endpoints to request that baseline application information be uploaded back to Symantec Endpoint Protection Manager. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/cloudmanaged": {
+      "post": {
+        "description": "",
+        "operationId": "Become Cloud Managed",
+        "parameters": [
+          {
+            "description": "The target groups or computers to which this command should be applied.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CloudModeCommandData"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Sends a command from Symantec Endpoint Protection Manager to Symantec Endpoint Protection endpoints to request that those endpoints communicate directly with the cloud instead of Symantec Endpoint Protection Manager. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/eoc": {
+      "post": {
+        "description": "",
+        "operationId": "EOC Command",
+        "parameters": [
+          {
+            "description": "The evidence of compromise command in XML.  See eoc.xsd in the Remote Management and Monitoring documentation for the proper format.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "computer_ids",
+            "in": "query",
+            "description": "The list of computers on which to run the command.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "group_ids",
+            "in": "query",
+            "description": "The list of groups on which to run the command.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Sends a command from Symantec Endpoint Protection Manager to Symantec Endpoint Protection endpoints to request an \"Evidence of Compromise\" scan on the endpoint. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/file/{file_id}/content": {
+      "get": {
+        "description": "",
+        "operationId": "Get Binary File Content",
+        "parameters": [
+          {
+            "name": "file_id",
+            "in": "path",
+            "description": "The file ID from which to get the binary content.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result."
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "410": {
+            "description": "Cannot find the specified object."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets the binary file content for a given file ID. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/file/{file_id}/details": {
+      "get": {
+        "description": "",
+        "operationId": "Get Binary File Details",
+        "parameters": [
+          {
+            "name": "file_id",
+            "in": "path",
+            "description": "The file ID from which to get detailed information.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/BinaryFile"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "410": {
+            "description": "Cannot find the specified object."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets the details of a binary file, such as the checksum and the file size. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/files": {
+      "post": {
+        "description": "",
+        "operationId": "Get File Command",
+        "parameters": [
+          {
+            "name": "computer_ids",
+            "in": "query",
+            "description": "The list of computers on which to search for the suspicious file.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "file_path",
+            "in": "query",
+            "description": "The file path of the suspicious file.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "md5",
+            "in": "query",
+            "description": "The MD5 hash value of the suspicious file.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sha1",
+            "in": "query",
+            "description": "The SHA1 hash value of the suspicious file.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sha256",
+            "in": "query",
+            "description": "The SHA256 hash value of the suspicious file.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "description": "The source to search for the suspicious file. Possible values are: FILESYSTEM (default), QUARANTINE, or BOTH. 12.1.x clients only use FILESYSTEM.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Sends a command from Symantec Endpoint Protection Manager to Symantec Endpoint Protection endpoints to request a suspicious file be uploaded back to Symantec Endpoint Protection Manager. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/fullscan": {
+      "post": {
+        "description": "",
+        "operationId": "Full Scan",
+        "parameters": [
+          {
+            "description": "Specify reboot options for an aggressive power scan on agents older than 14.3 RU5 or default options are used.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/RestartPayload"
+            }
+          },
+          {
+            "name": "computer_ids",
+            "in": "query",
+            "description": "The list of computers on which to run the command.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "group_ids",
+            "in": "query",
+            "description": "The list of groups on which to run the command.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "power",
+            "in": "query",
+            "description": "Specify whether to run an aggressive scan.",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Sends a command from Symantec Endpoint Protection Manager to Symantec Endpoint Protection endpoints to request a full scan on the endpoint. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/ironcache": {
+      "post": {
+        "description": "",
+        "operationId": "Invalidate IRON Cache Entries",
+        "parameters": [
+          {
+            "description": "The hashType and hash list to be applied to endpoints.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FingerprintlistPayload"
+            }
+          },
+          {
+            "name": "computer_ids",
+            "in": "query",
+            "description": "The list of computers on which to run the command.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "group_ids",
+            "in": "query",
+            "description": "The list of groups on which to run the command.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Sends a command from Symantec Endpoint Protection Manager to Symantec Endpoint Protection endpoints to invalidate IRON cache entries on the endpoint. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/license/override": {
+      "post": {
+        "description": "",
+        "operationId": "Apply License Override",
+        "parameters": [
+          {
+            "description": "the license policy to apply to the selected groups or computers.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/LicenseEntitlements"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Sends a command from Symantec Endpoint Protection Manager to Symantec Endpoint Protection endpoints to override the default license policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/license/resetoverride": {
+      "post": {
+        "description": "",
+        "operationId": "Reset License Override",
+        "parameters": [
+          {
+            "description": "the target groups or computers to which this command should be applied.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CommandTargets"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Sends a command from Symantec Endpoint Protection Manager to Symantec Endpoint Protection endpoints to reset license policy to default instance. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/quarantine": {
+      "post": {
+        "description": "",
+        "operationId": "Quarantine Command",
+        "parameters": [
+          {
+            "name": "computer_ids",
+            "in": "query",
+            "description": "The list of computers on which to run the command.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "group_ids",
+            "in": "query",
+            "description": "The list of groups on which to run the command.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "hardware_ids",
+            "in": "query",
+            "description": "The list of computer hardware keys",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "undo",
+            "in": "query",
+            "description": "If set to true, will undo quarantine.",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Sends a command from Symantec Endpoint Protection Manager to (un)quarantine Symantec Endpoint Protection endpoints. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/quarantine/files/delete/{uid}": {
+      "post": {
+        "description": "",
+        "operationId": "Delete From Quarantine Command",
+        "parameters": [
+          {
+            "name": "computer_ids",
+            "in": "query",
+            "description": "The list of computers on which to run the command.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "group_ids",
+            "in": "query",
+            "description": "The list of groups on which to run the command.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "hardware_ids",
+            "in": "query",
+            "description": "The list of computer hardware keys",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "uid",
+            "in": "path",
+            "description": "The file's quarantine identifier from event data",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Sends a command from Symantec Endpoint Protection Manager to delete a file from the quarantine located on Symantec Endpoint Protection endpoints. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/quarantine/files/restore/{uid}": {
+      "post": {
+        "description": "",
+        "operationId": "Restore From Quarantine Command",
+        "parameters": [
+          {
+            "name": "computer_ids",
+            "in": "query",
+            "description": "The list of computers on which to run the command.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "group_ids",
+            "in": "query",
+            "description": "The list of groups on which to run the command.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "hardware_ids",
+            "in": "query",
+            "description": "The list of computer hardware keys",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "uid",
+            "in": "path",
+            "description": "The file's quarantine identifier from event data",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Sends a command from Symantec Endpoint Protection Manager to restore a file from the quarantine located on Symantec Endpoint Protection endpoints. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/restart": {
+      "post": {
+        "description": "",
+        "operationId": "Restart",
+        "parameters": [
+          {
+            "description": "Specify reboot options",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RestartPayload"
+            }
+          },
+          {
+            "name": "computer_ids",
+            "in": "query",
+            "description": "The list of computers on which to run the command.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "group_ids",
+            "in": "query",
+            "description": "The list of groups on which to run the command.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "hardware_ids",
+            "in": "query",
+            "description": "The list of computer hardware keys",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Sends a command from Symantec Endpoint Protection Manager to Symantec Endpoint Protection endpoints to request a reboot on the endpoint. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/updatecontent": {
+      "post": {
+        "description": "",
+        "operationId": "Update Content Command",
+        "parameters": [
+          {
+            "name": "computer_ids",
+            "in": "query",
+            "description": "The list of computers on which to run the command.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "group_ids",
+            "in": "query",
+            "description": "The list of groups on which to run the command.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Sends a command from SEPM to SEP endpoints to update content. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/{command_id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Command Status Details",
+        "parameters": [
+          {
+            "name": "command_id",
+            "in": "path",
+            "description": "The command ID for which details are needed.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Specifies whether the results are in ascending order (ASC) or descending order (DESC).",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pageIndex",
+            "in": "query",
+            "description": "The index page for returned results. The default page index is 1.",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "The number of results to include on each page. The default is 20.",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "The column by which the results are sorted. The default is by command's start time.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/PageCommandStatusDetail"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets the details of a command status. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/command-queue/{command_id}/cancel": {
+      "post": {
+        "description": "",
+        "operationId": "Cancel Command",
+        "parameters": [
+          {
+            "name": "command_id",
+            "in": "path",
+            "description": "The command ID to be canceled.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Cancels an existing command by creating a new cancel command for clients for which the command is still pending. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "BinaryFile": {
+      "type": "object",
+      "required": [
+        "checksum",
+        "fileSize",
+        "id"
+      ],
+      "properties": {
+        "checksum": {
+          "description": "A binary file's checksum value.",
+          "type": "string"
+        },
+        "fileSize": {
+          "description": "A binary file's size.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "id": {
+          "description": "A binary file's ID.",
+          "type": "string"
+        }
+      }
+    },
+    "CloudModeCommandData": {
+      "type": "object",
+      "required": [
+        "targets"
+      ],
+      "properties": {
+        "cloud_customer_id": {
+          "type": "string"
+        },
+        "cloud_domain_id": {
+          "type": "string"
+        },
+        "computer_ids": {
+          "description": "List computer Guids for which to apply license entitlement",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "connect_token": {
+          "type": "string"
+        },
+        "group_ids": {
+          "description": "List group Ids for which to apply license entitlement",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "hardware_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "targets": {
+          "$ref": "#/definitions/CommandTargets"
+        }
+      }
+    },
+    "CommandStatusDetail": {
+      "type": "object",
+      "properties": {
+        "beginTime": {
+          "type": "string"
+        },
+        "binaryFileId": {
+          "type": "string"
+        },
+        "computerId": {
+          "type": "string"
+        },
+        "computerIp": {
+          "type": "string"
+        },
+        "computerName": {
+          "type": "string"
+        },
+        "currentLoginUserName": {
+          "type": "string"
+        },
+        "domainName": {
+          "type": "string"
+        },
+        "hardwareKey": {
+          "type": "string"
+        },
+        "lastUpdateTime": {
+          "type": "string"
+        },
+        "resultInXML": {
+          "type": "string"
+        },
+        "stateId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "subStateDesc": {
+          "type": "string"
+        },
+        "subStateId": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "CommandTargets": {
+      "type": "object",
+      "properties": {
+        "computer_ids": {
+          "description": "List computer Guids for which to apply license entitlement",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "group_ids": {
+          "description": "List group Ids for which to apply license entitlement",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "hardware_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "FingerprintlistPayload": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "items": {
+            "type": "string",
+            "xml": {
+              "name": "Hash"
+            }
+          },
+          "type": "array",
+          "xml": {
+            "name": "HashList",
+            "wrapped": true
+          }
+        },
+        "hashType": {
+          "pattern": "(?i)^SHA256$",
+          "type": "string",
+          "xml": {
+            "name": "HashType"
+          }
+        }
+      },
+      "xml": {
+        "name": "Params"
+      }
+    },
+    "LicenseEntitlements": {
+      "type": "object",
+      "required": [
+        "certificate",
+        "signed_payload"
+      ],
+      "properties": {
+        "certificate": {
+          "description": "The signed licensing policy content",
+          "type": "string"
+        },
+        "computer_ids": {
+          "description": "List computer Guids for which to apply license entitlement",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "group_ids": {
+          "description": "List group Ids for which to apply license entitlement",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "hardware_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "signed_payload": {
+          "description": "The signed licensing policy content",
+          "type": "string"
+        }
+      }
+    },
+    "PageCommandStatusDetail": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "items": {
+            "$ref": "#/definitions/CommandStatusDetail"
+          },
+          "type": "array"
+        },
+        "firstPage": {
+          "type": "boolean"
+        },
+        "lastPage": {
+          "type": "boolean"
+        },
+        "number": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "numberOfElements": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "size": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "sort": {
+          "$ref": "#/definitions/Sort"
+        },
+        "totalElements": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "totalPages": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "RestartPayload": {
+      "type": "object",
+      "required": [
+        "prompt_type",
+        "schedule_type"
+      ],
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "prompt_type": {
+          "description": "Specifies the prompt style used to notify the user",
+          "enum": [
+            "prompt",
+            "no_prompt"
+          ],
+          "type": "string"
+        },
+        "schedule_type": {
+          "description": "Specifies when to restart",
+          "enum": [
+            "now",
+            "later"
+          ],
+          "type": "string"
+        }
+      }
+    },
+    "Sort": {
+      "type": "object"
+    }
+  }
+}

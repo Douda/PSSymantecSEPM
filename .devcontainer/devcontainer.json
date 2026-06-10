@@ -1,35 +1,52 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/powershell
 {
-	"name": "PowerShell",
+	"name": "PSSymantecSEPM Dev",
 	"build": {
 		"dockerfile": "../dockerfile"
 	},
-	//  Features can be installed by adding the feature name and version to the features object.
-	// "features": {},
-	"workspaceFolder": "/workspace/PSSymantecSEPM",
-	// Configure tool-specific properties.
+	"workspaceFolder": "/workspaces/PSSymantecSEPM",
+	"postCreateCommand": "pwsh -NoProfile -Command 'if (Test-Path /workspaces/PSSymantecSEPM/Source/PSSymantecSEPM.psd1) { Import-Module ModuleBuilder -Force; Build-Module -SourcePath /workspaces/PSSymantecSEPM/Source/PSSymantecSEPM.psd1 -SemVer 0.0.1 -OutputDirectory /workspaces/PSSymantecSEPM/Output; Write-Host \"Module built.\" -ForegroundColor Green } else { Write-Warning \"Source manifest not found.\" }'",
 	"customizations": {
-		// Configure properties specific to VS Code.
 		"vscode": {
-			// Set *default* container specific settings.json values on container create.
 			"settings": {
 				"terminal.integrated.defaultProfile.linux": "pwsh",
-				"powershell.powerShellDefaultVersion": "pwsh"
+				"terminal.integrated.profiles.linux": {
+					"pwsh": {
+						"path": "/usr/bin/pwsh",
+						"args": ["-Login"]
+					}
+				},
+				"powershell.powerShellDefaultVersion": "pwsh",
+				"powershell.powerShellAdditionalExePaths": {
+					"PowerShell Core 7+": "/usr/bin/pwsh"
+				},
+				"files.exclude": {
+					"Output/": false
+				},
+				"editor.formatOnSave": true,
+				"powershell.codeFormatting.preset": "Stroustrup",
+				"powershell.codeFormatting.autoCorrectAliases": true,
+				"powershell.codeFormatting.useCorrectCasing": true
 			},
-			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
 				"ms-vscode.powershell",
 				"pspester.pester-test",
-				"HSSE-Development.gitversionview",
-				"mhutchie.git-graph",
+				"ms-vscode.powershell-preview",
 				"oderwat.indent-rainbow",
-				"TylerLeonhardt.vscode-inline-values-powershell",
 				"Gruntfuggly.todo-tree",
 				"vscode-icons-team.vscode-icons",
-				"Postman.postman-for-vscode"
-				// "justin-grote.powershell-extension-pack"
+				"eamodio.gitlens",
+				"mhutchie.git-graph"
 			]
 		}
+	},
+	"remoteUser": "root",
+	"runArgs": [
+		"--add-host", "host.docker.internal:host-gateway"
+	],
+	"containerEnv": {
+		"SEPM_SERVER": "${localEnv:SEPM_SERVER:host.docker.internal}",
+		"SEPM_PORT": "${localEnv:SEPM_PORT:8446}",
+		"WINRM_USER": "${localEnv:WINRM_USER:}",
+		"WINRM_PASS": "${localEnv:WINRM_PASS:}"
 	}
 }

@@ -4,8 +4,6 @@ function Get-SEPMThreatStats {
         Gets threat statistics
     .DESCRIPTION
         Gets threat statistics
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMThreatStats
 
@@ -17,38 +15,16 @@ function Get-SEPMThreatStats {
 #>
 
     [CmdletBinding()]
-    param (
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
-    )
+    param()
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/stats/threat"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/stats/threat"
+
     }
 
     process {
-        # prepare the parameters
-        $params = @{
-            Method  = 'GET'
-            Uri     = $URI
-            headers = $headers
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
-        return $resp.Stats
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        Write-Output $resp.Stats -NoEnumerate
     }
 }

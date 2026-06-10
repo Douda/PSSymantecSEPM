@@ -13,8 +13,6 @@ function New-SEPMGroup {
         "My Company\EMEA\Workstations"
     .PARAMETER EnabledInheritance
         Specifies if the group should inherit the parent group's policies
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         New-SEPMGroup -GroupName "Win7" -ParentGroup "My Company\EMEA\Workstations"
 
@@ -28,9 +26,7 @@ function New-SEPMGroup {
     [CmdletBinding()]
     param (
         # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck,
+
 
         # group name
         [Parameter(
@@ -64,26 +60,17 @@ function New-SEPMGroup {
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/groups"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/groups"
+
         # Get all groups from SEPM
         $allGroups = Get-SEPMGroups
     }
 
     process {
         # Get the group ID of the destination group
-        $ParentGroupID = $allGroups | Where-Object { $_.fullPathName -eq $ParentGroup } | Select-Object -ExpandProperty id
+        $parent = $allGroups | Where-Object { $_.fullPathName -eq $ParentGroup } | Select-Object -First 1
+        $ParentGroupID = if ($parent) { $parent.id } else { $null }
         if ([string]::IsNullOrEmpty($ParentGroupID)) {
             $message = "Group $GroupName not found. Please check the parent group name and try again."
             $message += "Following group format is expected: 'My Company\group\subgroup'"
@@ -98,26 +85,9 @@ function New-SEPMGroup {
             "description" = $Description
         }
 
-        # prepare the parameters
-        $params = @{
-            Method      = 'POST'
-            Uri         = $URI + "/$ParentGroupID"
-            headers     = $headers
-            contenttype = 'application/json'
-            body        = $body | ConvertTo-Json
-        }
-
-        # TODO For testing only - remove this
-        # $body | ConvertTo-Json -Depth 100 | Out-File .\Data\PolicyStructure.json -Force
-    
-        # Invoke the request
-        try {
-            $resp = Invoke-ABRestMethod -params $params
-        } catch {
-            Write-Warning -Message "Error: $_"
-        }
-
-        # return the response
+        $patchUri = $URI + "/$ParentGroupID"
+        $resp = Invoke-SepmApi -Method 'POST' -Uri $patchUri -Session $session `
+            -Body (ConvertTo-SEPMJson -InputObject $body) -ContentType 'application/json'
         return $resp
     }
 }

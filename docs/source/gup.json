@@ -1,0 +1,126 @@
+{
+  "basePath": "/sepm/api/v1",
+  "definitions": {
+    "GUPData": {
+      "type": "object",
+      "properties": {
+        "agentVersion": {
+          "type": "string"
+        },
+        "avas": {
+          "type": "string"
+        },
+        "cidsDrvOnOff": {
+          "type": "string"
+        },
+        "computerDomainName": {
+          "type": "string"
+        },
+        "computerName": {
+          "type": "string"
+        },
+        "cpumhz": {
+          "type": "string"
+        },
+        "currentIPS": {
+          "type": "string"
+        },
+        "diskDrive": {
+          "type": "string"
+        },
+        "freeDisk": {
+          "type": "string"
+        },
+        "freeMem": {
+          "type": "string"
+        },
+        "hiStatus": {
+          "type": "string"
+        },
+        "ipAddress": {
+          "type": "string"
+        },
+        "ips": {
+          "type": "string"
+        },
+        "lastHeartBeat": {
+          "type": "string"
+        },
+        "operationSystem": {
+          "type": "string"
+        },
+        "port": {
+          "type": "string"
+        },
+        "processorType": {
+          "type": "string"
+        },
+        "sepDomain": {
+          "type": "string"
+        },
+        "sepmgroup": {
+          "type": "string"
+        },
+        "seq": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "totalMem": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "host": "",
+  "info": {
+    "description": "This page documents the REST APIs that perform Symantec Endpoint Protection Manager operations.",
+    "title": "Symantec Endpoint Protection Manager API Reference",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/gup/status": {
+      "get": {
+        "description": "",
+        "operationId": "Get GUP Data",
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/GUPData"
+              },
+              "type": "array"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets a list of group update providers.",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "schemes": [
+    "https"
+  ],
+  "swagger": "2.0",
+  "tags": [
+    {
+      "name": "production"
+    }
+  ]
+}

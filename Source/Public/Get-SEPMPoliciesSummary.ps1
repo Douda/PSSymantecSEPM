@@ -9,8 +9,6 @@ function Get-SEPMPoliciesSummary {
         The policy type for which the summary is to be retrieved. 
         The valid values are hid, exceptions, mem, ntr, av, fw, ips, lu, hi, adc, msl, upgrade.
         If not specified, the summary for all policies is retrieved.
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMPoliciesSummary
 
@@ -68,47 +66,25 @@ function Get-SEPMPoliciesSummary {
             'upgrade'
         )]
         [string]
-        $PolicyType,
-
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
+        $PolicyType
     )
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/policies/summary"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/policies/summary"
+
         # Get the list of groups and IDs to inject into the response
         $groups = Get-SEPMGroups
     }
 
     process {
         if ($PolicyType) {
-            $URI = $script:BaseURLv1 + "/policies/summary" + "/" + $PolicyType
-        }
-
-        # prepare the parameters
-        $params = @{
-            Method  = 'GET'
-            Uri     = $URI
-            headers = $headers
+            $URI = $session.BaseURLv1 + "/policies/summary" + "/" + $PolicyType
         }
 
         # Invoke the request
         try {
-            $resp = Invoke-ABRestMethod -params $params
+            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
             # Add group FullPath to the response from their Group ID for ease of use
             # Parsing every response object
             foreach ($policy in $resp.content) {
@@ -130,6 +106,6 @@ function Get-SEPMPoliciesSummary {
         }
             
         # return the response
-        return $resp.content
+        Write-Output $resp.content -NoEnumerate
     }
 }

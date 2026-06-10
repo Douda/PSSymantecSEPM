@@ -4,8 +4,6 @@ function Get-SEPClientVersion {
         Gets a list and count of clients by client product version.
     .DESCRIPTION
         Gets a list and count of clients by client product version.
-    .PARAMETER SkipCertificateCheck
-        Skip certificate check
     .EXAMPLE
         PS C:\PSSymantecSEPM> $SEPversions = Get-SEPClientVersion
         PS C:\PSSymantecSEPM> $SEPversions.clientVersionList
@@ -27,44 +25,19 @@ function Get-SEPClientVersion {
 #>
 
     [CmdletBinding()]
-    param (
-        # Skip certificate check
-        [Parameter()]
-        [switch]
-        $SkipCertificateCheck
-    )
+    param()
 
     begin {
-        # initialize the configuration
-        $test_token = Test-SEPMAccessToken
-        if (-not $test_token) {
-            Get-SEPMAccessToken | Out-Null
-        }
-        if ($SkipCertificateCheck) {
-            $script:SkipCert = $true
-        }
-        $URI = $script:BaseURLv1 + "/stats/client/version"
-        $headers = @{
-            "Authorization" = "Bearer " + $script:accessToken.token
-            "Content"       = 'application/json'
-        }
+        $session = Initialize-SEPMSession
+        $URI = $session.BaseURLv1 + "/stats/client/version"
+
     }
 
     process {
-        # prepare the parameters
-        $params = @{
-            Method  = 'GET'
-            Uri     = $URI
-            headers = $headers
-        }
-    
-        $resp = Invoke-ABRestMethod -params $params
+        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
 
-        # Add a PSTypeName to the object
-        $resp.clientVersionList | ForEach-Object {
-            $_.PSTypeNames.Insert(0, "SEP.clientVersionList")
-        }
-
-        return $resp.clientVersionList
+        $list = $resp.clientVersionList
+        if ($null -eq $list) { return @() }
+        Write-Output $list -NoEnumerate
     }
 }

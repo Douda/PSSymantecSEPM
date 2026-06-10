@@ -1,0 +1,1397 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "SEPM ADMIN-USERS API",
+    "version": "v1",
+    "description": "Self-contained OpenAPI 2.0 specification for SEPM admin-users endpoints."
+  },
+  "basePath": "/sepm/api/v1",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/api/v1/admin-users": {
+      "get": {
+        "description": "",
+        "operationId": "Get All Admin User Details",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "The domain in which to look for administrators.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/AdminSummaryDetails"
+              },
+              "type": "array"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets the list of administrators for a particular domain.",
+        "tags": [
+          "production"
+        ]
+      },
+      "post": {
+        "description": "",
+        "operationId": "Create Admin User",
+        "parameters": [
+          {
+            "description": "The information used to create the administrator.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AddAdminEntry"
+            }
+          },
+          {
+            "name": "domainid",
+            "in": "query",
+            "description": "The domain in which to create the administrator.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/AdminSummaryDetails"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Create a new administrator with the details that are provided.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/admin-users/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Admin User Details",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/blacklist_HttpServletRequest"
+            }
+          },
+          {
+            "name": "domainId",
+            "in": "query",
+            "description": "The domain in which to look for the administrator.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The administrator's ID.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/AdminSummaryDetails"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Gets the details of a single administrator.",
+        "tags": [
+          "production"
+        ]
+      },
+      "put": {
+        "description": "",
+        "operationId": "Update Admin User",
+        "parameters": [
+          {
+            "description": "The updated details for the administrator.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/AdminEntry"
+            }
+          },
+          {
+            "name": "domainid",
+            "in": "query",
+            "description": "The administrator's domain.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The administrator's ID.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/AdminEntry"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Updates the details for a specified administrator.",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "AddAdminEntry": {
+      "type": "object",
+      "required": [
+        "adminType",
+        "authenticationMethod",
+        "emailAddress",
+        "lockTimeThreshold",
+        "loginAttemptThreshold",
+        "loginName",
+        "password"
+      ],
+      "properties": {
+        "adminType": {
+          "description": "The type of administrator. Possible values are 1 for system administrator, 2 for domain administrator, and 3 for limited administrator.",
+          "format": "int32",
+          "maximum": 3,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "authenticationMethod": {
+          "description": "The administrator's authentication method. Possible values are 0 for Symantec Endpoint Protection Manager Authentication, 1 for RSA SecurID Authentication, and 2 for Directory Authentication.",
+          "format": "int32",
+          "maximum": 2,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "emailAddress": {
+          "description": "The administrator's email address.",
+          "type": "string"
+        },
+        "fullName": {
+          "description": "The administrator's full name.",
+          "maxLength": 50,
+          "minLength": 0,
+          "pattern": "^[^\"%<>&/\u0000-\u001f]+$",
+          "type": "string"
+        },
+        "id": {
+          "description": "The administrator's ID.",
+          "type": "string"
+        },
+        "isReportingRights": {
+          "type": "boolean"
+        },
+        "lockAccount": {
+          "description": "Whether the administrator's account is configured to lock after a specified number of logon failures.",
+          "type": "boolean"
+        },
+        "lockTimeThreshold": {
+          "description": "The amount of time the administrator's account is locked after a logon failure.",
+          "format": "int32",
+          "maximum": 60,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "loginAttemptThreshold": {
+          "description": "The number of logon failures allowed before the administrator's account is locked.",
+          "format": "int32",
+          "maximum": 10,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "loginName": {
+          "description": "The administrator's logon name.",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[^\"\\\\/\\[\\]:;|=,\\+\\*?<>\\s]+$",
+          "type": "string"
+        },
+        "notifyAdminOfLockedState": {
+          "description": "Whether to notify the administrator that the account is locked due to logon failures.",
+          "type": "boolean"
+        },
+        "password": {
+          "description": "The administrator's password.",
+          "maxLength": 1024,
+          "minLength": 8,
+          "type": "string"
+        },
+        "reportingRights": {
+          "description": "The administrator's reporting rights. Not currently used.",
+          "type": "boolean"
+        }
+      }
+    },
+    "AdminEntry": {
+      "type": "object",
+      "required": [
+        "emailAddress",
+        "lockTimeThreshold",
+        "loginAttemptThreshold"
+      ],
+      "properties": {
+        "emailAddress": {
+          "description": "The administrator's email address.",
+          "type": "string"
+        },
+        "fullName": {
+          "description": "The administrator's full name.",
+          "maxLength": 50,
+          "minLength": 0,
+          "pattern": "^[^\"%<>&/\u0000-\u001f]+$",
+          "type": "string"
+        },
+        "lockAccount": {
+          "description": "Whether the administrator's account is configured to lock after a specified number of logon failures.",
+          "type": "boolean"
+        },
+        "lockTimeThreshold": {
+          "description": "The amount of time the administrator's account is locked after a logon failure.",
+          "format": "int32",
+          "maximum": 60,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "loginAttemptThreshold": {
+          "description": "The number of logon failures allowed before the administrator's account is locked.",
+          "format": "int32",
+          "maximum": 10,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "notifyAdminOfLockedState": {
+          "description": "Whether to notify the administrator that the account is locked due to logon failures.",
+          "type": "boolean"
+        }
+      }
+    },
+    "AdminSummaryDetails": {
+      "type": "object",
+      "required": [
+        "adminType",
+        "attemptThreshold",
+        "authenticationMethod",
+        "companyName",
+        "creationTime",
+        "email",
+        "enabled",
+        "failedLoginCount",
+        "lastLoginTime",
+        "lastLogonIP",
+        "lastPasswordChanged",
+        "lockStatus",
+        "lockTimeThreshold",
+        "loginName",
+        "onlineStatus",
+        "passwordExpiresIn"
+      ],
+      "properties": {
+        "adminType": {
+          "description": "The type of administrator. Possible values are 1 for system administrator, 2 for domain administrator, and 3 for limited administrator.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "attemptThreshold": {
+          "description": "The number of logon failures allowed before the administrator's account is locked.",
+          "type": "string"
+        },
+        "authenticationMethod": {
+          "description": "The administrator's authentication method. Possible values are 0 for Symantec Endpoint Protection Manager Authentication, 1 for RSA SecurID Authentication, and 2 for Directory Authentication.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "companyName": {
+          "description": "The administrator's company name.",
+          "type": "string"
+        },
+        "creationTime": {
+          "description": "When the administrator account was created.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "email": {
+          "description": "The administrator's email address.",
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Whether the administrator is enabled or not.",
+          "type": "boolean"
+        },
+        "failedLoginCount": {
+          "description": "The number of times the administrator's logon has failed.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "fullName": {
+          "description": "The administrator's full name.",
+          "type": "string"
+        },
+        "id": {
+          "description": "The administrator's ID.",
+          "type": "string"
+        },
+        "lastLoginTime": {
+          "description": "The administrator's last logon time.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "lastLogonIP": {
+          "description": "The administrator's last logon IP address.",
+          "type": "string"
+        },
+        "lastPasswordChanged": {
+          "description": "When the administrator's password was last changed.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "lockAccount": {
+          "description": "Whether the administrator's account is configured to lock after a specified number of logon failures.",
+          "type": "boolean"
+        },
+        "lockStatus": {
+          "description": "Whether the administrator is locked or not.",
+          "type": "boolean"
+        },
+        "lockTimeThreshold": {
+          "description": "The amount of time the administrator's account is locked after a logon failure.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "loginName": {
+          "description": "The administrator's logon name.",
+          "type": "string"
+        },
+        "notifyAdminOfLockedState": {
+          "description": "Whether to notify the administrator that the account is locked due to logon failures.",
+          "type": "boolean"
+        },
+        "onlineStatus": {
+          "description": "Whether the administrator is online or offline.",
+          "type": "boolean"
+        },
+        "passwordExpiresIn": {
+          "description": "When the administrator's password expires.",
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "Annotation": {
+      "type": "object"
+    },
+    "AsyncContext": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/ServletRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/ServletResponse"
+        },
+        "timeout": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "BufferedReader": {
+      "type": "object"
+    },
+    "ClassLoader": {
+      "type": "object",
+      "properties": {
+        "definedPackages": {
+          "items": {
+            "$ref": "#/definitions/Package"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "parent": {
+          "$ref": "#/definitions/ClassLoader"
+        },
+        "registeredAsParallelCapable": {
+          "type": "boolean"
+        },
+        "unnamedModule": {
+          "$ref": "#/definitions/Module"
+        }
+      }
+    },
+    "EnumerationLocale": {
+      "type": "object"
+    },
+    "EnumerationServlet": {
+      "type": "object"
+    },
+    "EnumerationString": {
+      "type": "object"
+    },
+    "FilterRegistration": {
+      "type": "object",
+      "properties": {
+        "className": {
+          "type": "string"
+        },
+        "initParameters": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "name": {
+          "type": "string"
+        },
+        "servletNameMappings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "urlPatternMappings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "HttpServletMapping": {
+      "type": "object",
+      "properties": {
+        "mappingMatch": {
+          "enum": [
+            "CONTEXT_ROOT",
+            "DEFAULT",
+            "EXACT",
+            "EXTENSION",
+            "PATH"
+          ],
+          "type": "string"
+        },
+        "matchValue": {
+          "type": "string"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "servletName": {
+          "type": "string"
+        }
+      }
+    },
+    "InputStream": {
+      "type": "object"
+    },
+    "JspConfigDescriptor": {
+      "type": "object",
+      "properties": {
+        "jspPropertyGroups": {
+          "items": {
+            "$ref": "#/definitions/JspPropertyGroupDescriptor"
+          },
+          "type": "array"
+        },
+        "taglibs": {
+          "items": {
+            "$ref": "#/definitions/TaglibDescriptor"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "JspPropertyGroupDescriptor": {
+      "type": "object",
+      "properties": {
+        "buffer": {
+          "type": "string"
+        },
+        "defaultContentType": {
+          "type": "string"
+        },
+        "deferredSyntaxAllowedAsLiteral": {
+          "type": "string"
+        },
+        "elIgnored": {
+          "type": "string"
+        },
+        "errorOnUndeclaredNamespace": {
+          "type": "string"
+        },
+        "includeCodas": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "includePreludes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "isXml": {
+          "type": "string"
+        },
+        "pageEncoding": {
+          "type": "string"
+        },
+        "scriptingInvalid": {
+          "type": "string"
+        },
+        "trimDirectiveWhitespaces": {
+          "type": "string"
+        },
+        "urlPatterns": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "Locale": {
+      "type": "object",
+      "properties": {
+        "country": {
+          "type": "string"
+        },
+        "displayCountry": {
+          "type": "string"
+        },
+        "displayLanguage": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "displayScript": {
+          "type": "string"
+        },
+        "displayVariant": {
+          "type": "string"
+        },
+        "extensionKeys": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "iso3Country": {
+          "type": "string"
+        },
+        "iso3Language": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "script": {
+          "type": "string"
+        },
+        "unicodeLocaleAttributes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "unicodeLocaleKeys": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "variant": {
+          "type": "string"
+        }
+      }
+    },
+    "Module": {
+      "type": "object",
+      "properties": {
+        "annotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "classLoader": {
+          "$ref": "#/definitions/ClassLoader"
+        },
+        "declaredAnnotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "descriptor": {
+          "$ref": "#/definitions/ModuleDescriptor"
+        },
+        "layer": {
+          "$ref": "#/definitions/ModuleLayer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "named": {
+          "type": "boolean"
+        },
+        "packages": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        }
+      }
+    },
+    "ModuleDescriptor": {
+      "type": "object",
+      "properties": {
+        "automatic": {
+          "type": "boolean"
+        },
+        "open": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ModuleLayer": {
+      "type": "object"
+    },
+    "Package": {
+      "type": "object",
+      "properties": {
+        "annotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "declaredAnnotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "implementationTitle": {
+          "type": "string"
+        },
+        "implementationVendor": {
+          "type": "string"
+        },
+        "implementationVersion": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sealed": {
+          "type": "boolean"
+        },
+        "specificationTitle": {
+          "type": "string"
+        },
+        "specificationVendor": {
+          "type": "string"
+        },
+        "specificationVersion": {
+          "type": "string"
+        }
+      }
+    },
+    "Part": {
+      "type": "object",
+      "properties": {
+        "contentType": {
+          "type": "string"
+        },
+        "headerNames": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "inputStream": {
+          "$ref": "#/definitions/InputStream"
+        },
+        "name": {
+          "type": "string"
+        },
+        "size": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "submittedFileName": {
+          "type": "string"
+        }
+      }
+    },
+    "Principal": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "PrintWriter": {
+      "type": "object"
+    },
+    "ServletRegistration": {
+      "type": "object",
+      "properties": {
+        "className": {
+          "type": "string"
+        },
+        "initParameters": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "mappings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "runAsRole": {
+          "type": "string"
+        }
+      }
+    },
+    "ServletRequest": {
+      "type": "object",
+      "properties": {
+        "asyncContext": {
+          "$ref": "#/definitions/AsyncContext"
+        },
+        "asyncStarted": {
+          "type": "boolean"
+        },
+        "asyncSupported": {
+          "type": "boolean"
+        },
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "characterEncoding": {
+          "type": "string"
+        },
+        "contentLength": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "contentLengthLong": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "dispatcherType": {
+          "enum": [
+            "FORWARD",
+            "INCLUDE",
+            "REQUEST",
+            "ASYNC",
+            "ERROR"
+          ],
+          "type": "string"
+        },
+        "inputStream": {
+          "$ref": "#/definitions/blacklist_ServletInputStream"
+        },
+        "localAddr": {
+          "type": "string"
+        },
+        "localName": {
+          "type": "string"
+        },
+        "localPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "locales": {
+          "$ref": "#/definitions/EnumerationLocale"
+        },
+        "parameterMap": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        "parameterNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "reader": {
+          "$ref": "#/definitions/BufferedReader"
+        },
+        "remoteAddr": {
+          "type": "string"
+        },
+        "remoteHost": {
+          "type": "string"
+        },
+        "remotePort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        },
+        "serverName": {
+          "type": "string"
+        },
+        "serverPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "servletContext": {
+          "$ref": "#/definitions/blacklist_ServletContext"
+        }
+      }
+    },
+    "ServletResponse": {
+      "type": "object",
+      "properties": {
+        "bufferSize": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "characterEncoding": {
+          "type": "string"
+        },
+        "committed": {
+          "type": "boolean"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "outputStream": {
+          "$ref": "#/definitions/blacklist_ServletOutputStream"
+        },
+        "writer": {
+          "$ref": "#/definitions/PrintWriter"
+        }
+      }
+    },
+    "SessionCookieConfig": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "httpOnly": {
+          "type": "boolean"
+        },
+        "maxAge": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        }
+      }
+    },
+    "StringBuffer": {
+      "type": "object"
+    },
+    "TaglibDescriptor": {
+      "type": "object",
+      "properties": {
+        "taglibLocation": {
+          "type": "string"
+        },
+        "taglibURI": {
+          "type": "string"
+        }
+      }
+    },
+    "blacklist_Cookie": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "httpOnly": {
+          "type": "boolean"
+        },
+        "maxAge": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "string"
+        },
+        "version": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "blacklist_HttpServletRequest": {
+      "type": "object",
+      "properties": {
+        "asyncContext": {
+          "$ref": "#/definitions/AsyncContext"
+        },
+        "asyncStarted": {
+          "type": "boolean"
+        },
+        "asyncSupported": {
+          "type": "boolean"
+        },
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "authType": {
+          "type": "string"
+        },
+        "characterEncoding": {
+          "type": "string"
+        },
+        "contentLength": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "contentLengthLong": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "contextPath": {
+          "type": "string"
+        },
+        "cookies": {
+          "items": {
+            "$ref": "#/definitions/blacklist_Cookie"
+          },
+          "type": "array"
+        },
+        "dispatcherType": {
+          "enum": [
+            "FORWARD",
+            "INCLUDE",
+            "REQUEST",
+            "ASYNC",
+            "ERROR"
+          ],
+          "type": "string"
+        },
+        "headerNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "httpServletMapping": {
+          "$ref": "#/definitions/HttpServletMapping"
+        },
+        "inputStream": {
+          "$ref": "#/definitions/blacklist_ServletInputStream"
+        },
+        "localAddr": {
+          "type": "string"
+        },
+        "localName": {
+          "type": "string"
+        },
+        "localPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "locales": {
+          "$ref": "#/definitions/EnumerationLocale"
+        },
+        "method": {
+          "type": "string"
+        },
+        "parameterMap": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        "parameterNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "parts": {
+          "items": {
+            "$ref": "#/definitions/Part"
+          },
+          "type": "array"
+        },
+        "pathInfo": {
+          "type": "string"
+        },
+        "pathTranslated": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "queryString": {
+          "type": "string"
+        },
+        "reader": {
+          "$ref": "#/definitions/BufferedReader"
+        },
+        "remoteAddr": {
+          "type": "string"
+        },
+        "remoteHost": {
+          "type": "string"
+        },
+        "remotePort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "remoteUser": {
+          "type": "string"
+        },
+        "requestURI": {
+          "type": "string"
+        },
+        "requestURL": {
+          "$ref": "#/definitions/StringBuffer"
+        },
+        "requestedSessionId": {
+          "type": "string"
+        },
+        "requestedSessionIdFromCookie": {
+          "type": "boolean"
+        },
+        "requestedSessionIdFromURL": {
+          "type": "boolean"
+        },
+        "requestedSessionIdFromUrl": {
+          "type": "boolean"
+        },
+        "requestedSessionIdValid": {
+          "type": "boolean"
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        },
+        "serverName": {
+          "type": "string"
+        },
+        "serverPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "servletContext": {
+          "$ref": "#/definitions/blacklist_ServletContext"
+        },
+        "servletPath": {
+          "type": "string"
+        },
+        "session": {
+          "$ref": "#/definitions/blacklist_HttpSession"
+        },
+        "trailerFields": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "trailerFieldsReady": {
+          "type": "boolean"
+        },
+        "userPrincipal": {
+          "$ref": "#/definitions/Principal"
+        }
+      }
+    },
+    "blacklist_HttpSession": {
+      "type": "object",
+      "properties": {
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "creationTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lastAccessedTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "maxInactiveInterval": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "new": {
+          "type": "boolean"
+        },
+        "servletContext": {
+          "$ref": "#/definitions/blacklist_ServletContext"
+        },
+        "sessionContext": {
+          "$ref": "#/definitions/blacklist_HttpSessionContext"
+        },
+        "valueNames": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "blacklist_HttpSessionContext": {
+      "type": "object",
+      "properties": {
+        "ids": {
+          "$ref": "#/definitions/EnumerationString"
+        }
+      }
+    },
+    "blacklist_ServletContext": {
+      "type": "object",
+      "properties": {
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "classLoader": {
+          "$ref": "#/definitions/ClassLoader"
+        },
+        "contextPath": {
+          "type": "string"
+        },
+        "defaultSessionTrackingModes": {
+          "items": {
+            "enum": [
+              "COOKIE",
+              "URL",
+              "SSL"
+            ],
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "effectiveMajorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "effectiveMinorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "effectiveSessionTrackingModes": {
+          "items": {
+            "enum": [
+              "COOKIE",
+              "URL",
+              "SSL"
+            ],
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "filterRegistrations": {
+          "additionalProperties": {
+            "$ref": "#/definitions/FilterRegistration"
+          },
+          "type": "object"
+        },
+        "initParameterNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "jspConfigDescriptor": {
+          "$ref": "#/definitions/JspConfigDescriptor"
+        },
+        "majorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "minorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "requestCharacterEncoding": {
+          "type": "string"
+        },
+        "responseCharacterEncoding": {
+          "type": "string"
+        },
+        "serverInfo": {
+          "type": "string"
+        },
+        "servletContextName": {
+          "type": "string"
+        },
+        "servletNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "servletRegistrations": {
+          "additionalProperties": {
+            "$ref": "#/definitions/ServletRegistration"
+          },
+          "type": "object"
+        },
+        "servlets": {
+          "$ref": "#/definitions/EnumerationServlet"
+        },
+        "sessionCookieConfig": {
+          "$ref": "#/definitions/SessionCookieConfig"
+        },
+        "sessionTimeout": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "virtualServerName": {
+          "type": "string"
+        }
+      }
+    },
+    "blacklist_ServletInputStream": {
+      "type": "object",
+      "properties": {
+        "finished": {
+          "type": "boolean"
+        },
+        "ready": {
+          "type": "boolean"
+        }
+      }
+    },
+    "blacklist_ServletOutputStream": {
+      "type": "object",
+      "properties": {
+        "ready": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,5300 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "SEPM POLICIES API",
+    "version": "v1",
+    "description": "Self-contained OpenAPI 2.0 specification for SEPM policies endpoints."
+  },
+  "basePath": "/sepm/api/v1",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/api/v1/policies/exceptions": {
+      "post": {
+        "description": "",
+        "operationId": "Create Policy",
+        "parameters": [
+          {
+            "description": "The exceptions policy to be created.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyExceptionsConfigurationExceptionsLockedOptions"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Creates a new exceptions policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/exceptions/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the exceptions policy to get.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/PolicyExceptionsConfigurationExceptionsLockedOptions"
+            }
+          }
+        },
+        "summary": "Get the exceptions policy for specified policy id. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "put": {
+        "description": "",
+        "operationId": "Edit Policy",
+        "parameters": [
+          {
+            "description": "The exceptions policy to be modified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyExceptionsConfigurationExceptionsLockedOptions"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the exceptions policy to edit.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Modify existing policy values with PUT request. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "operationId": "deletePolicy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the Exceptions policy to delete.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Deletes an existing Exceptions policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "patch": {
+        "description": "",
+        "operationId": "Update Policy",
+        "parameters": [
+          {
+            "description": "The exceptions policy to be modified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyExceptionsConfigurationExceptionsLockedOptions"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the exceptions policy to update.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Update exceptions policies by patch. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/firewall/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/blacklist_HttpServletRequest"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the firewall policy to get.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/PolicyFirewallConfigurationObject"
+            }
+          }
+        },
+        "summary": "Get the firewall policy for specified policy id. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "operationId": "Delete Policy",
+        "parameters": [
+          {
+            "description": "Only used internally.",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/blacklist_HttpServletRequest"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the Firewall policy to delete.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Deletes an existing Firewall policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/hid": {
+      "post": {
+        "description": "",
+        "operationId": "Create Policy",
+        "parameters": [
+          {
+            "description": "The High Intensity Detection policy to be created.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyHidConfigurationObject"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Creates a new High Intensity Detection policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/hid/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the HID policy to get.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/PolicyHidConfigurationObject"
+            }
+          }
+        },
+        "summary": "Get Hid Policy payload for specified policy id. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "put": {
+        "description": "",
+        "operationId": "Edit Policy",
+        "parameters": [
+          {
+            "description": "The High Intensity Detection policy to be modified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyHidConfigurationObject"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the HID policy to edit.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Modify existing policy values. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "operationId": "Delete Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the HID policy to delete.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Deletes an existing HID policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "patch": {
+        "description": "",
+        "operationId": "Update Policy",
+        "parameters": [
+          {
+            "description": "The High Intensity Detection policy to be modified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyHidConfigurationObject"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the HID policy to update.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Update policies by patch. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/ips/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the Ips policy to get.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/PolicyIPSConfigurationObject"
+            }
+          }
+        },
+        "summary": "Get Ips Policy payload for specified policy id. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/licensing": {
+      "post": {
+        "description": "",
+        "operationId": "Create Policy",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/LicensingPolicyPayload"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Creates a new SAEP licensing setting. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/lu/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the LiveUpdate settings policy to get.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/PolicyLuConfigurationObject"
+            }
+          }
+        },
+        "summary": "Get the LiveUpdate settings policy for specified policy id. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/mem": {
+      "post": {
+        "description": "",
+        "operationId": "Create Policy",
+        "parameters": [
+          {
+            "description": "The Memory Exploit Mitigation policy to be created.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyMemConfigurationMemLockedOptions"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Web service is processed successfully and resource is created"
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "404": {
+            "description": "The resource reguested was not found"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Creates a new Memory Exploit Mitigation policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/mem/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the MEM policy to get.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Web service is processed successfully, result is returned",
+            "schema": {
+              "$ref": "#/definitions/PolicyMemConfigurationMemLockedOptions"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "404": {
+            "description": "The resource reguested was not found"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Get Mem Policy payload for specified policy id. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "put": {
+        "description": "",
+        "operationId": "Edit Policy",
+        "parameters": [
+          {
+            "description": "The Memory Exploit Mitigation policy to be midified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyMemConfigurationMemLockedOptions"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the MEM policy to edit.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Web service is processed successfully and policy is updated",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "404": {
+            "description": "The resource reguested was not found"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Modify existing policy values. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "operationId": "Delete Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the MEM policy to delete.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Delete operation success. If the resource did not exist prior to the call, 204 is still returned."
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "404": {
+            "description": "The resource reguested was not found"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Deletes an existing MEM policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "patch": {
+        "description": "",
+        "operationId": "Update Policy",
+        "parameters": [
+          {
+            "description": "The Memory Exploit Mitigation policy to be midified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyMemConfigurationMemLockedOptions"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the MEM policy to update.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Web service is processed successfully and policy is updated",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "404": {
+            "description": "The resource reguested was not found"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Update policies by patch. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/policy-objects/hostgroups": {
+      "post": {
+        "description": "",
+        "operationId": "Create Policy",
+        "parameters": [
+          {
+            "description": "The host group policy component to be created.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/HostGroup"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create a new Host Group Policy Component.A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/policy-objects/hostgroups/summary": {
+      "get": {
+        "description": "",
+        "operationId": "Get Host Group Summary",
+        "parameters": [
+          {
+            "name": "domainId",
+            "in": "query",
+            "description": "If present, get host groups from this domain. Else get host groups from logged in domain.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The web service successfully processed the web request and returned a result.",
+            "schema": {
+              "$ref": "#/definitions/PageHostGroupSummary"
+            }
+          },
+          "400": {
+            "description": "The parameters are invalid."
+          },
+          "401": {
+            "description": "The user that is currently logged on has insufficient rights to execute the web method, or the user is unauthorized."
+          },
+          "404": {
+            "description": "The requested resource was not found."
+          },
+          "410": {
+            "description": "Can not find the object specified"
+          },
+          "500": {
+            "description": "The web service encountered an error while processing the web request."
+          }
+        },
+        "summary": "Get the host groups summary.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/policy-objects/hostgroups/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Host Group Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the host group policy",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/HostGroup"
+            }
+          }
+        },
+        "summary": "Get host group policy",
+        "tags": [
+          "production"
+        ]
+      },
+      "put": {
+        "description": "",
+        "operationId": "Update Policy",
+        "parameters": [
+          {
+            "description": "The host group policy component to be updated.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/HostGroup"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the host group policy component to updated.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update a Host Group Policy Component. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/raw/{policy_type}/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the policy to get.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "policy_type",
+            "in": "path",
+            "description": "The type of the policy to get.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Web service is processed successfully, result is returned",
+            "schema": {
+              "$ref": "#/definitions/RawPolicy"
+            }
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "401": {
+            "description": "The current logged in user does not have sufficient rights to execute the web method or user is unauthorized"
+          },
+          "404": {
+            "description": "The resource reguested was not found"
+          },
+          "500": {
+            "description": "The web service encountered an error processing the web request"
+          }
+        },
+        "summary": "Get Policy XML for specified policy id. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/summary": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy Summary",
+        "parameters": [
+          {
+            "name": "domainId",
+            "in": "query",
+            "description": "If present, get policies from this domain. Else get policies from logged in domain.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get the policy summary for specified policy type. Also gets the list of groups to which the policies are assigned.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/summary/{policy_type}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy Summary with Policy Type",
+        "parameters": [
+          {
+            "name": "domainId",
+            "in": "query",
+            "description": "If present, get policies from this domain. Else get policies from logged in domain.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "policy_type",
+            "in": "path",
+            "description": "Get summary for all the policies of this type.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get the policy summary for specified policy type. Also gets the list of groups to which the policies are assigned.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/tdad": {
+      "post": {
+        "description": "",
+        "operationId": "Create Policy",
+        "parameters": [
+          {
+            "description": "The Threat Defense for Active Directory policy to be created.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyTdadConfigurationObject"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Creates a new Threat Defense for Active Directory policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/tdad/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the TDAD policy to get.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/PolicyTdadConfigurationObject"
+            }
+          }
+        },
+        "summary": "Get TDAD Policy payload for specified policy id. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "put": {
+        "description": "",
+        "operationId": "Edit Policy",
+        "parameters": [
+          {
+            "description": "The Threat Defense for Active Directory policy to be modified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyTdadConfigurationObject"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the TDAD policy to edit.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Modify existing policy values. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "operationId": "Delete Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the TDAD policy to delete.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Deletes an existing TDAD policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "patch": {
+        "description": "",
+        "operationId": "Update Policy",
+        "parameters": [
+          {
+            "description": "The Threat Defense for Active Directory policy to be modified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyTdadConfigurationObject"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the TDAD policy to update.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Update policies by patch. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/upgrade": {
+      "post": {
+        "description": "",
+        "operationId": "Create Policy",
+        "parameters": [
+          {
+            "description": "The upgrade policy to be created.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyUpgradeConfigurationObject"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Creates a new Upgrade policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v1/policies/upgrade/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the Upgrade policy to get.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/PolicyUpgradeConfigurationObject"
+            }
+          }
+        },
+        "summary": "Get Upgrade Policy payload for specified policy id. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "put": {
+        "description": "",
+        "operationId": "Edit Policy",
+        "parameters": [
+          {
+            "description": "The Upgrade policy to be modified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyUpgradeConfigurationObject"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the Upgrade policy to edit.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Modify existing policy values. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "operationId": "Delete Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the Upgrade policy to delete.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Deletes an existing Upgrade policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "patch": {
+        "description": "",
+        "operationId": "Update Policy",
+        "parameters": [
+          {
+            "description": "The High Intensity Detection policy to be modified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyUpgradeConfigurationObject"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the Upgrade policy to update.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Update policies by patch. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v2/policies/exceptions": {
+      "post": {
+        "description": "",
+        "operationId": "Create Policy",
+        "parameters": [
+          {
+            "description": "The exceptions policy to be created.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyExceptionsConfigurationV2ExceptionsLockedOptions"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Creates a new exceptions policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    },
+    "/api/v2/policies/exceptions/{id}": {
+      "get": {
+        "description": "",
+        "operationId": "Get Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the exceptions policy to get.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/PolicyExceptionsConfigurationV2ExceptionsLockedOptions"
+            }
+          }
+        },
+        "summary": "Get the exceptions policy for specified policy id. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "put": {
+        "description": "",
+        "operationId": "Edit Policy",
+        "parameters": [
+          {
+            "description": "The exceptions policy to be modified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyExceptionsConfigurationV2ExceptionsLockedOptions"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the exceptions policy to edit.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Modify existing policy values with PUT request. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "operationId": "Delete Policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the Exceptions policy to delete.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Deletes an existing Exceptions policy. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      },
+      "patch": {
+        "description": "",
+        "operationId": "Update Policy",
+        "parameters": [
+          {
+            "description": "The exceptions policy to be modified.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PolicyExceptionsConfigurationV2ExceptionsLockedOptions"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the exceptions policy to update.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": "Update exceptions policies by patch. A system administrator account is required for this REST API.",
+        "tags": [
+          "production"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "AdapterConfiguration": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "identification": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "ANY",
+            "VPN",
+            "WIRELESS",
+            "DIAL_UP",
+            "ETHERNET",
+            "PPTP"
+          ],
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        }
+      }
+    },
+    "Advanced": {
+      "type": "object",
+      "properties": {
+        "allow_download_smaller_package": {
+          "description": "Allow client download smaller LU package",
+          "type": "boolean"
+        },
+        "allow_manual_lu": {
+          "description": "Allow running LU manually",
+          "type": "boolean"
+        },
+        "allow_patch_by_lu": {
+          "description": "Allow patch by LiveUpdate",
+          "type": "boolean"
+        },
+        "allow_proxy_setting_change": {
+          "description": "Allow local proxy setting change",
+          "type": "boolean"
+        },
+        "allow_schedule_change": {
+          "description": "Allow local schedule change",
+          "type": "boolean"
+        },
+        "require_http_headers": {
+          "description": "Require standard HTTP headers",
+          "type": "boolean"
+        }
+      }
+    },
+    "Annotation": {
+      "type": "object"
+    },
+    "ApplicationConfiguration": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "description": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "type": "string"
+        },
+        "last_modified_date": {
+          "type": "string"
+        },
+        "md5": {
+          "maxLength": 32,
+          "minLength": 32,
+          "pattern": "^[A-Fa-f0-9]*$",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 260,
+          "minLength": 1,
+          "pattern": "^[^<>|\"]*$",
+          "type": "string"
+        },
+        "sha2": {
+          "maxLength": 64,
+          "minLength": 64,
+          "pattern": "^[A-Fa-f0-9]*$",
+          "type": "string"
+        },
+        "size": {
+          "format": "int64",
+          "maximum": 2147483647,
+          "minimum": 0,
+          "type": "integer"
+        }
+      }
+    },
+    "AsyncContext": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/ServletRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/ServletResponse"
+        },
+        "timeout": {
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "BufferedReader": {
+      "type": "object"
+    },
+    "CenteralLuServer": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "Description of the internal LU server",
+          "type": "string"
+        },
+        "name": {
+          "description": "Name of the internal LU server",
+          "type": "string"
+        },
+        "password": {
+          "description": "Password of the internal LU server",
+          "type": "string"
+        },
+        "protocol": {
+          "description": "Protocol of the internal LU server",
+          "type": "string"
+        },
+        "url": {
+          "description": "URL of the internal LU server",
+          "type": "string"
+        },
+        "username": {
+          "description": "Username of the internal LU server",
+          "type": "string"
+        }
+      }
+    },
+    "ClassLoader": {
+      "type": "object",
+      "properties": {
+        "definedPackages": {
+          "items": {
+            "$ref": "#/definitions/Package"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "parent": {
+          "$ref": "#/definitions/ClassLoader"
+        },
+        "registeredAsParallelCapable": {
+          "type": "boolean"
+        },
+        "unnamedModule": {
+          "$ref": "#/definitions/Module"
+        }
+      }
+    },
+    "ConnectionConfiguration": {
+      "type": "object",
+      "properties": {
+        "direction_id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "ether_type_id": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "icmp_code_ranges": {
+          "items": {
+            "$ref": "#/definitions/IntegerRange"
+          },
+          "type": "array"
+        },
+        "icmp_codes": {
+          "items": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "icmp_type_ranges": {
+          "items": {
+            "$ref": "#/definitions/IntegerRange"
+          },
+          "type": "array"
+        },
+        "icmp_types": {
+          "items": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "ip_fragmented_only": {
+          "type": "boolean"
+        },
+        "ports": {
+          "items": {
+            "$ref": "#/definitions/PortConfiguration"
+          },
+          "type": "array"
+        },
+        "protocol_id_ranges": {
+          "items": {
+            "$ref": "#/definitions/IntegerRange"
+          },
+          "type": "array"
+        },
+        "protocol_ids": {
+          "items": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "svc_name": {
+          "type": "string"
+        },
+        "svc_uid": {
+          "type": "string"
+        }
+      }
+    },
+    "CustomGroupRule": {
+      "type": "object",
+      "properties": {
+        "custom_ips_signatures": {
+          "$ref": "#/definitions/CustomIPSSignatureRule"
+        },
+        "description": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "CustomIPSSignatureRule": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "enum": [
+            "ALLOW",
+            "BLOCK"
+          ],
+          "type": "string"
+        },
+        "applications": {
+          "items": {
+            "$ref": "#/definitions/File"
+          },
+          "type": "array"
+        },
+        "description": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "packet_capture": {
+          "type": "boolean"
+        },
+        "packet_direction_id": {
+          "format": "int32",
+          "maximum": 2,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "severity": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "traffic_condition": {
+          "type": "string"
+        }
+      }
+    },
+    "CustomVariableRule": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "EnumerationLocale": {
+      "type": "object"
+    },
+    "EnumerationServlet": {
+      "type": "object"
+    },
+    "EnumerationString": {
+      "type": "object"
+    },
+    "ExceptionThreat": {
+      "type": "object",
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "description": "Id of the threat.",
+          "type": "string"
+        },
+        "name": {
+          "description": "The threat name.",
+          "type": "string"
+        }
+      }
+    },
+    "ExceptionsApplicationToMonitor": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "The process to detect.",
+          "type": "string"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        }
+      }
+    },
+    "ExceptionsConfiguration": {
+      "type": "object",
+      "properties": {
+        "applications": {
+          "description": "Applications at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleApplication"
+          },
+          "type": "array"
+        },
+        "applications_to_monitor": {
+          "description": "Monitored applicaitons at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsApplicationToMonitor"
+          },
+          "type": "array"
+        },
+        "blacklistrules": {
+          "description": "Blacklists at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleBlacklist"
+          },
+          "type": "array"
+        },
+        "certificates": {
+          "description": "Certificates at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleCertificate"
+          },
+          "type": "array"
+        },
+        "directories": {
+          "description": "Directories on wins platform at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleDirectory"
+          },
+          "type": "array"
+        },
+        "dns_and_host_applications": {
+          "description": "Dns and host applications at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleApplication"
+          },
+          "type": "array"
+        },
+        "dns_and_host_blacklistrules": {
+          "description": "Dns and host blacklists at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleDnsHostBlacklist"
+          },
+          "type": "array"
+        },
+        "extension_list": {
+          "$ref": "#/definitions/ExceptionsRuleExtensionList",
+          "description": "Extension on windows platforms at the exceptions policy"
+        },
+        "files": {
+          "description": "Files on windows platform at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleFile"
+          },
+          "type": "array"
+        },
+        "knownrisks": {
+          "description": "Known risks at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleKnownRisk"
+          },
+          "type": "array"
+        },
+        "linux": {
+          "$ref": "#/definitions/ExceptionsLinuxConfiguration",
+          "description": "Linux configuration at the exceptions policy"
+        },
+        "mac": {
+          "$ref": "#/definitions/ExceptionsMacConfiguration",
+          "description": "Mac files at the exceptions policy"
+        },
+        "non_pe_rules": {
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleNonPEFile"
+          },
+          "type": "array"
+        },
+        "tamper_files": {
+          "description": "Tamper files at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleFile"
+          },
+          "type": "array"
+        },
+        "webdomains": {
+          "description": "Trusted web domains at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleDomain"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "ExceptionsConfigurationV2": {
+      "type": "object",
+      "properties": {
+        "applications": {
+          "description": "Applications at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleApplication"
+          },
+          "type": "array"
+        },
+        "applications_to_monitor": {
+          "description": "Monitored applicaitons at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsApplicationToMonitor"
+          },
+          "type": "array"
+        },
+        "certificates": {
+          "description": "Certificates at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleCertificate"
+          },
+          "type": "array"
+        },
+        "denylistrules": {
+          "description": "Denylists at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleBlacklist"
+          },
+          "type": "array"
+        },
+        "directories": {
+          "description": "Directories on wins platform at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleDirectory"
+          },
+          "type": "array"
+        },
+        "dns_and_host_applications": {
+          "description": "Dns and host applications at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleApplication"
+          },
+          "type": "array"
+        },
+        "dns_and_host_denylistrules": {
+          "description": "Dns and host denylists at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleDnsHostBlacklist"
+          },
+          "type": "array"
+        },
+        "extension_list": {
+          "$ref": "#/definitions/ExceptionsRuleExtensionList",
+          "description": "Extension on windows platforms at the exceptions policy"
+        },
+        "files": {
+          "description": "Files on windows platform at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleFile"
+          },
+          "type": "array"
+        },
+        "knownrisks": {
+          "description": "Known risks at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleKnownRisk"
+          },
+          "type": "array"
+        },
+        "linux": {
+          "$ref": "#/definitions/ExceptionsLinuxConfiguration",
+          "description": "Linux configuration at the exceptions policy"
+        },
+        "mac": {
+          "$ref": "#/definitions/ExceptionsMacConfiguration",
+          "description": "Mac files at the exceptions policy"
+        },
+        "non_pe_rules": {
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleNonPEFile"
+          },
+          "type": "array"
+        },
+        "tamper_files": {
+          "description": "Tamper files at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleFile"
+          },
+          "type": "array"
+        },
+        "webdomains": {
+          "description": "Trusted web domains at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleDomain"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "ExceptionsFile": {
+      "type": "object",
+      "required": [
+        "sha2"
+      ],
+      "properties": {
+        "company": {
+          "description": "Optional attribute identifying the process.  The name of the company that published the object.",
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "directory": {
+          "description": "Optional attribute identifying the process.  The directory where the object was originally found.",
+          "type": "string"
+        },
+        "md5": {
+          "pattern": "(^[0-9a-fA-F]{32}$)",
+          "type": "string"
+        },
+        "name": {
+          "description": "Optional attribute identifying the process.  The name of the file object; for example, iexplore.exe",
+          "type": "string"
+        },
+        "sha2": {
+          "description": "The SHA-256, SHA-1, or MD5 checksum of the object content.",
+          "pattern": "(^[0-9a-fA-F]{64}$)|(^[0-9a-fA-F]{40}$)|(^[0-9a-fA-F]{32}$)",
+          "type": "string"
+        },
+        "size": {
+          "description": "Optional attribute identifying the process.  The size of the object, in bytes; for example, 69472.",
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      }
+    },
+    "ExceptionsFingerprint": {
+      "type": "object",
+      "required": [
+        "algorithm",
+        "value"
+      ],
+      "properties": {
+        "algorithm": {
+          "description": "The algorithm used to create the fingerprint.  SHA-1 support only for SAEPv1 for certificate thumbprint.",
+          "enum": [
+            "SHA1",
+            "SHA2"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "description": "The hash of the object content.",
+          "pattern": "^[0-9a-fA-F]*$",
+          "type": "string"
+        }
+      }
+    },
+    "ExceptionsLinuxConfiguration": {
+      "type": "object",
+      "properties": {
+        "directories": {
+          "description": "Directories on Linux platforms at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleLinuxDirectory"
+          },
+          "type": "array"
+        },
+        "extension_list": {
+          "$ref": "#/definitions/ExceptionsRuleExtensionList",
+          "description": "Extension on Linux platforms at the exceptions policy"
+        }
+      }
+    },
+    "ExceptionsLockedOptions": {
+      "type": "object",
+      "properties": {
+        "application": {
+          "type": "boolean"
+        },
+        "certificate": {
+          "type": "boolean"
+        },
+        "dnshostfile": {
+          "type": "boolean"
+        },
+        "domain": {
+          "type": "boolean"
+        },
+        "extension": {
+          "type": "boolean"
+        },
+        "file": {
+          "type": "boolean"
+        },
+        "knownrisk": {
+          "type": "boolean"
+        },
+        "securityrisk": {
+          "type": "boolean"
+        },
+        "sonar": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ExceptionsMacConfiguration": {
+      "type": "object",
+      "properties": {
+        "files": {
+          "description": "Files on mac platforms at the exceptions policy",
+          "items": {
+            "$ref": "#/definitions/ExceptionsRuleMacFile"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "ExceptionsRuleApplication": {
+      "type": "object",
+      "required": [
+        "processfile"
+      ],
+      "properties": {
+        "action": {
+          "description": "The action of the threat in exceptions policy.",
+          "enum": [
+            "IGNORE",
+            "LOG_ONLY",
+            "QUARANTINE",
+            "BLOCK"
+          ],
+          "type": "string"
+        },
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "processfile": {
+          "$ref": "#/definitions/ExceptionsFile",
+          "description": "The process to ignore"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        }
+      }
+    },
+    "ExceptionsRuleBlacklist": {
+      "type": "object",
+      "required": [
+        "action",
+        "processfile"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action to take on the process",
+          "enum": [
+            "BLOCK",
+            "QUARANTINE",
+            "REMOVE"
+          ],
+          "type": "string"
+        },
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "processfile": {
+          "$ref": "#/definitions/ExceptionsFile",
+          "description": "The process to block, delete or quarantine"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        }
+      }
+    },
+    "ExceptionsRuleCertificate": {
+      "type": "object",
+      "required": [
+        "signature_fingerprint"
+      ],
+      "properties": {
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        },
+        "signature_company_name": {
+          "description": "The company name on the certificate",
+          "type": "string"
+        },
+        "signature_fingerprint": {
+          "$ref": "#/definitions/ExceptionsFingerprint",
+          "description": "Hash of the digital certificate"
+        },
+        "signature_fingerprints": {
+          "description": "List of hash of the digital certificates [Only supported with V2 APIs]. If SHA1 is provided here, `signature_fingerprint`'s value will be ignored",
+          "items": {
+            "$ref": "#/definitions/ExceptionsFingerprint"
+          },
+          "type": "array"
+        },
+        "signature_issuer": {
+          "description": "he issuer of the object signature",
+          "type": "string"
+        }
+      }
+    },
+    "ExceptionsRuleDirectory": {
+      "type": "object",
+      "required": [
+        "directory",
+        "pathvariable"
+      ],
+      "properties": {
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "directory": {
+          "description": "Folder name",
+          "type": "string"
+        },
+        "pathvariable": {
+          "description": "A prefix variable indicates a well-known Windows folder",
+          "enum": [
+            "NONE",
+            "COMMON_APPDATA",
+            "COMMON_DESKTOPDIRECTORY",
+            "COMMON_DOCUMENTS",
+            "COMMON_PROGRAMS",
+            "COMMON_STARTUP",
+            "PROGRAM_FILES",
+            "PROGRAM_FILES_COMMON",
+            "SYSTEM",
+            "SYSTEM_DRIVE",
+            "USER_PROFILE",
+            "WINDOWS"
+          ],
+          "type": "string"
+        },
+        "recursive": {
+          "description": "Indicates whether sub-folders are also excluded",
+          "type": "boolean"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        },
+        "scancategory": {
+          "description": "Type of security risk scan",
+          "enum": [
+            "GESC_AP",
+            "GESC_MANUAL",
+            "GESC_ALL"
+          ],
+          "type": "string"
+        },
+        "scantype": {
+          "description": "Type of scan that exclude the folder",
+          "enum": [
+            "GEPT_RISK",
+            "GEPT_SECURITY_RISK",
+            "GEPT_HPP",
+            "GEPT_ADC",
+            "ALL"
+          ],
+          "type": "string"
+        }
+      }
+    },
+    "ExceptionsRuleDnsHostBlacklist": {
+      "type": "object",
+      "required": [
+        "action",
+        "processfile"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action to take on the process",
+          "enum": [
+            "BLOCK",
+            "PROMPT"
+          ],
+          "type": "string"
+        },
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "processfile": {
+          "$ref": "#/definitions/ExceptionsFile",
+          "description": "The process to block or prompt"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        }
+      }
+    },
+    "ExceptionsRuleDomain": {
+      "type": "object",
+      "required": [
+        "domain"
+      ],
+      "properties": {
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "domain": {
+          "description": "The URL domain extracted from the URL; for example, www.files.com or an ip address.  Domain names can include wildcards.",
+          "type": "string"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        }
+      }
+    },
+    "ExceptionsRuleExtensionList": {
+      "type": "object",
+      "required": [
+        "extensions"
+      ],
+      "properties": {
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "extensions": {
+          "description": "The extensions.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        },
+        "scancategory": {
+          "description": "The scan category.",
+          "enum": [
+            "GESC_AP",
+            "GESC_MANUAL",
+            "GESC_ALL"
+          ],
+          "type": "string"
+        }
+      }
+    },
+    "ExceptionsRuleFile": {
+      "type": "object",
+      "required": [
+        "path",
+        "pathvariable"
+      ],
+      "properties": {
+        "SONAR": {
+          "type": "boolean"
+        },
+        "applicationcontrol": {
+          "description": "Exclude this file from application control",
+          "type": "boolean"
+        },
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "path": {
+          "description": "The path to the object.  Relative path if pathvariable is defined.  Full path if pathvariable is [NONE] or not specified",
+          "type": "string"
+        },
+        "pathvariable": {
+          "description": "A prefix variable indicates a well-known Windows folder",
+          "enum": [
+            "NONE",
+            "COMMON_APPDATA",
+            "COMMON_DESKTOPDIRECTORY",
+            "COMMON_DOCUMENTS",
+            "COMMON_PROGRAMS",
+            "COMMON_STARTUP",
+            "PROGRAM_FILES",
+            "PROGRAM_FILES_COMMON",
+            "SYSTEM",
+            "SYSTEM_DRIVE",
+            "USER_PROFILE",
+            "WINDOWS"
+          ],
+          "type": "string"
+        },
+        "recursive": {
+          "description": "Exclude child processes",
+          "type": "boolean"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        },
+        "scancategory": {
+          "description": "Type of security risk scan",
+          "enum": [
+            "GESC_AP",
+            "GESC_MANUAL",
+            "GESC_ALL"
+          ],
+          "type": "string"
+        },
+        "securityrisk": {
+          "description": "Exclude this file from security risk",
+          "type": "boolean"
+        },
+        "sonar": {
+          "description": "Exclude this file from SONAR",
+          "type": "boolean"
+        }
+      }
+    },
+    "ExceptionsRuleKnownRisk": {
+      "type": "object",
+      "required": [
+        "threat"
+      ],
+      "properties": {
+        "action": {
+          "description": "The action of the threat in exceptions policy.",
+          "enum": [
+            "IGNORE",
+            "LOG_ONLY",
+            "QUARANTINE",
+            "BLOCK"
+          ],
+          "type": "string"
+        },
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        },
+        "threat": {
+          "$ref": "#/definitions/ExceptionThreat",
+          "description": "The threat in exceptions policy."
+        }
+      }
+    },
+    "ExceptionsRuleLinuxDirectory": {
+      "type": "object",
+      "required": [
+        "directory",
+        "pathvariable"
+      ],
+      "properties": {
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "directory": {
+          "description": "Folder name",
+          "type": "string"
+        },
+        "pathvariable": {
+          "description": "A prefix variable indicates a well-known Linux folder",
+          "enum": [
+            "NONE",
+            "HOME",
+            "ROOT",
+            "BIN",
+            "ETC",
+            "USR",
+            "OPT"
+          ],
+          "type": "string"
+        },
+        "recursive": {
+          "description": "Indicates whether sub-folders are also excluded",
+          "type": "boolean"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        },
+        "scancategory": {
+          "description": "Type of security risk scan",
+          "enum": [
+            "GESC_AP",
+            "GESC_MANUAL",
+            "GESC_ALL"
+          ],
+          "type": "string"
+        }
+      }
+    },
+    "ExceptionsRuleMacFile": {
+      "type": "object",
+      "required": [
+        "path",
+        "pathvariable"
+      ],
+      "properties": {
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "path": {
+          "description": "The path to the object.  Relative path if pathvariable is defined.  Full path if pathvariable is [NONE] or not specified",
+          "type": "string"
+        },
+        "pathvariable": {
+          "description": "A prefix variable indicates a well-known Mac folder",
+          "enum": [
+            "NONE",
+            "HOME",
+            "APPLICATION",
+            "LIBRARY"
+          ],
+          "type": "string"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        }
+      }
+    },
+    "ExceptionsRuleNonPEFile": {
+      "type": "object",
+      "required": [
+        "file"
+      ],
+      "properties": {
+        "action": {
+          "enum": [
+            "IGNORE",
+            "LOG_ONLY",
+            "QUARANTINE",
+            "BLOCK"
+          ],
+          "type": "string"
+        },
+        "actor": {
+          "$ref": "#/definitions/ExceptionsFile"
+        },
+        "deleted": {
+          "description": "Note if the rule need be deleted when we PATCH a request",
+          "type": "boolean"
+        },
+        "file": {
+          "$ref": "#/definitions/ExceptionsFile"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/ExceptionsRuleState",
+          "description": "Rule options"
+        }
+      }
+    },
+    "ExceptionsRuleState": {
+      "type": "object",
+      "required": [
+        "source"
+      ],
+      "properties": {
+        "enabled": {
+          "description": "Ability to disable a rule temporarily from enforcement without deleting it",
+          "type": "boolean"
+        },
+        "source": {
+          "description": "Which 3rd-party management system was the source of the rule; ex, SEP, ATP",
+          "type": "string"
+        }
+      }
+    },
+    "ExplicitGroupUpdateProviders": {
+      "type": "object",
+      "properties": {
+        "explicit_mappings": {
+          "description": "Explicit GUP mapping ",
+          "items": {
+            "$ref": "#/definitions/ExplicitMapping"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "ExplicitMapping": {
+      "type": "object",
+      "properties": {
+        "client_subnet_addr": {
+          "description": "Client sub-net address",
+          "type": "string"
+        },
+        "mapping_type": {
+          "description": "Mapping type",
+          "enum": [
+            "IP_ADDRESS",
+            "HOST_NAME",
+            "SUBNET"
+          ],
+          "type": "string"
+        },
+        "mapping_value": {
+          "description": "Mapping value",
+          "type": "string"
+        },
+        "port": {
+          "description": "Port",
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "File": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "md5": {
+          "pattern": "(^[0-9a-fA-F]{32}$)",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sha2": {
+          "pattern": "(^[0-9a-fA-F]{64}$)|(^[0-9a-fA-F]{40}$)|(^[0-9a-fA-F]{32}$)",
+          "type": "string"
+        },
+        "size": {
+          "format": "int32",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      }
+    },
+    "FilterRegistration": {
+      "type": "object",
+      "properties": {
+        "className": {
+          "type": "string"
+        },
+        "initParameters": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "name": {
+          "type": "string"
+        },
+        "servletNameMappings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "urlPatternMappings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "FirewallConfiguration": {
+      "type": "object",
+      "properties": {
+        "antiIP_spoofing": {
+          "type": "boolean"
+        },
+        "antimac_spoofing": {
+          "type": "boolean"
+        },
+        "autoblock": {
+          "type": "boolean"
+        },
+        "autoblock_duration": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "baseline_rules": {
+          "items": {
+            "$ref": "#/definitions/FirewallRuleConfiguration"
+          },
+          "type": "array"
+        },
+        "dos": {
+          "type": "boolean"
+        },
+        "endpoint_notification": {
+          "$ref": "#/definitions/policies_EndpointNotification"
+        },
+        "enforced_rules": {
+          "items": {
+            "$ref": "#/definitions/FirewallRuleConfiguration"
+          },
+          "type": "array"
+        },
+        "hide_os": {
+          "type": "boolean"
+        },
+        "ignore_parent_rules": {
+          "items": {
+            "$ref": "#/definitions/FirewallRuleConfiguration"
+          },
+          "type": "array"
+        },
+        "mac": {
+          "$ref": "#/definitions/MacFirewallConfiguration"
+        },
+        "netbios_protection": {
+          "type": "boolean"
+        },
+        "p2p_auth": {
+          "$ref": "#/definitions/PeerToPeerAuthConfiguration"
+        },
+        "port_scan": {
+          "type": "boolean"
+        },
+        "reverse_dns": {
+          "type": "boolean"
+        },
+        "smart_dhcp": {
+          "type": "boolean"
+        },
+        "smart_dns": {
+          "type": "boolean"
+        },
+        "smart_wins": {
+          "type": "boolean"
+        },
+        "stealth_web": {
+          "type": "boolean"
+        },
+        "token_ring_traffic": {
+          "type": "boolean"
+        },
+        "windows_firewall": {
+          "enum": [
+            "NO_ACTION",
+            "DISABLE_ONCE",
+            "DISABLE",
+            "ENABLE"
+          ],
+          "type": "string"
+        },
+        "windows_firewall_notification": {
+          "type": "boolean"
+        }
+      }
+    },
+    "FirewallRuleConfiguration": {
+      "type": "object",
+      "required": [
+        "name",
+        "uid"
+      ],
+      "properties": {
+        "action": {
+          "enum": [
+            "ALLOW",
+            "BLOCK",
+            "ASK"
+          ],
+          "type": "string"
+        },
+        "adapters": {
+          "items": {
+            "$ref": "#/definitions/AdapterConfiguration"
+          },
+          "type": "array"
+        },
+        "applications": {
+          "items": {
+            "$ref": "#/definitions/ApplicationConfiguration"
+          },
+          "type": "array"
+        },
+        "connections": {
+          "items": {
+            "$ref": "#/definitions/ConnectionConfiguration"
+          },
+          "type": "array"
+        },
+        "desc": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "type": "string"
+        },
+        "email_alert": {
+          "type": "boolean"
+        },
+        "hosts": {
+          "items": {
+            "$ref": "#/definitions/HostConfiguration"
+          },
+          "type": "array"
+        },
+        "log_action": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 260,
+          "minLength": 1,
+          "type": "string"
+        },
+        "packet_capture": {
+          "type": "boolean"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/RuleState"
+        },
+        "screen_saver": {
+          "enum": [
+            "ON",
+            "OFF",
+            "ANY"
+          ],
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "INFO",
+            "WARNING",
+            "MINOR",
+            "MAJOR",
+            "CRITICAL",
+            "FATAL"
+          ],
+          "type": "string"
+        },
+        "time_slots": {
+          "items": {
+            "$ref": "#/definitions/TimeSlotConfiguration"
+          },
+          "type": "array"
+        },
+        "uid": {
+          "type": "string"
+        }
+      }
+    },
+    "FtpProxy": {
+      "type": "object",
+      "properties": {
+        "ftp_proxy_option": {
+          "description": "FTP proxy option",
+          "enum": [
+            "NO_PROXY",
+            "CLIENT_BROWSER_SPECIFIED_PROXY",
+            "CUSTOMIZED_PROXY"
+          ],
+          "type": "string"
+        },
+        "host": {
+          "description": "host name of FTP proxy",
+          "type": "string"
+        },
+        "port": {
+          "description": "port of FTP proxy",
+          "format": "int32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      }
+    },
+    "GroupUpdateProvider": {
+      "type": "object",
+      "properties": {
+        "default_port": {
+          "description": "Default port",
+          "format": "int32",
+          "type": "integer"
+        },
+        "delete_unused_content_after": {
+          "description": "Time of deleting unused content after it",
+          "format": "int64",
+          "type": "integer"
+        },
+        "download_from_default_after": {
+          "description": "Time of download from default",
+          "format": "int64",
+          "type": "integer"
+        },
+        "explicit_gup": {
+          "$ref": "#/definitions/ExplicitGroupUpdateProviders",
+          "description": "Explicit GUP"
+        },
+        "max_bandwidth_allowed": {
+          "description": "Max bandwidth allowed",
+          "format": "int32",
+          "type": "integer"
+        },
+        "max_disk_cache_size": {
+          "description": "Max disk cache size",
+          "format": "int32",
+          "type": "integer"
+        },
+        "max_simultaneous_download": {
+          "description": "Max simultaneous download",
+          "format": "int32",
+          "type": "integer"
+        },
+        "multi_gup": {
+          "$ref": "#/definitions/MultipleGroupUpdateProviders",
+          "description": "Multiple GUP"
+        },
+        "single_gup": {
+          "description": "Single GUP",
+          "type": "string"
+        }
+      }
+    },
+    "HidConfiguration": {
+      "type": "object",
+      "properties": {
+        "audit": {
+          "type": "boolean"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "rep_discovered_rule": {
+          "$ref": "#/definitions/RepDiscoveredRule"
+        },
+        "rep_prevalence_rule": {
+          "$ref": "#/definitions/RepPrevalenceRule"
+        },
+        "risk_id_level": {
+          "format": "int32",
+          "maximum": 500,
+          "minimum": 100,
+          "type": "integer"
+        },
+        "suspicious_risk_id_limit": {
+          "format": "int32",
+          "maximum": 500,
+          "minimum": 100,
+          "type": "integer"
+        },
+        "trust_intranet": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Host": {
+      "type": "object"
+    },
+    "HostConfiguration": {
+      "type": "object",
+      "properties": {
+        "dns_domain": {
+          "type": "string"
+        },
+        "dns_host": {
+          "type": "string"
+        },
+        "group_name": {
+          "type": "string"
+        },
+        "group_uid": {
+          "type": "string"
+        },
+        "ip": {
+          "type": "string"
+        },
+        "ip_range": {
+          "$ref": "#/definitions/IpRangeConfiguration"
+        },
+        "ipv4_subnet": {
+          "$ref": "#/definitions/IPv4Subnet"
+        },
+        "ipv6_subnet": {
+          "type": "string"
+        },
+        "local_subnet": {
+          "type": "boolean"
+        },
+        "location": {
+          "enum": [
+            "LOCAL",
+            "REMOTE",
+            "SRC",
+            "DST"
+          ],
+          "type": "string"
+        },
+        "mac": {
+          "type": "string"
+        }
+      }
+    },
+    "HostGroup": {
+      "type": "object",
+      "required": [
+        "hosts",
+        "name"
+      ],
+      "properties": {
+        "hosts": {
+          "description": "The hosts of the host group policy component. The host is any of Mac, IpV4, IpV6, IpV4Range, IpV6Range, DnsName, DnsHost, IpV4Subnet, IpV6Subnet",
+          "example": "{\n  \"name\": \"test-host\",\n  \"hosts\": [\n    {\"mac\": \"00-01-00-00-00-00\"},\n    {\"dns_domain\": \"*.test.com\"},\n    {\"dns_host\": \"aHostName\"},\n    {\"ip\": \"1.2.3.4\"},\n    {\"ipv4_subnet\": {\n      \"ip\": \"1.1.1.1\",\n      \"mask\": \"255.255.255.0\"\n    }},\n    {\"ipv4_range\": {\"ip_start\": \"1.2.3.4\", \"ip_end\": \"1.2.3.4\"}},\t\n    {\"ipv6\": \"2001:DB8:3C0:FC01:49C8:C72A::10\"},\n    {\"ipv6_subnet\": \"2002:C058:6301::/48\"},\n    {\"ipv6_range\": {\"ip_start\": \"2001:DB8:3C0:FC01:49C8:C72A::20\", \"ip_end\": \"2001:DB8:3C0:FC01:49C8:C72A::21\"}}\n  ]\n}",
+          "items": {
+            "$ref": "#/definitions/Host"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "Name of host group policy component.",
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[^/\\\\*?<>|:\"]*$",
+          "type": "string"
+        }
+      }
+    },
+    "HostGroupSummary": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "domainid": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lastmodifiedtime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "name": {
+          "description": "The host group name.",
+          "type": "string"
+        }
+      }
+    },
+    "HostNameData": {
+      "type": "object",
+      "properties": {
+        "host_name": {
+          "description": "Hostname",
+          "type": "string"
+        }
+      }
+    },
+    "HttpProxy": {
+      "type": "object",
+      "properties": {
+        "auth_domain": {
+          "description": "Domain of the proxy",
+          "type": "string"
+        },
+        "auth_mode": {
+          "description": "Authenticate mode of the proxy",
+          "enum": [
+            "BASIC_AUTH",
+            "NT_LAN_MANAGED_AUTH"
+          ],
+          "type": "string"
+        },
+        "auth_password": {
+          "description": "Password of the proxy",
+          "type": "string"
+        },
+        "auth_user_name": {
+          "description": "Username of the proxy",
+          "type": "string"
+        },
+        "authenticate": {
+          "description": "If the proxy needs authentication",
+          "type": "boolean"
+        },
+        "host": {
+          "description": "Host name of the proxy",
+          "type": "string"
+        },
+        "http_port": {
+          "description": "HTTP port of the proxy",
+          "format": "int32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "http_proxy_option": {
+          "description": "HTTP proxy option",
+          "enum": [
+            "NO_PROXY",
+            "WINDOWS_INTERNET_OPTIONS_PROXY",
+            "CUSTOMIZED_PROXY"
+          ],
+          "type": "string"
+        },
+        "https_port": {
+          "description": "HTTPS port of the proxy",
+          "format": "int32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      }
+    },
+    "HttpServletMapping": {
+      "type": "object",
+      "properties": {
+        "mappingMatch": {
+          "enum": [
+            "CONTEXT_ROOT",
+            "DEFAULT",
+            "EXACT",
+            "EXTENSION",
+            "PATH"
+          ],
+          "type": "string"
+        },
+        "matchValue": {
+          "type": "string"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "servletName": {
+          "type": "string"
+        }
+      }
+    },
+    "IPSConfiguration": {
+      "type": "object",
+      "properties": {
+        "browser_protection": {
+          "enum": [
+            "ALLOW",
+            "BLOCK",
+            "LOG"
+          ],
+          "type": "string"
+        },
+        "custom_ips_signature_groups": {
+          "items": {
+            "$ref": "#/definitions/CustomGroupRule"
+          },
+          "type": "array"
+        },
+        "custom_variables": {
+          "items": {
+            "$ref": "#/definitions/CustomVariableRule"
+          },
+          "type": "array"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "endpoint_notification": {
+          "$ref": "#/definitions/policies_EndpointNotification"
+        },
+        "ips_signatures": {
+          "items": {
+            "$ref": "#/definitions/IPSSignatureRule"
+          },
+          "type": "array"
+        },
+        "mac": {
+          "items": {
+            "$ref": "#/definitions/IPSSignatureRule"
+          },
+          "type": "array"
+        },
+        "out_of_band": {
+          "type": "boolean"
+        },
+        "server_signature_set": {
+          "type": "boolean"
+        },
+        "url_reputation": {
+          "type": "boolean"
+        }
+      }
+    },
+    "IPSRuleState": {
+      "type": "object",
+      "required": [
+        "source"
+      ],
+      "properties": {
+        "enabled": {
+          "description": "Ability to disable a rule temporarily from enforcement without deleting it",
+          "type": "boolean"
+        },
+        "newly_added": {
+          "type": "boolean"
+        },
+        "source": {
+          "description": "Which 3rd-party management system was the source of the rule; ex, SEP, ATP",
+          "type": "string"
+        }
+      }
+    },
+    "IPSSignatureRule": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "enum": [
+            "ALLOW",
+            "BLOCK"
+          ],
+          "type": "string"
+        },
+        "classifications": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cve_uid": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "log_action": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "protection": {
+          "enum": [
+            "BROWSER",
+            "IPS"
+          ],
+          "type": "string"
+        },
+        "rulestate": {
+          "$ref": "#/definitions/IPSRuleState"
+        },
+        "server": {
+          "type": "boolean"
+        },
+        "severity": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "IPv4Subnet": {
+      "type": "object",
+      "properties": {
+        "ip": {
+          "pattern": "^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(\\.(?!$)|$)){4}$",
+          "type": "string"
+        },
+        "mask": {
+          "pattern": "^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(\\.(?!$)|$)){4}$",
+          "type": "string"
+        }
+      }
+    },
+    "InputStream": {
+      "type": "object"
+    },
+    "IntegerRange": {
+      "type": "object",
+      "properties": {
+        "end": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "start": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "IpData": {
+      "type": "object",
+      "properties": {
+        "ip": {
+          "description": "IP address",
+          "type": "string"
+        }
+      }
+    },
+    "IpRangeConfiguration": {
+      "type": "object",
+      "properties": {
+        "ip_end": {
+          "type": "string"
+        },
+        "ip_start": {
+          "type": "string"
+        }
+      }
+    },
+    "IpsAndHostsRule": {
+      "type": "object",
+      "properties": {
+        "host_names": {
+          "description": "Host names",
+          "items": {
+            "$ref": "#/definitions/HostNameData"
+          },
+          "type": "array"
+        },
+        "ip_addrs": {
+          "description": "IP addresses",
+          "items": {
+            "$ref": "#/definitions/IpData"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "JspConfigDescriptor": {
+      "type": "object",
+      "properties": {
+        "jspPropertyGroups": {
+          "items": {
+            "$ref": "#/definitions/JspPropertyGroupDescriptor"
+          },
+          "type": "array"
+        },
+        "taglibs": {
+          "items": {
+            "$ref": "#/definitions/TaglibDescriptor"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "JspPropertyGroupDescriptor": {
+      "type": "object",
+      "properties": {
+        "buffer": {
+          "type": "string"
+        },
+        "defaultContentType": {
+          "type": "string"
+        },
+        "deferredSyntaxAllowedAsLiteral": {
+          "type": "string"
+        },
+        "elIgnored": {
+          "type": "string"
+        },
+        "errorOnUndeclaredNamespace": {
+          "type": "string"
+        },
+        "includeCodas": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "includePreludes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "isXml": {
+          "type": "string"
+        },
+        "pageEncoding": {
+          "type": "string"
+        },
+        "scriptingInvalid": {
+          "type": "string"
+        },
+        "trimDirectiveWhitespaces": {
+          "type": "string"
+        },
+        "urlPatterns": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "Key": {
+      "type": "object",
+      "properties": {
+        "equals": {
+          "description": "If equals",
+          "type": "boolean"
+        },
+        "key": {
+          "description": "Name of the key",
+          "type": "string"
+        }
+      }
+    },
+    "KeyName": {
+      "type": "object",
+      "properties": {
+        "exists": {
+          "description": "If key exists",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "Name of the key",
+          "type": "string"
+        }
+      }
+    },
+    "KeyValue": {
+      "type": "object",
+      "properties": {
+        "equals": {
+          "description": "If key value equals",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "Name of the key value",
+          "type": "string"
+        },
+        "value": {
+          "description": "Value of the key value",
+          "type": "string"
+        },
+        "value_type": {
+          "description": "Value type of the key",
+          "enum": [
+            "STRING",
+            "OWORD",
+            "BINARY"
+          ],
+          "type": "string"
+        }
+      }
+    },
+    "LicensingPolicyPayload": {
+      "type": "object",
+      "required": [
+        "certificate",
+        "signed_payload"
+      ],
+      "properties": {
+        "certificate": {
+          "description": "The signed licensing policy content",
+          "type": "string"
+        },
+        "signed_payload": {
+          "description": "The signed licensing policy content",
+          "type": "string"
+        }
+      }
+    },
+    "Locale": {
+      "type": "object",
+      "properties": {
+        "country": {
+          "type": "string"
+        },
+        "displayCountry": {
+          "type": "string"
+        },
+        "displayLanguage": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "displayScript": {
+          "type": "string"
+        },
+        "displayVariant": {
+          "type": "string"
+        },
+        "extensionKeys": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "iso3Country": {
+          "type": "string"
+        },
+        "iso3Language": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "script": {
+          "type": "string"
+        },
+        "unicodeLocaleAttributes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "unicodeLocaleKeys": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "variant": {
+          "type": "string"
+        }
+      }
+    },
+    "LuConfiguration": {
+      "type": "object",
+      "properties": {
+        "linux": {
+          "$ref": "#/definitions/Platform",
+          "description": "Linux setting configuration in LiveUpdate setting policy"
+        },
+        "mac": {
+          "$ref": "#/definitions/Platform",
+          "description": "MAC setting configuration in LiveUpdate setting policy"
+        },
+        "windows": {
+          "$ref": "#/definitions/Platform",
+          "description": "windows setting configuration in LiveUpdate setting policy"
+        }
+      }
+    },
+    "LuSchedule": {
+      "type": "object",
+      "properties": {
+        "av_def_age": {
+          "description": "AV definition age of the schedule",
+          "format": "int32",
+          "type": "integer"
+        },
+        "av_def_check_enabled": {
+          "description": "Enable AV definition check of the schedule",
+          "type": "boolean"
+        },
+        "av_def_check_freq": {
+          "description": "AV definition check frequency of the schedule",
+          "type": "string"
+        },
+        "day": {
+          "description": "Day configuration of the schedule",
+          "enum": [
+            "SUNDAY",
+            "MONDAY",
+            "TUESDAY",
+            "WEDNESDAY",
+            "THURSDAY",
+            "FRIDAY",
+            "SATURDAY"
+          ],
+          "type": "string"
+        },
+        "disconnection_check_duration": {
+          "description": "Disconnection check duration of the schedule",
+          "format": "int32",
+          "type": "integer"
+        },
+        "disconnection_check_enabled": {
+          "description": "Enable disconnection check of the schedule",
+          "type": "boolean"
+        },
+        "disconnection_check_freq": {
+          "description": "Disconnection check frequency of the schedule",
+          "type": "string"
+        },
+        "download_interval": {
+          "description": "Download interval of the schedule",
+          "format": "int32",
+          "type": "integer"
+        },
+        "frequency": {
+          "description": "Frequency configuration of the schedule",
+          "enum": [
+            "CONTINUOUS",
+            "HOURLY",
+            "DAILY",
+            "WEEKLY"
+          ],
+          "type": "string"
+        },
+        "idle_detection": {
+          "description": "Idle detection of the schedule",
+          "type": "boolean"
+        },
+        "randomize_window": {
+          "description": "Randomized window of the schedule",
+          "format": "int32",
+          "type": "integer"
+        },
+        "retry_window": {
+          "description": "Retry window of the schedule",
+          "format": "int32",
+          "type": "integer"
+        },
+        "start_hour": {
+          "description": "Start hour of the schedule",
+          "format": "int32",
+          "type": "integer"
+        },
+        "start_minute": {
+          "description": "Start minute of the schedule",
+          "format": "int32",
+          "type": "integer"
+        },
+        "start_time": {
+          "description": "Start time of the schedule",
+          "format": "int64",
+          "type": "integer"
+        }
+      }
+    },
+    "LuServer": {
+      "type": "object",
+      "properties": {
+        "activate_ftp_mode": {
+          "description": "If FTP mode activated",
+          "type": "boolean"
+        },
+        "central_lu_servers": {
+          "description": "Central LU servers configuration",
+          "items": {
+            "$ref": "#/definitions/CenteralLuServer"
+          },
+          "type": "array"
+        },
+        "gup": {
+          "$ref": "#/definitions/GroupUpdateProvider",
+          "description": "Group update provider configuration"
+        },
+        "https_trusted": {
+          "description": "if trusts HTTPS",
+          "type": "boolean"
+        },
+        "proxy": {
+          "$ref": "#/definitions/ProxyConfiguration",
+          "description": "Proxy configuration"
+        },
+        "use_3rd_party_server": {
+          "description": "if enable 3rd party LiveUpdate server",
+          "type": "boolean"
+        },
+        "use_default_mgmt_server": {
+          "description": "If uses default management server as LiveUpdate server",
+          "type": "boolean"
+        },
+        "use_liveupdate_server": {
+          "description": "If uses LiveUpdate server",
+          "type": "boolean"
+        }
+      }
+    },
+    "MacFirewallConfiguration": {
+      "type": "object",
+      "properties": {
+        "antimac_spoofing": {
+          "type": "boolean"
+        },
+        "autoblock": {
+          "type": "boolean"
+        },
+        "autoblock_duration": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "baseline_rules": {
+          "items": {
+            "$ref": "#/definitions/FirewallRuleConfiguration"
+          },
+          "type": "array"
+        },
+        "dos": {
+          "type": "boolean"
+        },
+        "endpoint_notification": {
+          "$ref": "#/definitions/policies_EndpointNotification"
+        },
+        "enforced_rules": {
+          "items": {
+            "$ref": "#/definitions/FirewallRuleConfiguration"
+          },
+          "type": "array"
+        },
+        "ignore_parent_rules": {
+          "items": {
+            "$ref": "#/definitions/FirewallRuleConfiguration"
+          },
+          "type": "array"
+        },
+        "port_scan": {
+          "type": "boolean"
+        },
+        "smart_dhcp": {
+          "type": "boolean"
+        },
+        "smart_dns": {
+          "type": "boolean"
+        }
+      }
+    },
+    "MemConfiguration": {
+      "type": "object",
+      "properties": {
+        "customrules": {
+          "description": "Administrator defined application to protect. If an application is listed here without techniques, it is added to the coverage using the global technique state.",
+          "items": {
+            "$ref": "#/definitions/PepExceptionElement"
+          },
+          "type": "array"
+        },
+        "defaultruleoverrides": {
+          "description": "Overrides to the default rules. If an application is listed here without technique, it is completely disabled.",
+          "items": {
+            "$ref": "#/definitions/PepExceptionElement"
+          },
+          "type": "array"
+        },
+        "disabledefaultrules": {
+          "description": "Disables all default rules.",
+          "type": "boolean"
+        },
+        "enableadvanced": {
+          "description": "Enables the advanced policy in addition to the basic one for Memory Exploit Mitigation.",
+          "type": "boolean"
+        },
+        "enabled": {
+          "description": "Enables the basic policy for Memory Exploit Mitigation.",
+          "type": "boolean"
+        },
+        "enablejavaprotection": {
+          "description": "Enable Java Security Manager Protection.",
+          "type": "boolean"
+        },
+        "globalauditmodeoverride": {
+          "description": "Put all techniques into audit mode, even future techniques",
+          "type": "boolean"
+        },
+        "globaltechniqueoverrides": {
+          "description": "Global setting for the technique",
+          "items": {
+            "$ref": "#/definitions/PepThreatRuleElement"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "MemLockedOptions": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Module": {
+      "type": "object",
+      "properties": {
+        "annotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "classLoader": {
+          "$ref": "#/definitions/ClassLoader"
+        },
+        "declaredAnnotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "descriptor": {
+          "$ref": "#/definitions/ModuleDescriptor"
+        },
+        "layer": {
+          "$ref": "#/definitions/ModuleLayer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "named": {
+          "type": "boolean"
+        },
+        "packages": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        }
+      }
+    },
+    "ModuleDescriptor": {
+      "type": "object",
+      "properties": {
+        "automatic": {
+          "type": "boolean"
+        },
+        "open": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ModuleLayer": {
+      "type": "object"
+    },
+    "MultipleGroupUpdateProviders": {
+      "type": "object",
+      "properties": {
+        "names": {
+          "description": "Rule set of the multiple GUP",
+          "items": {
+            "$ref": "#/definitions/RuleSet"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "OperatingSystemsRule": {
+      "type": "object",
+      "properties": {
+        "op_systems": {
+          "description": "Operating systems",
+          "items": {
+            "enum": [
+              "WINDOWS_2K_PROFESSIONAL",
+              "WINDOWS_2K_SERVER",
+              "WINDOWS_2K_ADV_SERVER",
+              "WINDOWS_2K_DATACENTER",
+              "WINDOWS_XP_HOME",
+              "WINDOWS_XP_PROFESSIONAL",
+              "WINDOWS_XP_PROFESSIONAL_X64",
+              "WINDOWS_FUNDAMENTALS_FOR_LEGACY_PCS_OR_XP_EMBEDDED",
+              "WINDOWS_SERVER_2K3_WEB_EDITION",
+              "WINDOWS_SERVER_2K3_WEB_EDITION_X64",
+              "WINDOWS_SERVER_2K3_STD_EDITION",
+              "WINDOWS_SERVER_2K3_STD_EDITION_X64",
+              "WINDOWS_SERVER_2K3_ENT_EDITION",
+              "WINDOWS_SERVER_2K3_ENT_EDITION_X64",
+              "WINDOWS_SERVER_2K3_DC_EDITION",
+              "WINDOWS_SERVER_2K3_DC_EDITION_X64",
+              "WINDOWS_VISTA_HOME",
+              "WINDOWS_VISTA_HOME_X64",
+              "WINDOWS_VISTA_BUSINESS_ULTIMATE_ENTERPRISE",
+              "WINDOWS_VISTA_BUSINESS_ULTIMATE_ENTERPRISE_X64",
+              "WINDOWS_SERVER_2K8_STD_EDITION",
+              "WINDOWS_SERVER_2K8_STD_EDITION_X64",
+              "WINDOWS_SERVER_2K8_ENT_EDITION",
+              "WINDOWS_SERVER_2K8_ENT_EDITION_X64",
+              "WINDOWS_SERVER_2K8_DC_EDITION",
+              "WINDOWS_SERVER_2K8_DC_EDITION_X64",
+              "WINDOWS_WEB_SERVER_2K8_EDITION",
+              "WINDOWS_WEB_SERVER_2K8_EDITION_X64",
+              "WINDOWS_SERVER_2K8_SMALL_BUSINESS_SERVER_EDITION_X64",
+              "WINDOWS_SERVER_2K8_ESSENTIAL_BUSINESS_SERVER_EDITION_X64",
+              "WINDOWS_7_HOME",
+              "WINDOWS_7_HOME_X64",
+              "WINDOWS_7_PROFESSIONAL_ULTIMATE_ENTERPRISE",
+              "WINDOWS_7_PROFESSIONAL_ULTIMATE_ENTERPRISE_X64",
+              "WINDOWS_8_PROFESSIONAL_ENTERPRISE",
+              "WINDOWS_8_PROFESSIONAL_ENTERPRISE_X64",
+              "WINDOWS_SERVER_2K12_STD_EDITION_X64",
+              "WINDOWS_SERVER_2K12_DC_EDITION_X64",
+              "WINDOWS_8_DOT_1_WORK_STATION",
+              "WINDOWS_8_DOT_1_WORK_STATION_X64",
+              "WINDOWS_SERVER_2K12_R2_STD_EDITION_X64",
+              "WINDOWS_SERVER_2K12_R2_DC_EDITION_X64",
+              "WINDOWS_10_PROFESSIONAL_ENTERPRISE",
+              "WINDOWS_10_PROFESSIONAL_ENTERPRISE_X64",
+              "WINDOWS_SERVER_2K15_STD_EDITION_X64",
+              "WINDOWS_SERVER_2K15_DC_EDITION_X64"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "Package": {
+      "type": "object",
+      "properties": {
+        "annotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "declaredAnnotations": {
+          "items": {
+            "$ref": "#/definitions/Annotation"
+          },
+          "type": "array"
+        },
+        "implementationTitle": {
+          "type": "string"
+        },
+        "implementationVendor": {
+          "type": "string"
+        },
+        "implementationVersion": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sealed": {
+          "type": "boolean"
+        },
+        "specificationTitle": {
+          "type": "string"
+        },
+        "specificationVendor": {
+          "type": "string"
+        },
+        "specificationVersion": {
+          "type": "string"
+        }
+      }
+    },
+    "PageHostGroupSummary": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "items": {
+            "$ref": "#/definitions/HostGroupSummary"
+          },
+          "type": "array"
+        },
+        "firstPage": {
+          "type": "boolean"
+        },
+        "lastPage": {
+          "type": "boolean"
+        },
+        "number": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "numberOfElements": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "size": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "sort": {
+          "$ref": "#/definitions/Sort"
+        },
+        "totalElements": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "totalPages": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "Part": {
+      "type": "object",
+      "properties": {
+        "contentType": {
+          "type": "string"
+        },
+        "headerNames": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "inputStream": {
+          "$ref": "#/definitions/InputStream"
+        },
+        "name": {
+          "type": "string"
+        },
+        "size": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "submittedFileName": {
+          "type": "string"
+        }
+      }
+    },
+    "PeerToPeerAuthConfiguration": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "excludeHosts": {
+          "type": "boolean"
+        },
+        "hosts": {
+          "items": {
+            "$ref": "#/definitions/HostConfiguration"
+          },
+          "type": "array"
+        },
+        "max_auth_attempts": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "session_timeout": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "time_before_re_auth": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "time_between_auth_attempts": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "time_for_remote_blocked": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "PepExceptionElement": {
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "description": "The path of the process to protect. Wildcards are permitted.",
+          "maxLength": 512,
+          "minLength": 2,
+          "type": "string"
+        },
+        "techniqueoverrides": {
+          "description": "Technique override for a specific path.",
+          "items": {
+            "$ref": "#/definitions/PepThreatRuleElement"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "PepThreatRuleElement": {
+      "type": "object",
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "action": {
+          "description": "The action to take when the rule is enabled.",
+          "enum": [
+            "ALLOW",
+            "BLOCK"
+          ],
+          "type": "string"
+        },
+        "id": {
+          "description": "The signature ID for the technique.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "log_action": {
+          "description": "The log action to take when the rule is enabled.",
+          "format": "int32",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "name": {
+          "description": "The name of the threat, as identified by the specific definition engine.",
+          "maxLength": 50,
+          "minLength": 1,
+          "type": "string"
+        },
+        "state": {
+          "description": "Indicates whether the technique is enabled or disabled.",
+          "format": "int32",
+          "maximum": 2,
+          "minimum": 0,
+          "type": "integer"
+        }
+      }
+    },
+    "Platform": {
+      "type": "object",
+      "properties": {
+        "advanced": {
+          "$ref": "#/definitions/Advanced",
+          "description": "Advanced configuration in LiveUpdate setting policy"
+        },
+        "schedule": {
+          "$ref": "#/definitions/LuSchedule",
+          "description": "Download schedule configuration in LiveUpdate setting policy"
+        },
+        "server": {
+          "$ref": "#/definitions/LuServer",
+          "description": "Source server configuration in LiveUpdate setting policy"
+        }
+      }
+    },
+    "PolicyExceptionsConfigurationExceptionsLockedOptions": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "configuration": {
+          "$ref": "#/definitions/ExceptionsConfiguration",
+          "description": "Configuration"
+        },
+        "desc": {
+          "description": "The policy description.",
+          "maxLength": 1024,
+          "minLength": 1,
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Indicates whether the policy is enabled or not.",
+          "type": "boolean"
+        },
+        "lastmodifiedtime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lockedoptions": {
+          "$ref": "#/definitions/ExceptionsLockedOptions",
+          "description": "Option names to be locked"
+        },
+        "name": {
+          "description": "The policy name.",
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[^/\\\\*?<>|:\"]*$",
+          "type": "string"
+        },
+        "sources": {
+          "description": "A list of data objects provided by the policy source, which includes the ID, the name and the version.",
+          "items": {
+            "$ref": "#/definitions/Sources"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "PolicyExceptionsConfigurationV2ExceptionsLockedOptions": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "configuration": {
+          "$ref": "#/definitions/ExceptionsConfigurationV2",
+          "description": "Configuration"
+        },
+        "desc": {
+          "description": "The policy description.",
+          "maxLength": 1024,
+          "minLength": 1,
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Indicates whether the policy is enabled or not.",
+          "type": "boolean"
+        },
+        "lastmodifiedtime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lockedoptions": {
+          "$ref": "#/definitions/ExceptionsLockedOptions",
+          "description": "Option names to be locked"
+        },
+        "name": {
+          "description": "The policy name.",
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[^/\\\\*?<>|:\"]*$",
+          "type": "string"
+        },
+        "sources": {
+          "description": "A list of data objects provided by the policy source, which includes the ID, the name and the version.",
+          "items": {
+            "$ref": "#/definitions/Sources"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "PolicyFirewallConfigurationObject": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "configuration": {
+          "$ref": "#/definitions/FirewallConfiguration",
+          "description": "Configuration"
+        },
+        "desc": {
+          "description": "The policy description.",
+          "maxLength": 1024,
+          "minLength": 1,
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Indicates whether the policy is enabled or not.",
+          "type": "boolean"
+        },
+        "lastmodifiedtime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lockedoptions": {
+          "description": "Option names to be locked",
+          "type": "object"
+        },
+        "name": {
+          "description": "The policy name.",
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[^/\\\\*?<>|:\"]*$",
+          "type": "string"
+        },
+        "sources": {
+          "description": "A list of data objects provided by the policy source, which includes the ID, the name and the version.",
+          "items": {
+            "$ref": "#/definitions/Sources"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "PolicyHidConfigurationObject": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "configuration": {
+          "$ref": "#/definitions/HidConfiguration",
+          "description": "Configuration"
+        },
+        "desc": {
+          "description": "The policy description.",
+          "maxLength": 1024,
+          "minLength": 1,
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Indicates whether the policy is enabled or not.",
+          "type": "boolean"
+        },
+        "lastmodifiedtime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lockedoptions": {
+          "description": "Option names to be locked",
+          "type": "object"
+        },
+        "name": {
+          "description": "The policy name.",
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[^/\\\\*?<>|:\"]*$",
+          "type": "string"
+        },
+        "sources": {
+          "description": "A list of data objects provided by the policy source, which includes the ID, the name and the version.",
+          "items": {
+            "$ref": "#/definitions/Sources"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "PolicyIPSConfigurationObject": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "configuration": {
+          "$ref": "#/definitions/IPSConfiguration",
+          "description": "Configuration"
+        },
+        "desc": {
+          "description": "The policy description.",
+          "maxLength": 1024,
+          "minLength": 1,
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Indicates whether the policy is enabled or not.",
+          "type": "boolean"
+        },
+        "lastmodifiedtime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lockedoptions": {
+          "description": "Option names to be locked",
+          "type": "object"
+        },
+        "name": {
+          "description": "The policy name.",
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[^/\\\\*?<>|:\"]*$",
+          "type": "string"
+        },
+        "sources": {
+          "description": "A list of data objects provided by the policy source, which includes the ID, the name and the version.",
+          "items": {
+            "$ref": "#/definitions/Sources"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "PolicyLuConfigurationObject": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "configuration": {
+          "$ref": "#/definitions/LuConfiguration",
+          "description": "Configuration"
+        },
+        "desc": {
+          "description": "The policy description.",
+          "maxLength": 1024,
+          "minLength": 1,
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Indicates whether the policy is enabled or not.",
+          "type": "boolean"
+        },
+        "lastmodifiedtime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lockedoptions": {
+          "description": "Option names to be locked",
+          "type": "object"
+        },
+        "name": {
+          "description": "The policy name.",
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[^/\\\\*?<>|:\"]*$",
+          "type": "string"
+        },
+        "sources": {
+          "description": "A list of data objects provided by the policy source, which includes the ID, the name and the version.",
+          "items": {
+            "$ref": "#/definitions/Sources"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "PolicyMemConfigurationMemLockedOptions": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "configuration": {
+          "$ref": "#/definitions/MemConfiguration",
+          "description": "Configuration"
+        },
+        "desc": {
+          "description": "The policy description.",
+          "maxLength": 1024,
+          "minLength": 1,
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Indicates whether the policy is enabled or not.",
+          "type": "boolean"
+        },
+        "lastmodifiedtime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lockedoptions": {
+          "$ref": "#/definitions/MemLockedOptions",
+          "description": "Option names to be locked"
+        },
+        "name": {
+          "description": "The policy name.",
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[^/\\\\*?<>|:\"]*$",
+          "type": "string"
+        },
+        "sources": {
+          "description": "A list of data objects provided by the policy source, which includes the ID, the name and the version.",
+          "items": {
+            "$ref": "#/definitions/Sources"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "PolicyTdadConfigurationObject": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "configuration": {
+          "$ref": "#/definitions/TdadConfiguration",
+          "description": "Configuration"
+        },
+        "desc": {
+          "description": "The policy description.",
+          "maxLength": 1024,
+          "minLength": 1,
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Indicates whether the policy is enabled or not.",
+          "type": "boolean"
+        },
+        "lastmodifiedtime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lockedoptions": {
+          "description": "Option names to be locked",
+          "type": "object"
+        },
+        "name": {
+          "description": "The policy name.",
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[^/\\\\*?<>|:\"]*$",
+          "type": "string"
+        },
+        "sources": {
+          "description": "A list of data objects provided by the policy source, which includes the ID, the name and the version.",
+          "items": {
+            "$ref": "#/definitions/Sources"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "PolicyUpgradeConfigurationObject": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "configuration": {
+          "$ref": "#/definitions/UpgradeConfiguration",
+          "description": "Configuration"
+        },
+        "desc": {
+          "description": "The policy description.",
+          "maxLength": 1024,
+          "minLength": 1,
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Indicates whether the policy is enabled or not.",
+          "type": "boolean"
+        },
+        "lastmodifiedtime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "lockedoptions": {
+          "description": "Option names to be locked",
+          "type": "object"
+        },
+        "name": {
+          "description": "The policy name.",
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[^/\\\\*?<>|:\"]*$",
+          "type": "string"
+        },
+        "sources": {
+          "description": "A list of data objects provided by the policy source, which includes the ID, the name and the version.",
+          "items": {
+            "$ref": "#/definitions/Sources"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "PortConfiguration": {
+      "type": "object",
+      "properties": {
+        "end": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "location": {
+          "enum": [
+            "LOCAL",
+            "REMOTE",
+            "SRC",
+            "DST"
+          ],
+          "type": "string"
+        },
+        "start": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "Principal": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "PrintWriter": {
+      "type": "object"
+    },
+    "ProxyConfiguration": {
+      "type": "object",
+      "properties": {
+        "ftp_proxy": {
+          "$ref": "#/definitions/FtpProxy",
+          "description": "FTP proxy option"
+        },
+        "http_proxy": {
+          "$ref": "#/definitions/HttpProxy",
+          "description": "HTTP proxy option"
+        }
+      }
+    },
+    "RawPolicy": {
+      "type": "object",
+      "properties": {
+        "policy_xml": {
+          "type": "string"
+        }
+      }
+    },
+    "RegistryRule": {
+      "type": "object",
+      "properties": {
+        "key_names": {
+          "description": "List of key names",
+          "items": {
+            "$ref": "#/definitions/KeyName"
+          },
+          "type": "array"
+        },
+        "key_values": {
+          "description": "List of key values",
+          "items": {
+            "$ref": "#/definitions/KeyValue"
+          },
+          "type": "array"
+        },
+        "keys": {
+          "description": "List of keys",
+          "items": {
+            "$ref": "#/definitions/Key"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "RepDiscoveredRule": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "description": "Indicates whether this rule is enabled",
+          "type": "boolean"
+        },
+        "rep_discovered_days": {
+          "description": "Convict file if downloaded and has this first seen number of days or fewer ",
+          "format": "int32",
+          "maximum": 999,
+          "minimum": 1,
+          "type": "integer"
+        }
+      }
+    },
+    "RepPrevalenceRule": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "description": "Indicates whether this rule is enabled",
+          "type": "boolean"
+        },
+        "rep_prevalence_band": {
+          "description": "Convict file if downloaded and has this prevalence band or lower",
+          "enum": [
+            "FEWER5",
+            "FEWER50",
+            "FEWER100",
+            "HUNDREDS",
+            "THOUSANDS",
+            "TEN_THOUSANDS",
+            "HUN_THOUSANDS",
+            "MILLIONS"
+          ],
+          "type": "string"
+        }
+      }
+    },
+    "RuleSet": {
+      "type": "object",
+      "properties": {
+        "ips_and_hosts_rule": {
+          "$ref": "#/definitions/IpsAndHostsRule",
+          "description": "Rule of IPs and hosts"
+        },
+        "os_rule": {
+          "$ref": "#/definitions/OperatingSystemsRule",
+          "description": "Rule of OS"
+        },
+        "registry_rule": {
+          "$ref": "#/definitions/RegistryRule",
+          "description": "Rule of registry"
+        }
+      }
+    },
+    "RuleState": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "newly_added": {
+          "type": "boolean"
+        },
+        "source": {
+          "type": "string"
+        }
+      }
+    },
+    "ServletRegistration": {
+      "type": "object",
+      "properties": {
+        "className": {
+          "type": "string"
+        },
+        "initParameters": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "mappings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "runAsRole": {
+          "type": "string"
+        }
+      }
+    },
+    "ServletRequest": {
+      "type": "object",
+      "properties": {
+        "asyncContext": {
+          "$ref": "#/definitions/AsyncContext"
+        },
+        "asyncStarted": {
+          "type": "boolean"
+        },
+        "asyncSupported": {
+          "type": "boolean"
+        },
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "characterEncoding": {
+          "type": "string"
+        },
+        "contentLength": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "contentLengthLong": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "dispatcherType": {
+          "enum": [
+            "FORWARD",
+            "INCLUDE",
+            "REQUEST",
+            "ASYNC",
+            "ERROR"
+          ],
+          "type": "string"
+        },
+        "inputStream": {
+          "$ref": "#/definitions/blacklist_ServletInputStream"
+        },
+        "localAddr": {
+          "type": "string"
+        },
+        "localName": {
+          "type": "string"
+        },
+        "localPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "locales": {
+          "$ref": "#/definitions/EnumerationLocale"
+        },
+        "parameterMap": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        "parameterNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "reader": {
+          "$ref": "#/definitions/BufferedReader"
+        },
+        "remoteAddr": {
+          "type": "string"
+        },
+        "remoteHost": {
+          "type": "string"
+        },
+        "remotePort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        },
+        "serverName": {
+          "type": "string"
+        },
+        "serverPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "servletContext": {
+          "$ref": "#/definitions/blacklist_ServletContext"
+        }
+      }
+    },
+    "ServletResponse": {
+      "type": "object",
+      "properties": {
+        "bufferSize": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "characterEncoding": {
+          "type": "string"
+        },
+        "committed": {
+          "type": "boolean"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "outputStream": {
+          "$ref": "#/definitions/blacklist_ServletOutputStream"
+        },
+        "writer": {
+          "$ref": "#/definitions/PrintWriter"
+        }
+      }
+    },
+    "SessionCookieConfig": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "httpOnly": {
+          "type": "boolean"
+        },
+        "maxAge": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Sort": {
+      "type": "object"
+    },
+    "Sources": {
+      "type": "object",
+      "properties": {
+        "exclusiveedit": {
+          "description": "Gets ExclusiveEdit flag provided by the Source",
+          "type": "boolean"
+        },
+        "id": {
+          "description": "Gets Source ID of policy",
+          "pattern": "^[0-9a-zA-Z-_]*$",
+          "type": "string"
+        },
+        "name": {
+          "description": "Gets Source name, ex, SAEP",
+          "type": "string"
+        },
+        "version": {
+          "description": "Gets Source version of the policy",
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "StringBuffer": {
+      "type": "object"
+    },
+    "TaglibDescriptor": {
+      "type": "object",
+      "properties": {
+        "taglibLocation": {
+          "type": "string"
+        },
+        "taglibURI": {
+          "type": "string"
+        }
+      }
+    },
+    "TdadConfiguration": {
+      "type": "object",
+      "properties": {
+        "ad_domains": {
+          "items": {
+            "$ref": "#/definitions/TdadElement"
+          },
+          "type": "array"
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "TdadElement": {
+      "type": "object",
+      "properties": {
+        "ad_domain_uid": {
+          "type": "string"
+        },
+        "domain_name": {
+          "type": "string"
+        },
+        "policy_uid": {
+          "type": "string"
+        },
+        "policy_version": {
+          "type": "string"
+        },
+        "sid": {
+          "type": "string"
+        }
+      }
+    },
+    "TimeSlotConfiguration": {
+      "type": "object",
+      "properties": {
+        "end_time": {
+          "type": "string"
+        },
+        "exclude": {
+          "type": "boolean"
+        },
+        "friday": {
+          "type": "boolean"
+        },
+        "monday": {
+          "type": "boolean"
+        },
+        "month": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "saturday": {
+          "type": "boolean"
+        },
+        "sunday": {
+          "type": "boolean"
+        },
+        "thursday": {
+          "type": "boolean"
+        },
+        "time": {
+          "type": "string"
+        },
+        "tuesday": {
+          "type": "boolean"
+        },
+        "wednesday": {
+          "type": "boolean"
+        }
+      }
+    },
+    "UpgradeConfiguration": {
+      "type": "object",
+      "properties": {
+        "release_delay_days": {
+          "description": "Number of days to wait to upgrade after SEPM publishes a release.",
+          "format": "int32",
+          "maximum": 45,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "schedule": {
+          "$ref": "#/definitions/UpgradeSchedule",
+          "description": "Permissible days and time on which to upgrade."
+        }
+      }
+    },
+    "UpgradeSchedule": {
+      "type": "object",
+      "properties": {
+        "daily": {
+          "$ref": "#/definitions/WeekDays",
+          "description": "The days to do the upgrade."
+        },
+        "end_time": {
+          "description": "End time of window where upgrades are permitted. Format is 0000-00-00TThh:mm:ss.sTZD",
+          "type": "string"
+        },
+        "retry_enabled": {
+          "description": "Enable retries if client missed upgrade.",
+          "type": "boolean"
+        },
+        "time_window": {
+          "description": "Number of seconds in the distribution window. The client picks a random time within the window for its own upgrade.",
+          "format": "int32",
+          "maximum": 2592000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      }
+    },
+    "WeekDays": {
+      "type": "object",
+      "properties": {
+        "friday": {
+          "description": "Enable upgrade on Friday.",
+          "type": "boolean"
+        },
+        "monday": {
+          "description": "Enable upgrade on Monday.",
+          "type": "boolean"
+        },
+        "saturday": {
+          "description": "Enable upgrade on Saturday.",
+          "type": "boolean"
+        },
+        "sunday": {
+          "description": "Enable upgrade on Sunday.",
+          "type": "boolean"
+        },
+        "thursday": {
+          "description": "Enable upgrade on Thursday.",
+          "type": "boolean"
+        },
+        "time": {
+          "description": "Start time of window where upgrades are permitted. Format is 0000-00-00TThh:mm:ss.sTZD",
+          "type": "string"
+        },
+        "tuesday": {
+          "description": "Enable upgrade on Tuesday.",
+          "type": "boolean"
+        },
+        "wednesday": {
+          "description": "Enable upgrade on Wednesday.",
+          "type": "boolean"
+        }
+      }
+    },
+    "blacklist_Cookie": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "httpOnly": {
+          "type": "boolean"
+        },
+        "maxAge": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "string"
+        },
+        "version": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "blacklist_HttpServletRequest": {
+      "type": "object",
+      "properties": {
+        "asyncContext": {
+          "$ref": "#/definitions/AsyncContext"
+        },
+        "asyncStarted": {
+          "type": "boolean"
+        },
+        "asyncSupported": {
+          "type": "boolean"
+        },
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "authType": {
+          "type": "string"
+        },
+        "characterEncoding": {
+          "type": "string"
+        },
+        "contentLength": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "contentLengthLong": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "contextPath": {
+          "type": "string"
+        },
+        "cookies": {
+          "items": {
+            "$ref": "#/definitions/blacklist_Cookie"
+          },
+          "type": "array"
+        },
+        "dispatcherType": {
+          "enum": [
+            "FORWARD",
+            "INCLUDE",
+            "REQUEST",
+            "ASYNC",
+            "ERROR"
+          ],
+          "type": "string"
+        },
+        "headerNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "httpServletMapping": {
+          "$ref": "#/definitions/HttpServletMapping"
+        },
+        "inputStream": {
+          "$ref": "#/definitions/blacklist_ServletInputStream"
+        },
+        "localAddr": {
+          "type": "string"
+        },
+        "localName": {
+          "type": "string"
+        },
+        "localPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "locale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "locales": {
+          "$ref": "#/definitions/EnumerationLocale"
+        },
+        "method": {
+          "type": "string"
+        },
+        "parameterMap": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        "parameterNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "parts": {
+          "items": {
+            "$ref": "#/definitions/Part"
+          },
+          "type": "array"
+        },
+        "pathInfo": {
+          "type": "string"
+        },
+        "pathTranslated": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "queryString": {
+          "type": "string"
+        },
+        "reader": {
+          "$ref": "#/definitions/BufferedReader"
+        },
+        "remoteAddr": {
+          "type": "string"
+        },
+        "remoteHost": {
+          "type": "string"
+        },
+        "remotePort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "remoteUser": {
+          "type": "string"
+        },
+        "requestURI": {
+          "type": "string"
+        },
+        "requestURL": {
+          "$ref": "#/definitions/StringBuffer"
+        },
+        "requestedSessionId": {
+          "type": "string"
+        },
+        "requestedSessionIdFromCookie": {
+          "type": "boolean"
+        },
+        "requestedSessionIdFromURL": {
+          "type": "boolean"
+        },
+        "requestedSessionIdFromUrl": {
+          "type": "boolean"
+        },
+        "requestedSessionIdValid": {
+          "type": "boolean"
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "secure": {
+          "type": "boolean"
+        },
+        "serverName": {
+          "type": "string"
+        },
+        "serverPort": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "servletContext": {
+          "$ref": "#/definitions/blacklist_ServletContext"
+        },
+        "servletPath": {
+          "type": "string"
+        },
+        "session": {
+          "$ref": "#/definitions/blacklist_HttpSession"
+        },
+        "trailerFields": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "trailerFieldsReady": {
+          "type": "boolean"
+        },
+        "userPrincipal": {
+          "$ref": "#/definitions/Principal"
+        }
+      }
+    },
+    "blacklist_HttpSession": {
+      "type": "object",
+      "properties": {
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "creationTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lastAccessedTime": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "maxInactiveInterval": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "new": {
+          "type": "boolean"
+        },
+        "servletContext": {
+          "$ref": "#/definitions/blacklist_ServletContext"
+        },
+        "sessionContext": {
+          "$ref": "#/definitions/blacklist_HttpSessionContext"
+        },
+        "valueNames": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "blacklist_HttpSessionContext": {
+      "type": "object",
+      "properties": {
+        "ids": {
+          "$ref": "#/definitions/EnumerationString"
+        }
+      }
+    },
+    "blacklist_ServletContext": {
+      "type": "object",
+      "properties": {
+        "attributeNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "classLoader": {
+          "$ref": "#/definitions/ClassLoader"
+        },
+        "contextPath": {
+          "type": "string"
+        },
+        "defaultSessionTrackingModes": {
+          "items": {
+            "enum": [
+              "COOKIE",
+              "URL",
+              "SSL"
+            ],
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "effectiveMajorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "effectiveMinorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "effectiveSessionTrackingModes": {
+          "items": {
+            "enum": [
+              "COOKIE",
+              "URL",
+              "SSL"
+            ],
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "filterRegistrations": {
+          "additionalProperties": {
+            "$ref": "#/definitions/FilterRegistration"
+          },
+          "type": "object"
+        },
+        "initParameterNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "jspConfigDescriptor": {
+          "$ref": "#/definitions/JspConfigDescriptor"
+        },
+        "majorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "minorVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "requestCharacterEncoding": {
+          "type": "string"
+        },
+        "responseCharacterEncoding": {
+          "type": "string"
+        },
+        "serverInfo": {
+          "type": "string"
+        },
+        "servletContextName": {
+          "type": "string"
+        },
+        "servletNames": {
+          "$ref": "#/definitions/EnumerationString"
+        },
+        "servletRegistrations": {
+          "additionalProperties": {
+            "$ref": "#/definitions/ServletRegistration"
+          },
+          "type": "object"
+        },
+        "servlets": {
+          "$ref": "#/definitions/EnumerationServlet"
+        },
+        "sessionCookieConfig": {
+          "$ref": "#/definitions/SessionCookieConfig"
+        },
+        "sessionTimeout": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "virtualServerName": {
+          "type": "string"
+        }
+      }
+    },
+    "blacklist_ServletInputStream": {
+      "type": "object",
+      "properties": {
+        "finished": {
+          "type": "boolean"
+        },
+        "ready": {
+          "type": "boolean"
+        }
+      }
+    },
+    "blacklist_ServletOutputStream": {
+      "type": "object",
+      "properties": {
+        "ready": {
+          "type": "boolean"
+        }
+      }
+    },
+    "policies_EndpointNotification": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "endpoint_notification_message": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
