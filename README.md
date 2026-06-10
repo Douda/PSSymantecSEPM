@@ -57,10 +57,9 @@ PS C:\PSSymantecSEPM> Get-Command -Module PSSymantecSEPM | Select-Object -Proper
 | Get-TDADPolicy                    | Move-SEPClientGroup                  |
 | Remove-SEPMFileFingerprintList    | Remove-SEPMWindowsExtensionException |
 | Remove-SEPMWindowsFileException   | Remove-SEPMWindowsFolderException    |
-| Reset-SEPMConfiguration           | Send-SEPMCommandGetFile              |
-| Send-SEPMCommandQuarantine        | Set-SEPMAuthentication               |
-| Set-SEPMConfiguration             | Start-SEPMReplication                |
-| Start-SEPScan                     | Update-SEPClient                     |
+| Reset-SEPMConfiguration           | Send-SEPMCommand                     |
+| Set-SEPMAuthentication            | Set-SEPMConfiguration                |
+| Start-SEPMReplication             | Update-SEPMExceptionPolicy           |
 | Update-SEPMFileFingerprintList    |                                      |
 
 Every command has a help page, eg. `Get-Help Get-SEPComputers`
