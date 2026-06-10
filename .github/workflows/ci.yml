@@ -75,7 +75,7 @@ jobs:
           Install-Module -Name Pester -RequiredVersion 5.7.1 -Force -Scope CurrentUser -ErrorAction Stop
           Install-Module -Name ImportExcel -Force -Scope CurrentUser -ErrorAction Stop
           Import-Module ./Output/PSSymantecSEPM/PSSymantecSEPM.psm1 -Force
-          Invoke-Pester -Path ./Tests/ -CI
+          Invoke-Pester -Path ./Tests/ -ExcludePath '*Template*' -CI
 
   test-ps51:
     needs: build
@@ -98,7 +98,7 @@ jobs:
           Install-Module -Name ImportExcel -Force -Scope CurrentUser -ErrorAction Stop
           function global:Get-Credential { throw "Get-Credential invoked in CI - this should not happen" }
           Import-Module ./Output/PSSymantecSEPM/PSSymantecSEPM.psm1 -Force
-          Invoke-Pester -Path ./Tests/ -CI
+          Invoke-Pester -Path ./Tests/ -ExcludePath '*Template*' -CI
 
   publish:
     needs: [test-ps7, test-ps51]
