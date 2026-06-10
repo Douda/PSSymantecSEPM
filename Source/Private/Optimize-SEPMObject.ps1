@@ -94,7 +94,7 @@ function Optimize-SEPMObject {
         if ($PSVersionTable.PSVersion.Major -ge 6) {
             $obj = $InputObject | ConvertTo-Json -Depth 100 | ConvertFrom-Json -Depth 100
         } else {
-            $obj = Clone-PSObjectTree $InputObject
+            $obj = $InputObject | ConvertTo-Json -Depth 100 -Compress | ConvertFrom-Json
         }
 
         $allProperties = $obj | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name

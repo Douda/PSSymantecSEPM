@@ -12,7 +12,7 @@ Describe 'Invoke-SepmApi' {
     }
 
     Context 'Session parameter set' {
-        It 'extracts Headers and SkipCert from the session object and returns [hashtable]' {
+        It 'extracts Headers and SkipCert from the session object and returns [hashtable]' -Skip:($PSVersionTable.PSVersion.Major -lt 6) {
             $session = New-TestSession -ServerAddress 'SEPM01' -Port '8446' -Token 'TestToken123' -SkipCert
 
             InModuleScope PSSymantecSEPM -Parameters @{ session = $session } {
@@ -72,7 +72,7 @@ Describe 'Invoke-SepmApi' {
     }
 
     Context 'Manual parameter set' {
-        It 'uses Headers and SkipCert from parameters' {
+        It 'uses Headers and SkipCert from parameters' -Skip:($PSVersionTable.PSVersion.Major -lt 6) {
             InModuleScope PSSymantecSEPM {
                 $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
 
@@ -118,7 +118,7 @@ Describe 'Invoke-SepmApi' {
             }
         }
 
-        It 'calls Invoke-RestMethod with -SkipCertificateCheck when SkipCert is $true' {
+        It 'calls Invoke-RestMethod with -SkipCertificateCheck when SkipCert is `$true' -Skip:($PSVersionTable.PSVersion.Major -lt 6) {
             InModuleScope PSSymantecSEPM {
                 $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
 
