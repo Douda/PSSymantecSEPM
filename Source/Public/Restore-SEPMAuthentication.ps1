@@ -31,14 +31,14 @@ function Restore-SEPMAuthentication {
     
     if ($AccessToken) {
         # Make sure that the path that we're going to be storing the file exists.
-        $null = New-Item -Path (Split-Path -Path $script:accessTokenFilePath -Parent) -ItemType Directory -Force
+        $null = New-Item -Path (Split-Path -Path $script:accessTokenFilePath -Parent) -ItemType Directory -Force -ErrorAction SilentlyContinue
 
         $null = Copy-Item -Path $Path -Destination $script:accessTokenFilePath -Force
     }
     
     if ($Credential) {
         # Make sure that the path that we're going to be storing the file exists.
-        $null = New-Item -Path (Split-Path -Path $script:credentialsFilePath -Parent) -ItemType Directory -Force
+        $null = New-Item -Path (Split-Path -Path $script:credentialsFilePath -Parent) -ItemType Directory -Force -ErrorAction SilentlyContinue
 
         $null = Copy-Item -Path $Path -Destination $script:credentialsFilePath -Force
     }

@@ -20,7 +20,7 @@ Describe 'Backup-SEPMAuthentication' {
             $dummyCreds = New-Object System.Management.Automation.PSCredential 'TestUser',
                 (ConvertTo-SecureString -String 'TestPass' -AsPlainText -Force)
             $parent = Split-Path -Path $script:CredsPath -Parent
-            $null = New-Item -Path $parent -ItemType Directory -Force
+            $null = New-Item -Path $parent -ItemType Directory -Force -ErrorAction SilentlyContinue
             $dummyCreds | Export-Clixml -Path $script:CredsPath
         }
 
@@ -56,7 +56,7 @@ Describe 'Backup-SEPMAuthentication' {
             # Write fixture token directly to TestDrive — Initialize-TestEnvironment
             # already redirected $script:accessTokenFilePath to this path.
             $parent = Split-Path -Path $script:TokenPath -Parent
-            $null = New-Item -Path $parent -ItemType Directory -Force
+            $null = New-Item -Path $parent -ItemType Directory -Force -ErrorAction SilentlyContinue
             $fakeToken = [PSCustomObject]@{
                 Token           = 'fake-token-value'
                 TokenExpiration = (Get-Date).AddHours(1)
@@ -83,7 +83,7 @@ Describe 'Backup-SEPMAuthentication' {
     Context 'Backup with both credential and token files present' {
         BeforeAll {
             $parent = Split-Path -Path $script:CredsPath -Parent
-            $null = New-Item -Path $parent -ItemType Directory -Force
+            $null = New-Item -Path $parent -ItemType Directory -Force -ErrorAction SilentlyContinue
 
             $dummyCreds = New-Object System.Management.Automation.PSCredential 'BothUser',
                 (ConvertTo-SecureString -String 'BothPass' -AsPlainText -Force)
