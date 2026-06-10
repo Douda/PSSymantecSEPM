@@ -41,7 +41,7 @@ if ($FP_NAME) {
 # ── Discovery: file in command queue ──
 $s = Initialize-SEPMSession
 $fileId = $null
-# Try known file ID first (notepad.exe uploaded via Send-SEPMCommandGetFile)
+# Try known file ID first (notepad.exe uploaded via Send-SEPMCommand -Type GetFile)
 $knownId = "67C2C7AFAC1E00022E681989133418AF"
 try {
     $test = Get-SEPFileDetails -FileID $knownId

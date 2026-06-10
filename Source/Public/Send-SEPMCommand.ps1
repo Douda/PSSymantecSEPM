@@ -133,6 +133,8 @@ function Send-SEPMCommand {
 
         $commandEntry = $commandRegistry[$Type]
 
+        # Common parameters can appear in $PSBoundParameters when explicitly passed
+        # by the user (e.g. -ErrorAction Stop). Skip them during type-specific validation.
         $commonParams = @('ErrorAction', 'WarningAction', 'Verbose', 'Debug', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction')
         $alwaysValid = @('Type', 'ComputerName', 'GroupName') + $commonParams
         $allowedParamNames = if ($commandEntry.ContainsKey('Params')) { $commandEntry.Params.Keys } else { @() }
@@ -147,6 +149,15 @@ function Send-SEPMCommand {
                 $validTypesStr = $validTypes -join ', '
                 throw "-$boundParam is only valid with -Type $validTypesStr"
             }
+        }
+
+        # Hash-type parameters are mutually exclusive — exactly one or none allowed.
+        $hashParamNames = @('SHA256', 'MD5', 'SHA1')
+        $specifiedHashes = foreach ($hp in $hashParamNames) {
+            if ($PSBoundParameters.ContainsKey($hp)) { $hp }
+        }
+        if ($specifiedHashes.Count -gt 1) {
+            throw "Only one of -SHA256, -MD5, -SHA1 may be specified. Found: $($specifiedHashes -join ', ')"
         }
 
         $body = $null

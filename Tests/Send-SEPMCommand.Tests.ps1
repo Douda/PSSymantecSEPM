@@ -270,6 +270,21 @@ Describe 'Send-SEPMCommand' {
                 Should -Throw '-SHA1 must be exactly 40 characters, got 41'
         }
 
+        It 'rejects multiple hash types passed simultaneously' {
+            $hash256 = 'ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890'
+            $hashMD5 = 'ABCDEF1234567890ABCDEF1234567890'
+            { Send-SEPMCommand -Type GetFile -ComputerName 'PC1' -SHA256 $hash256 -MD5 $hashMD5 -ErrorAction Stop } |
+                Should -Throw 'Only one of*SHA256*MD5'
+        }
+
+        It 'rejects all three hash types passed simultaneously' {
+            $hash256 = 'ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890'
+            $hashMD5 = 'ABCDEF1234567890ABCDEF1234567890'
+            $hash1   = 'ABCDEF1234567890ABCDEF1234567890ABCDEF12'
+            { Send-SEPMCommand -Type ClearIronCache -ComputerName 'PC1' -SHA256 $hash256 -MD5 $hashMD5 -SHA1 $hash1 -ErrorAction Stop } |
+                Should -Throw 'Only one of*SHA256*MD5*SHA1'
+        }
+
         It 'accepts valid SHA256 for ClearIronCache' {
             $hash = 'ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890'
             Send-SEPMCommand -Type ClearIronCache -ComputerName 'PC1' -SHA256 $hash
