@@ -64,7 +64,7 @@ function Move-SEPClientGroup {
         $hardwareKey = if ($computer) { $computer.hardwareKey } else { $null }
         if ([string]::IsNullOrEmpty($hardwareKey)) {
             $message = "HardwareKey of computer $ComputerName not found. Please check the computer name and try again."
-            Write-Error $message
+            Write-Error $message -ErrorAction Continue
             return
         }
 
@@ -74,7 +74,7 @@ function Move-SEPClientGroup {
         if ([string]::IsNullOrEmpty($groupID)) {
             $message = "Group $GroupName not found. Please check the group name and try again."
             $message += "Following group format is expected: 'My Company\group\subgroup'"
-            Write-Error $message
+            Write-Error $message -ErrorAction Continue
             return
         }
 

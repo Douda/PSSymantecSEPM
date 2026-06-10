@@ -56,7 +56,7 @@ function Remove-SEPMGroup {
         if (-not $group -or [string]::IsNullOrEmpty($group.id)) {
             $message = "Group '$fullPathName' not found. Please check the group name and parent group and try again."
             $message += " Following group format is expected: 'My Company\group\subgroup'"
-            Write-Error $message
+            Write-Error $message -ErrorAction Continue
             return
         }
 

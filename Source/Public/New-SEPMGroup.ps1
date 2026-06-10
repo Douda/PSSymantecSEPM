@@ -74,7 +74,7 @@ function New-SEPMGroup {
         if ([string]::IsNullOrEmpty($ParentGroupID)) {
             $message = "Group $GroupName not found. Please check the parent group name and try again."
             $message += "Following group format is expected: 'My Company\group\subgroup'"
-            Write-Error $message
+            Write-Error $message -ErrorAction Continue
             return
         }
 

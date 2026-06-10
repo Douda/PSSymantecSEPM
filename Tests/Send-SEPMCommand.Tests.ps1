@@ -146,7 +146,7 @@ Describe 'Send-SEPMCommand' {
     Context 'unmatched names' {
         It 'emits non-terminating error for unmatched names while dispatching matched ones' {
             Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
-                Write-Error "The following names were not found: NonexistentPC"
+                Write-Error "The following names were not found: NonexistentPC" -ErrorAction Continue
                 return @{ computer_ids = @('ABC123'); group_ids = @() }
             }
 
@@ -162,7 +162,7 @@ Describe 'Send-SEPMCommand' {
 
         It 'emits non-terminating error listing all unmatched names when none found' {
             Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
-                Write-Error "The following names were not found: NonexistentPC, GhostPC"
+                Write-Error "The following names were not found: NonexistentPC, GhostPC" -ErrorAction Continue
                 return @{ computer_ids = @(); group_ids = @() }
             }
 

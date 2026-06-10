@@ -60,9 +60,9 @@ Only certain critical event types (e.g., Server Health Alert) support acknowledg
 Events such as software update notifications and system notifications must be
 acknowledged through the SEPM console (Monitors > Notifications).
 "@
-                Write-Error -Message $msg -ErrorId 'EventNotAcknowledgeable'
+                Write-Error -Message $msg -ErrorId 'EventNotAcknowledgeable' -ErrorAction Continue
             } else {
-                Write-Error -Message "Failed to acknowledge event '$EventID'. Response: $resp" -ErrorId 'EventAcknowledgeFailed'
+                Write-Error -Message "Failed to acknowledge event '$EventID'. Response: $resp" -ErrorId 'EventAcknowledgeFailed' -ErrorAction Continue
             }
             return $false
         }
