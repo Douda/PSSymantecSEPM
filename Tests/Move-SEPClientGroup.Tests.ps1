@@ -98,12 +98,14 @@ Describe 'Move-SEPClientGroup' {
             Move-SEPClientGroup -ComputerName 'MyComputer' -GroupName 'My Company\BadGroup' -ErrorAction SilentlyContinue -ErrorVariable script:errors
 
             @($script:errors).Count | Should -BeGreaterThan 0
-            # PS 5.1 wraps non-terminating errors in StopUpstreamCommandsException;
-            # the real error text is in InnerException.Message
-            $actualMessage = if ($script:errors[0].Exception.InnerException) {
-                $script:errors[0].Exception.InnerException.Message
+            # PS 5.1 + mocks + -ErrorAction SilentlyContinue produces 2 errors:
+            # [0] StopUpstreamCommandsException (Exception=$null), [1] the real error.
+            # Use the last error in the array for the actual message.
+            $realError = $script:errors[-1]
+            $actualMessage = if ($realError.Exception.InnerException) {
+                $realError.Exception.InnerException.Message
             } else {
-                $script:errors[0].Exception.Message
+                $realError.Exception.Message
             }
             $actualMessage | Should -Match 'Group'
         }
