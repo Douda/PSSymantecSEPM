@@ -4,14 +4,14 @@ assembly-informational-format: '{NuGetVersionV2}+Build.{env:BUILDCOUNT ?? 0}.Dat
 
 commit-message-incrementing: MergeMessageOnly
 branches:
-  main:
+  master:
     increment: Minor
   pull-request:
-    label: rc
+    tag: rc
     increment: Patch
   develop:
     mode: ContinuousDeployment
-    label: beta
+    tag: beta
     increment: Patch
 ignore:
   sha: []

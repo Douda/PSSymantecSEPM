@@ -21,9 +21,18 @@ jobs:
 
       - name: Run GitVersion
         id: gitversion
-        uses: gittools/actions/gitversion/execute@v3
-        with:
-          useConfigFile: true
+        shell: bash
+        run: |
+          # Fix GitVersion 6.x config incompatibility: tag -> label
+          sed -i 's/    tag: rc/    label: rc/' GitVersion.yml
+          sed -i 's/    tag: beta/    label: beta/' GitVersion.yml
+          sed -i 's/  master:/  main:/' GitVersion.yml
+          echo "=== Patched GitVersion.yml ==="
+          cat GitVersion.yml
+          JSON=$(dotnet-gitversion /output json /config GitVersion.yml 2>/dev/null)
+          echo "GitVersion JSON: $JSON"
+          SEMVER=$(echo "$JSON" | jq -r '.SemVer')
+          echo "SemVer=$SEMVER" >> $GITHUB_OUTPUT
 
       - name: Build Module
         shell: pwsh
