@@ -109,7 +109,7 @@ function parseBlockers(body: string): number[] {
   if (section.toLowerCase().includes("none")) return [];
 
   const nums: number[] = [];
-  for (const m of section.matchAll(/#?(\d+)/g)) {
+  for (const m of section.matchAll(/#(\d+)/g)) {
     nums.push(parseInt(m[1], 10));
   }
   return nums;
