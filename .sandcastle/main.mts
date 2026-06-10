@@ -276,7 +276,6 @@ if (prTarget) {
   // merge sequentially. Blocked slices wait until their blockers are
   // checked [x], then get picked up in the next round.
   // ===================================================================
-  const prevBranch = sh("git branch --show-current") || "develop";
   let totalMerged = 0;
 
   for (let round = 1; round <= MAX_ROUNDS; round++) {
@@ -295,18 +294,21 @@ if (prTarget) {
     }
     console.log("");
 
-    // Rebase PR branch onto latest develop.
-    sh("git fetch origin develop 2>&1");
-    sh(`git checkout ${prTarget.prBranch} 2>&1`);
-    const rebaseResult = sh(`git rebase origin/develop 2>&1`);
+    // Rebase PR branch onto latest develop (in isolated worktree so the
+    // main working tree never leaves its current branch).
+    const mergeWorktree = `.sandcastle/worktrees/mrg-${prTarget.prBranch}`;
+    sh(`rm -rf ${mergeWorktree} 2>&1`);
+    sh("git worktree prune 2>&1");
+    sh(`git worktree add -f ${mergeWorktree} ${prTarget.prBranch} 2>&1`);
+    sh(`git -C ${mergeWorktree} fetch origin develop 2>&1`);
+    const rebaseResult = sh(`git -C ${mergeWorktree} rebase origin/develop 2>&1`);
     if (rebaseResult.toLowerCase().includes("conflict")) {
       console.error(`ERROR: Rebase conflict on ${prTarget.prBranch}. Skipping round.`);
-      sh("git rebase --abort 2>&1");
-      sh(`git checkout ${prevBranch} 2>&1`);
+      sh(`git -C ${mergeWorktree} rebase --abort 2>&1`);
+      sh(`git worktree remove ${mergeWorktree} 2>&1`);
       continue;
     }
-    sh(`git push --force-with-lease origin ${prTarget.prBranch} 2>&1`);
-    sh(`git checkout ${prevBranch} 2>&1`);
+    sh(`git -C ${mergeWorktree} push --force-with-lease origin ${prTarget.prBranch} 2>&1`);
 
     // -----------------------------------------------------------------
     // Phase: Execute + Review (parallel)
@@ -406,15 +408,13 @@ if (prTarget) {
       const branch = result.branch as string;
 
       console.log(`  Merging #${slice.num} (${branch})...`);
-      sh(`git checkout ${prTarget.prBranch} 2>&1`);
       const mergeResult = sh(
-        `git merge ${branch} --no-ff -m "merge: slice #${slice.num} — ${slice.title}" 2>&1`,
+        `git -C ${mergeWorktree} merge ${branch} --no-ff -m "merge: slice #${slice.num} — ${slice.title}" 2>&1`,
       );
 
       if (!mergeResult || mergeResult.toLowerCase().includes("conflict")) {
         console.error(`  ✗ #${slice.num}: MERGE CONFLICT — needs manual resolution`);
-        sh("git merge --abort 2>&1");
-        sh(`git checkout ${prevBranch} 2>&1`);
+        sh(`git -C ${mergeWorktree} merge --abort 2>&1`);
         if (result.sandbox) await result.sandbox.close();
         continue;
       }
@@ -422,14 +422,16 @@ if (prTarget) {
       mergeCount++;
       totalMerged++;
 
-      sh(`git push origin ${prTarget.prBranch} 2>&1`);
-      sh(`git checkout ${prevBranch} 2>&1`);
+      sh(`git -C ${mergeWorktree} push origin ${prTarget.prBranch} 2>&1`);
 
       updatePRChecklist(prTarget.prNumber, slice.num);
       if (result.sandbox) await result.sandbox.close();
 
       console.log(`  ✓ #${slice.num}: ${result.implementCommits + result.reviewCommits} commit(s) merged`);
     }
+
+    // Clean up merge worktree.
+    sh(`git worktree remove ${mergeWorktree} 2>&1`);
 
     console.log(`\nRound ${round}: ${mergeCount}/${prTarget.slices.length} merged (total: ${totalMerged})`);
   }
