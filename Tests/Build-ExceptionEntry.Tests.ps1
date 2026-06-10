@@ -36,14 +36,14 @@ Describe 'Build-ExceptionEntry' {
                 $props = @{
                     path         = 'C:\test\file.exe'
                     pathvariable = '[NONE]'
-                    scancategory = 'GESC_ALL'
+                    scancategory = 'AllScans'
                 }
                 $result = Build-ExceptionEntry -Schema $schema -Type 'Files' -Properties $props
                 $result | Should -Not -BeNullOrEmpty
                 $result -is [hashtable] | Should -Be $true
                 $result['path'] | Should -Be 'C:\test\file.exe'
                 $result['pathvariable'] | Should -Be '[NONE]'
-                $result['scancategory'] | Should -Be 'GESC_ALL'
+                $result['scancategory'] | Should -Be 'AllScans'
             }
         }
 
@@ -107,7 +107,7 @@ Describe 'Build-ExceptionEntry' {
         It 'produces correct output for type Files' {
             InModuleScope PSSymantecSEPM {
                 $schema = $script:_ExceptionSchema
-                $result = Build-ExceptionEntry -Schema $schema -Type 'Files' -Properties @{ path = 'C:\test\file.exe'; sonar = $true; scancategory = 'GESC_ALL' }
+                $result = Build-ExceptionEntry -Schema $schema -Type 'Files' -Properties @{ path = 'C:\test\file.exe'; sonar = $true; scancategory = 'AllScans' }
                 $result | Should -Not -BeNullOrEmpty
                 $result -is [hashtable] | Should -Be $true
                 $result.ContainsKey('rulestate') | Should -Be $true
@@ -128,10 +128,10 @@ Describe 'Build-ExceptionEntry' {
         It 'produces correct output for type Extensions' {
             InModuleScope PSSymantecSEPM {
                 $schema = $script:_ExceptionSchema
-                $result = Build-ExceptionEntry -Schema $schema -Type 'Extensions' -Properties @{ extensions = @('exe', 'dll'); scancategory = 'GESC_AP' }
+                $result = Build-ExceptionEntry -Schema $schema -Type 'Extensions' -Properties @{ extensions = @('exe', 'dll'); scancategory = 'All' }
                 $result['extensions'].Count | Should -Be 2
                 $result['extensions'] -contains 'exe' | Should -Be $true
-                $result['scancategory'] | Should -Be 'GESC_AP'
+                $result['scancategory'] | Should -Be 'All'
             }
         }
 
@@ -218,7 +218,7 @@ Describe 'Build-ExceptionEntry' {
         It 'produces correct output for type TamperFiles' {
             InModuleScope PSSymantecSEPM {
                 $schema = $script:_ExceptionSchema
-                $result = Build-ExceptionEntry -Schema $schema -Type 'TamperFiles' -Properties @{ path = 'C:\test\file.exe'; sonar = $true; scancategory = 'GESC_ALL' }
+                $result = Build-ExceptionEntry -Schema $schema -Type 'TamperFiles' -Properties @{ path = 'C:\test\file.exe'; sonar = $true; scancategory = 'AllScans' }
                 $result['path'] | Should -Be 'C:\test\file.exe'
                 $result['sonar'] | Should -Be $true
             }
@@ -596,7 +596,7 @@ Describe 'Build-ExceptionEntry' {
                     scancategory = 'INVALID'
                 }
                 { Build-ExceptionEntry -Schema $schema -Type 'Files' -Properties $props } |
-                    Should -Throw -ExpectedMessage "*Valid values: GESC_AP, GESC_MANUAL, GESC_ALL*"
+                    Should -Throw -ExpectedMessage "*Valid values: AllScans, AutoProtect, ScheduledAndOndemand*"
             }
         }
 
@@ -605,10 +605,10 @@ Describe 'Build-ExceptionEntry' {
                 $schema = $script:_ExceptionSchema
                 $props = @{
                     path         = 'C:\test\file.exe'
-                    scancategory = 'GESC_AP'
+                    scancategory = 'AutoProtect'
                 }
                 $result = Build-ExceptionEntry -Schema $schema -Type 'Files' -Properties $props
-                $result['scancategory'] | Should -Be 'GESC_AP'
+                $result['scancategory'] | Should -Be 'AutoProtect'
             }
         }
     }

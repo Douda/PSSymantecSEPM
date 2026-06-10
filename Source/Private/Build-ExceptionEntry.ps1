@@ -14,7 +14,7 @@ $script:_ExceptionSchema = @{
         Fields     = @{
             path              = @{ type = 'string' }
             pathvariable      = @{ type = 'string' }
-            scancategory      = @{ type = 'string'; enum = @('GESC_AP', 'GESC_MANUAL', 'GESC_ALL') }
+            scancategory      = @{ type = 'string'; enum = @('AllScans', 'AutoProtect', 'ScheduledAndOndemand') }
             sonar             = @{ type = 'bool' }
             securityrisk      = @{ type = 'bool' }
             applicationcontrol = @{ type = 'bool' }
@@ -28,7 +28,7 @@ $script:_ExceptionSchema = @{
         Fields     = @{
             pathvariable = @{ type = 'string' }
             directory    = @{ type = 'string' }
-            scancategory = @{ type = 'string'; enum = @('GESC_AP', 'GESC_MANUAL', 'GESC_ALL') }
+            scancategory = @{ type = 'string'; enum = @('AllScans', 'AutoProtect', 'ScheduledAndOndemand') }
             scantype     = @{ type = 'string'; enum = @('All', 'SecurityRisk', 'SONAR', 'ApplicationControl', 'AllScans', 'AutoProtect', 'ScheduledAndOndemand') }
             recursive    = @{ type = 'bool' }
         }
@@ -39,7 +39,7 @@ $script:_ExceptionSchema = @{
         Required   = @('extensions')
         Fields     = @{
             extensions   = @{ type = 'string[]' }
-            scancategory = @{ type = 'string'; enum = @('GESC_AP', 'GESC_MANUAL', 'GESC_ALL') }
+            scancategory = @{ type = 'string'; enum = @('All', 'SecurityRisk', 'SONAR', 'ApplicationControl', 'AllScans', 'AutoProtect', 'ScheduledAndOndemand') }
         }
     }
     Webdomains = @{
@@ -136,7 +136,7 @@ $script:_ExceptionSchema = @{
         Fields     = @{
             pathvariable = @{ type = 'string' }
             directory    = @{ type = 'string' }
-            scancategory = @{ type = 'string'; enum = @('GESC_AP', 'GESC_MANUAL', 'GESC_ALL') }
+            scancategory = @{ type = 'string'; enum = @('AllScans', 'AutoProtect', 'ScheduledAndOndemand') }
             recursive    = @{ type = 'bool' }
         }
     }
@@ -146,7 +146,7 @@ $script:_ExceptionSchema = @{
         Required   = @('extensions')
         Fields     = @{
             extensions   = @{ type = 'string[]' }
-            scancategory = @{ type = 'string'; enum = @('GESC_AP', 'GESC_MANUAL', 'GESC_ALL') }
+            scancategory = @{ type = 'string'; enum = @('All', 'SecurityRisk', 'SONAR', 'ApplicationControl', 'AllScans', 'AutoProtect', 'ScheduledAndOndemand') }
         }
     }
     Knownrisks = @{
@@ -173,7 +173,7 @@ $script:_ExceptionSchema = @{
         Fields     = @{
             path              = @{ type = 'string' }
             pathvariable      = @{ type = 'string' }
-            scancategory      = @{ type = 'string'; enum = @('GESC_AP', 'GESC_MANUAL', 'GESC_ALL') }
+            scancategory      = @{ type = 'string'; enum = @('AllScans', 'AutoProtect', 'ScheduledAndOndemand') }
             sonar             = @{ type = 'bool' }
             securityrisk      = @{ type = 'bool' }
             applicationcontrol = @{ type = 'bool' }
