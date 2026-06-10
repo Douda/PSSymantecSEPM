@@ -24,12 +24,11 @@ function Get-SEPMDomain {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/domains"
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMDomain'
     }
 
     process {
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
 
         return $resp
     }

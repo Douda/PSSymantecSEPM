@@ -15,6 +15,12 @@ function Invoke-SepmEndpoint {
     .PARAMETER Session
         A session object from Initialize-SEPMSession.
 
+    .PARAMETER BoundParameters
+        The cmdlet's $PSBoundParameters hashtable for resolving query param values.
+
+    .PARAMETER AdditionalQueryParams
+        Extra query params to append (module-scoped values, hardcoded defaults).
+
     .OUTPUTS
         System.Collections.Hashtable. The API response.
 
@@ -28,10 +34,14 @@ function Invoke-SepmEndpoint {
         [hashtable]$Endpoint,
 
         [Parameter(Mandatory = $true)]
-        [PSCustomObject]$Session
+        [PSCustomObject]$Session,
+
+        [hashtable]$BoundParameters,
+
+        [hashtable]$AdditionalQueryParams
     )
 
-    $uri = Resolve-SepmEndpoint -Endpoint $Endpoint -Session $Session
+    $uri = Resolve-SepmEndpoint -Endpoint $Endpoint -Session $Session -BoundParameters $BoundParameters -AdditionalQueryParams $AdditionalQueryParams
 
     return Invoke-SepmApi -Method $Endpoint.Method -Uri $uri -Session $Session
 }

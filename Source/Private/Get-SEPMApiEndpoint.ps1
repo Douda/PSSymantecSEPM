@@ -9,6 +9,85 @@ if (-not $script:_endpointRegistry) {
             Method        = 'GET'
             Path          = '/version'
         }
+        'Get-SEPMAdmins' = @{
+            OperationName = 'Get-SEPMAdmins'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/admin-users'
+            QueryParams   = @{ domain = 'Domain' }
+        }
+        'Get-SEPMDomain' = @{
+            OperationName = 'Get-SEPMDomain'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/domains'
+        }
+        'Get-SEPClientStatus' = @{
+            OperationName = 'Get-SEPClientStatus'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/stats/client/onlinestatus'
+        }
+        'Get-SEPClientVersion' = @{
+            OperationName = 'Get-SEPClientVersion'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/stats/client/version'
+        }
+        'Get-SEPClientDefVersions' = @{
+            OperationName = 'Get-SEPClientDefVersions'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/stats/client/content'
+        }
+        'Get-SEPGUPList' = @{
+            OperationName = 'Get-SEPGUPList'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/gup/status'
+        }
+        'Get-SEPMReplicationStatus' = @{
+            OperationName = 'Get-SEPMReplicationStatus'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/replication/status'
+        }
+        'Get-SEPMThreatStats' = @{
+            OperationName = 'Get-SEPMThreatStats'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/stats/threat'
+        }
+        'Get-SEPMDatabaseInfo' = @{
+            OperationName = 'Get-SEPMDatabaseInfo'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/admin/database'
+        }
+        'Get-SEPMLatestDefinition' = @{
+            OperationName = 'Get-SEPMLatestDefinition'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/content/avdef/latest'
+        }
+        'Get-SEPMLicense' = @{
+            OperationName = 'Get-SEPMLicense'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/licenses'
+        }
+        'Get-SEPMLicenseSummary' = @{
+            OperationName = 'Get-SEPMLicenseSummary'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/licenses/summary'
+        }
+        'Get-SEPMEventInfo' = @{
+            OperationName = 'Get-SEPMEventInfo'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/events/critical'
+        }
     }
 }
 
