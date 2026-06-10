@@ -131,8 +131,7 @@ Audited 2026-06-09 — 13 cmdlets use this pattern:
 | `Get-SEPMPoliciesSummary` | Policy summary array |
 | `Get-SEPMReplicationStatus` | Replication status array |
 | `Get-SEPMThreatStats` | Threat stats array |
-| `Start-SEPScan` | Scan result array |
-| `Update-SEPClientDefinitions` | Update result array |
+| `Send-SEPMCommand` | Command result array |
 
 New cmdlets returning collections should follow this pattern.
 

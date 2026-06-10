@@ -7,7 +7,7 @@ function Get-SEPFileDetails {
     .PARAMETER FileID
         The ID of the file to get the details of
         Is a required parameter
-        Can be found in the command ID of the response from Send-SEPMCommandGetFile
+        Can be found in the command ID of the response from Send-SEPMCommand -Type GetFile
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPFileDetails -FileID 12345678901234567890123456789
 
