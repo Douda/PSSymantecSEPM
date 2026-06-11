@@ -88,6 +88,42 @@ if (-not $script:_endpointRegistry) {
             Method        = 'GET'
             Path          = '/events/critical'
         }
+        'Get-SEPMExceptionPolicy' = @{
+            OperationName = 'Get-SEPMExceptionPolicy'
+            Version       = '2.0'
+            Method        = 'GET'
+            Path          = '/policies/exceptions/{id}'
+        }
+        'Get-SEPMFirewallPolicy' = @{
+            OperationName = 'Get-SEPMFirewallPolicy'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/policies/firewall/{id}'
+        }
+        'Get-SEPMIpsPolicy' = @{
+            OperationName = 'Get-SEPMIpsPolicy'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/policies/ips/{id}'
+        }
+        'Get-SEPMGroupSettings' = @{
+            OperationName = 'Get-SEPMGroupSettings'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/groups/{id}/locations/{id}/settings'
+        }
+        'Get-SEPMPolicyXML' = @{
+            OperationName = 'Get-SEPMPolicyXML'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/policies/raw/{id}/{id}'
+        }
+        'Get-SEPMLocationXML' = @{
+            OperationName = 'Get-SEPMLocationXML'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/groups/{id}/locations/{id}/xml'
+        }
     }
 }
 

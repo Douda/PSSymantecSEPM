@@ -21,6 +21,10 @@ function Invoke-SepmEndpoint {
     .PARAMETER AdditionalQueryParams
         Extra query params to append (module-scoped values, hardcoded defaults).
 
+    .PARAMETER PathIds
+        An array of ID values for {id} placeholder substitution in the path template.
+        Passed through to Resolve-SepmEndpoint.
+
     .OUTPUTS
         System.Collections.Hashtable. The API response.
 
@@ -38,10 +42,12 @@ function Invoke-SepmEndpoint {
 
         [hashtable]$BoundParameters,
 
-        [hashtable]$AdditionalQueryParams
+        [hashtable]$AdditionalQueryParams,
+
+        [string[]]$PathIds
     )
 
-    $uri = Resolve-SepmEndpoint -Endpoint $Endpoint -Session $Session -BoundParameters $BoundParameters -AdditionalQueryParams $AdditionalQueryParams
+    $uri = Resolve-SepmEndpoint -Endpoint $Endpoint -Session $Session -BoundParameters $BoundParameters -AdditionalQueryParams $AdditionalQueryParams -PathIds $PathIds
 
     return Invoke-SepmApi -Method $Endpoint.Method -Uri $uri -Session $Session
 }

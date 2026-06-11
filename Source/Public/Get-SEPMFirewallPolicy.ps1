@@ -70,9 +70,8 @@ function Get-SEPMFirewallPolicy {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/policies/firewall"
-
-        
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMFirewallPolicy'
+        $baseURI = $session.BaseURLv1 + '/policies/firewall'
     }
 
     process {
@@ -86,7 +85,7 @@ function Get-SEPMFirewallPolicy {
 
             foreach ($fwPolicy in $fwPolicies) {
                 $i++
-                $policyURI = $URI + "/" + $fwPolicy.id
+                $policyURI = $baseURI + '/' + $fwPolicy.id
 
                 Write-Progress -Activity "Fetching firewall policies" -Status "$i/$total` : $($fwPolicy.name)" -PercentComplete ($i / $total * 100)
 
@@ -119,11 +118,8 @@ function Get-SEPMFirewallPolicy {
             }
         }
 
-        # Updating URI with policy ID
-        $URI = $URI + "/" + $policyID
-        
         try {
-            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($policyID)
         } catch {
             Write-Warning -Message "Error: $_"
         }

@@ -26,6 +26,11 @@ function Resolve-SepmEndpoint {
     .PARAMETER AdditionalQueryParams
         Extra query params to append (module-scoped values, hardcoded defaults).
 
+    .PARAMETER PathIds
+        An array of ID values for {id} placeholder substitution in the path template.
+        Each {id} in the path is replaced by the next element. If the path has no {id}
+        placeholder and a single element is provided, it is appended to the path.
+
     .OUTPUTS
         System.String. The full URI for the API call.
 
@@ -43,7 +48,9 @@ function Resolve-SepmEndpoint {
 
         [hashtable]$BoundParameters,
 
-        [hashtable]$AdditionalQueryParams
+        [hashtable]$AdditionalQueryParams,
+
+        [string[]]$PathIds
     )
 
     $baseUrl = if ($Endpoint.Version -eq '1.0') {
@@ -52,7 +59,31 @@ function Resolve-SepmEndpoint {
         $Session.BaseURLv2
     }
 
-    $uri = $baseUrl + $Endpoint.Path
+    # Apply Path ID substitution
+    $resolvedPath = $Endpoint.Path
+    if ($PathIds -and $PathIds.Count -gt 0) {
+        if ($resolvedPath -match '\{id\}') {
+            # Replace each {id} placeholder sequentially from PathIds
+            $matches = [regex]::Matches($resolvedPath, '\{id\}')
+            $parts = $resolvedPath -split '\{id\}', ($matches.Count + 1)
+            $segments = @()
+            for ($i = 0; $i -lt $matches.Count; $i++) {
+                $segments += $parts[$i]
+                if ($i -lt $PathIds.Count) {
+                    $segments += $PathIds[$i]
+                }
+            }
+            # Last part
+            if ($matches.Count -lt $parts.Count) {
+                $segments += $parts[$matches.Count]
+            }
+            $resolvedPath = $segments -join ''
+        } elseif ($PathIds.Count -eq 1) {
+            $resolvedPath = $resolvedPath + '/' + $PathIds[0]
+        }
+    }
+
+    $uri = $baseUrl + $resolvedPath
 
     # Resolve query params from registry mapping + caller extras
     $queryParams = @{}
