@@ -1,10 +1,12 @@
-# Smoke: New-SEPMGroup (PS7)
-# Usage: pwsh -NoProfile -File Scripts/Smoke/New-SEPMGroup/batch.ps7.ps1
+﻿<#
+.SYNOPSIS
+    Shared smoke tests for New-SEPMGroup.
 
-$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
-. "$RepoRoot/Scripts/Smoke/Common.ps1"
-
-Write-Host "=== Smoke: New-SEPMGroup (PS7) ===" -ForegroundColor Yellow
+.DESCRIPTION
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
+    Covers: create group, verify exists, create with inheritance,
+            error on bad parent, create with description, cleanup.
+#>
 
 $results = @{}
 $testGroupName = "SmokeTest_Group_$(Get-Date -Format 'yyyyMMddHHmmss')"
@@ -51,15 +53,5 @@ Write-Host "`n--- CLEANUP ---" -ForegroundColor Yellow
     }
 }
 
-# === Summary ===
-Write-Host "`n========== SUMMARY (PS7) ==========" -ForegroundColor Yellow
-$pass = 0; $fail = 0; $skip = 0
-foreach ($k in $results.Keys | Sort-Object) {
-    $v = $results[$k]
-    if ($v -eq "PASS") { $pass++; Write-Host "  $k : PASS" -ForegroundColor Green }
-    elseif ($v -eq "SKIP") { $skip++; Write-Host "  $k : SKIP" -ForegroundColor Yellow }
-    else { $fail++; Write-Host "  $k : FAIL" -ForegroundColor Red }
-}
-Write-Host "TOTAL: $($pass+$fail+$skip) tests, $pass pass, $fail fail, $skip skip" -ForegroundColor Yellow
-
-if ($fail -gt 0) { exit 1 }
+# ── Summary ──
+Write-Summary -Results $results -Label "New-SEPMGroup Smoke Tests"
