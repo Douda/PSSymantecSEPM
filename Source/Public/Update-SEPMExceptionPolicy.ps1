@@ -280,16 +280,21 @@ function Update-SEPMExceptionPolicy {
                 $existingPolicy = Get-SEPMExceptionPolicy -PolicyName $PolicyName
                 $existingExts = $existingPolicy.configuration.extension_list.extensions
 
+                # Handle $null or non-array existing extensions (no extension_list yet)
+                if ($null -eq $existingExts) {
+                    $existingExts = @()
+                }
+
                 if ($Remove.IsPresent) {
                     foreach ($ext in $Extensions) {
                         if ($ext -notin $existingExts) {
                             throw "Cannot remove Extension '$ext'. It is not in the exception list."
                         }
                     }
-                    $resultExts = $existingExts | Where-Object { $_ -notin $Extensions }
+                    $resultExts = @($existingExts | Where-Object { $_ -notin $Extensions })
                     $deleted = $true
                 } else {
-                    $resultExts = @($Extensions) + @($existingExts) | Sort-Object | Get-Unique
+                    $resultExts = @(@($Extensions) + @($existingExts) | Sort-Object | Get-Unique)
                     $deleted = $false
                 }
 
@@ -337,6 +342,16 @@ function Update-SEPMExceptionPolicy {
         # strips null/empty top-level properties and configuration sub-properties,
         # and applies SEPM domain rules (mac, linux, extension_list).
         $ObjBody = Optimize-SEPMObject -InputObject $ObjBody
+
+        # PS5.1 ConvertTo-Json unwraps single-element arrays. If extensions was
+        # reduced to a scalar by the round-trip, re-wrap it as an array so the
+        # SEPM API receives valid JSON: "extensions": [".ext"] not "extensions": ".ext".
+        if ($null -ne $ObjBody.configuration `
+            -and $null -ne $ObjBody.configuration.extension_list `
+            -and $ObjBody.configuration.extension_list.extensions -isnot [array]) {
+            $ObjBody.configuration.extension_list.extensions = @($ObjBody.configuration.extension_list.extensions)
+        }
+
         $bodyJson = ConvertTo-SEPMJson -InputObject $ObjBody -Compress
 
         $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($PolicyID) -Body $bodyJson
