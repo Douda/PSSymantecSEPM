@@ -9,6 +9,8 @@
     Usage: pwsh -NoProfile -File Scripts/Smoke/Get-SEPSimpleGets1/run.ps7.ps1
 #>
 
+#Requires -Version 7.0
+
 $ErrorActionPreference = "Continue"
 $RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
 

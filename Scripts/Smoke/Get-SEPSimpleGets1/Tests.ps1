@@ -13,12 +13,12 @@ $results = @{}
 # ── A1: Get-SEPClientInfectedStatus ──
 $results.A1 = T "A1" "Get-SEPClientInfectedStatus" `
     { Get-SEPClientInfectedStatus } `
-    { param($r) $r -is [array] -or (@($r).Count -ge 0) }
+    { param($r) $null -ne $r }
 
 # ── A2: Get-SEPClientInfectedStatus -Clean ──
 $results.A2 = T "A2" "Get-SEPClientInfectedStatus -Clean" `
     { Get-SEPClientInfectedStatus -Clean } `
-    { param($r) $r -is [array] -or (@($r).Count -ge 0) }
+    { param($r) $null -ne $r }
 
 # ── B1: Get-SEPGUPList ──
 $results.B1 = T "B1" "Get-SEPGUPList" `
@@ -39,9 +39,9 @@ $results.D1 = T "D1" "Get-SEPMEventInfo" `
 $s = Initialize-SEPMSession
 $commandId = $null
 try {
-    $queue = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/command-queue?pageSize=50" -Session $s
-    if ($queue.content -and $queue.content.Count -gt 0) {
-        $commandId = $queue.content[0].commandId
+    $commandQueue = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/command-queue?pageSize=50" -Session $s
+    if ($commandQueue.content -and $commandQueue.content.Count -gt 0) {
+        $commandId = $commandQueue.content[0].commandId
     }
 } catch { }
 
@@ -63,8 +63,8 @@ try {
 } catch { }
 if (-not $fileId) {
     try {
-        $cmdQueue = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/command-queue?pageSize=50" -Session $s
-        foreach ($cmd in $cmdQueue.content) {
+        $commandQueue = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/command-queue?pageSize=50" -Session $s
+        foreach ($cmd in $commandQueue.content) {
             if ($cmd.binaryFileId) { $fileId = $cmd.binaryFileId; break }
         }
     } catch { }
