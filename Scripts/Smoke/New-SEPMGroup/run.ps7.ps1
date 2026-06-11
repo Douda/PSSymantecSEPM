@@ -4,7 +4,7 @@
 
 .DESCRIPTION
     Bootstraps the module and SEPM connection for PS 7+, then dot-sources
-    Common-Shared.ps1 (auth + helpers) and Tests.ps1 (test cases).
+    Common.ps1 (auth + helpers) and Tests.ps1 (test cases).
 
     Usage: pwsh -NoProfile -File Scripts/Smoke/New-SEPMGroup/run.ps7.ps1
 #>

@@ -1,9 +1,9 @@
-<#
+﻿<#
 .SYNOPSIS
     Shared smoke tests for Update-SEPMExceptionPolicy.
 
 .DESCRIPTION
-    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common-Shared.ps1.
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
     Covers 7 test groups:
       A: Metadata (EnablePolicy, DisablePolicy, PolicyDescription, combined, conflict)
       B: WindowsFile (AllScans, Sonar, SecurityRisk, ApplicationControl, ExcludeChildProcesses, PathVariable, Remove, combined rule+metadata)
@@ -38,7 +38,7 @@ function Get-PolicyState {
         -SkipCert:$true
 }
 
-# ── Custom T helper (shadows Common-Shared.ps1) ──
+# ── Custom T helper (shadows Common.ps1) ──
 # Mutation cmdlets need ground-truth verification: mutate → sleep → fetch policy → assert
 function T {
     param($Id, $Label, [ScriptBlock]$Action, [ScriptBlock]$Assert)

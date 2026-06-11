@@ -3,7 +3,7 @@
     Shared smoke tests for New-SEPMGroup.
 
 .DESCRIPTION
-    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common-Shared.ps1.
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
     Covers: create group, verify exists, create with inheritance,
             error on bad parent, create with description, cleanup.
 #>

@@ -4,7 +4,7 @@
 
 .DESCRIPTION
     Bootstraps the module and SEPM connection for PS 5.1 on the Windows VM,
-    then dot-sources Common-Shared.ps1 (auth + helpers) and Tests.ps1 (test cases).
+    then dot-sources Common.ps1 (auth + helpers) and Tests.ps1 (test cases).
 
     Deploy with UTF-8 BOM to the Windows VM before running:
       pwsh -NoProfile -c "...WriteAllText('/home/douda/Windows/...', ..., UTF8+BOM)"

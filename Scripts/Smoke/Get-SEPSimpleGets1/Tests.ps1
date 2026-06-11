@@ -1,9 +1,9 @@
-<#
+﻿<#
 .SYNOPSIS
     Shared smoke tests for simple GET cmdlets batch 1.
 
 .DESCRIPTION
-    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common-Shared.ps1.
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
     Covers: Get-SEPClientInfectedStatus, Get-SEPFileDetails, Get-SEPGUPList,
             Get-SEPMCommandStatus, Get-SEPMDatabaseInfo, Get-SEPMEventInfo
 #>
