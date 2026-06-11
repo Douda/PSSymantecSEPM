@@ -74,9 +74,17 @@ Avoid specific file paths or code snippets — they go stale fast. Exception: if
 
 ## Blocked by
 
-- A reference to the blocking ticket (if any)
+- #NNN — brief reason it blocks this slice
 
-Or "None - can start immediately" if no blockers.
+Use exactly the `- #NNN` format, one per line. Only list issues that must be
+COMPLETED before this slice can start. Do NOT add notes like "Can be
+developed in parallel with #NNN" here — parallelism notes belong in the
+"What to build" section. The sandcastle automation parses this section
+and treats every `- #NNN` line as a hard dependency.
+
+If no blockers, write:
+
+None — can start immediately.
 
 </issue-template>
 
