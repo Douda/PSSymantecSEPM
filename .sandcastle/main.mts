@@ -109,7 +109,10 @@ function parseBlockers(body: string): number[] {
   if (section.toLowerCase().includes("none")) return [];
 
   const nums: number[] = [];
-  for (const m of section.matchAll(/#(\d+)/g)) {
+  // Only match #NNN that appears right after a bullet (- #NNN).
+  // Inline mentions like "Can be developed in parallel with #NNN" are
+  // not blockers and won't match this pattern.
+  for (const m of section.matchAll(/-\s*#(\d+)/g)) {
     nums.push(parseInt(m[1], 10));
   }
   return nums;
