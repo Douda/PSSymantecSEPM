@@ -1,10 +1,12 @@
-# Smoke batch: simple GET cmdlets batch 1 (PS7)
-# Covers: Get-SEPClientInfectedStatus, Get-SEPFileDetails, Get-SEPGUPList,
-#         Get-SEPMCommandStatus, Get-SEPMDatabaseInfo, Get-SEPMEventInfo
-# Usage: pwsh -NoProfile -File Scripts/Smoke/Get-SEPSimpleGets1/batch.ps7.ps1
+<#
+.SYNOPSIS
+    Shared smoke tests for simple GET cmdlets batch 1.
 
-$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
-. "$RepoRoot/Scripts/Smoke/Common.ps1"
+.DESCRIPTION
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common-Shared.ps1.
+    Covers: Get-SEPClientInfectedStatus, Get-SEPFileDetails, Get-SEPGUPList,
+            Get-SEPMCommandStatus, Get-SEPMDatabaseInfo, Get-SEPMEventInfo
+#>
 
 $results = @{}
 
@@ -61,8 +63,8 @@ try {
 } catch { }
 if (-not $fileId) {
     try {
-        $queue = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/command-queue?pageSize=50" -Session $s
-        foreach ($cmd in $queue.content) {
+        $cmdQueue = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/command-queue?pageSize=50" -Session $s
+        foreach ($cmd in $cmdQueue.content) {
             if ($cmd.binaryFileId) { $fileId = $cmd.binaryFileId; break }
         }
     } catch { }
@@ -78,12 +80,4 @@ if ($fileId) {
 }
 
 # ── Summary ──
-Write-Host "`n========== SUMMARY (PS7 Simple GETs Batch 1) ==========" -ForegroundColor Yellow
-$pass = 0; $fail = 0; $skip = 0
-foreach ($k in $results.Keys | Sort-Object) {
-    $v = $results[$k]
-    if ($v -eq "PASS") { $pass++; Write-Host "  $k : PASS" -ForegroundColor Green }
-    elseif ($v -eq "SKIP") { $skip++; Write-Host "  $k : SKIP" -ForegroundColor Yellow }
-    else { $fail++; Write-Host "  $k : FAIL" -ForegroundColor Red }
-}
-Write-Host "TOTAL: $($pass+$fail+$skip) tests, $pass pass, $fail fail, $skip skip" -ForegroundColor Yellow
+Write-Summary -Results $results -Label "Simple GETs Batch 1"
