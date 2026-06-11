@@ -63,23 +63,13 @@ function Resolve-SepmEndpoint {
     $resolvedPath = $Endpoint.Path
     if ($PathIds -and $PathIds.Count -gt 0) {
         if ($resolvedPath -match '\{id\}') {
-            # Replace each {id} placeholder sequentially from PathIds
-            $matches = [regex]::Matches($resolvedPath, '\{id\}')
-            $parts = $resolvedPath -split '\{id\}', ($matches.Count + 1)
-            $segments = @()
-            for ($i = 0; $i -lt $matches.Count; $i++) {
-                $segments += $parts[$i]
-                if ($i -lt $PathIds.Count) {
-                    $segments += $PathIds[$i]
-                }
+            foreach ($id in $PathIds) {
+                $pos = $resolvedPath.IndexOf('{id}')
+                if ($pos -lt 0) { break }
+                $resolvedPath = $resolvedPath.Substring(0, $pos) + $id + $resolvedPath.Substring($pos + 4)
             }
-            # Last part
-            if ($matches.Count -lt $parts.Count) {
-                $segments += $parts[$matches.Count]
-            }
-            $resolvedPath = $segments -join ''
         } elseif ($PathIds.Count -eq 1) {
-            $resolvedPath = $resolvedPath + '/' + $PathIds[0]
+            $resolvedPath += '/' + $PathIds[0]
         }
     }
 
