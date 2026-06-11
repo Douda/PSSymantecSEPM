@@ -40,9 +40,6 @@ function Get-SEPMLocation {
 
     [CmdletBinding()]
     param (
-        # Skip certificate check
-
-
         # GroupID
         [Parameter(
             Mandatory = $true,

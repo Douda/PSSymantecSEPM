@@ -82,12 +82,11 @@ function Get-SEPComputers {
         elseif ($GroupName) {
             $allResults = @()
 
-            # URI query strings
             $pageParams = @{
                 sort         = "COMPUTER_NAME"
                 pageIndex    = 1
                 pageSize     = 100
-                computerName = $ComputerName # empty string value to ensure the URI is constructed correctly & query all computers
+                computerName = $ComputerName
             }
 
             do {

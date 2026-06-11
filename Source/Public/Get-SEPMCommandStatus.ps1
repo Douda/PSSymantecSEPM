@@ -60,19 +60,13 @@ function Get-SEPMCommandStatus {
         $pageParams = @{}
 
         do {
-            $params = @{
-                Endpoint             = $endpoint
-                Session              = $session
-                PathIds              = @($Command_ID)
-                AdditionalQueryParams = $pageParams
-            }
-            $resp = Invoke-SepmEndpoint @params
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($Command_ID) -AdditionalQueryParams $pageParams
 
             # Process the response
             $allResults += $resp.content
 
             # Increment the page index
-            $pageParams.pageIndex = if ($pageParams.ContainsKey('pageIndex')) { $pageParams.pageIndex + 1 } else { 1 }
+            $pageParams.pageIndex++
 
         } until ($resp.lastPage -eq $true)
 
