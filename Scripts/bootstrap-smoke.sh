@@ -36,6 +36,50 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# ── Shared functions (sourced by Tests/bootstrap-smoke.tests.bash) ──
+
+# Discover smoke test suites matching the given file pattern.
+# Skips Seed-* directories unless seed_flag is "1".
+# Outputs absolute runner paths, one per line (empty if none found).
+discover_smoke_suites() {
+    local base_dir="$1"
+    local pattern="$2"
+    local seed="${3:-0}"
+    local runners=()
+    for d in "${base_dir}/"*/; do
+        [ -d "$d" ] || continue
+        local dirname
+        dirname=$(basename "$d")
+        local runner="${d}${pattern}"
+        if [ -f "$runner" ]; then
+            if [[ "$dirname" == Seed-* ]] && [ "$seed" != "1" ]; then
+                continue
+            fi
+            runners+=("$runner")
+        fi
+    done
+    if [ ${#runners[@]} -gt 0 ]; then
+        printf '%s\n' "${runners[@]}"
+    fi
+}
+
+# Parse a smoke test log file for the TOTAL: ... line.
+# Outputs: "tests pass fail skip" (space-separated, defaults to "0 0 0 0").
+parse_smoke_result_file() {
+    local log_file="$1"
+    local tests pass fail skip
+    tests=$(grep -oP '\d+(?= tests)' "$log_file" | head -1 || echo "0")
+    pass=$(grep  -oP '\d+(?= pass)'  "$log_file" | head -1 || echo "0")
+    fail=$(grep  -oP '\d+(?= fail)'  "$log_file" | head -1 || echo "0")
+    skip=$(grep  -oP '\d+(?= skip)'  "$log_file" | head -1 || echo "0")
+    echo "$tests $pass $fail $skip"
+}
+
+# When sourced, stop here (tests import the functions above)
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+    return 0
+fi
+
 # ── Defaults (from docs/agents/smoke-testing.md) ──
 export VM_USER="${VM_USER:-smokeuser}"
 export WINRM_USER="${WINRM_USER:-$VM_USER}"
@@ -298,19 +342,7 @@ if [ "${SKIP_PS7:-0}" = "1" ]; then
     warn "SKIP_PS7=1 — skipping PS7 smoke tests"
     ((skipped++)) || true
 else
-    # Discover all suites with run.ps7.ps1 entry points
-    PS7_RUNNERS=()
-    for d in "${REPO_ROOT}/Scripts/Smoke/"*/; do
-        dirname=$(basename "$d")
-        runner="${d}run.ps7.ps1"
-        if [ -f "$runner" ]; then
-            if [[ "$dirname" == Seed-* ]] && [ "${SEED:-0}" != "1" ]; then
-                info "Skipping seed suite: ${dirname} (set SEED=1 to include)"
-                continue
-            fi
-            PS7_RUNNERS+=("$runner")
-        fi
-    done
+    mapfile -t PS7_RUNNERS < <(discover_smoke_suites "${REPO_ROOT}/Scripts/Smoke" "run.ps7.ps1" "${SEED:-0}")
 
     if [ ${#PS7_RUNNERS[@]} -eq 0 ]; then
         warn "No PS7 smoke suites found (looking for */run.ps7.ps1)"
@@ -324,11 +356,7 @@ else
             info "Running ${suite} (PS7)..."
             pwsh -NoProfile -File "$runner" > "$log" 2>&1 || true
 
-            # Parse TOTAL line from log
-            local_tests=$(grep -oP '\d+(?= tests)' "$log" | head -1 || echo "0")
-            local_pass=$(grep -oP '\d+(?= pass)' "$log" | head -1 || echo "0")
-            local_fail=$(grep -oP '\d+(?= fail)' "$log" | head -1 || echo "0")
-            local_skip=$(grep -oP '\d+(?= skip)' "$log" | head -1 || echo "0")
+            read local_tests local_pass local_fail local_skip <<< "$(parse_smoke_result_file "$log")"
 
             PS7_SUITE_RESULTS["${suite}"]="${local_tests} ${local_pass} ${local_fail} ${local_skip}"
             pass=$((pass + local_pass))
@@ -355,19 +383,7 @@ if [ "${SKIP_PS51:-0}" = "1" ]; then
     warn "SKIP_PS51=1 — skipping PS5.1 smoke tests"
     ((skipped++)) || true
 else
-    # Discover all suites with run.ps51.ps1 entry points
-    PS51_RUNNERS=()
-    for d in "${REPO_ROOT}/Scripts/Smoke/"*/; do
-        dirname=$(basename "$d")
-        runner="${d}run.ps51.ps1"
-        if [ -f "$runner" ]; then
-            if [[ "$dirname" == Seed-* ]] && [ "${SEED:-0}" != "1" ]; then
-                info "Skipping seed suite: ${dirname} (set SEED=1 to include)"
-                continue
-            fi
-            PS51_RUNNERS+=("$runner")
-        fi
-    done
+    mapfile -t PS51_RUNNERS < <(discover_smoke_suites "${REPO_ROOT}/Scripts/Smoke" "run.ps51.ps1" "${SEED:-0}")
 
     if [ ${#PS51_RUNNERS[@]} -eq 0 ]; then
         warn "No PS5.1 smoke suites found (looking for */run.ps51.ps1)"
@@ -382,11 +398,7 @@ else
             info "Running ${suite} (PS5.1) via WinRM..."
             python3 "${REPO_ROOT}/Scripts/invoke-winrm.py" "${vm_runner}" > "$log" 2>&1 || true
 
-            # Parse TOTAL line from log
-            local_tests=$(grep -oP '\d+(?= tests)' "$log" | head -1 || echo "0")
-            local_pass=$(grep -oP '\d+(?= pass)' "$log" | head -1 || echo "0")
-            local_fail=$(grep -oP '\d+(?= fail)' "$log" | head -1 || echo "0")
-            local_skip=$(grep -oP '\d+(?= skip)' "$log" | head -1 || echo "0")
+            read local_tests local_pass local_fail local_skip <<< "$(parse_smoke_result_file "$log")"
 
             PS51_SUITE_RESULTS["${suite}"]="${local_tests} ${local_pass} ${local_fail} ${local_skip}"
             pass=$((pass + local_pass))
@@ -413,22 +425,8 @@ echo ""
 printf "  %-40s %10s %10s\n" "Suite" "PS7" "PS5.1"
 printf "  %-40s %10s %10s\n" "────────────────────────────────────────" "──────────" "──────────"
 
-# Collect all unique suite names
-ALL_SUITES=()
-for suite in "${!PS7_SUITE_RESULTS[@]}"; do
-    ALL_SUITES+=("$suite")
-done
-for suite in "${!PS51_SUITE_RESULTS[@]}"; do
-    # Only add if not already present
-    found=0
-    for s in "${ALL_SUITES[@]}"; do
-        if [ "$s" = "$suite" ]; then found=1; break; fi
-    done
-    if [ "$found" -eq 0 ]; then ALL_SUITES+=("$suite"); fi
-done
-
-# Sort suites alphabetically
-IFS=$'\n' ALL_SUITES=($(sort <<<"${ALL_SUITES[*]}")); unset IFS
+# Collect all unique suite names, sorted alphabetically
+mapfile -t ALL_SUITES < <(printf '%s\n' "${!PS7_SUITE_RESULTS[@]}" "${!PS51_SUITE_RESULTS[@]}" | sort -u)
 
 for suite in "${ALL_SUITES[@]}"; do
     ps7_result="  —"

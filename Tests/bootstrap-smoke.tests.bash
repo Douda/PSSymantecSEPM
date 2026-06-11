@@ -3,8 +3,8 @@
 # Tests/bootstrap-smoke.tests.bash — Unit tests for bootstrap-smoke.sh helpers
 # ────────────────────────────────────────────────────────────────────────────
 #
-# Tests the discover, skip, parse, and summary logic extracted from
-# bootstrap-smoke.sh without requiring a live VM or SEPM instance.
+# Tests the discover, parse, and summary functions from bootstrap-smoke.sh
+# without requiring a live VM or SEPM instance.
 #
 # Usage: bash Tests/bootstrap-smoke.tests.bash
 # ────────────────────────────────────────────────────────────────────────────
@@ -14,6 +14,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 TEST_DIR=$(mktemp -d)
 trap 'rm -rf "$TEST_DIR"' EXIT
+
+# Source shared functions from bootstrap-smoke.sh (stops after function defs)
+source "${REPO_ROOT}/Scripts/bootstrap-smoke.sh"
 
 PASS=0; FAIL=0
 assert_eq() {
@@ -29,11 +32,10 @@ assert_eq() {
     fi
 }
 
-# ── Test 1: discover_ps7_suites — finds all run.ps7.ps1 suites ──
+# ── Test 1: discover_smoke_suites (PS7 runners) ──
 
-echo "── Test 1: discover_ps7_suites ──"
+echo "── Test 1: discover_smoke_suites (PS7) ──"
 
-# Create mock directory structure
 mkdir -p "$TEST_DIR/Scripts/Smoke/SuiteA"
 mkdir -p "$TEST_DIR/Scripts/Smoke/SuiteB"
 mkdir -p "$TEST_DIR/Scripts/Smoke/SuiteC"
@@ -48,119 +50,60 @@ touch "$TEST_DIR/Scripts/Smoke/Seed-SomeSeed/run.ps7.ps1"
 touch "$TEST_DIR/Scripts/Smoke/OnlyPS51/run.ps51.ps1"
 
 # SEED=0 (default) — skip Seed-* directories
-SEED=0
-SUITES_PS7=()
-for d in "$TEST_DIR/Scripts/Smoke/"*/; do
-    dirname=$(basename "$d")
-    runner="${d}run.ps7.ps1"
-    if [ -f "$runner" ]; then
-        if [[ "$dirname" == Seed-* ]] && [ "$SEED" != "1" ]; then
-            continue
-        fi
-        SUITES_PS7+=("$(realpath "$runner")")
-    fi
-done
-
-assert_eq "finds SuiteA" "$(realpath "$TEST_DIR/Scripts/Smoke/SuiteA/run.ps7.ps1")" "${SUITES_PS7[0]:-}"
-assert_eq "finds SuiteB" "$(realpath "$TEST_DIR/Scripts/Smoke/SuiteB/run.ps7.ps1")" "${SUITES_PS7[1]:-}"
-assert_eq "finds SuiteC" "$(realpath "$TEST_DIR/Scripts/Smoke/SuiteC/run.ps7.ps1")" "${SUITES_PS7[2]:-}"
-assert_eq "count=3 (skips Seed-* and OnlyPS51)" "3" "${#SUITES_PS7[@]}"
+mapfile -t SUITES_PS7 < <(discover_smoke_suites "$TEST_DIR/Scripts/Smoke" "run.ps7.ps1" 0)
+assert_eq "finds SuiteA"   "$TEST_DIR/Scripts/Smoke/SuiteA/run.ps7.ps1"       "${SUITES_PS7[0]:-}"
+assert_eq "finds SuiteB"   "$TEST_DIR/Scripts/Smoke/SuiteB/run.ps7.ps1"       "${SUITES_PS7[1]:-}"
+assert_eq "finds SuiteC"   "$TEST_DIR/Scripts/Smoke/SuiteC/run.ps7.ps1"       "${SUITES_PS7[2]:-}"
+assert_eq "count=3"        "3"                                                "${#SUITES_PS7[@]}"
 
 # SEED=1 — include Seed-* directories
-SEED=1
-SUITES_PS7_SEED=()
-for d in "$TEST_DIR/Scripts/Smoke/"*/; do
-    dirname=$(basename "$d")
-    runner="${d}run.ps7.ps1"
-    if [ -f "$runner" ]; then
-        if [[ "$dirname" == Seed-* ]] && [ "$SEED" != "1" ]; then
-            continue
-        fi
-        SUITES_PS7_SEED+=("$(realpath "$runner")")
-    fi
-done
-assert_eq "SEED=1 finds 4 total (includes Seed-*)" "4" "${#SUITES_PS7_SEED[@]}"
+mapfile -t SUITES_PS7_SEED < <(discover_smoke_suites "$TEST_DIR/Scripts/Smoke" "run.ps7.ps1" 1)
+assert_eq "SEED=1 count=4" "4" "${#SUITES_PS7_SEED[@]}"
 
-# ── Test 2: discover_ps51_suites — finds all run.ps51.ps1 suites ──
+# ── Test 2: discover_smoke_suites (PS51 runners) ──
 
-echo "── Test 2: discover_ps51_suites ──"
+echo "── Test 2: discover_smoke_suites (PS51) ──"
 
-SEED=0
-SUITES_PS51=()
-for d in "$TEST_DIR/Scripts/Smoke/"*/; do
-    dirname=$(basename "$d")
-    runner="${d}run.ps51.ps1"
-    if [ -f "$runner" ]; then
-        if [[ "$dirname" == Seed-* ]] && [ "$SEED" != "1" ]; then
-            continue
-        fi
-        SUITES_PS51+=("$(realpath "$runner")")
-    fi
-done
+mapfile -t SUITES_PS51 < <(discover_smoke_suites "$TEST_DIR/Scripts/Smoke" "run.ps51.ps1" 0)
+assert_eq "finds OnlyPS51" "$TEST_DIR/Scripts/Smoke/OnlyPS51/run.ps51.ps1" "${SUITES_PS51[0]:-}"
+assert_eq "count=1"        "1"                                             "${#SUITES_PS51[@]}"
 
-assert_eq "finds OnlyPS51" "$(realpath "$TEST_DIR/Scripts/Smoke/OnlyPS51/run.ps51.ps1")" "${SUITES_PS51[0]:-}"
-assert_eq "count=1" "1" "${#SUITES_PS51[@]}"
+# ── Test 3: discover_smoke_suites (empty / missing directory) ──
 
-# ── Test 3: parse_total_line — extracts pass/fail/skip from TOTAL line ──
+echo "── Test 3: discover_smoke_suites (empty) ──"
 
-echo "── Test 3: parse_total_line ──"
+mkdir -p "$TEST_DIR/EmptySmoke"
+mapfile -t SUITES_EMPTY < <(discover_smoke_suites "$TEST_DIR/EmptySmoke" "run.ps7.ps1" 0)
+assert_eq "empty dir"          "0" "${#SUITES_EMPTY[@]}"
 
-parse_total() {
-    local line="$1"
-    local tests=$(echo "$line" | grep -oP '\d+(?= tests)' | head -1 || echo "0")
-    local pass=$(echo "$line" | grep -oP '\d+(?= pass)' | head -1 || echo "0")
-    local fail=$(echo "$line" | grep -oP '\d+(?= fail)' | head -1 || echo "0")
-    local skip=$(echo "$line" | grep -oP '\d+(?= skip)' | head -1 || echo "0")
-    echo "$tests $pass $fail $skip"
-}
+mapfile -t SUITES_NO_DIR < <(discover_smoke_suites "$TEST_DIR/NoSuchDir" "run.ps7.ps1" 0)
+assert_eq "missing dir"        "0" "${#SUITES_NO_DIR[@]}"
 
-read tests pass fail skip <<< "$(parse_total "TOTAL: 5 tests, 4 pass, 1 fail, 0 skip")"
-assert_eq "extracts tests=5" "5" "$tests"
-assert_eq "extracts pass=4" "4" "$pass"
-assert_eq "extracts fail=1" "1" "$fail"
-assert_eq "extracts skip=0" "0" "$skip"
+# ── Test 4: parse_smoke_result_file ──
 
-read tests pass fail skip <<< "$(parse_total "TOTAL: 10 tests, 8 pass, 0 fail, 2 skip")"
-assert_eq "extracts tests=10" "10" "$tests"
-assert_eq "extracts pass=8" "8" "$pass"
-assert_eq "extracts fail=0" "0" "$fail"
-assert_eq "extracts skip=2" "2" "$skip"
+echo "── Test 4: parse_smoke_result_file ──"
 
-# Not a TOTAL line — should return zeros
-read tests pass fail skip <<< "$(parse_total "Some random output")"
-assert_eq "non-TOTAL line yields zeros" "0 0 0 0" "$tests $pass $fail $skip"
+echo "TOTAL: 5 tests, 4 pass, 1 fail, 0 skip" > "$TEST_DIR/smoke1.log"
+read t p f s <<< "$(parse_smoke_result_file "$TEST_DIR/smoke1.log")"
+assert_eq "tests=5"  "5" "$t"
+assert_eq "pass=4"   "4" "$p"
+assert_eq "fail=1"   "1" "$f"
+assert_eq "skip=0"   "0" "$s"
 
-# ── Test 4: suite name extraction from runner path ──
+echo "TOTAL: 10 tests, 8 pass, 0 fail, 2 skip" > "$TEST_DIR/smoke2.log"
+read t p f s <<< "$(parse_smoke_result_file "$TEST_DIR/smoke2.log")"
+assert_eq "tests=10" "10" "$t"
+assert_eq "pass=8"   "8"  "$p"
+assert_eq "fail=0"   "0"  "$f"
+assert_eq "skip=2"   "2"  "$s"
 
-echo "── Test 4: suite name extraction ──"
+echo "Some random output" > "$TEST_DIR/smoke3.log"
+read t p f s <<< "$(parse_smoke_result_file "$TEST_DIR/smoke3.log")"
+assert_eq "no TOTAL → zeros" "0 0 0 0" "$t $p $f $s"
 
-extract_suite_name() {
-    local runner="$1"
-    local dir_path=$(dirname "$runner")
-    basename "$dir_path"
-}
-
-assert_eq "SuiteA" "SuiteA" "$(extract_suite_name "$TEST_DIR/Scripts/Smoke/SuiteA/run.ps7.ps1")"
-assert_eq "Seed-SomeSeed" "Seed-SomeSeed" "$(extract_suite_name "$TEST_DIR/Scripts/Smoke/Seed-SomeSeed/run.ps7.ps1")"
-
-# ── Test 5: SKIP_PS7 / SKIP_PS51 env vars ──
-
-echo "── Test 5: SKIP_PS7 / SKIP_PS51 env vars ──"
-
-SKIP_PS7=1
-if [ "${SKIP_PS7:-0}" = "1" ]; then
-    assert_eq "SKIP_PS7=1 triggers skip" "1" "1"
-else
-    assert_eq "SKIP_PS7=1 triggers skip (FAILED)" "1" "0"
-fi
-
-SKIP_PS7=0
-SKIP_PS51=1
-if [ "${SKIP_PS51:-0}" = "1" ]; then
-    assert_eq "SKIP_PS51=1 triggers skip" "1" "1"
-else
-    assert_eq "SKIP_PS51=1 triggers skip (FAILED)" "1" "0"
-fi
+: > "$TEST_DIR/smoke4.log"
+read t p f s <<< "$(parse_smoke_result_file "$TEST_DIR/smoke4.log")"
+assert_eq "empty file → zeros" "0 0 0 0" "$t $p $f $s"
 
 # ── Summary ──
 echo ""
