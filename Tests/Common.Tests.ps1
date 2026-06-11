@@ -1,10 +1,10 @@
-# Unit tests for Common-Shared.ps1 helper functions
+# Unit tests for Common.ps1 helper functions
 # These test T, Skip, and Write-Summary output formatting in isolation.
 # Exit-code behavior is verified during live smoke tests.
 
-Describe 'Common-Shared.ps1' {
+Describe 'Common.ps1' {
 
-    # Functions are tested inline with identical source code to Common-Shared.ps1.
+    # Functions are tested inline with identical source code to Common.ps1.
     # Auth (Set-SEPMAuthentication/Get-SEPMAccessToken) is not exercised here —
     # those require the module and are verified during smoke tests.
 
