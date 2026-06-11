@@ -200,14 +200,20 @@ $results.C6 = T "C6" "WFolder: SecurityRiskCategory without SecurityRisk (error)
 # Group D: WindowsExtension exceptions
 # ═══════════════════════════════════════════════
 
-# Bootstrap extension_list if null.
-# The SEPM API silently ignores PATCH with an empty extensions array, so we
-# seed it with dummy extensions. Two are needed to avoid a PowerShell scalar
-# unrolling bug in the cmdlet when removing leaves exactly one extension.
-$preDState = Get-PolicyState
-if (-not $preDState.configuration.extension_list) {
-    Write-Host "  Bootstrapping extension_list..." -ForegroundColor Gray
-    $bootstrapBody = @{
+function Invoke-BootstrapExtensionList {
+    <#
+    .SYNOPSIS
+        Seed extension_list with dummy entries so the SEPM API accepts subsequent
+        extension mutations. Two entries prevent a PS scalar-unrolling edge case.
+        Returns $true if the bootstrap was performed, $false if already populated.
+    #>
+    param([string]$Label)
+    $state = Get-PolicyState
+    if ($state.configuration.extension_list) {
+        return $false
+    }
+    Write-Host "  Bootstrapping extension_list ($Label)..." -ForegroundColor Gray
+    $body = @{
         configuration = @{
             extension_list = @{
                 scancategory = 'AllScans'
@@ -215,17 +221,17 @@ if (-not $preDState.configuration.extension_list) {
             }
         }
     }
-    $bootstrapJson = ConvertTo-Json -InputObject $bootstrapBody -Depth 5 -Compress
     $s = Initialize-SEPMSession
     Invoke-SepmApi -Method PATCH `
         -Uri "$($s.BaseURLv2)/policies/exceptions/$POLICY_ID" `
         -Headers $s.Headers -SkipCert:$s.SkipCert `
-        -Body $bootstrapJson -ContentType 'application/json' `
+        -Body (ConvertTo-Json -InputObject $body -Depth 5 -Compress) `
+        -ContentType 'application/json' `
         -ErrorAction SilentlyContinue | Out-Null
-    $BOOTSTRAP_EXT = $true
-} else {
-    $BOOTSTRAP_EXT = $false
+    return $true
 }
+
+$BOOTSTRAP_EXT = Invoke-BootstrapExtensionList -Label 'pre-D1'
 
 $results.D1 = T "D1" "WExt: add .smoketest (merge)" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -Extensions ".smoketest" } `
@@ -243,25 +249,9 @@ $results.D4 = T "D4" "WExt: remove nonexistent (error)" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -Extensions ".nonexistent_ext" -Remove } `
     { param($p) $true }
 
-# D3 Remove sets deleted=true on extension_list, which the SEPM API interprets
-# as "clear all extensions", leaving an empty array. Re-bootstrap before D5.
+# D3 Remove may leave extension_list empty (SEPM API quirk). Re-bootstrap before D5.
 if ($BOOTSTRAP_EXT) {
-    Write-Host "  Re-seeding extension_list after D3..." -ForegroundColor Gray
-    $bootstrapBody = @{
-        configuration = @{
-            extension_list = @{
-                scancategory = 'AllScans'
-                extensions   = @('.smoke_bootstrap_d1', '.smoke_bootstrap_d2')
-            }
-        }
-    }
-    $bootstrapJson = ConvertTo-Json -InputObject $bootstrapBody -Depth 5 -Compress
-    $s = Initialize-SEPMSession
-    Invoke-SepmApi -Method PATCH `
-        -Uri "$($s.BaseURLv2)/policies/exceptions/$POLICY_ID" `
-        -Headers $s.Headers -SkipCert:$s.SkipCert `
-        -Body $bootstrapJson -ContentType 'application/json' `
-        -ErrorAction SilentlyContinue | Out-Null
+    Invoke-BootstrapExtensionList -Label 'post-D3' | Out-Null
     Start-Sleep -Milliseconds 500
 }
 
@@ -315,28 +305,26 @@ $results.G3 = T "G3" "NonExistentPolicy error" `
 
 Write-Host "`n========== RESTORE ==========" -ForegroundColor Yellow
 
+# Use direct Invoke-SepmApi to restore only metadata fields without affecting
+# configuration (the Default parameter set would PATCH without configuration,
+# which the SEPM API may interpret as clearing it).
+function Invoke-RestorePolicyMetadata {
+    param([bool]$Enabled, [string]$Description)
+    $body = @{ enabled = $Enabled; desc = $Description }
+    $s = Initialize-SEPMSession
+    Invoke-SepmApi -Method PATCH `
+        -Uri "$($s.BaseURLv2)/policies/exceptions/$POLICY_ID" `
+        -Headers $s.Headers -SkipCert:$s.SkipCert `
+        -Body (ConvertTo-Json -InputObject $body -Depth 3 -Compress) `
+        -ContentType 'application/json' `
+        -ErrorAction SilentlyContinue | Out-Null
+}
+
 if ($ORIGINAL_ENABLED) {
     $descToRestore = if ($ORIGINAL_DESC.Length -gt 1024) { $ORIGINAL_DESC.Substring(0, 1024) } else { $ORIGINAL_DESC }
-    # Use direct Invoke-SepmApi to restore only enabled and desc without
-    # affecting configuration (the Default parameter set would PATCH without
-    # configuration, which the SEPM API may interpret as clearing it).
-    $restoreBody = @{ enabled = $true; desc = $descToRestore }
-    $restoreJson = ConvertTo-Json -InputObject $restoreBody -Depth 3 -Compress
-    $s = Initialize-SEPMSession
-    Invoke-SepmApi -Method PATCH `
-        -Uri "$($s.BaseURLv2)/policies/exceptions/$POLICY_ID" `
-        -Headers $s.Headers -SkipCert:$s.SkipCert `
-        -Body $restoreJson -ContentType 'application/json' `
-        -ErrorAction SilentlyContinue | Out-Null
+    Invoke-RestorePolicyMetadata -Enabled $true -Description $descToRestore
 } else {
-    $restoreBody = @{ enabled = $false; desc = $ORIGINAL_DESC }
-    $restoreJson = ConvertTo-Json -InputObject $restoreBody -Depth 3 -Compress
-    $s = Initialize-SEPMSession
-    Invoke-SepmApi -Method PATCH `
-        -Uri "$($s.BaseURLv2)/policies/exceptions/$POLICY_ID" `
-        -Headers $s.Headers -SkipCert:$s.SkipCert `
-        -Body $restoreJson -ContentType 'application/json' `
-        -ErrorAction SilentlyContinue | Out-Null
+    Invoke-RestorePolicyMetadata -Enabled $false -Description $ORIGINAL_DESC
 }
 Start-Sleep -Milliseconds 500
 
