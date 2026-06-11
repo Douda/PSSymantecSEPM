@@ -75,6 +75,69 @@ parse_smoke_result_file() {
     echo "$tests $pass $fail $skip"
 }
 
+# Run a smoke test phase (PS7 or PS5.1). Discovers suites matching $pattern,
+# executes each via $executor (a function name), and stores results in $result_array.
+# Parameters:
+#   $1 - label (e.g., "PS7", "PS5.1")
+#   $2 - pattern (e.g., "run.ps7.ps1")
+#   $3 - skip_env var name (e.g., "SKIP_PS7")
+#   $4 - log_suffix (e.g., "ps7", "ps51")
+#   $5 - executor function name (called as: $executor runner suite)
+#   $6 - result_array nameref (must be a declared associative array)
+run_phase() {
+    local label="$1"
+    local pattern="$2"
+    local skip_env="$3"
+    local log_suffix="$4"
+    local executor="$5"
+    local -n result_array="$6"
+
+    if [ "${!skip_env:-0}" = "1" ]; then
+        warn "${skip_env}=1 — skipping ${label} smoke tests"
+        ((skipped++)) || true
+        return
+    fi
+
+    mapfile -t runners < <(discover_smoke_suites "${REPO_ROOT}/Scripts/Smoke" "$pattern" "${SEED:-0}")
+
+    if [ ${#runners[@]} -eq 0 ]; then
+        warn "No ${label} smoke suites found (looking for */${pattern})"
+        ((skipped++)) || true
+        return
+    fi
+
+    info "Found ${#runners[@]} ${label} suite(s)"
+    for runner in "${runners[@]}"; do
+        suite=$(basename "$(dirname "$runner")")
+        log="/tmp/smoke-${suite}-${log_suffix}.log"
+        echo ""
+        info "Running ${suite} (${label})..."
+        "$executor" "$runner" "$suite" > "$log" 2>&1 || true
+
+        read local_tests local_pass local_fail local_skip <<< "$(parse_smoke_result_file "$log")"
+
+        result_array["${suite}"]="${local_tests} ${local_pass} ${local_fail} ${local_skip}"
+        pass=$((pass + local_pass))
+        fail=$((fail + local_fail))
+
+        if [ "${local_fail}" -gt 0 ]; then
+            warn "  ${suite}: ${local_pass}/${local_tests} pass, ${local_fail} fail → ${log}"
+        else
+            ok "  ${suite}: ${local_pass}/${local_tests} all pass"
+        fi
+    done
+}
+
+# Executor callbacks for run_phase
+_run_ps7() {
+    pwsh -NoProfile -File "$1"
+}
+
+_run_ps51() {
+    local vm_runner="${VM_DESKTOP}\\Scripts\\Smoke\\$(basename "$(dirname "$1")")\\run.ps51.ps1"
+    python3 "${REPO_ROOT}/Scripts/invoke-winrm.py" "${vm_runner}"
+}
+
 # When sourced, stop here (tests import the functions above)
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
     return 0
@@ -334,84 +397,15 @@ fi
 # Phase 6: Smoke tests — PS 7 (devcontainer)
 # ────────────────────────────────────────────────────────────────────────────
 section "Phase 6: Smoke tests — PS 7"
-
-# Track per-suite results for aggregate summary
 declare -A PS7_SUITE_RESULTS
-
-if [ "${SKIP_PS7:-0}" = "1" ]; then
-    warn "SKIP_PS7=1 — skipping PS7 smoke tests"
-    ((skipped++)) || true
-else
-    mapfile -t PS7_RUNNERS < <(discover_smoke_suites "${REPO_ROOT}/Scripts/Smoke" "run.ps7.ps1" "${SEED:-0}")
-
-    if [ ${#PS7_RUNNERS[@]} -eq 0 ]; then
-        warn "No PS7 smoke suites found (looking for */run.ps7.ps1)"
-        ((skipped++)) || true
-    else
-        info "Found ${#PS7_RUNNERS[@]} PS7 suite(s)"
-        for runner in "${PS7_RUNNERS[@]}"; do
-            suite=$(basename "$(dirname "$runner")")
-            log="/tmp/smoke-${suite}-ps7.log"
-            echo ""
-            info "Running ${suite} (PS7)..."
-            pwsh -NoProfile -File "$runner" > "$log" 2>&1 || true
-
-            read local_tests local_pass local_fail local_skip <<< "$(parse_smoke_result_file "$log")"
-
-            PS7_SUITE_RESULTS["${suite}"]="${local_tests} ${local_pass} ${local_fail} ${local_skip}"
-            pass=$((pass + local_pass))
-            fail=$((fail + local_fail))
-
-            if [ "${local_fail}" -gt 0 ]; then
-                warn "  ${suite}: ${local_pass}/${local_tests} pass, ${local_fail} fail → ${log}"
-            else
-                ok "  ${suite}: ${local_pass}/${local_tests} all pass"
-            fi
-        done
-    fi
-fi
+run_phase "PS7" "run.ps7.ps1" "SKIP_PS7" "ps7" _run_ps7 PS7_SUITE_RESULTS
 
 # ────────────────────────────────────────────────────────────────────────────
 # Phase 7: Smoke tests — PS 5.1 (WinRM)
 # ────────────────────────────────────────────────────────────────────────────
 section "Phase 7: Smoke tests — PS 5.1"
-
-# Track per-suite results for aggregate summary
 declare -A PS51_SUITE_RESULTS
-
-if [ "${SKIP_PS51:-0}" = "1" ]; then
-    warn "SKIP_PS51=1 — skipping PS5.1 smoke tests"
-    ((skipped++)) || true
-else
-    mapfile -t PS51_RUNNERS < <(discover_smoke_suites "${REPO_ROOT}/Scripts/Smoke" "run.ps51.ps1" "${SEED:-0}")
-
-    if [ ${#PS51_RUNNERS[@]} -eq 0 ]; then
-        warn "No PS5.1 smoke suites found (looking for */run.ps51.ps1)"
-        ((skipped++)) || true
-    else
-        info "Found ${#PS51_RUNNERS[@]} PS5.1 suite(s)"
-        for runner in "${PS51_RUNNERS[@]}"; do
-            suite=$(basename "$(dirname "$runner")")
-            log="/tmp/smoke-${suite}-ps51.log"
-            vm_runner="${VM_DESKTOP}\\Scripts\\Smoke\\${suite}\\run.ps51.ps1"
-            echo ""
-            info "Running ${suite} (PS5.1) via WinRM..."
-            python3 "${REPO_ROOT}/Scripts/invoke-winrm.py" "${vm_runner}" > "$log" 2>&1 || true
-
-            read local_tests local_pass local_fail local_skip <<< "$(parse_smoke_result_file "$log")"
-
-            PS51_SUITE_RESULTS["${suite}"]="${local_tests} ${local_pass} ${local_fail} ${local_skip}"
-            pass=$((pass + local_pass))
-            fail=$((fail + local_fail))
-
-            if [ "${local_fail}" -gt 0 ]; then
-                warn "  ${suite}: ${local_pass}/${local_tests} pass, ${local_fail} fail → ${log}"
-            else
-                ok "  ${suite}: ${local_pass}/${local_tests} all pass"
-            fi
-        done
-    fi
-fi
+run_phase "PS5.1" "run.ps51.ps1" "SKIP_PS51" "ps51" _run_ps51 PS51_SUITE_RESULTS
 
 # ────────────────────────────────────────────────────────────────────────────
 # Summary
