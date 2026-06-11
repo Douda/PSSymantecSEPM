@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     PS5.1 entry point for New-SEPMGroup smoke tests.
 
