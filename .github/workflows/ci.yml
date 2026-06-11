@@ -12,14 +12,14 @@ jobs:
     outputs:
       SemVer: ${{ steps.gitversion.outputs.SemVer }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup GitVersion
-        uses: gittools/actions/gitversion/setup@v3
+        uses: gittools/actions/gitversion/setup@v4
         with:
-          versionSpec: '6.0.x'
+          versionSpec: '6.x'
 
       - name: Run GitVersion
         id: gitversion
@@ -60,7 +60,7 @@ jobs:
           Build-Module -SourcePath ./Source/PSSymantecSEPM.psd1 -SemVer ${{ steps.gitversion.outputs.SemVer }}
 
       - name: Upload module artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: module
           path: ./Output/PSSymantecSEPM/
@@ -69,10 +69,10 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download module artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: module
           path: ./Output/PSSymantecSEPM/
@@ -92,10 +92,10 @@ jobs:
     needs: build
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download module artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: module
           path: ./Output/PSSymantecSEPM/
@@ -117,12 +117,12 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Download module artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: module
           path: ./Output/PSSymantecSEPM/
