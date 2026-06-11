@@ -21,7 +21,7 @@ and their suite-specific `Tests.ps1`.
 |---|---|
 | `Get-SEPSimpleGets1/` | Converted (#153) |
 | `New-SEPMGroup/` | Converted (#154) |
-| `Update-SEPMExceptionPolicy/` | Converted (#155) |
+| `Update-SEPMExceptionPolicy/` | Converted (#155) — includes `Invoke-BootstrapExtensionList` workaround for SEPM API empty-extension_list rejection |
 
 ## Unconverted suites (29)
 
