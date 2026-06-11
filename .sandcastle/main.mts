@@ -339,7 +339,7 @@ if (prTarget) {
           const implement = await sandbox.run({
             name: "implementer",
             maxIterations: 2,
-            agent: sandcastle.pi("deepseek-v4-pro"),
+            agent: sandcastle.pi("deepseek-v4-flash"),
             promptFile: "./.sandcastle/implement-prompt.md",
             promptArgs: {
               PR_NUMBER: String(prTarget!.prNumber),
@@ -488,7 +488,7 @@ if (prTarget) {
         const implement = await sandbox.run({
           name: "implementer",
           maxIterations: 2,
-          agent: sandcastle.pi("deepseek-v4-pro"),
+          agent: sandcastle.pi("deepseek-v4-flash"),
           promptFile: "./.sandcastle/implement-standalone-prompt.md",
           promptArgs: {
             ISSUE_NUMBER: String(standaloneIssue.issueNumber),
