@@ -25,9 +25,6 @@ function New-SEPMGroup {
 
     [CmdletBinding()]
     param (
-        # Skip certificate check
-
-
         # group name
         [Parameter(
             ValueFromPipelineByPropertyName = $true
@@ -61,7 +58,7 @@ function New-SEPMGroup {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/groups"
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'New-SEPMGroup'
 
         # Get all groups from SEPM
         $allGroups = Get-SEPMGroups
@@ -78,16 +75,8 @@ function New-SEPMGroup {
             return
         }
 
-        # Body structure for the request
-        $body = @{
-            "inherits"    = $EnabledInheritance.ToBool()
-            "name"        = $GroupName
-            "description" = $Description
-        }
-
-        $patchUri = $URI + "/$ParentGroupID"
-        $resp = Invoke-SepmApi -Method 'POST' -Uri $patchUri -Session $session `
-            -Body (ConvertTo-SEPMJson -InputObject $body) -ContentType 'application/json'
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session `
+            -BoundParameters $PSBoundParameters -PathIds @($ParentGroupID)
         return $resp
     }
 }

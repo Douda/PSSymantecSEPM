@@ -48,12 +48,11 @@ function Get-SEPClientDefVersions {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/stats/client/content"
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPClientDefVersions'
     }
 
     process {
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
 
         $list = $resp.clientDefStatusList
         if ($null -eq $list) { return @() }

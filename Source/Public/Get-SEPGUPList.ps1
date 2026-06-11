@@ -26,12 +26,11 @@ function Get-SEPGUPList {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/gup/status"
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPGUPList'
     }
 
     process {
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
 
         Write-Output $resp -NoEnumerate
     }

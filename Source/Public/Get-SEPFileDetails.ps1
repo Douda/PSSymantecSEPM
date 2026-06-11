@@ -25,20 +25,11 @@ function Get-SEPFileDetails {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/command-queue/file/$FileID/details"
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPFileDetails'
     }
 
     process {
-        # URI query strings
-        $QueryStrings = @{
-            file_id = $FileID
-        }
-
-        # Construct the URI
-        $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($FileID) -BoundParameters $PSBoundParameters
         return $resp
     }
 }

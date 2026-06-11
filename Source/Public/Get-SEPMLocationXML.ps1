@@ -63,37 +63,11 @@ function Get-SEPMLocationXML {
 
     begin {
         $session = Initialize-SEPMSession
-
-        $allGroupsInfo = Get-SEPMGroups
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMLocationXML'
     }
 
     process {
-        # Get Group info
-        $groupInfo = $allGroupsInfo | Where-Object { $_.id -eq $GroupID }
-
-        $URI = $session.BaseURLv1 + "/groups/$GroupID/locations/$LocationID/xml"
-        # $locationList = @()
-
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
-
-        # # parse response and add group information to the list
-        # foreach ($location in $resp) {
-        #     $locationList += [PSCustomObject]@{
-        #         locationName      = $location.split(":")[0]
-        #         locationId        = $location.split("/")[-1]
-        #         groupName         = $groupInfo.name
-        #         groupId           = $groupInfo.id
-        #         groupFullPathName = $groupInfo.fullPathName
-        #     }
-        # }
-
-        # # Add a PSTypeName to the object
-        # $locationList | ForEach-Object {
-        #     $_.PSObject.TypeNames.Insert(0, 'SEPM.GroupLocationInfo')
-        # }
-
-        # # return the response
-        # return $locationList
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($GroupID, $LocationID)
 
         return $resp
     }

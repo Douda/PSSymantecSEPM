@@ -47,7 +47,7 @@ function Get-SEPMIpsPolicy {
 
     begin {
         $session = Initialize-SEPMSession
-                $URI = $session.BaseURLv1 + "/policies/ips"
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMIpsPolicy'
 
         # Stores the policy summary for all policies only once
         $policies = Get-SEPMPoliciesSummary
@@ -65,10 +65,7 @@ function Get-SEPMIpsPolicy {
             throw $message
         }
 
-        # Updating URI with policy ID
-        $URI = $URI + "/" + $policyID
-        
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($policyID)
         return $resp
     }
 }

@@ -183,7 +183,7 @@ function Update-SEPMExceptionPolicy {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv2 + "/policies/exceptions"
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Update-SEPMExceptionPolicy'
     }
 
     process {
@@ -339,9 +339,7 @@ function Update-SEPMExceptionPolicy {
         $ObjBody = Optimize-SEPMObject -InputObject $ObjBody
         $bodyJson = ConvertTo-SEPMJson -InputObject $ObjBody -Compress
 
-        $patchUri = $URI + "/" + $PolicyID
-        $resp = Invoke-SepmApi -Method 'PATCH' -Uri $patchUri -Session $session `
-            -Body $bodyJson -ContentType 'application/json'
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($PolicyID) -Body $bodyJson
         return $resp
     }
 }

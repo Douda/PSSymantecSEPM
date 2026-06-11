@@ -32,22 +32,11 @@ function Start-SEPMReplication {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/replication/replicatenow"
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Start-SEPMReplication'
     }
 
     process {
-        # URI query strings
-        $QueryStrings = @{
-            partnerSiteName = $partnerSiteName
-            logs            = $logs
-            content         = $ContentAndPackages
-        }
-
-        # Construct the URI
-        $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-
-        $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -BoundParameters $PSBoundParameters
         return $resp
     }
 }

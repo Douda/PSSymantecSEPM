@@ -42,7 +42,7 @@ function Remove-SEPMGroup {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/groups"
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Remove-SEPMGroup'
 
         # Get all groups from SEPM
         $allGroups = Get-SEPMGroups
@@ -60,8 +60,7 @@ function Remove-SEPMGroup {
             return
         }
 
-        $deleteUri = $URI + "/$($group.id)"
-        $resp = Invoke-SepmApi -Method 'DELETE' -Uri $deleteUri -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($group.id)
         return $resp
     }
 }

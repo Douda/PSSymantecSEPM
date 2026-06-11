@@ -45,9 +45,7 @@ function Get-SEPMPolicyXML {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/policies/raw"
-
-        
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMPolicyXML'
     }
 
     process {
@@ -60,11 +58,8 @@ function Get-SEPMPolicyXML {
             $policy_type = $policy.policytype
         }
 
-        # Updating URI with policy ID
-        $URI = $URI + "/" + $policy_type + "/" + $policyID
-        
         try {
-            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($policy_type, $policyID)
         } catch {
             Write-Warning -Message "Error: $_"
         }
