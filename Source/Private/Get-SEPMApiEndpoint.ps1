@@ -128,7 +128,7 @@ if (-not $script:_endpointRegistry) {
             OperationName = 'New-SEPMGroup'
             Version       = '1.0'
             Method        = 'POST'
-            Path          = '/groups'
+            Path          = '/groups/{id}'
             BodyParams    = @{
                 name        = 'GroupName'
                 description = 'Description'

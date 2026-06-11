@@ -27,7 +27,7 @@ Describe 'Get-SEPMApiEndpoint' {
             InModuleScope PSSymantecSEPM {
                 $entry = Get-SEPMApiEndpoint -OperationName 'New-SEPMGroup'
                 $entry.Method                  | Should -Be 'POST'
-                $entry.Path                    | Should -Be '/groups'
+                $entry.Path                    | Should -Be '/groups/{id}'
                 $entry.BodyParams.name         | Should -Be 'GroupName'
                 $entry.BodyParams.description  | Should -Be 'Description'
                 $entry.BodyParams.inherits     | Should -Be 'EnabledInheritance'
