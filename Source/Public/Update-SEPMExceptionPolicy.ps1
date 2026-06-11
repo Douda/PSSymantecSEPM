@@ -294,7 +294,7 @@ function Update-SEPMExceptionPolicy {
                     $resultExts = @($existingExts | Where-Object { $_ -notin $Extensions })
                     $deleted = $true
                 } else {
-                    $resultExts = @(@($Extensions) + @($existingExts) | Sort-Object | Get-Unique)
+                    $resultExts = @($Extensions + $existingExts | Sort-Object | Get-Unique)
                     $deleted = $false
                 }
 
@@ -346,9 +346,9 @@ function Update-SEPMExceptionPolicy {
         # PS5.1 ConvertTo-Json unwraps single-element arrays. If extensions was
         # reduced to a scalar by the round-trip, re-wrap it as an array so the
         # SEPM API receives valid JSON: "extensions": [".ext"] not "extensions": ".ext".
-        if ($null -ne $ObjBody.configuration `
-            -and $null -ne $ObjBody.configuration.extension_list `
-            -and $ObjBody.configuration.extension_list.extensions -isnot [array]) {
+        if ($null -ne $ObjBody.configuration -and
+            $null -ne $ObjBody.configuration.extension_list -and
+            $ObjBody.configuration.extension_list.extensions -isnot [array]) {
             $ObjBody.configuration.extension_list.extensions = @($ObjBody.configuration.extension_list.extensions)
         }
 

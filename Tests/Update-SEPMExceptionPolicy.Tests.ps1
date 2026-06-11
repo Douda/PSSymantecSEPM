@@ -311,8 +311,6 @@ Describe 'Update-SEPMExceptionPolicy' {
         }
 
         It 'Sends extensions as a JSON array when adding a single extension to a policy with no extensions' {
-            $script:capturedBody = $null
-
             Mock Get-SEPMExceptionPolicy -ModuleName PSSymantecSEPM {
                 return [PSCustomObject]@{
                     configuration = [PSCustomObject]@{
@@ -323,21 +321,21 @@ Describe 'Update-SEPMExceptionPolicy' {
                     }
                 }
             }
+
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                $script:capturedBody = $Body
                 return [PSCustomObject]@{ status = 'success' }
             }
 
             $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Extensions '.smoketest'
 
             $result.status | Should -Be 'success'
-            $script:capturedBody | Should -Not -BeNullOrEmpty
-
-            $parsed = $script:capturedBody | ConvertFrom-Json
-            $exts = $parsed.configuration.extension_list.extensions
-            $exts -is [array] | Should -Be $true -Because 'extensions must be a JSON array, not a scalar'
-            $exts.Count | Should -Be 1
-            $exts[0] | Should -Be '.smoketest'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter {
+                $parsed = $Body | ConvertFrom-Json
+                $exts = $parsed.configuration.extension_list.extensions
+                $exts -is [array] -and
+                $exts.Count -eq 1 -and
+                '.smoketest' -in $exts
+            } -Exactly 1 -Scope It
         }
     }
 
