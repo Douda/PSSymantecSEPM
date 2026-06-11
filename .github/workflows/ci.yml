@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      SemVer: ${{ steps.gitversion.outputs.SemVer }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,8 +41,8 @@ jobs:
             echo "GitVersion failed or empty SemVer, computing fallback from latest tag"
             LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
             echo "Latest tag: $LATEST_TAG"
-            # Parse MAJOR.MINOR.PATCH from tag, bump minor, reset patch to 0
-            SEMVER=$(echo "$LATEST_TAG" | sed -E 's/^v?([0-9]+)\.([0-9]+)\.([0-9]+).*/\1.\2.\3/' | awk -F. '{print $1"."($2+1)".0"}')
+            # Parse MAJOR.MINOR.PATCH from tag, bump patch
+            SEMVER=$(echo "$LATEST_TAG" | sed -E 's/^v?([0-9]+)\.([0-9]+)\.([0-9]+).*/\1.\2.\3/' | awk -F. '{print $1"."$2"."($3+1)}')
             echo "Computed SemVer: $SEMVER"
             if [ -z "$SEMVER" ]; then
               SEMVER="0.12.3"
@@ -111,10 +113,14 @@ jobs:
           Invoke-Pester -Path ./Tests/ -ExcludePath '*Template*' -CI
 
   publish:
-    needs: [test-ps7, test-ps51]
+    needs: [build, test-ps7, test-ps51]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Download module artifact
         uses: actions/download-artifact@v4
         with:
@@ -128,3 +134,10 @@ jobs:
           $ProgressPreference = 'SilentlyContinue'
           Install-Module -Name ImportExcel -Force -Scope CurrentUser -ErrorAction Stop
           Publish-Module -Path ./Output/PSSymantecSEPM/ -NuGetApiKey ${{ secrets.PSGALLERY_API_KEY }} -Force
+
+      - name: Tag release
+        run: |
+          TAG="v${{ needs.build.outputs.SemVer }}"
+          echo "Tagging $TAG"
+          git tag -a "$TAG" -m "$TAG"
+          git push origin "$TAG"
