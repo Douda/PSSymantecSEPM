@@ -71,20 +71,18 @@ function Get-SEPMPoliciesSummary {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/policies/summary"
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMPoliciesSummary'
 
         # Get the list of groups and IDs to inject into the response
         $groups = Get-SEPMGroups
     }
 
     process {
-        if ($PolicyType) {
-            $URI = $session.BaseURLv1 + "/policies/summary" + "/" + $PolicyType
-        }
+        $pathIds = if ($PolicyType) { @($PolicyType) } else { $null }
 
         # Invoke the request
         try {
-            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds $pathIds
             # Add group FullPath to the response from their Group ID for ease of use
             # Parsing every response object
             foreach ($policy in $resp.content) {

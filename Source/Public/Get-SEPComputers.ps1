@@ -64,25 +64,14 @@ function Get-SEPComputers {
 
     begin {
         $session = Initialize-SEPMSession
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPComputers'
     }
 
     process {
 
         # Using computer name API call
         if ($ComputerName) {
-            $allResults = @()
-            $URI = $session.BaseURLv1 + "/computers"
-
-            # URI query strings
-            $QueryStrings = @{
-                computerName = $ComputerName
-            }
-
-            # Construct the URI
-            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-
-            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -BoundParameters $PSBoundParameters
             $allResults = $resp.content
 
             # Filtering
@@ -92,28 +81,22 @@ function Get-SEPComputers {
         # Using computer name API call then filtering
         elseif ($GroupName) {
             $allResults = @()
-            $URI = $session.BaseURLv1 + "/computers"
 
-            # URI query strings
-            $QueryStrings = @{
+            $pageParams = @{
                 sort         = "COMPUTER_NAME"
                 pageIndex    = 1
                 pageSize     = 100
-                computerName = $ComputerName # empty string value to ensure the URI is constructed correctly & query all computers
+                computerName = $ComputerName
             }
 
-            # Construct the URI
-            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-
             do {
-                $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+                $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -AdditionalQueryParams $pageParams
 
                 # Process the response
                 $allResults += $resp.content
 
-                # Increment the page index & update URI
-                $QueryStrings.pageIndex++
-                $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
+                # Increment the page index
+                $pageParams.pageIndex++
             } until ($resp.lastPage -eq $true)
 
             # Filtering
@@ -127,27 +110,22 @@ function Get-SEPComputers {
         # No parameters
         else {
             $allResults = @()
-            $URI = $session.BaseURLv1 + "/computers"
 
             # URI query strings
-            $QueryStrings = @{
+            $pageParams = @{
                 sort      = "COMPUTER_NAME"
                 pageIndex = 1
                 pageSize  = 100
             }
 
-            # Construct the URI
-            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-
             do {
-                $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+                $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -AdditionalQueryParams $pageParams
 
                 # Process the response
                 $allResults += $resp.content
 
-                # Increment the page index & update URI
-                $QueryStrings.pageIndex++
-                $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
+                # Increment the page index
+                $pageParams.pageIndex++
             } until ($resp.lastPage -eq $true)
         }
 

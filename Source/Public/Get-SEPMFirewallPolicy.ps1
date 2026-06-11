@@ -71,7 +71,6 @@ function Get-SEPMFirewallPolicy {
     begin {
         $session = Initialize-SEPMSession
         $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMFirewallPolicy'
-        $baseURI = $session.BaseURLv1 + '/policies/firewall'
     }
 
     process {
@@ -85,11 +84,10 @@ function Get-SEPMFirewallPolicy {
 
             foreach ($fwPolicy in $fwPolicies) {
                 $i++
-                $policyURI = $baseURI + '/' + $fwPolicy.id
 
                 Write-Progress -Activity "Fetching firewall policies" -Status "$i/$total` : $($fwPolicy.name)" -PercentComplete ($i / $total * 100)
 
-                $resp = Invoke-SepmApi -Method GET -Uri $policyURI -Session $session
+                $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($fwPolicy.id)
 
                 # Add a PSTypeName to the object
                 $resp.PSObject.TypeNames.Insert(0, 'SEPM.FirewallPolicy')
