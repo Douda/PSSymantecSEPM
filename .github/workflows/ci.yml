@@ -35,7 +35,7 @@ jobs:
           echo "=== End GitVersion output ==="
           # GitVersion 6.x emits INFO lines to stdout alongside JSON.
           # Extract SemVer from the JSON object in the output.
-          SEMVER=$(echo "$GV_OUTPUT" | grep -oP '"SemVer"\s*:\s*"\K[^"]+' || true)
+          SEMVER=$(echo "$GV_OUTPUT" | grep -oP '"MajorMinorPatch"\s*:\s*"\K[^"]+' || true)
           echo "Extracted SemVer: '$SEMVER'"
           if [ -z "$SEMVER" ] || [ "$GITV_EXIT" != "0" ]; then
             echo "GitVersion failed or empty SemVer, computing fallback from latest tag"
