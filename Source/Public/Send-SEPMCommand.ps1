@@ -81,6 +81,7 @@ function Send-SEPMCommand {
 
     begin {
         $session = Initialize-SEPMSession
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Send-SEPMCommand'
         $accumulatedComputerNames = @()
 
         $hashParamSpecs = @{
@@ -198,17 +199,7 @@ function Send-SEPMCommand {
             }
         }
 
-        $URI = $session.BaseURLv1 + '/command-queue/' + $commandEntry.Path
-        $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $queryStrings
-
-        $apiParams = @{
-            Method  = 'POST'
-            Uri     = $URI
-            Session = $session
-        }
-        if ($body) { $apiParams.Body = $body }
-
-        $resp = Invoke-SepmApi @apiParams
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($commandEntry.Path) -AdditionalQueryParams $queryStrings -Body $body
 
         Write-Output $resp -NoEnumerate
     }

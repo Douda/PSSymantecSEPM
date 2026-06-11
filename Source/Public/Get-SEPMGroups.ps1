@@ -30,13 +30,12 @@ function Get-SEPMGroups {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/groups"
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMGroups'
     }
 
     process {
         # QueryString parameters for pagination
-        $QueryStrings = @{
+        $pageParams = @{
             pageSize  = 25
             pageIndex = 1
         }
@@ -44,14 +43,13 @@ function Get-SEPMGroups {
         # Invoke the request
         $allResults = @()
         do {
-            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -AdditionalQueryParams $pageParams
 
             # Process the response
             $allResults += $resp.content
 
-            # Increment the page index & update URI
-            $QueryStrings.pageIndex++
-            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
+            # Increment the page index
+            $pageParams.pageIndex++
         } until ($resp.lastPage -eq $true)
 
         # return the response

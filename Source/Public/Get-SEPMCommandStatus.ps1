@@ -52,23 +52,27 @@ function Get-SEPMCommandStatus {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/command-queue/$command_id"
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMCommandStatus'
     }
 
     process {
         $allResults = @()
-        $QueryStrings = @{}
+        $pageParams = @{}
 
         do {
-            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+            $params = @{
+                Endpoint             = $endpoint
+                Session              = $session
+                PathIds              = @($Command_ID)
+                AdditionalQueryParams = $pageParams
+            }
+            $resp = Invoke-SepmEndpoint @params
 
             # Process the response
             $allResults += $resp.content
 
-            # Increment the page index & update URI
-            $QueryStrings.pageIndex++
-            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
+            # Increment the page index
+            $pageParams.pageIndex = if ($pageParams.ContainsKey('pageIndex')) { $pageParams.pageIndex + 1 } else { 1 }
 
         } until ($resp.lastPage -eq $true)
 

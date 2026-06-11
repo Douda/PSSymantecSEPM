@@ -186,6 +186,81 @@ if (-not $script:_endpointRegistry) {
             Method        = 'PATCH'
             Path          = '/computers'
         }
+        'Get-SEPComputers' = @{
+            OperationName = 'Get-SEPComputers'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/computers'
+            QueryParams   = @{
+                computerName = 'ComputerName'
+            }
+        }
+        'Get-SEPMGroups' = @{
+            OperationName = 'Get-SEPMGroups'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/groups'
+        }
+        'Get-SEPMCommandStatus' = @{
+            OperationName = 'Get-SEPMCommandStatus'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/command-queue/{id}'
+        }
+        'Get-SEPMLocation' = @{
+            OperationName = 'Get-SEPMLocation'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/groups/{id}/locations'
+        }
+        'Get-SEPMPolicySnapshot' = @{
+            OperationName = 'Get-SEPMPolicySnapshot'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/groups/{id}/locations'
+        }
+        'Get-SEPMFileFingerprintList' = @{
+            OperationName = 'Get-SEPMFileFingerprintList'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/policy-objects/fingerprints'
+            QueryParams   = @{
+                name = 'FingerprintListName'
+            }
+        }
+        'Get-SEPFileDetails' = @{
+            OperationName = 'Get-SEPFileDetails'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/command-queue/file/{id}/details'
+            QueryParams   = @{
+                file_id = 'FileID'
+            }
+        }
+        'Send-SEPMCommand' = @{
+            OperationName = 'Send-SEPMCommand'
+            Version       = '1.0'
+            Method        = 'POST'
+            Path          = '/command-queue/{id}'
+        }
+        'Confirm-SEPMEventInfo' = @{
+            OperationName = 'Confirm-SEPMEventInfo'
+            Version       = '1.0'
+            Method        = 'POST'
+            Path          = '/events/acknowledge/{id}'
+        }
+        'Get-SEPMPoliciesSummary' = @{
+            OperationName = 'Get-SEPMPoliciesSummary'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/policies/summary'
+        }
+        'Update-SEPMExceptionPolicy' = @{
+            OperationName = 'Update-SEPMExceptionPolicy'
+            Version       = '2.0'
+            Method        = 'PATCH'
+            Path          = '/policies/exceptions/{id}'
+        }
     }
 }
 

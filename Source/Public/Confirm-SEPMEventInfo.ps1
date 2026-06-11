@@ -44,12 +44,11 @@ function Confirm-SEPMEventInfo {
 
     begin {
         $session = Initialize-SEPMSession
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Confirm-SEPMEventInfo'
     }
 
     process {
-        $URI = $session.BaseURLv1 + '/events/acknowledge/' + $EventID
-
-        $resp = Invoke-SepmApi -Method POST -Uri $URI -Session $session -WarningAction SilentlyContinue
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($EventID)
 
         # Detect error responses (PS7: "Error: ...", PS5.1: raw JSON with errorCode)
         if ($resp -is [string] -and $resp -match 'errorCode|Failed to update') {

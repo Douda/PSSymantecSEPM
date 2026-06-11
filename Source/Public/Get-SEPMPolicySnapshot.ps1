@@ -33,6 +33,7 @@ function Get-SEPMPolicySnapshot {
         $snapshot = [PSCustomObject]@{}
         $snapshot.PSObject.TypeNames.Insert(0, 'SEPM.PolicySnapshot')
         $session = Initialize-SEPMSession
+        $locEndpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMPolicySnapshot'
         $groups  = Get-SEPMGroups
     }
 
@@ -59,11 +60,8 @@ function Get-SEPMPolicySnapshot {
         foreach ($g in $groups) {
             # Skip groups with non-string IDs (API returns hashtable IDs for some groups).
             if ($g.id -isnot [string]) { continue }
-            $locUri = $session.BaseURLv1 + '/groups/' + $g.id + '/locations'
-            $qs = @{ hasName = $true }
-            $locUri = Build-SEPMQueryURI -BaseURI $locUri -QueryStrings $qs
             try {
-                $resp = Invoke-SepmApi -Method GET -Uri $locUri -Session $session
+                $resp = Invoke-SepmEndpoint -Endpoint $locEndpoint -Session $session -PathIds @($g.id) -AdditionalQueryParams @{ hasName = $true }
             } catch {
                 continue
             }

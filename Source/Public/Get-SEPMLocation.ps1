@@ -55,6 +55,7 @@ function Get-SEPMLocation {
 
     begin {
         $session = Initialize-SEPMSession
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMLocation'
 
         $allGroupsInfo = Get-SEPMGroups
     }
@@ -63,18 +64,10 @@ function Get-SEPMLocation {
         # Get Group info
         $groupInfo = $allGroupsInfo | Where-Object { $_.id -eq $GroupID }
 
-        $URI = $session.BaseURLv1 + "/groups" + "/$GroupID/locations"
         $locationList = @()
 
-        # QueryString parameters
-        $QueryStrings = @{
-            hasName = $true
-        }
-
         # Invoke the request
-        $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($GroupID) -AdditionalQueryParams @{ hasName = $true }
 
         # Normalize response to string array (Invoke-SepmApi returns Object[] for arrays,
         # hashtable or string for single values)
