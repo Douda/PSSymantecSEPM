@@ -78,7 +78,7 @@ $results.A4 = T "A4" "Enable+Description" `
 $results.A5 = T "A5" "Enable+Disable (error)" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -EnablePolicy -DisablePolicy } `
     { param($p) $true } `
-    -ExpectedError "EnablePolicy.*DisablePolicy"
+    -ExpectedError "EnablePolicy*DisablePolicy"
 
 # ═══════════════════════════════════════════════
 # Group B: WindowsFile exceptions
@@ -183,7 +183,7 @@ $results.C5 = T "C5" "WFolder: Remove" `
 $results.C6 = T "C6" "WFolder: SecurityRiskCategory without SecurityRisk (error)" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -FolderPath "C:\Temp\BadFolder" -ScanType All -SecurityRiskCategory AllScans } `
     { param($p) $true } `
-    -ExpectedError "SecurityRiskCategory.*ScanType"
+    -ExpectedError "SecurityRiskCategory*ScanType"
 
 # ═══════════════════════════════════════════════
 # Group D: WindowsExtension exceptions
@@ -240,7 +240,7 @@ $results.D3 = T "D3" "WExt: remove .smoketest" `
 $results.D4 = T "D4" "WExt: remove nonexistent (error)" `
     { Update-SEPMExceptionPolicy -PolicyName $POLICY_NAME -Extensions ".nonexistent_ext" -Remove } `
     { param($p) $true } `
-    -ExpectedError "not found"
+    -ExpectedError "Cannot remove Extension"
 
 # D3 Remove may leave extension_list empty (SEPM API quirk). Re-bootstrap before D5.
 if ($BOOTSTRAP_EXT) {
