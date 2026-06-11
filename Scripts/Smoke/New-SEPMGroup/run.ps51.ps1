@@ -33,5 +33,5 @@ $SmokeModule = Get-Module PSSymantecSEPM
 & $SmokeModule { $script:SkipCert = $true }
 
 # ── Shared infrastructure + tests ──
-. "$RepoRoot\Scripts\Smoke\Common-Shared.ps1"
+. "$RepoRoot\Scripts\Smoke\Common.ps1"
 . "$RepoRoot\Scripts\Smoke\New-SEPMGroup\Tests.ps1"

@@ -31,5 +31,5 @@ Remove-Item -Path "$HOME/.config/PSSymantecSEPM/creds.xml" -Force -ErrorAction S
 Remove-Item -Path "$HOME/.local/share/PSSymantecSEPM/accessToken.xml" -Force -ErrorAction SilentlyContinue
 
 # ── Shared infrastructure + tests ──
-. "$RepoRoot/Scripts/Smoke/Common-Shared.ps1"
+. "$RepoRoot/Scripts/Smoke/Common.ps1"
 . "$RepoRoot/Scripts/Smoke/Get-SEPSimpleGets1/Tests.ps1"
