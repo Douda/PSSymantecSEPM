@@ -32,20 +32,14 @@ Function Get-SEPMAdmins {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/admin-users"
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMAdmins'
     }
 
     process {
-        # URI query strings
-        $QueryStrings = @{
-            domain = $script:configuration.domain
-        }
+        # Domain comes from module-scoped configuration, not a cmdlet parameter
+        $extraParams = @{ domain = $script:configuration.domain }
 
-        # Construct the URI
-        $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -AdditionalQueryParams $extraParams
 
         # Process the response
         if ([string]::IsNullOrEmpty($AdminName)) {

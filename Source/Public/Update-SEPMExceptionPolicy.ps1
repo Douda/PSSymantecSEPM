@@ -183,7 +183,7 @@ function Update-SEPMExceptionPolicy {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv2 + "/policies/exceptions"
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Update-SEPMExceptionPolicy'
     }
 
     process {
@@ -207,57 +207,48 @@ function Update-SEPMExceptionPolicy {
 
         # Dispatch hashtable: parameter set name → scriptblock
         $PSBP = $PSBoundParameters
+
+        # Iterate bound scan-type parameters to set booleans and scancategory.
+        # $PSBP.Keys enumerates all bound param names; only scan-type case
+        # labels match, so unrelated params (PolicyName, Path, etc.) fall through.
         $dispatch = @{
             'WindowsFile' = {
-                $ExceptionParams = @{}
-                $ExceptionParams.path = $Path
-                $ExceptionParams.pathvariable = $PathVariable
-                $ExceptionParams.RulestateSource = $script:ModuleName
-                $ExceptionParams.deleted = $Remove.IsPresent
+                $props = @{
+                    path         = $Path
+                    pathvariable = $PathVariable
+                    deleted      = $Remove.IsPresent
+                }
 
                 # Parse scan type parameters
                 switch ($PSBP.Keys) {
-                    'Sonar'              { $ExceptionParams.sonar = $true }
+                    'Sonar'              { $props.sonar = $true }
                     'SecurityRiskCategory' {
-                        $ExceptionParams.securityrisk = $true
-                        $ExceptionParams.scancategory = $SecurityRiskCategory
+                        $props.securityrisk = $true
+                        $props.scancategory = $SecurityRiskCategory
                     }
-                    'ApplicationControl' { $ExceptionParams.applicationcontrol = $true }
+                    'ApplicationControl' { $props.applicationcontrol = $true }
                     'ExcludeChildProcesses' {
-                        $ExceptionParams.applicationcontrol = $true
-                        $ExceptionParams.recursive = $true
+                        $props.applicationcontrol = $true
+                        $props.recursive = $true
                     }
                     'AllScans' {
-                        $ExceptionParams.securityrisk = $true
-                        $ExceptionParams.sonar = $true
-                        $ExceptionParams.applicationcontrol = $true
-                        $ExceptionParams.scancategory = "AllScans"
+                        $props.securityrisk = $true
+                        $props.sonar = $true
+                        $props.applicationcontrol = $true
+                        $props.scancategory = 'AllScans'
                     }
                 }
 
                 # If no scan type is provided, default to AllScans
-                if (-not $ExceptionParams.securityrisk -and -not $ExceptionParams.sonar -and -not $ExceptionParams.applicationcontrol) {
-                    $ExceptionParams.securityrisk = $true
-                    $ExceptionParams.sonar = $true
-                    $ExceptionParams.applicationcontrol = $true
-                    $ExceptionParams.scancategory = "AllScans"
+                if (-not $props.ContainsKey('securityrisk') -and -not $props.ContainsKey('sonar') -and -not $props.ContainsKey('applicationcontrol')) {
+                    $props.securityrisk = $true
+                    $props.sonar = $true
+                    $props.applicationcontrol = $true
+                    $props.scancategory = 'AllScans'
                 }
 
-                $FilesHashTable = $ObjBody.CreateFilesHashTable(
-                    $ExceptionParams.sonar,
-                    $ExceptionParams.deleted,
-                    $ExceptionParams.RulestateEnabled,
-                    $ExceptionParams.RulestateSource,
-                    $ExceptionParams.scancategory,
-                    $ExceptionParams.pathvariable,
-                    $ExceptionParams.path,
-                    $ExceptionParams.applicationcontrol,
-                    $ExceptionParams.securityrisk,
-                    $ExceptionParams.recursive
-                )
-
-                $ObjBody.AddConfigurationFilesExceptions($FilesHashTable)
-
+                $entry = $ObjBody.NewEntry('Files', $props)
+                $ObjBody.AddEntry('Files', $entry)
             }
             'WindowsFolder'    = {
                 # Default to 'All' for WindowsFolder when -ScanType not explicitly passed
@@ -267,37 +258,32 @@ function Update-SEPMExceptionPolicy {
                     throw "The -SecurityRiskCategory parameter requires the -ScanType parameter to be set to 'SecurityRisk'."
                 }
 
-                $ExceptionParams = @{}
-                $ExceptionParams.directory = $FolderPath
-                $ExceptionParams.pathvariable = $PathVariable
-                $ExceptionParams.scantype = $folderScanType
-                $ExceptionParams.RulestateSource = $script:ModuleName
-                $ExceptionParams.deleted = $Remove.IsPresent
+                $props = @{
+                    directory    = $FolderPath
+                    pathvariable = $PathVariable
+                    scantype     = $folderScanType
+                    deleted      = $Remove.IsPresent
+                }
 
                 if ($IncludeSubFolders) {
-                    $ExceptionParams.recursive = $true
+                    $props.recursive = $true
                 }
 
                 if ($folderScanType -eq 'SecurityRisk' -and $SecurityRiskCategory) {
-                    $ExceptionParams.scancategory = $SecurityRiskCategory
+                    $props.scancategory = $SecurityRiskCategory
                 }
 
-                $DirectoryHashTable = $ObjBody.CreateDirectoryHashtable(
-                    $ExceptionParams.deleted,
-                    $ExceptionParams.RulestateEnabled,
-                    $ExceptionParams.RulestateSource,
-                    $ExceptionParams.scancategory,
-                    $ExceptionParams.scantype,
-                    $ExceptionParams.pathvariable,
-                    $ExceptionParams.directory,
-                    $ExceptionParams.recursive
-                )
-
-                $ObjBody.AddConfigurationDirectoriesExceptions($DirectoryHashTable)
+                $entry = $ObjBody.NewEntry('Directories', $props)
+                $ObjBody.AddEntry('Directories', $entry)
             }
             'WindowsExtension' = {
                 $existingPolicy = Get-SEPMExceptionPolicy -PolicyName $PolicyName
                 $existingExts = $existingPolicy.configuration.extension_list.extensions
+
+                # Handle $null or non-array existing extensions (no extension_list yet)
+                if ($null -eq $existingExts) {
+                    $existingExts = @()
+                }
 
                 if ($Remove.IsPresent) {
                     foreach ($ext in $Extensions) {
@@ -305,47 +291,35 @@ function Update-SEPMExceptionPolicy {
                             throw "Cannot remove Extension '$ext'. It is not in the exception list."
                         }
                     }
-                    $resultExts = $existingExts | Where-Object { $_ -notin $Extensions }
+                    $resultExts = @($existingExts | Where-Object { $_ -notin $Extensions })
                     $deleted = $true
                 } else {
-                    $resultExts = @($Extensions) + @($existingExts) | Sort-Object | Get-Unique
+                    $resultExts = @($Extensions + $existingExts | Sort-Object | Get-Unique)
                     $deleted = $false
                 }
 
-                $extHash = $ObjBody.CreateExtensionListHashtable(
-                    $deleted,
-                    $null,
-                    $script:ModuleName,
-                    $ScanType,
-                    $resultExts
-                )
-
-                $ObjBody.AddExtensionsList($extHash)
+                $entry = $ObjBody.NewEntry('Extensions', @{
+                    extensions   = $resultExts
+                    scancategory = $ScanType
+                    deleted      = $deleted
+                })
+                $ObjBody.AddEntry('Extensions', $entry)
             }
             'Tamper'           = {
-                $tamperHash = $ObjBody.CreateTamperFilesHashtable(
-                    $null,                # sonar
-                    $Remove.IsPresent,     # deleted
-                    $null,                # rulestate_enabled
-                    $script:ModuleName,   # rulestate_source
-                    '',                    # scancategory
-                    $PathVariable,        # pathvariable
-                    $TamperPath,          # path
-                    $null,                # applicationcontrol
-                    $null,                # securityrisk
-                    $null                 # recursive
-                )
-                $ObjBody.AddTamperFiles($tamperHash)
+                $entry = $ObjBody.NewEntry('TamperFiles', @{
+                    path         = $TamperPath
+                    pathvariable = $PathVariable
+                    deleted      = $Remove.IsPresent
+                })
+                $ObjBody.AddEntry('TamperFiles', $entry)
             }
             'MacFile'          = {
-                $macHash = $ObjBody.CreateMacFilesHashtable(
-                    $Remove.IsPresent,
-                    $null,
-                    $script:ModuleName,
-                    $MacPathVariable,
-                    $MacPath
-                )
-                $ObjBody.AddMacFiles($macHash)
+                $entry = $ObjBody.NewEntry('MacFiles', @{
+                    path         = $MacPath
+                    pathvariable = $MacPathVariable
+                    deleted      = $Remove.IsPresent
+                })
+                $ObjBody.AddEntry('MacFiles', $entry)
             }
             'Default'          = {}
         }
@@ -368,11 +342,19 @@ function Update-SEPMExceptionPolicy {
         # strips null/empty top-level properties and configuration sub-properties,
         # and applies SEPM domain rules (mac, linux, extension_list).
         $ObjBody = Optimize-SEPMObject -InputObject $ObjBody
+
+        # PS5.1 ConvertTo-Json unwraps single-element arrays. If extensions was
+        # reduced to a scalar by the round-trip, re-wrap it as an array so the
+        # SEPM API receives valid JSON: "extensions": [".ext"] not "extensions": ".ext".
+        if ($null -ne $ObjBody.configuration -and
+            $null -ne $ObjBody.configuration.extension_list -and
+            $ObjBody.configuration.extension_list.extensions -isnot [array]) {
+            $ObjBody.configuration.extension_list.extensions = @($ObjBody.configuration.extension_list.extensions)
+        }
+
         $bodyJson = ConvertTo-SEPMJson -InputObject $ObjBody -Compress
 
-        $patchUri = $URI + "/" + $PolicyID
-        $resp = Invoke-SepmApi -Method 'PATCH' -Uri $patchUri -Session $session `
-            -Body $bodyJson -ContentType 'application/json'
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($PolicyID) -Body $bodyJson
         return $resp
     }
 }

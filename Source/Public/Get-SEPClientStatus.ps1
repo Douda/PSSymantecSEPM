@@ -18,12 +18,11 @@ function Get-SEPClientStatus {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/stats/client/onlinestatus"
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPClientStatus'
     }
 
     process {
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
 
         $list = $resp.clientCountStatsList
         if ($null -eq $list) { return @() }

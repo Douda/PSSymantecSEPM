@@ -19,12 +19,11 @@ function Get-SEPMLatestDefinition {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/content/avdef/latest"
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMLatestDefinition'
     }
 
     process {
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
 
         return $resp
     }

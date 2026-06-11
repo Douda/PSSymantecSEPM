@@ -48,23 +48,11 @@ function Add-SEPMFileFingerprintList {
 
     begin {
         $session = Initialize-SEPMSession
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Add-SEPMFileFingerprintList'
     }
 
     process {
-        $URI = $session.BaseURLv1 + "/policy-objects/fingerprints"
-
-        # Construct the body & required fields
-        $body = @{
-            name        = $name
-            domainId    = $domainId
-            hashType    = $HashType
-            description = $description
-            data        = $hashlist
-        }
-
-        $resp = Invoke-SepmApi -Method 'POST' -Uri $URI -Session $session `
-            -Body (ConvertTo-SEPMJson -InputObject $body) -ContentType 'application/json'
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -BoundParameters $PSBoundParameters
         return $resp
     }
 }

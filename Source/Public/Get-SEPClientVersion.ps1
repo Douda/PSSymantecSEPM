@@ -29,12 +29,11 @@ function Get-SEPClientVersion {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/stats/client/version"
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPClientVersion'
     }
 
     process {
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
 
         $list = $resp.clientVersionList
         if ($null -eq $list) { return @() }

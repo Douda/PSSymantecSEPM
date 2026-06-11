@@ -52,9 +52,6 @@ Describe 'Get-SEPMPolicySnapshot' {
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM {
                 return $script:fakeSession
             }
-            Mock Build-SEPMQueryURI -ModuleName PSSymantecSEPM {
-                return $BaseURI
-            }
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Uri -match '/locations' } {
                 foreach ($gid in $script:locationResponses.Keys) {
                     if ($Uri -match $gid) { return $script:locationResponses[$gid] }
@@ -95,9 +92,6 @@ Describe 'Get-SEPMPolicySnapshot' {
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM {
                 return $script:fakeSession
             }
-            Mock Build-SEPMQueryURI -ModuleName PSSymantecSEPM {
-                return $BaseURI
-            }
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Uri -match '/locations' } {
                 foreach ($gid in $script:locationResponses.Keys) {
                     if ($Uri -match $gid) { return $script:locationResponses[$gid] }
@@ -130,9 +124,6 @@ Describe 'Get-SEPMPolicySnapshot' {
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM {
                 return $script:fakeSession
             }
-            Mock Build-SEPMQueryURI -ModuleName PSSymantecSEPM {
-                return $BaseURI
-            }
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Uri -match '/locations' } {
                 foreach ($gid in $script:locationResponses.Keys) {
                     if ($Uri -match $gid) { return $script:locationResponses[$gid] }
@@ -158,9 +149,6 @@ Describe 'Get-SEPMPolicySnapshot' {
             }
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM {
                 return $script:fakeSession
-            }
-            Mock Build-SEPMQueryURI -ModuleName PSSymantecSEPM {
-                return $BaseURI
             }
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Uri -match '/locations' } {
                 foreach ($gid in $script:locationResponses.Keys) {
@@ -190,9 +178,6 @@ Describe 'Get-SEPMPolicySnapshot' {
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM {
                 return $script:fakeSession
             }
-            Mock Build-SEPMQueryURI -ModuleName PSSymantecSEPM {
-                return $BaseURI
-            }
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Uri -match '/locations' } {
                 foreach ($gid in $script:locationResponses.Keys) {
                     if ($Uri -match $gid) { return $script:locationResponses[$gid] }
@@ -220,9 +205,6 @@ Describe 'Get-SEPMPolicySnapshot' {
             }
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM {
                 return $script:fakeSession
-            }
-            Mock Build-SEPMQueryURI -ModuleName PSSymantecSEPM {
-                return $BaseURI
             }
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Uri -match '/locations' } {
                 foreach ($gid in $script:locationResponses.Keys) {
@@ -253,9 +235,6 @@ Describe 'Get-SEPMPolicySnapshot' {
             }
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM {
                 return $script:fakeSession
-            }
-            Mock Build-SEPMQueryURI -ModuleName PSSymantecSEPM {
-                return $BaseURI
             }
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Uri -match '/locations' } {
                 foreach ($gid in $script:locationResponses.Keys) {

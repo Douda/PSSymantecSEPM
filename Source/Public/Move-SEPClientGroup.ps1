@@ -52,7 +52,7 @@ function Move-SEPClientGroup {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/computers"
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Move-SEPClientGroup'
 
         # Get all groups from SEPM
         $allGroups = Get-SEPMGroups
@@ -78,19 +78,18 @@ function Move-SEPClientGroup {
             return
         }
 
-        # Body structure for the request
+        # Body structure for the request (complex nested body, built manually)
         $body = @(
             @{
                 "group"       = @{
-                    "id" = $groupID   
+                    "id" = $groupID
                 }
                 "hardwareKey" = $hardwareKey
             }
-        ) 
+        )
 
         $bodyJson = ConvertTo-SEPMJson -InputObject $body -AsArray
-        $resp = Invoke-SepmApi -Method 'PATCH' -Uri $URI -Session $session `
-            -Body $bodyJson -ContentType 'application/json'
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -Body $bodyJson
 
         $fullResponse = [PSCustomObject]@{
             computerName        = $ComputerName

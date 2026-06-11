@@ -19,12 +19,11 @@ function Get-SEPMReplicationStatus {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/replication/status"
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMReplicationStatus'
     }
 
     process {
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
 
         # Add a PSTypeName to the object
         $resp.replicationStatus | ForEach-Object {

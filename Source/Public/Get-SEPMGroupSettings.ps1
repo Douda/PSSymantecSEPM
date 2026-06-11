@@ -39,22 +39,12 @@ function Get-SEPMGroupSettings {
 
     begin {
         $session = Initialize-SEPMSession
-        # $URI = $session.BaseURLv1 + "/groups"
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMGroupSettings'
     }
 
     process {
-        # Location ID
-        $URI = $session.BaseURLv1 + "/groups/$groupId/locations/$locationId/settings"
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($groupId, $locationId)
 
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
-
-        # Add a PSTypeName to the object
-        # $resp | ForEach-Object {
-        #     $_.PSObject.TypeNames.Insert(0, 'SEPM.GroupInfo')
-        # }
-
-        # return the response
         return $resp
     }
 }

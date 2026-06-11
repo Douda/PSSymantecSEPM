@@ -48,19 +48,23 @@ pwsh -NoProfile -c '
 '
 ```
 
-### Quick smoke (one-liner after Common.ps1)
+### Smoke test structure (three-file entry point)
 
-All smoke scripts dot-source `Scripts/Smoke/Common.ps1` which handles module import,
-certificate bypass (`$script:SkipCert`), SEPM configuration, and authentication in one line:
+Each smoke suite uses three files under `Scripts/Smoke/<Suite>/`:
 
-```powershell
-$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
-. "$RepoRoot/Scripts/Smoke/Common.ps1"
-```
+| File | Purpose |
+|------|---------|
+| `run.ps7.ps1` | PS7 entry point — module import, `-SkipCertificateCheck`, `Set-SepmConfiguration`, stale cred cleanup |
+| `run.ps51.ps1` | PS5.1 entry point — `ServicePointManager` callback, TLS 1.2, `$env:APPDATA` config, module import from shared volume |
+| `Tests.ps1` | Shared test logic — dot-sourced by both entry points after `Common.ps1` |
 
-Common.ps1 also exports `T` and `Skip` helper functions used by all smoke scripts.
-Credentials (`admin` / `MyComplexPassword1!`) live in Common.ps1 and Common-PS51.ps1 —
-change them once, all smoke scripts update.
+Entry points handle platform bootstrapping, then dot-source `Scripts/Smoke/Common.ps1`
+(auth + `T`/`Skip`/`Write-Summary` helpers) and the suite's `Tests.ps1`.
+
+`Common.ps1` is platform-agnostic — no `$PSVersionTable` branching, no config paths,
+no module import. Credentials (`admin` / `MyComplexPassword1!`) are centralized there.
+
+See `Scripts/Smoke/README.md` for suite conversion status.
 
 ### Manual (bypassing Common.ps1)
 
@@ -139,44 +143,27 @@ $r.StatusCode  # 200 = success
 
 ## PS 5.1 (WinRM)
 
+### Automated (bootstrap-smoke.sh)
+
+`Scripts/bootstrap-smoke.sh` handles deployment and execution automatically:
+
 ```bash
-# Deploy module
+bash Scripts/bootstrap-smoke.sh
+```
+
+It deploys the module + `Scripts/Smoke/` tree to the shared volume, then discovers
+and runs all `*/run.ps51.ps1` suites via WinRM. See `Scripts/Smoke/README.md` for
+suite status.
+
+### Manual (single suite)
+
+```bash
+# Deploy module + smoke scripts to shared volume
 cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM
+cp -r ./Scripts/Smoke /home/douda/Windows/Scripts/Smoke
 
-# Deploy shared init (once per VM session)
-pwsh -NoProfile -c "
-  \$bom = [System.Text.UTF8Encoding]::new(\$true)
-  \$c = Get-Content ./Scripts/Smoke/Common-PS51.ps1 -Raw
-  [System.IO.File]::WriteAllText('/home/douda/Windows/Common-PS51.ps1', \$c, \$bom)
-"
-```
-
-All PS5.1 smoke scripts dot-source Common-PS51.ps1:
-```powershell
-$RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
-. "$RepoRoot\Common-PS51.ps1"
-```
-
-This handles TLS 1.2, certificate bypass, module import, SEPM config, and
-authentication. Write the script body with just assertions.
-
-### Writing a PS5.1 smoke script (UTF-8 BOM mandatory)
-
-```bash
-printf '\xef\xbb\xbf' > /home/douda/Windows/smoke-<cmdlet>.ps1
-cat >> /home/douda/Windows/smoke-<cmdlet>.ps1 << 'EOF'
-$ErrorActionPreference = "Continue"
-$RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
-. "$RepoRoot\Common-PS51.ps1"
-
-# ... smoke assertions ...
-EOF
-```
-
-### Run (NTLM transport, port 5985)
-
-```bash
-python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\smoke-<cmdlet>.ps1'
+# Run via WinRM (NTLM transport, port 5985)
+python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\Scripts\Smoke\<Suite>\run.ps51.ps1'
 ```
 
 `invoke-winrm.py` handles NTLM auth on port 5985. SSL/5986 is broken with pywinrm.
@@ -184,40 +171,29 @@ python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\smoke-<cmdlet
 **Transport**: PS5.1 uses `[HttpWebRequest]` with `KeepAlive=false` (via `Invoke-SepmApi`, see Source/Private/Invoke-SepmApi.ps1).
 `Invoke-RestMethod` on .NET Framework 4.x reuses TLS connections which SEPM 14.3 rejects.
 
-**PS 5.1 differences**: no `-SkipCertificateCheck` (use callback above); all .ps1 files need UTF-8 BOM; `ConvertFrom-Json` lacks `-AsHashtable`/`-Depth`.
+**PS 5.1 differences**: no `-SkipCertificateCheck` (use `ServicePointManager` callback); all .ps1 files need UTF-8 BOM; `ConvertFrom-Json` lacks `-AsHashtable`/`-Depth`.
 
 ## Smoke scripts
 
 Smoke scripts are organized by cmdlet under `Scripts/Smoke/<CmdletName>/`.
-Each cmdlet directory has `batch.ps7.ps1`, `batch.ps51.ps1`, and optional helpers.
+Each suite uses the three-file entry point pattern (`run.ps7.ps1`, `run.ps51.ps1`, `Tests.ps1`).
 
-All scripts dot-source a shared init file that handles module import, auth,
-and provides `T`/`Skip` helper functions:
-- PS7: `Scripts/Smoke/Common.ps1`
-- PS5.1: `Scripts/Smoke/Common-PS51.ps1` (deployed to shared volume)
+All entry points dot-source `Scripts/Smoke/Common.ps1` (platform-agnostic auth + `T`/`Skip`/`Write-Summary` helpers),
+then their suite's `Tests.ps1` (shared test logic). Only the entry point preamble differs between PS7 and PS5.1.
 
-| Suite | Purpose |
-|-------|---------|
-| `Seed-SEPMData` | Orchestrator skeleton: Test category + Force flag |
-| `Get-SEPMFiles` | File fingerprint list + file details GET |
-| `Get-SEPMInfrastructure` | GUP list, license, database info, latest definitions |
-| `Get-SEPMLocations` | Location list + XML export |
-| `Update-SEPMExceptionPolicy` | Full PATCH matrix (35 tests per runtime) |
-
-Only the preamble differs between PS7 and PS5.1 — the test logic is identical.
+See `Scripts/Smoke/README.md` for which suites are converted and which still need migration.
 
 ```bash
-# PS7
-pwsh -NoProfile -File Scripts/Smoke/<Suite>/batch.ps7.ps1
+# PS7 (single suite)
+pwsh -NoProfile -File Scripts/Smoke/<Suite>/run.ps7.ps1
 
-# PS5.1
+# PS5.1 (single suite — manual deploy first)
 cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM
-pwsh -NoProfile -c "
-  \$bom = [System.Text.UTF8Encoding]::new(\$true)
-  \$c = Get-Content ./Scripts/Smoke/<Suite>/batch.ps51.ps1 -Raw
-  [System.IO.File]::WriteAllText('/home/douda/Windows/smoke-<suite>.ps1', \$c, \$bom)
-"
-python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\smoke-<suite>.ps1'
+cp -r ./Scripts/Smoke /home/douda/Windows/Scripts/Smoke
+python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\Scripts\Smoke\<Suite>\run.ps51.ps1'
+
+# All suites (both platforms)
+bash Scripts/bootstrap-smoke.sh
 ```
 
 ## Known bugs
@@ -235,14 +211,20 @@ PowerShell's `ConvertFrom-Json` rejects these on both PS versions.
 ## File layout
 
 ```
-~/.config/PSSymantecSEPM/config.json         # {port, ServerAddress}
-~/.config/PSSymantecSEPM/creds.xml           # encrypted creds (Export-Clixml)
+~/.config/PSSymantecSEPM/config.json          # {port, ServerAddress}
+~/.config/PSSymantecSEPM/creds.xml            # encrypted creds (Export-Clixml)
 ~/.local/share/PSSymantecSEPM/accessToken.xml # cached token
-~/Windows/                                   # shared with Windows VM
-Source/Private/00_Exceptions-Policy.ps1      # PowerShell class (loads first)
-Source/Private/Invoke-ABRestMethod.ps1       # DEPRECATED — being replaced by Invoke-SepmApi
-Source/Private/Invoke-SepmApi.ps1            # New REST layer (PS7: Invoke-RestMethod, PS5.1: HttpWebRequest)
-Source/Private/Initialize-SEPMSession.ps1    # session factory
-Output/PSSymantecSEPM/                       # built module
-Scripts/invoke-winrm.py                      # PS 5.1 test runner
+~/Windows/                                    # shared with Windows VM
+Source/Private/00_Exceptions-Policy.ps1       # PowerShell class (loads first)
+Source/Private/Invoke-ABRestMethod.ps1        # DEPRECATED — replaced by Invoke-SepmApi
+Source/Private/Invoke-SepmApi.ps1             # REST layer (PS7: Invoke-RestMethod, PS5.1: HttpWebRequest)
+Source/Private/Initialize-SEPMSession.ps1     # session factory
+Output/PSSymantecSEPM/                        # built module
+Scripts/Smoke/Common.ps1                      # shared smoke infra (auth + T/Skip/Write-Summary)
+Scripts/Smoke/<Suite>/run.ps7.ps1             # PS7 entry point per suite
+Scripts/Smoke/<Suite>/run.ps51.ps1            # PS5.1 entry point per suite
+Scripts/Smoke/<Suite>/Tests.ps1               # shared test logic per suite
+Scripts/Smoke/README.md                       # migration status
+Scripts/bootstrap-smoke.sh                    # full-suite orchestrator
+Scripts/invoke-winrm.py                       # PS 5.1 test runner
 ```

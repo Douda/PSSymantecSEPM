@@ -109,7 +109,10 @@ function parseBlockers(body: string): number[] {
   if (section.toLowerCase().includes("none")) return [];
 
   const nums: number[] = [];
-  for (const m of section.matchAll(/#(\d+)/g)) {
+  // Only match #NNN that appears right after a bullet (- #NNN).
+  // Inline mentions like "Can be developed in parallel with #NNN" are
+  // not blockers and won't match this pattern.
+  for (const m of section.matchAll(/-\s*#(\d+)/g)) {
     nums.push(parseInt(m[1], 10));
   }
   return nums;
@@ -336,7 +339,7 @@ if (prTarget) {
           const implement = await sandbox.run({
             name: "implementer",
             maxIterations: 2,
-            agent: sandcastle.pi("deepseek-v4-pro"),
+            agent: sandcastle.pi("deepseek-v4-flash"),
             promptFile: "./.sandcastle/implement-prompt.md",
             promptArgs: {
               PR_NUMBER: String(prTarget!.prNumber),
@@ -359,7 +362,7 @@ if (prTarget) {
 
           const review = await sandbox.run({
             name: "reviewer",
-            maxIterations: 1,
+            maxIterations: 2,
             agent: sandcastle.pi("deepseek-v4-pro"),
             promptFile: "./.sandcastle/review-prompt.md",
             promptArgs: {
@@ -485,7 +488,7 @@ if (prTarget) {
         const implement = await sandbox.run({
           name: "implementer",
           maxIterations: 2,
-          agent: sandcastle.pi("deepseek-v4-pro"),
+          agent: sandcastle.pi("deepseek-v4-flash"),
           promptFile: "./.sandcastle/implement-standalone-prompt.md",
           promptArgs: {
             ISSUE_NUMBER: String(standaloneIssue.issueNumber),
@@ -501,7 +504,7 @@ if (prTarget) {
         console.log(`Work complete on branch: ${branch}`);
         await sandbox.run({
           name: "reviewer",
-          maxIterations: 1,
+          maxIterations: 2,
           agent: sandcastle.pi("deepseek-v4-pro"),
           promptFile: "./.sandcastle/review-prompt.md",
           promptArgs: { BRANCH: branch, BASE_BRANCH: "develop" },

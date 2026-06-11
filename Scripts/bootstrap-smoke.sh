@@ -36,6 +36,113 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# ── Shared functions (sourced by Tests/bootstrap-smoke.tests.bash) ──
+
+# Discover smoke test suites matching the given file pattern.
+# Skips Seed-* directories unless seed_flag is "1".
+# Outputs absolute runner paths, one per line (empty if none found).
+discover_smoke_suites() {
+    local base_dir="$1"
+    local pattern="$2"
+    local seed="${3:-0}"
+    local runners=()
+    for d in "${base_dir}/"*/; do
+        [ -d "$d" ] || continue
+        local dirname
+        dirname=$(basename "$d")
+        local runner="${d}${pattern}"
+        if [ -f "$runner" ]; then
+            if [[ "$dirname" == Seed-* ]] && [ "$seed" != "1" ]; then
+                continue
+            fi
+            runners+=("$runner")
+        fi
+    done
+    if [ ${#runners[@]} -gt 0 ]; then
+        printf '%s\n' "${runners[@]}"
+    fi
+}
+
+# Parse a smoke test log file for the TOTAL: ... line.
+# Outputs: "tests pass fail skip" (space-separated, defaults to "0 0 0 0").
+parse_smoke_result_file() {
+    local log_file="$1"
+    local tests pass fail skip
+    tests=$(grep -oP '\d+(?= tests)' "$log_file" | head -1 || echo "0")
+    pass=$(grep  -oP '\d+(?= pass)'  "$log_file" | head -1 || echo "0")
+    fail=$(grep  -oP '\d+(?= fail)'  "$log_file" | head -1 || echo "0")
+    skip=$(grep  -oP '\d+(?= skip)'  "$log_file" | head -1 || echo "0")
+    echo "$tests $pass $fail $skip"
+}
+
+# Run a smoke test phase (PS7 or PS5.1). Discovers suites matching $pattern,
+# executes each via $executor (a function name), and stores results in $result_array.
+# Parameters:
+#   $1 - label (e.g., "PS7", "PS5.1")
+#   $2 - pattern (e.g., "run.ps7.ps1")
+#   $3 - skip_env var name (e.g., "SKIP_PS7")
+#   $4 - log_suffix (e.g., "ps7", "ps51")
+#   $5 - executor function name (called as: $executor runner suite)
+#   $6 - result_array nameref (must be a declared associative array)
+run_phase() {
+    local label="$1"
+    local pattern="$2"
+    local skip_env="$3"
+    local log_suffix="$4"
+    local executor="$5"
+    local -n result_array="$6"
+
+    if [ "${!skip_env:-0}" = "1" ]; then
+        warn "${skip_env}=1 — skipping ${label} smoke tests"
+        ((skipped++)) || true
+        return
+    fi
+
+    mapfile -t runners < <(discover_smoke_suites "${REPO_ROOT}/Scripts/Smoke" "$pattern" "${SEED:-0}")
+
+    if [ ${#runners[@]} -eq 0 ]; then
+        warn "No ${label} smoke suites found (looking for */${pattern})"
+        ((skipped++)) || true
+        return
+    fi
+
+    info "Found ${#runners[@]} ${label} suite(s)"
+    for runner in "${runners[@]}"; do
+        suite=$(basename "$(dirname "$runner")")
+        log="/tmp/smoke-${suite}-${log_suffix}.log"
+        echo ""
+        info "Running ${suite} (${label})..."
+        "$executor" "$runner" "$suite" > "$log" 2>&1 || true
+
+        read local_tests local_pass local_fail local_skip <<< "$(parse_smoke_result_file "$log")"
+
+        result_array["${suite}"]="${local_tests} ${local_pass} ${local_fail} ${local_skip}"
+        pass=$((pass + local_pass))
+        fail=$((fail + local_fail))
+
+        if [ "${local_fail}" -gt 0 ]; then
+            warn "  ${suite}: ${local_pass}/${local_tests} pass, ${local_fail} fail → ${log}"
+        else
+            ok "  ${suite}: ${local_pass}/${local_tests} all pass"
+        fi
+    done
+}
+
+# Executor callbacks for run_phase
+_run_ps7() {
+    pwsh -NoProfile -File "$1"
+}
+
+_run_ps51() {
+    local vm_runner="${VM_DESKTOP}\\Scripts\\Smoke\\$(basename "$(dirname "$1")")\\run.ps51.ps1"
+    python3 "${REPO_ROOT}/Scripts/invoke-winrm.py" "${vm_runner}"
+}
+
+# When sourced, stop here (tests import the functions above)
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+    return 0
+fi
+
 # ── Defaults (from docs/agents/smoke-testing.md) ──
 export VM_USER="${VM_USER:-smokeuser}"
 export WINRM_USER="${WINRM_USER:-$VM_USER}"
@@ -216,14 +323,21 @@ python3 "${REPO_ROOT}/Scripts/invoke-winrm.py" "${VM_DESKTOP}\\init-sepm-vm.ps1"
 ok "VM SEPM config + credentials set up"
 
 # ────────────────────────────────────────────────────────────────────────────
-# Phase 5: Deploy module to VM
+# Phase 5: Deploy module + smoke scripts to VM
 # ────────────────────────────────────────────────────────────────────────────
-section "Phase 5: Deploy module to VM"
+section "Phase 5: Deploy to VM"
 
 info "Copying module to shared volume..."
 rm -rf "${SHARED_VOLUME}/PSSymantecSEPM"
 cp -r "${REPO_ROOT}/Output/PSSymantecSEPM" "${SHARED_VOLUME}/PSSymantecSEPM"
 ok "Module deployed → ${VM_MODULE_DIR}"
+
+# 5a. Deploy Scripts/Smoke/ to shared volume (PS51 suites dot-source Common.ps1 + Tests.ps1)
+info "Copying smoke scripts to shared volume..."
+rm -rf "${SHARED_VOLUME}/Scripts/Smoke"
+mkdir -p "${SHARED_VOLUME}/Scripts"
+cp -r "${REPO_ROOT}/Scripts/Smoke" "${SHARED_VOLUME}/Scripts/Smoke"
+ok "Smoke scripts deployed → ${VM_DESKTOP}\\Scripts\\Smoke\\"
 
 # 5b. Verify module on VM (after deployment)
 info "Verifying module auth on VM..."
@@ -283,74 +397,59 @@ fi
 # Phase 6: Smoke tests — PS 7 (devcontainer)
 # ────────────────────────────────────────────────────────────────────────────
 section "Phase 6: Smoke tests — PS 7"
-
-BATCH_PS7="${REPO_ROOT}/Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps7.ps1"
-
-if [ "${SKIP_PS7:-0}" = "1" ]; then
-    warn "SKIP_PS7=1 — skipping PS7 smoke tests"
-    ((skipped++)) || true
-elif [ -f "${BATCH_PS7}" ]; then
-    info "Running batch.ps7.ps1..."
-    PS7_OUT=$(pwsh -NoProfile -File "${BATCH_PS7}" 2>&1) || true
-    echo "${PS7_OUT}"
-
-    # Parse summary
-    PS7_PASS=$(echo "${PS7_OUT}" | grep -oP '\d+(?= pass)' | head -1 || echo "0")
-    PS7_FAIL=$(echo "${PS7_OUT}" | grep -oP '\d+(?= fail)' | head -1 || echo "0")
-    PS7_TOTAL=$(echo "${PS7_OUT}" | grep -oP '\d+(?= tests)' | head -1 || echo "0")
-    pass=$((pass + PS7_PASS))
-    fail=$((fail + PS7_FAIL))
-
-    if [ "${PS7_FAIL}" -gt 0 ]; then
-        warn "PS7: ${PS7_PASS}/${PS7_TOTAL} pass, ${PS7_FAIL} failures"
-    else
-        ok "PS7: ${PS7_PASS}/${PS7_TOTAL} all pass"
-    fi
-else
-    err "batch.ps7.ps1 not found at ${BATCH_PS7}"
-fi
+declare -A PS7_SUITE_RESULTS
+run_phase "PS7" "run.ps7.ps1" "SKIP_PS7" "ps7" _run_ps7 PS7_SUITE_RESULTS
 
 # ────────────────────────────────────────────────────────────────────────────
 # Phase 7: Smoke tests — PS 5.1 (WinRM)
 # ────────────────────────────────────────────────────────────────────────────
 section "Phase 7: Smoke tests — PS 5.1"
-
-BATCH_PS51="${REPO_ROOT}/Scripts/Smoke/Update-SEPMExceptionPolicy/batch.ps51.ps1"
-BATCH_PS51_VM="${VM_DESKTOP}\\batch.ps51.ps1"
-
-if [ "${SKIP_PS51:-0}" = "1" ]; then
-    warn "SKIP_PS51=1 — skipping PS5.1 smoke tests"
-    ((skipped++)) || true
-elif [ -f "${BATCH_PS51}" ]; then
-    # Deploy batch script to VM
-    cp "${BATCH_PS51}" "${SHARED_VOLUME}/batch.ps51.ps1"
-    ok "batch.ps51.ps1 → shared volume"
-
-    info "Running batch.ps51.ps1 via WinRM (this may take a few minutes)..."
-    PS51_OUT=$(python3 "${REPO_ROOT}/Scripts/invoke-winrm.py" "${BATCH_PS51_VM}" 2>&1) || true
-    echo "${PS51_OUT}"
-
-    # Parse summary
-    PS51_PASS=$(echo "${PS51_OUT}" | grep -oP '\d+(?= pass)' | head -1 || echo "0")
-    PS51_FAIL=$(echo "${PS51_OUT}" | grep -oP '\d+(?= fail)' | head -1 || echo "0")
-    PS51_TOTAL=$(echo "${PS51_OUT}" | grep -oP '\d+(?= tests)' | head -1 || echo "0")
-    pass=$((pass + PS51_PASS))
-    fail=$((fail + PS51_FAIL))
-
-    if [ "${PS51_FAIL}" -gt 0 ]; then
-        warn "PS5.1: ${PS51_PASS}/${PS51_TOTAL} pass, ${PS51_FAIL} failures"
-    else
-        ok "PS5.1: ${PS51_PASS}/${PS51_TOTAL} all pass"
-    fi
-else
-    err "batch.ps51.ps1 not found at ${BATCH_PS51}"
-fi
+declare -A PS51_SUITE_RESULTS
+run_phase "PS5.1" "run.ps51.ps1" "SKIP_PS51" "ps51" _run_ps51 PS51_SUITE_RESULTS
 
 # ────────────────────────────────────────────────────────────────────────────
 # Summary
 # ────────────────────────────────────────────────────────────────────────────
 section "Summary"
 
+# ── Per-suite results table ──
+echo ""
+echo -e "${BOLD}Per-suite results:${NC}"
+echo ""
+printf "  %-40s %10s %10s\n" "Suite" "PS7" "PS5.1"
+printf "  %-40s %10s %10s\n" "────────────────────────────────────────" "──────────" "──────────"
+
+# Collect all unique suite names, sorted alphabetically
+mapfile -t ALL_SUITES < <(printf '%s\n' "${!PS7_SUITE_RESULTS[@]}" "${!PS51_SUITE_RESULTS[@]}" | sort -u)
+
+for suite in "${ALL_SUITES[@]}"; do
+    ps7_result="  —"
+    ps51_result="  —"
+
+    if [ -n "${PS7_SUITE_RESULTS[$suite]+set}" ]; then
+        read s_tests s_pass s_fail s_skip <<< "${PS7_SUITE_RESULTS[$suite]}"
+        if [ "${s_fail}" -gt 0 ]; then
+            ps7_result="${RED}FAIL${NC} "
+        else
+            ps7_result="${GREEN}PASS${NC} "
+        fi
+        ps7_result="${ps7_result}(${s_pass}/${s_tests})"
+    fi
+
+    if [ -n "${PS51_SUITE_RESULTS[$suite]+set}" ]; then
+        read s_tests s_pass s_fail s_skip <<< "${PS51_SUITE_RESULTS[$suite]}"
+        if [ "${s_fail}" -gt 0 ]; then
+            ps51_result="${RED}FAIL${NC} "
+        else
+            ps51_result="${GREEN}PASS${NC} "
+        fi
+        ps51_result="${ps51_result}(${s_pass}/${s_tests})"
+    fi
+
+    printf "  %-40s %b %b\n" "$suite" "$ps7_result" "$ps51_result"
+done
+
+echo ""
 total=$((pass + fail))
 echo -e "  Total:  ${BOLD}${total}${NC} tests"
 echo -e "  Pass:   ${GREEN}${pass}${NC}"

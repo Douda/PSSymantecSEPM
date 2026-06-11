@@ -31,12 +31,11 @@ function Get-SEPMDatabaseInfo {
     param()
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/admin/database"
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMDatabaseInfo'
     }
 
     process {
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
 
         return $resp
     }

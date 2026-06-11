@@ -19,12 +19,11 @@ function Get-SEPMThreatStats {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/stats/threat"
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMThreatStats'
     }
 
     process {
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
         Write-Output $resp.Stats -NoEnumerate
     }
 }

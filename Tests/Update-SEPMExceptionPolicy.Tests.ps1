@@ -269,6 +269,33 @@ Describe 'Update-SEPMExceptionPolicy' {
             } -Exactly 1 -Scope It
         }
 
+        It 'Handles a null existing extensions list gracefully' {
+            # Simulate a policy where extension_list does not exist yet
+            Mock Get-SEPMExceptionPolicy -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{
+                    configuration = [PSCustomObject]@{
+                        extension_list = $null
+                    }
+                }
+            }
+
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Extensions '.new'
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter {
+                $body = $Body | ConvertFrom-Json
+                $exts = $body.configuration.extension_list.extensions
+                # Verify extensions is an array with one element
+                $exts -is [array] -and
+                $exts.Count -eq 1 -and
+                '.new' -in $exts
+            } -Exactly 1 -Scope It
+        }
+
         It 'Respects explicit ScanType parameter' {
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
                 return [PSCustomObject]@{ status = 'success' }
@@ -280,6 +307,34 @@ Describe 'Update-SEPMExceptionPolicy' {
             Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter {
                 $body = $Body | ConvertFrom-Json
                 $body.configuration.extension_list.scancategory -eq 'AutoProtect'
+            } -Exactly 1 -Scope It
+        }
+
+        It 'Sends extensions as a JSON array when adding a single extension to a policy with no extensions' {
+            Mock Get-SEPMExceptionPolicy -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{
+                    configuration = [PSCustomObject]@{
+                        extension_list = [PSCustomObject]@{
+                            extensions = $null
+                            scancategory = 'AllScans'
+                        }
+                    }
+                }
+            }
+
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ status = 'success' }
+            }
+
+            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Extensions '.smoketest'
+
+            $result.status | Should -Be 'success'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter {
+                $parsed = $Body | ConvertFrom-Json
+                $exts = $parsed.configuration.extension_list.extensions
+                $exts -is [array] -and
+                $exts.Count -eq 1 -and
+                '.smoketest' -in $exts
             } -Exactly 1 -Scope It
         }
     }

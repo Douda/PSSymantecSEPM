@@ -28,12 +28,11 @@ function Get-SEPMEventInfo {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/events/critical"
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMEventInfo'
     }
 
     process {
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
 
         # Add a PSTypeName to the object
         $resp.criticalEventsInfoList | ForEach-Object {

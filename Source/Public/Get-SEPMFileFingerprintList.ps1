@@ -52,31 +52,18 @@ function Get-SEPMFileFingerprintList {
 
     begin {
         $session = Initialize-SEPMSession
-        
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMFileFingerprintList'
     }
 
     process {
-
         if ($FingerprintListName) {
-            $URI = $session.BaseURLv1 + "/policy-objects/fingerprints"
-            # URI query strings
-            $QueryStrings = @{
-                name = $FingerprintListName
-            }
-
-            # Construct the URI
-            $URI = Build-SEPMQueryURI -BaseURI $URI -QueryStrings $QueryStrings
-
-            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -BoundParameters $PSBoundParameters
         }
 
         if ($FingerprintListID) {
-            $URI = $session.BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"
-
-            $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($FingerprintListID)
         }
-        
+
         # return the response
         return $resp
     }

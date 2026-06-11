@@ -89,8 +89,7 @@ function Get-SEPMExceptionPolicy {
 
     begin {
         $session = Initialize-SEPMSession
-        # BaseURL V2
-        $URI = $session.BaseURLv2 + "/policies/exceptions"
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMExceptionPolicy'
 
         # Stores the policy summary for all policies only once
         $policies = Get-SEPMPoliciesSummary
@@ -108,11 +107,7 @@ function Get-SEPMExceptionPolicy {
             throw $message
         }
 
-        # Updating URI with policy ID
-        $URI = $URI + "/" + $policyID
-        
-        # Use Invoke-SepmApi with session (handles PS5.1 + PS7 transport and deserialization)
-        $resp = Invoke-SepmApi -Method 'GET' -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($policyID)
 
         # Add a PSTypeName to the object
         $resp.PSObject.TypeNames.Insert(0, 'SEPM.ExceptionPolicy')

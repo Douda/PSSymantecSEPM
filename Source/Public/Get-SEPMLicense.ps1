@@ -36,9 +36,6 @@ function Get-SEPMLicense {
 
     [CmdletBinding()]
     param (
-        # Skip certificate check
-
-
         # Summary
         [Parameter()]
         [switch]
@@ -47,17 +44,15 @@ function Get-SEPMLicense {
 
     begin {
         $session = Initialize-SEPMSession
-        $URI = $session.BaseURLv1 + "/licenses"
-
+        if ($Summary) {
+            $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMLicenseSummary'
+        } else {
+            $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMLicense'
+        }
     }
 
     process {
-        #If the -Summary switch is used, then we will only return the summary of the license information
-        if ($Summary) {
-            $URI = $session.BaseURLv1 + "/licenses/summary"
-        }
-
-        $resp = Invoke-SepmApi -Method GET -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
 
         return $resp
     }
