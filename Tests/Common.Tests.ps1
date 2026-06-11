@@ -16,7 +16,9 @@ Describe 'Common.ps1' {
                     $Label,
                     [ScriptBlock]$Action,
                     [ScriptBlock]$Assert,
-                    [string]$ExpectedError
+                    [string]$ExpectedError,
+                    [int]$SleepMs = 0,
+                    [ScriptBlock]$AssertTarget
                 )
                 Write-Host "--- $Id : $Label ---" -ForegroundColor Cyan
                 try {
@@ -31,7 +33,13 @@ Describe 'Common.ps1' {
                         return "FAIL"
                     }
 
-                    $ok = & $Assert $result
+                    if ($SleepMs -gt 0) { Start-Sleep -Milliseconds $SleepMs }
+                    if ($AssertTarget) {
+                        $assertInput = & $AssertTarget
+                    } else {
+                        $assertInput = $result
+                    }
+                    $ok = & $Assert $assertInput
                     if ($ok) { Write-Host "  VERDICT: PASS" -ForegroundColor Green; return "PASS" }
                     else     { Write-Host "  VERDICT: FAIL" -ForegroundColor Red;   return "FAIL" }
                 } catch {
@@ -95,6 +103,30 @@ Describe 'Common.ps1' {
                 { param($r) $true } `
                 -ExpectedError "not found"
             $result | Should -Be "FAIL"
+        }
+
+        It 'uses AssertTarget output instead of Action output for assertion' {
+            $result = T "X9" "assert target test" `
+                { return "ignored" } `
+                { param($r) $r -eq 99 } `
+                -AssertTarget { return 99 }
+            $result | Should -Be "PASS"
+        }
+
+        It 'sleeps before asserting when SleepMs is set' {
+            $sw = [System.Diagnostics.Stopwatch]::StartNew()
+            $result = T "X10" "sleep test" `
+                { return 42 } `
+                { param($r) $r -eq 42 } `
+                -SleepMs 200
+            $sw.Stop()
+            $result | Should -Be "PASS"
+            $sw.ElapsedMilliseconds | Should -BeGreaterOrEqual 150
+        }
+
+        It 'existing tests work without AssertTarget (backward compat)' {
+            $result = T "X11" "no assert target" { return "hello" } { param($r) $r -eq "hello" }
+            $result | Should -Be "PASS"
         }
     }
 

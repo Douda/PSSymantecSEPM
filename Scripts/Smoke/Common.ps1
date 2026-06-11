@@ -53,6 +53,14 @@ function T {
     .PARAMETER ExpectedError
         Optional substring. If the Action throws or returns an API error containing this
         text, the test is classified as PASS (expected error scenario).
+    .PARAMETER SleepMs
+        Milliseconds to sleep after running Action (default 0). Use for mutation
+        cmdlets that need SEPM to settle before asserting.
+    .PARAMETER AssertTarget
+        Optional ScriptBlock that produces the assertion subject. When provided,
+        AssertTarget runs after Action (and after SleepMs) and its output is passed
+        to Assert instead of Action's return value. Use for mutation cmdlets that
+        need ground-truth verification against API state.
     .OUTPUTS
         String: "PASS", "FAIL", or "SKIP".
     #>
@@ -61,7 +69,9 @@ function T {
         $Label,
         [ScriptBlock]$Action,
         [ScriptBlock]$Assert,
-        [string]$ExpectedError
+        [string]$ExpectedError,
+        [int]$SleepMs = 0,
+        [ScriptBlock]$AssertTarget
     )
     Write-Host "--- $Id : $Label ---" -ForegroundColor Cyan
     try {
@@ -76,7 +86,13 @@ function T {
             return "FAIL"
         }
 
-        $ok = & $Assert $result
+        if ($SleepMs -gt 0) { Start-Sleep -Milliseconds $SleepMs }
+        if ($AssertTarget) {
+            $assertInput = & $AssertTarget
+        } else {
+            $assertInput = $result
+        }
+        $ok = & $Assert $assertInput
         if ($ok) { Write-Host "  VERDICT: PASS" -ForegroundColor Green; return "PASS" }
         else     { Write-Host "  VERDICT: FAIL" -ForegroundColor Red;   return "FAIL" }
     } catch {
