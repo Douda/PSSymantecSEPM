@@ -266,19 +266,15 @@ Describe 'Optimize-SEPMObject' {
                 $policy = [SEPMPolicyExceptionsStructure]::new()
                 $policy.name = 'TestPolicy'
 
-                $fileHash = $policy.CreateFilesHashTable(
-                    $false,   # sonar
-                    $false,   # deleted
-                    $true,    # rulestate_enabled
-                    'PSSymantecSEPM',
-                    'AllScans',
-                    '[NONE]',
-                    'C:\test\file.exe',
-                    $false,   # applicationcontrol
-                    $true,    # securityrisk
-                    $false    # recursive
-                )
-                $policy.AddConfigurationFilesExceptions($fileHash)
+                $entry = $policy.NewEntry('Files', @{
+                    path              = 'C:\test\file.exe'
+                    pathvariable      = '[NONE]'
+                    scancategory      = 'AllScans'
+                    securityrisk      = $true
+                    deleted           = $false
+                    rulestate_enabled = $true
+                })
+                $policy.AddEntry('Files', $entry)
 
                 $result = Optimize-SEPMObject -InputObject $policy
 
