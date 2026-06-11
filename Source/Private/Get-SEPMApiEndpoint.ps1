@@ -124,6 +124,68 @@ if (-not $script:_endpointRegistry) {
             Method        = 'GET'
             Path          = '/groups/{id}/locations/{id}/xml'
         }
+        'New-SEPMGroup' = @{
+            OperationName = 'New-SEPMGroup'
+            Version       = '1.0'
+            Method        = 'POST'
+            Path          = '/groups'
+            BodyParams    = @{
+                name        = 'GroupName'
+                description = 'Description'
+                inherits    = 'EnabledInheritance'
+            }
+        }
+        'Remove-SEPMGroup' = @{
+            OperationName = 'Remove-SEPMGroup'
+            Version       = '1.0'
+            Method        = 'DELETE'
+            Path          = '/groups/{id}'
+        }
+        'Add-SEPMFileFingerprintList' = @{
+            OperationName = 'Add-SEPMFileFingerprintList'
+            Version       = '1.0'
+            Method        = 'POST'
+            Path          = '/policy-objects/fingerprints'
+            BodyParams    = @{
+                name        = 'name'
+                domainId    = 'domainId'
+                hashType    = 'HashType'
+                description = 'description'
+                data        = 'hashlist'
+            }
+        }
+        'Remove-SEPMFileFingerprintList' = @{
+            OperationName = 'Remove-SEPMFileFingerprintList'
+            Version       = '1.0'
+            Method        = 'DELETE'
+            Path          = '/policy-objects/fingerprints/{id}'
+        }
+        'Update-SEPMFileFingerprintList' = @{
+            OperationName = 'Update-SEPMFileFingerprintList'
+            Version       = '1.0'
+            Method        = 'POST'
+            Path          = '/policy-objects/fingerprints/{id}'
+            BodyParams    = @{
+                name        = 'name'
+                domainId    = 'domainId'
+                hashType    = 'HashType'
+                description = 'description'
+                data        = 'hashlist'
+            }
+        }
+        'Start-SEPMReplication' = @{
+            OperationName = 'Start-SEPMReplication'
+            Version       = '1.0'
+            Method        = 'POST'
+            Path          = '/replication/replicatenow'
+            QueryParams   = @{ partnerSiteName = 'partnerSiteName' }
+        }
+        'Move-SEPClientGroup' = @{
+            OperationName = 'Move-SEPClientGroup'
+            Version       = '1.0'
+            Method        = 'PATCH'
+            Path          = '/computers'
+        }
     }
 }
 

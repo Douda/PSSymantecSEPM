@@ -44,20 +44,17 @@ function Remove-SEPMFileFingerprintList {
 
     begin {
         $session = Initialize-SEPMSession
-
+        $endpoint = Get-SEPMApiEndpoint -OperationName 'Remove-SEPMFileFingerprintList'
     }
 
     process {
         # Get the FingerprintListID if the FingerprintListName is provided
         if ($FingerprintListName) {
-            $URI = $session.BaseURLv1 + "/policy-objects/fingerprints"
             $fp = Get-SEPMFileFingerprintList -FingerprintListName $FingerprintListName | Select-Object -First 1
             $FingerprintListID = if ($fp) { $fp.id } else { $null }
         }
 
-        $URI = $session.BaseURLv1 + "/policy-objects/fingerprints/$FingerprintListID"
-
-        $resp = Invoke-SepmApi -Method 'DELETE' -Uri $URI -Session $session
+        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($FingerprintListID)
         return $resp
     }
 }

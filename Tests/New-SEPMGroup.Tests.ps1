@@ -45,8 +45,8 @@ Describe 'New-SEPMGroup' {
 
             $body = $script:apiCalls[0].Body | ConvertFrom-Json
             $body.name      | Should -Be 'Win7'
-            $body.inherits  | Should -BeFalse
-            $body.description | Should -BeNullOrEmpty
+            $body.PSObject.Properties.Name | Should -Not -Contain 'inherits'
+            $body.PSObject.Properties.Name | Should -Not -Contain 'description'
         }
 
         It 'sends EnabledInheritance flag in body' {
