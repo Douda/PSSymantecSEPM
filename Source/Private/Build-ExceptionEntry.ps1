@@ -1,11 +1,3 @@
-# Schema-driven exception entry constructor.
-#
-# Takes a type name, properties hashtable, and schema, and returns a validated
-# Exception Entry hashtable ready for insertion into a SEPMExceptionPolicy.
-#
-# Pure function — does not read module-scoped state. The caller owns the schema
-# and passes it via the -Schema parameter.
-
 $script:_ExceptionSchema = @{
     Files = @{
         ConfigPath = 'files'
@@ -260,6 +252,34 @@ $script:_ExceptionSchema = @{
     }
 }
 
+<#
+.SYNOPSIS
+    Copies fields from a source hashtable into a target hashtable based on a field definition map.
+
+.DESCRIPTION
+    Iterates the keys of $FieldDefs. For each key present in $Source with a non-null
+    value, copies it to $Target. String values that are empty ('') are excluded;
+    all other types (bool, int, array) are copied as-is.
+    This keeps optional fields out of the output when the caller did not supply them.
+
+.PARAMETER Source
+    Caller-provided properties hashtable (the raw input).
+
+.PARAMETER Target
+    Output hashtable being built (mutated in place).
+
+.PARAMETER FieldDefs
+    Schema field definitions for the current type or sub-object. Keys are field names;
+    values are definition hashtables (e.g. @{ type = 'string' }).
+
+.EXAMPLE
+    Copy-SchemaFields -Source @{ path = 'C:\test'; recursive = $true } `
+                      -Target @{} -FieldDefs @{ path = @{ type = 'string' }; recursive = @{ type = 'bool' } }
+    # $Target now contains path = 'C:\test' and recursive = $true
+
+.NOTES
+    Internal helper. Not exported.
+#>
 function Copy-SchemaFields {
     param([hashtable]$Source, [hashtable]$Target, [hashtable]$FieldDefs)
 
@@ -279,6 +299,34 @@ function Copy-SchemaFields {
     }
 }
 
+<#
+.SYNOPSIS
+    Validates that all required fields are present in a target hashtable.
+
+.DESCRIPTION
+    Checks each field name in $Required against the keys of $Target.
+    Any missing fields are collected and thrown as a single error listing
+    all absent names, prefixed with the caller-supplied $Context string
+    (e.g. "type 'Files'" or "sub-object 'processfile' in type 'Applications'").
+
+.PARAMETER Target
+    The built output hashtable to validate.
+
+.PARAMETER Required
+    Array of field names that must be present in $Target.
+
+.PARAMETER Context
+    Human-readable description of the entity being validated, included in the
+    error message for debuggability.
+
+.EXAMPLE
+    Assert-RequiredFields -Target @{ path = 'C:\test' } -Required @('path', 'pathvariable') `
+                          -Context "type 'Files'"
+    # Throws: "Missing required field 'pathvariable' for type 'Files'."
+
+.NOTES
+    Internal helper. Not exported.
+#>
 function Assert-RequiredFields {
     param([hashtable]$Target, [array]$Required, [string]$Context)
 
@@ -294,6 +342,52 @@ function Assert-RequiredFields {
     }
 }
 
+<#
+.SYNOPSIS
+    Builds a validated Exception Entry hashtable from a type name, properties, and schema.
+
+.DESCRIPTION
+    Schema-driven constructor for SEPM exception policy entries. Looks up the type
+    definition in $Schema, copies caller fields via Copy-SchemaFields, constructs a
+    rulestate PSCustomObject (with source default and optional enabled override),
+    builds sub-objects from nested hashtables, validates enum field values against
+    the schema, and asserts all required fields are present.
+
+    Returns a [hashtable] ready for insertion into a
+    SEPMPolicyExceptionsStructure.configuration array.
+
+.PARAMETER Schema
+    Exception type definition hashtable ($script:_ExceptionSchema). Each key is a
+    type name; each value declares ConfigPath, AddMethod, Required, Fields, and
+    optionally SubObjects.
+
+.PARAMETER Type
+    Exception entry type name (e.g. 'Files', 'Directories', 'Applications').
+    Must match a key in $Schema.
+
+.PARAMETER Properties
+    Caller-supplied property values as a hashtable. May include optional fields,
+    sub-objects as nested hashtables, a 'deleted' flag, and rulestate overrides
+    ('rulestate' for full override, 'rulestate_enabled' to merge just the enabled bit).
+
+.EXAMPLE
+    $entry = Build-ExceptionEntry -Schema $script:_ExceptionSchema `
+                                  -Type 'Files' `
+                                  -Properties @{ path = 'C:\test\file.exe'; sonar = $true }
+
+    # Returns: @{ path = 'C:\test\file.exe'; sonar = $true; rulestate = [PSCustomObject]@{ source = 'PSSymantecSEPM' } }
+
+.EXAMPLE
+    $entry = Build-ExceptionEntry -Schema $script:_ExceptionSchema `
+                                  -Type 'Applications' `
+                                  -Properties @{ processfile = @{ sha2 = 'abc'; name = 'app.exe' }; action = 'ALLOW' }
+
+    # Returns a hashtable with processfile as a PSCustomObject and action = 'ALLOW'
+
+.NOTES
+    Internal helper. Not exported. Tested directly under ADR-0002 criterion 3
+    (complexity concentration — absorbs behaviour previously spread across 16 factory methods).
+#>
 function Build-ExceptionEntry {
     [CmdletBinding()]
     param (
