@@ -362,7 +362,7 @@ if (prTarget) {
 
           const review = await sandbox.run({
             name: "reviewer",
-            maxIterations: 1,
+            maxIterations: 2,
             agent: sandcastle.pi("deepseek-v4-pro"),
             promptFile: "./.sandcastle/review-prompt.md",
             promptArgs: {
@@ -504,7 +504,7 @@ if (prTarget) {
         console.log(`Work complete on branch: ${branch}`);
         await sandbox.run({
           name: "reviewer",
-          maxIterations: 1,
+          maxIterations: 2,
           agent: sandcastle.pi("deepseek-v4-pro"),
           promptFile: "./.sandcastle/review-prompt.md",
           promptArgs: { BRANCH: branch, BASE_BRANCH: "develop" },
