@@ -11,7 +11,7 @@ cert bypass, and SEPM connection setup before dot-sourcing `Common.ps1`.
 - `Common-Shared.ps1` (interim file, merged into `Common.ps1`)
 - `Common-PS51.ps1` (old PS 5.1-specific init, superseded by `run.ps51.ps1` per suite)
 
-## Converted suites (3)
+## Converted suites (6)
 
 These suites use the new `run.ps7.ps1` / `run.ps51.ps1` entry points
 that handle their own platform bootstrapping, then dot-source `Common.ps1`
@@ -19,11 +19,14 @@ and their suite-specific `Tests.ps1`.
 
 | Suite | Status |
 |---|---|
+| `FileFingerprintList/` | Converted (#175) |
+| `Get-SEPMFiles/` | Converted (#175) |
 | `Get-SEPSimpleGets1/` | Converted (#153) |
 | `New-SEPMGroup/` | Converted (#154) |
+| `Start-SEPMReplication/` | Converted (#175) |
 | `Update-SEPMExceptionPolicy/` | Converted (#155) — includes `Invoke-BootstrapExtensionList` workaround for SEPM API empty-extension_list rejection |
 
-## Unconverted suites (29)
+## Unconverted suites (26)
 
 These suites still use the old `batch.ps7.ps1` / `batch.ps51.ps1` pattern
 that dot-sources the deleted `Common.ps1` / `Common-PS51.ps1`.
@@ -34,9 +37,7 @@ They are **intentionally broken** and will be converted in follow-up PRs.
 | `ConfigBackupRestore/` | Unconverted |
 | `Confirm-SEPMEventInfo/` | Unconverted |
 | `Export-SEPMFirewallPolicyToExcel/` | Unconverted |
-| `FileFingerprintList/` | Unconverted |
 | `Get-SEPMExceptionPolicy/` | Unconverted |
-| `Get-SEPMFiles/` | Unconverted |
 | `Get-SEPMFirewallPolicy/` | Unconverted |
 | `Get-SEPMGroupSettings/` | Unconverted |
 | `Get-SEPMInfrastructure/` | Unconverted |
@@ -58,5 +59,4 @@ They are **intentionally broken** and will be converted in follow-up PRs.
 | `Seed-UpgradePolicies/` | Unconverted |
 | `Seed-Validation/` | Unconverted |
 | `Send-SEPMCommand/` | Unconverted |
-| `Start-SEPMReplication/` | Unconverted |
 | `Update-SEPMFileFingerprintList/` | Unconverted |

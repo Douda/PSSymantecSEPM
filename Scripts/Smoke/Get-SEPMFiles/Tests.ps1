@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Shared smoke tests for Get-SEPMFileFingerprintList and Get-SEPFileDetails.
 
@@ -11,30 +11,30 @@
 $results = @{}
 
 # ── Discovery: fingerprint list ──
-$FP_ID   = "2AF80AC20C804119826BE077ECE49C1C"
-$FP_NAME = $null
+$fpId   = "2AF80AC20C804119826BE077ECE49C1C"
+$fpName = $null
 try {
-    $test = Get-SEPMFileFingerprintList -FingerprintListID $FP_ID
-    if ($test.name) { $FP_NAME = $test.name }
+    $test = Get-SEPMFileFingerprintList -FingerprintListID $fpId
+    if ($test.name) { $fpName = $test.name }
 } catch { }
-if (-not $FP_NAME) {
+if (-not $fpName) {
     $fpl = Get-SEPMFileFingerprintList
     if ($fpl -and $fpl.Count -gt 0) {
-        $FP_ID   = $fpl[0].id
-        $FP_NAME = $fpl[0].name
+        $fpId   = $fpl[0].id
+        $fpName = $fpl[0].name
     }
 }
 
-if ($FP_NAME) {
-    Write-Host "Discovered fingerprint list: $FP_NAME ($FP_ID)" -ForegroundColor Gray
+if ($fpName) {
+    Write-Host "Discovered fingerprint list: $fpName ($fpId)" -ForegroundColor Gray
 
     $results.B1 = T "B1" "Get-SEPMFileFingerprintList -FingerprintListID" `
-        { Get-SEPMFileFingerprintList -FingerprintListID $FP_ID } `
+        { Get-SEPMFileFingerprintList -FingerprintListID $fpId } `
         { param($r) $r -ne $null -and $r.name -ne $null -and $r.hashType -ne $null }
 
     $results.B2 = T "B2" "Get-SEPMFileFingerprintList -FingerprintListName" `
-        { Get-SEPMFileFingerprintList -FingerprintListName $FP_NAME } `
-        { param($r) ($r -ne $null) -and ($r.name -eq $FP_NAME -or ($r -is [array] -and $r[0].name -eq $FP_NAME) -or ($r -is [hashtable] -and $r.name -eq $FP_NAME)) }
+        { Get-SEPMFileFingerprintList -FingerprintListName $fpName } `
+        { param($r) ($r -ne $null) -and ($r.name -eq $fpName -or ($r -is [array] -and $r[0].name -eq $fpName) -or ($r -is [hashtable] -and $r.name -eq $fpName)) }
 } else {
     $results.B1 = Skip "B1" "Get-SEPMFileFingerprintList -FingerprintListID" "No fingerprint lists"
     $results.B2 = Skip "B2" "Get-SEPMFileFingerprintList -FingerprintListName" "No fingerprint lists"
