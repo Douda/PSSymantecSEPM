@@ -10,6 +10,16 @@
 
 Write-Host "=== Smoke: Seed MEMPolicies ==="
 
+# ── Private function wrappers (module-scope tunnel) ──
+$script:__SepmModule = Get-Module PSSymantecSEPM
+
+function Invoke-SepmApi {
+    & $script:__SepmModule { Invoke-SepmApi @args } @args
+}
+function Initialize-SEPMSession {
+    & $script:__SepmModule { Initialize-SEPMSession @args } @args
+}
+
 $seedScript = Join-Path -Path $RepoRoot -ChildPath 'Scripts/Seed-SEPMData.ps1'
 $seedNames = @('Standard MEM', 'Advanced MEM', 'Java-Only MEM', 'Audit MEM')
 

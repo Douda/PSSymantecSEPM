@@ -9,6 +9,16 @@
 
 Write-Host "=== Smoke: Seed-Validation ==="
 
+# ── Private function wrappers (module-scope tunnel) ──
+$script:__SepmModule = Get-Module PSSymantecSEPM
+
+function Invoke-SepmApi {
+    & $script:__SepmModule { Invoke-SepmApi @args } @args
+}
+function Initialize-SEPMSession {
+    & $script:__SepmModule { Initialize-SEPMSession @args } @args
+}
+
 # Helper: normalize summary content (handles ConvertTo-Hashtable collapsing 1-element arrays)
 function Get-SummaryContent($response) {
     $content = if ($response.ContainsKey('content')) { $response.content } else { $response }
