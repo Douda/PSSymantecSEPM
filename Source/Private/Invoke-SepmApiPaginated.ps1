@@ -74,6 +74,9 @@ function Invoke-SepmApiPaginated {
         }
     }
 
+    # Build body once — it does not change between pages
+    $bodyToSend = Build-SepmBody -Endpoint $Endpoint -BoundParameters $BoundParameters -Body $Body
+
     $allResults = @()
 
     do {
@@ -84,9 +87,6 @@ function Invoke-SepmApiPaginated {
             Uri     = $uri
             Session = $Session
         }
-
-        # Use Build-SepmBody for body construction
-        $bodyToSend = Build-SepmBody -Endpoint $Endpoint -BoundParameters $BoundParameters -Body $Body
         if ($bodyToSend) {
             $apiSplat.Body = $bodyToSend
             $apiSplat.ContentType = 'application/json'
@@ -99,12 +99,10 @@ function Invoke-SepmApiPaginated {
             throw "Paginated API call failed: $resp"
         }
 
-        # Concatenate content
         if ($resp.content) {
             $allResults += $resp.content
         }
 
-        # Increment page index for next iteration
         $queryParams['pageIndex']++
 
     } until ($resp.lastPage -eq $true)
