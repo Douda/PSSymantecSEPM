@@ -1,8 +1,12 @@
-$ErrorActionPreference = "Continue"
-$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
-. "$RepoRoot/Scripts/Smoke/Common.ps1"
+﻿<#
+.SYNOPSIS
+    Shared smoke tests for Send-SEPMCommand.
 
-Write-Host "=== Smoke: Send-SEPMCommand (PS7) ===" -ForegroundColor Yellow
+.DESCRIPTION
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
+    Covers: ActiveScan, FullScan, Quarantine, UpdateContent, GetFile,
+            ClearIronCache with various computers and parameters.
+#>
 
 $results = @{}
 
@@ -74,15 +78,4 @@ $results.PIPE1 = T "PIPE1" "ActiveScan multiple computers via pipeline" `
     { 'WIN-P093KPK2K7Q', 'NonExistentComputer12345' | Send-SEPMCommand -Type ActiveScan } `
     { param($r) $r -ne $null }
 
-# === Summary ===
-Write-Host "`n========== SUMMARY (PS7) ==========" -ForegroundColor Yellow
-$pass = 0; $fail = 0; $skip = 0
-foreach ($k in $results.Keys | Sort-Object) {
-    $v = $results[$k]
-    if ($v -eq "PASS") { $pass++; Write-Host "  $k : PASS" -ForegroundColor Green }
-    elseif ($v -eq "SKIP") { $skip++; Write-Host "  $k : SKIP" -ForegroundColor Yellow }
-    else { $fail++; Write-Host "  $k : FAIL" -ForegroundColor Red }
-}
-Write-Host "TOTAL: $($pass+$fail+$skip) tests, $pass pass, $fail fail, $skip skip" -ForegroundColor Yellow
-
-if ($fail -gt 0) { exit 1 }
+Write-Summary -Results $results -Label "Send-SEPMCommand Smoke Tests"

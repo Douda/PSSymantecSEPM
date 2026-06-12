@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Unified shared infrastructure for all PSSymantecSEPM smoke scripts.
 

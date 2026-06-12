@@ -1,8 +1,11 @@
-$ErrorActionPreference = "Continue"
-$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
-. "$RepoRoot/Scripts/Smoke/Common.ps1"
+﻿<#
+.SYNOPSIS
+    Shared smoke tests for Get-SEPMVersion.
 
-Write-Host "=== Smoke: Get-SEPMVersion (PS7) ==="
+.DESCRIPTION
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
+    Covers: returns version fields, API_VERSION string check, version string check.
+#>
 
 $results = @{}
 
@@ -18,11 +21,4 @@ $results.A3 = T "A3" "version is a non-empty string" `
     { Get-SEPMVersion } `
     { param($r) $r.version -is [string] -and $r.version.Length -gt 0 }
 
-$pass = ($results.Values | Where-Object { $_ -eq "PASS" }).Count
-$fail = ($results.Values | Where-Object { $_ -eq "FAIL" }).Count
-
-Write-Host "`n=== SUMMARY: PS7 $pass PASS, $fail FAIL ==="
-
-if ($fail -gt 0) {
-    exit 1
-}
+Write-Summary -Results $results -Label "Get-SEPMVersion Smoke Tests"

@@ -1,12 +1,12 @@
-# Smoke verification for Get-SEPMPolicySnapshot (PS7)
-# Usage: pwsh -NoProfile -File Scripts/Smoke/Get-SEPMPolicySnapshot/batch.ps7.ps1
+﻿<#
+.SYNOPSIS
+    Shared smoke tests for Get-SEPMPolicySnapshot.
 
-[CmdletBinding()]param()
-
-$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
-. "$RepoRoot/Scripts/Smoke/Common.ps1"
-
-Write-Host "=== Smoke: Get-SEPMPolicySnapshot (PS7) ===" -ForegroundColor Yellow
+.DESCRIPTION
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
+    Covers: returns PolicySnapshot, FW type check, Summary, LocationMap,
+            FetchedAt, Clixml round-trip, DelayMs.
+#>
 
 $results = @{}
 
@@ -24,7 +24,7 @@ $results.A1 = T "A1" "Get-SEPMPolicySnapshot -PolicyType fw returns SEPM.PolicyS
 # ── A2: FW policies have correct type ──
 $snap = Get-SEPMPolicySnapshot -PolicyType fw
 $results.A2 = T "A2" "FW.Policies items have PSTypeName SEPM.FirewallPolicy" `
-    { $snap } `
+    { Get-SEPMPolicySnapshot -PolicyType fw } `
     { param($r)
         ($r.FW.Policies | ForEach-Object { $_.PSObject.TypeNames[0] } | Select-Object -Unique).Count -eq 1 -and
         $r.FW.Policies[0].PSObject.TypeNames[0] -eq 'SEPM.FirewallPolicy'
@@ -32,7 +32,7 @@ $results.A2 = T "A2" "FW.Policies items have PSTypeName SEPM.FirewallPolicy" `
 
 # ── A3: FW Summary populated ──
 $results.A3 = T "A3" "FW.Summary contains policy summaries" `
-    { $snap } `
+    { Get-SEPMPolicySnapshot -PolicyType fw } `
     { param($r)
         $r.FW.Summary -ne $null -and
         $r.FW.Summary.Count -gt 0 -and
@@ -42,7 +42,7 @@ $results.A3 = T "A3" "FW.Summary contains policy summaries" `
 
 # ── A4: LocationMap has entries ──
 $results.A4 = T "A4" "LocationMap is a non-empty hashtable" `
-    { $snap } `
+    { Get-SEPMPolicySnapshot -PolicyType fw } `
     { param($r)
         $r.LocationMap -ne $null -and
         $r.LocationMap.Count -gt 0 -and
@@ -51,7 +51,7 @@ $results.A4 = T "A4" "LocationMap is a non-empty hashtable" `
 
 # ── A5: FetchedAt is recent ──
 $results.A5 = T "A5" "FetchedAt is a DateTime within last 5 minutes" `
-    { $snap } `
+    { Get-SEPMPolicySnapshot -PolicyType fw } `
     { param($r)
         $r.FetchedAt -is [DateTime] -and
         $r.FetchedAt -gt (Get-Date).AddMinutes(-5)
@@ -76,12 +76,4 @@ $results.A7 = T "A7" "-DelayMs 100 does not error" `
     { Get-SEPMPolicySnapshot -PolicyType fw -DelayMs 100 } `
     { param($r) $r -ne $null -and $r.FW.Policies.Count -gt 0 }
 
-# ── Summary ──
-Write-Host "`n========== SUMMARY (PS7) ==========" -ForegroundColor Yellow
-$pass = 0; $fail = 0
-foreach ($k in $results.Keys | Sort-Object) {
-    $v = $results[$k]
-    if ($v -eq "PASS") { $pass++; Write-Host "  $k : PASS" -ForegroundColor Green }
-    else { $fail++; Write-Host "  $k : FAIL" -ForegroundColor Red }
-}
-Write-Host "TOTAL: $($pass+$fail) tests, $pass pass, $fail fail" -ForegroundColor Yellow
+Write-Summary -Results $results -Label "Get-SEPMPolicySnapshot Smoke Tests"

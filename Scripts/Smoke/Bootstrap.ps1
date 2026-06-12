@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Platform-specific bootstrap for all PSSymantecSEPM smoke suites.
 
