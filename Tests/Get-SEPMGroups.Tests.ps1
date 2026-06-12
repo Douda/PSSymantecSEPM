@@ -5,17 +5,31 @@ Describe 'Get-SEPMGroups' {
     BeforeAll {
         Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
         $script:TestState = Initialize-TestEnvironment
+        $script:fakeSession = New-TestSession -SkipCert
     }
 
     AfterAll {
         Clear-TestEnvironment -State $script:TestState
     }
 
-    Context 'Basic response' {
-        It 'returns groups from the API' {
-            $fakeSession = New-TestSession -SkipCert
+    BeforeEach {
+        Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+    }
 
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+    Context 'API dispatch' {
+        It 'delegates to Invoke-SepmEndpoint' {
+            Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
+                return @{ content = @(); lastPage = $true }
+            }
+
+            Get-SEPMGroups | Out-Null
+
+            Should -Invoke Invoke-SepmEndpoint -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
+        }
+    }
+
+    Context 'Response handling' {
+        It 'returns groups from the API' {
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
                 return @{
                     content   = @(
@@ -33,23 +47,7 @@ Describe 'Get-SEPMGroups' {
             $result[1].name | Should -Be 'Workstations'
         }
 
-        It 'calls Invoke-SepmEndpoint with the correct endpoint' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @{ content = @(); lastPage = $true }
-            }
-
-            Get-SEPMGroups | Out-Null
-
-            Should -Invoke Invoke-SepmEndpoint -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
-        }
-
         It 'returns empty array when no groups exist' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
                 return @{ content = @(); lastPage = $true }
             }
@@ -58,10 +56,7 @@ Describe 'Get-SEPMGroups' {
             @($result).Count | Should -Be 0
         }
 
-        It 'uses Write-Output -NoEnumerate for collection output' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+        It 'preserves collection type for single-element results' {
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
                 return @{
                     content   = @(
@@ -72,7 +67,6 @@ Describe 'Get-SEPMGroups' {
             }
 
             $result = Get-SEPMGroups
-            # Single-element collection should still be a collection
             @($result).Count | Should -Be 1
             $result.Count | Should -Be 1
         }
