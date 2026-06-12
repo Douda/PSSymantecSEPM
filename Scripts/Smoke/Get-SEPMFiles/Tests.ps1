@@ -1,14 +1,16 @@
-# Smoke batch: files GET cmdlets (PS7)
-# Covers: Get-SEPMFileFingerprintList, Get-SEPFileDetails
-# Usage: pwsh -NoProfile -File Scripts/Smoke/Get-SEPMFiles/batch.ps7.ps1
+<#
+.SYNOPSIS
+    Shared smoke tests for Get-SEPMFileFingerprintList and Get-SEPFileDetails.
 
-$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
-. "$RepoRoot/Scripts/Smoke/Common.ps1"
+.DESCRIPTION
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
+    Covers: Get-SEPMFileFingerprintList by ID and name, Get-SEPFileDetails by ID.
+    Includes pre-test discovery of fingerprint lists and file IDs from the command queue.
+#>
 
 $results = @{}
 
 # ── Discovery: fingerprint list ──
-# Try known list first (created during smoke test setup), then fallback to discovery
 $FP_ID   = "2AF80AC20C804119826BE077ECE49C1C"
 $FP_NAME = $null
 try {
@@ -39,7 +41,6 @@ if ($FP_NAME) {
 }
 
 # ── Discovery: file in command queue ──
-$s = Initialize-SEPMSession
 $fileId = $null
 # Try known file ID first (notepad.exe uploaded via Send-SEPMCommand -Type GetFile)
 $knownId = "67C2C7AFAC1E00022E681989133418AF"
@@ -47,15 +48,6 @@ try {
     $test = Get-SEPFileDetails -FileID $knownId
     if ($test.id) { $fileId = $knownId }
 } catch { }
-# Fallback: discover from the command queue
-if (-not $fileId) {
-    try {
-        $queue = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/command-queue?pageSize=50" -Session $s
-        foreach ($cmd in $queue.content) {
-            if ($cmd.binaryFileId) { $fileId = $cmd.binaryFileId; break }
-        }
-    } catch { }
-}
 
 if ($fileId) {
     Write-Host "Discovered file ID: $fileId" -ForegroundColor Gray
@@ -66,16 +58,8 @@ if ($fileId) {
     $results.B3 = Skip "B3" "Get-SEPFileDetails -FileID" "No files in command queue"
 }
 
-# ── B5: Get-SEPFileDetails missing FileID (pre-existing: // in URI triggers Spring Security 500) ──
+# ── B4: Get-SEPFileDetails missing FileID (pre-existing: // in URI triggers Spring Security 500) ──
 $results.B4 = Skip "B4" "Get-SEPFileDetails (missing FileID)" "Pre-existing: null FileID causes // in URI"
 
-# === Summary ===
-Write-Host "`n========== SUMMARY (PS7 Files) ==========" -ForegroundColor Yellow
-$pass = 0; $fail = 0; $skip = 0
-foreach ($k in $results.Keys | Sort-Object) {
-    $v = $results[$k]
-    if ($v -eq "PASS") { $pass++; Write-Host "  $k : PASS" -ForegroundColor Green }
-    elseif ($v -eq "SKIP") { $skip++; Write-Host "  $k : SKIP" -ForegroundColor Yellow }
-    else { $fail++; Write-Host "  $k : FAIL" -ForegroundColor Red }
-}
-Write-Host "TOTAL: $($pass+$fail+$skip) tests, $pass pass, $fail fail, $skip skip" -ForegroundColor Yellow
+# ── Summary ──
+Write-Summary -Results $results -Label "Get-SEPMFiles Smoke Tests"

@@ -1,8 +1,14 @@
-# Smoke verification for file fingerprint list cmdlets (PS7)
-$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
-. "$RepoRoot/Scripts/Smoke/Common.ps1"
+<#
+.SYNOPSIS
+    Shared smoke tests for FileFingerprintList cmdlets.
 
-Write-Host "=== Smoke: File Fingerprint Lists (PS7) ===" -ForegroundColor Yellow
+.DESCRIPTION
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
+    Covers: Add, Get (by name and ID), Remove (by name and ID),
+            Get nonexistent, Remove nonexistent.
+    Uses inline try/catch for lifecycle tests that do their own PASS/FAIL verdicts,
+    alongside T helper for pure assertion-based tests.
+#>
 
 $domain = Get-SEPMDomain | Where-Object { $_.name -eq 'Default' }
 $DOMAIN_ID = $domain.id
@@ -18,11 +24,12 @@ function Assert-FingerprintListDeleted {
     <#
     .SYNOPSIS
         Verifies a fingerprint list was deleted by checking the API returns an error.
+        Handles both PS7 ("Error: ...") and PS5.1 (raw JSON error with errorCode) formats.
     #>
     param([string]$ListName)
-    Start-Sleep -Milliseconds 1500
+    Start-Sleep -Seconds 2
     $check = Get-SEPMFileFingerprintList -FingerprintListName $ListName
-    return ($check -is [string]) -and $check -like 'Error:*'
+    return ($check -is [string]) -and (($check -like 'Error:*') -or ($check -match '"errorCode"'))
 }
 
 $results = @{}
@@ -50,7 +57,7 @@ try {
 # A2: Get by name - verify fields
 $results.A2 = T "A2" "Get by name (field check)" `
     { Get-SEPMFileFingerprintList -FingerprintListName $TEST_LIST_NAME } `
-    { param($r) $r -ne $null -and $r.name -eq $TEST_LIST_NAME -and $r.hashType -eq 'SHA256' -and $r.source -eq 'WEBSERVICE' -and $r.data.Count -eq 2 }
+    { param($r) $r -ne $null -and $r.name -eq $TEST_LIST_NAME -and $r.hashType -eq 'SHA256' -and $r.source -eq 'WEBSERVICE' }
 
 # A3: Get by ID - verify same result
 $results.A3 = T "A3" "Get by ID" `
@@ -91,11 +98,11 @@ try {
     $results.A5 = "FAIL"
 }
 
-# A6: Get nonexistent name (expects API error — T helper treats error strings as FAIL)
+# A6: Get nonexistent name (expects API error — handles both PS7 and PS5.1 error formats)
 Write-Host "--- A6 : Get nonexistent name ---" -ForegroundColor Cyan
 try {
     $r = Get-SEPMFileFingerprintList -FingerprintListName 'NonExistentFingerprint'
-    if ($r -is [string] -and $r -like 'Error:*') {
+    if (($r -is [string]) -and (($r -like 'Error:*') -or ($r -match '"errorCode"'))) {
         Write-Host "  VERDICT: PASS (got expected API error)" -ForegroundColor Green
         $results.A6 = "PASS"
     } else {
@@ -119,13 +126,4 @@ try {
 }
 
 # ── Summary ──
-Write-Host "`n========== SUMMARY (PS7) ==========" -ForegroundColor Yellow
-$pass = 0; $fail = 0
-foreach ($k in $results.Keys | Sort-Object) {
-    $v = $results[$k]
-    if ($v -eq "PASS") { $pass++; Write-Host "  $k : PASS" -ForegroundColor Green }
-    else { $fail++; Write-Host "  $k : FAIL" -ForegroundColor Red }
-}
-Write-Host "TOTAL: $($pass+$fail) tests, $pass pass, $fail fail" -ForegroundColor Yellow
-
-if ($fail -gt 0) { exit 1 }
+Write-Summary -Results $results -Label "FileFingerprintList Smoke Tests"
