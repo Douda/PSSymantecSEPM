@@ -1,11 +1,16 @@
-﻿$ErrorActionPreference = "Continue"
-$RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
-. "$RepoRoot\Common-PS51.ps1"
+﻿<#
+.SYNOPSIS
+    Shared smoke tests for Move-SEPClientGroup.
 
-Write-Host "=== Smoke: Move-SEPClientGroup (PS5.1) ===" -ForegroundColor Yellow
+.DESCRIPTION
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
+    Covers: move to target group, move back, output types, output fields,
+            error on invalid computer, and restores original group.
+#>
 
 $results = @{}
 
+# ── Discovery: find a computer and a target group ──
 $s = Initialize-SEPMSession
 $content = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/computers?pageSize=5&pageIndex=1&sort=COMPUTER_NAME" -Headers $s.Headers -SkipCert:$s.SkipCert
 $computers = $content.content
@@ -36,15 +41,18 @@ if (-not $computers -or $computers.Count -eq 0) {
 
         Write-Host "Moving '$srcComputer' from '$srcGroup' -> '$targetGroup'" -ForegroundColor Gray
 
+        # ── A1: Move computer ──
         $results.A1 = T "A1" "Move computer" `
             { Move-SEPClientGroup -ComputerName $srcComputer -GroupName $targetGroup } `
             { param($r) $r -and $r.computerName }
 
+        # ── A2: Move back ──
         Start-Sleep -Seconds 1
         $results.A2 = T "A2" "Move back" `
             { Move-SEPClientGroup -ComputerName $srcComputer -GroupName $srcGroup } `
             { param($r) $r -and $r.computerName }
 
+        # ── A3: Output type ──
         $results.A3 = T "A3" "Output type" `
             {
                 Start-Sleep -Seconds 1
@@ -55,6 +63,7 @@ if (-not $computers -or $computers.Count -eq 0) {
             } `
             { param($r) $r -eq 'SEPM.MoveClientGroupResponse' }
 
+        # ── A4: Output fields ──
         $results.A4 = T "A4" "Output fields" `
             {
                 Start-Sleep -Seconds 1
@@ -65,6 +74,7 @@ if (-not $computers -or $computers.Count -eq 0) {
             } `
             { param($r) $r -eq $true }
 
+        # ── A5: Invalid computer writes error ──
         $results.A5 = T "A5" "Error on invalid" `
             {
                 $errs = $null
@@ -75,13 +85,5 @@ if (-not $computers -or $computers.Count -eq 0) {
     }
 }
 
-$pass = 0; $fail = 0; $skip = 0
-foreach ($k in $results.Keys | Sort-Object) {
-    $v = $results[$k]
-    if ($v -eq "PASS") { $pass++; Write-Host "  $k : PASS" -ForegroundColor Green }
-    elseif ($v -eq "SKIP") { $skip++; Write-Host "  $k : SKIP" -ForegroundColor Yellow }
-    else { $fail++; Write-Host "  $k : FAIL" -ForegroundColor Red }
-}
-Write-Host "TOTAL: $($pass+$fail+$skip) tests, $pass pass, $fail fail, $skip skip" -ForegroundColor Yellow
-
-if ($fail -gt 0) { Write-Error "Smoke tests failed: $fail failure(s)"; exit 1 }
+# ── Summary ──
+Write-Summary -Results $results -Label "Move-SEPClientGroup"
