@@ -10,7 +10,7 @@ function Invoke-SepmEndpoint {
         the transport layer.
 
         When the endpoint declares BodyParams, delegates body construction to
-        Build-SepmBody (Tier 1). A pre-serialized -Body argument takes precedence
+        Build-SepmBody. A pre-serialized -Body argument takes precedence
         over BodyParams auto-build (for cmdlets with complex nested bodies).
 
         When the endpoint declares Paginated = $true, delegates to
@@ -78,10 +78,8 @@ function Invoke-SepmEndpoint {
 
     $uri = Resolve-SepmEndpoint -Endpoint $Endpoint -Session $Session -BoundParameters $BoundParameters -AdditionalQueryParams $AdditionalQueryParams -PathIds $PathIds
 
-    # Build body via Build-SepmBody (extracted body construction logic)
     $bodyToSend = Build-SepmBody -Endpoint $Endpoint -BoundParameters $BoundParameters -Body $Body
 
-    # Build splat for Invoke-SepmApi
     $apiSplat = @{
         Method  = $Endpoint.Method
         Uri     = $uri

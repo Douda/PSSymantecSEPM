@@ -32,7 +32,7 @@ function Invoke-SepmApiPaginated {
         for endpoints that need a request body.
 
     .OUTPUTS
-        System.Collections.ArrayList (unwrapped array of page contents).
+        System.Object[] containing concatenated page content.
 
     .NOTES
         Internal helper method. Not exported.
@@ -59,7 +59,7 @@ function Invoke-SepmApiPaginated {
         throw "Endpoint '$($Endpoint.OperationName)' is not configured for pagination."
     }
 
-    # Merge PageDefaults into query params (page-specific overrides take precedence)
+    # Merge PageDefaults and AdditionalQueryParams into query params
     $queryParams = @{}
     if ($Endpoint.PageDefaults) {
         foreach ($key in $Endpoint.PageDefaults.Keys) {
