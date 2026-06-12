@@ -35,8 +35,6 @@ function Get-SEPMGroups {
 
     process {
         # Invoke-SepmEndpoint handles pagination internally via Invoke-SepmApiPaginated
-        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
-
-        Write-Output $resp.content -NoEnumerate
+        Write-Output (Invoke-SepmEndpoint -Endpoint $endpoint -Session $session) -NoEnumerate
     }
 }

@@ -183,11 +183,10 @@ Describe 'Invoke-SepmEndpoint' {
 
                 $result = Invoke-SepmEndpoint -Endpoint $Endpoint -Session $Session
 
-                # Result is wrapped for backward compat: .content has the full array, .lastPage = $true
-                $result.content.Count | Should -Be 2
-                $result.content[0] | Should -Be 'PC1'
-                $result.content[1] | Should -Be 'PC2'
-                $result.lastPage | Should -BeTrue
+                # Result is the concatenated array directly
+                $result.Count | Should -Be 2
+                $result[0] | Should -Be 'PC1'
+                $result[1] | Should -Be 'PC2'
 
                 Should -Invoke Invoke-SepmApiPaginated -Times 1 -Exactly
             }

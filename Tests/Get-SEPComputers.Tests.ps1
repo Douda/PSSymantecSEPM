@@ -17,7 +17,7 @@ Describe 'Get-SEPComputers' {
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @{ content = (1..5 | ForEach-Object { New-DummyComputer }); lastPage = $true }
+                return 1..5 | ForEach-Object { New-DummyComputer }
             }
 
             $result = Get-SEPComputers
@@ -33,10 +33,7 @@ Describe 'Get-SEPComputers' {
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @{
-                    content   = (, @(New-DummyComputer -ComputerName "MyComputer")) + (1..4 | ForEach-Object { New-DummyComputer })
-                    lastPage = $true
-                }
+                return (, @(New-DummyComputer -ComputerName "MyComputer")) + (1..4 | ForEach-Object { New-DummyComputer })
             }
 
             $result = Get-SEPComputers -ComputerName "MyComputer"
@@ -49,10 +46,7 @@ Describe 'Get-SEPComputers' {
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @{
-                    content   = (, @(New-DummyComputer -ComputerName "MyComputer")) + (1..4 | ForEach-Object { New-DummyComputer })
-                    lastPage = $true
-                }
+                return (, @(New-DummyComputer -ComputerName "MyComputer")) + (1..4 | ForEach-Object { New-DummyComputer })
             }
 
             $result = "MyComputer" | Get-SEPComputers
@@ -67,10 +61,7 @@ Describe 'Get-SEPComputers' {
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @{
-                    content = (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup" }) + (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup\\Subgroup" }) + (1..8 | ForEach-Object { New-DummyComputer })
-                    lastPage = $true
-                }
+                return (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup" }) + (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup\\Subgroup" }) + (1..8 | ForEach-Object { New-DummyComputer })
             }
 
             $result = Get-SEPComputers -GroupName "My Company\\MyGroup"
@@ -83,10 +74,7 @@ Describe 'Get-SEPComputers' {
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @{
-                    content = (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup" }) + (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup\\Subgroup" }) + (1..8 | ForEach-Object { New-DummyComputer })
-                    lastPage = $true
-                }
+                return (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup" }) + (1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup\\Subgroup" }) + (1..8 | ForEach-Object { New-DummyComputer })
             }
 
             $result = Get-SEPComputers -GroupName "My Company\\MyGroup" -IncludeSubGroups
@@ -102,7 +90,7 @@ Describe 'Get-SEPComputers' {
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @{ content = (1..5 | ForEach-Object { New-DummyComputer }); lastPage = $true }
+                return 1..5 | ForEach-Object { New-DummyComputer }
             }
 
             Get-SEPComputers -ComputerName "MyComputer" | Out-Null
@@ -117,7 +105,7 @@ Describe 'Get-SEPComputers' {
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @{ content = (1..5 | ForEach-Object { New-DummyComputer }); lastPage = $true }
+                return 1..5 | ForEach-Object { New-DummyComputer }
             }
 
             Get-SEPComputers | Out-Null

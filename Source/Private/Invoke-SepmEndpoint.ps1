@@ -14,11 +14,8 @@ function Invoke-SepmEndpoint {
         over BodyParams auto-build (for cmdlets with complex nested bodies).
 
         When the endpoint declares Paginated = $true, delegates to
-        Invoke-SepmApiPaginated which handles page iteration and concatenation.
-        The result is wrapped in a hashtable with .content and .lastPage = $true
-        so that cmdlets with their own inline pagination loops (not yet migrated
-        to rely on Invoke-SepmApiPaginated) continue to work. The cmdlet's own
-        loop will run once and exit because lastPage is already true.
+        Invoke-SepmApiPaginated which handles page iteration and concatenation,
+        returning the full array of items directly.
 
     .PARAMETER Endpoint
         A hashtable from the endpoint registry with at least Method, Version, and Path.
@@ -42,7 +39,7 @@ function Invoke-SepmEndpoint {
         Use for complex bodies the flat auto-build cannot express.
 
     .OUTPUTS
-        System.Collections.Hashtable or array of content objects.
+        System.Collections.Hashtable or System.Object[] (paginated endpoints).
 
     .NOTES
         Internal helper method. Not exported.
@@ -67,13 +64,7 @@ function Invoke-SepmEndpoint {
 
     # Paginated endpoint: delegate to Invoke-SepmApiPaginated
     if ($Endpoint.Paginated) {
-        $allResults = Invoke-SepmApiPaginated -Endpoint $Endpoint -Session $Session -BoundParameters $BoundParameters -AdditionalQueryParams $AdditionalQueryParams -PathIds $PathIds -Body $Body
-        # Wrap result for backward compatibility with cmdlets that have inline pagination loops
-        # (they expect .content and .lastPage on the response object).
-        return @{
-            content  = $allResults
-            lastPage = $true
-        }
+        return Invoke-SepmApiPaginated -Endpoint $Endpoint -Session $Session -BoundParameters $BoundParameters -AdditionalQueryParams $AdditionalQueryParams -PathIds $PathIds -Body $Body
     }
 
     $uri = Resolve-SepmEndpoint -Endpoint $Endpoint -Session $Session -BoundParameters $BoundParameters -AdditionalQueryParams $AdditionalQueryParams -PathIds $PathIds

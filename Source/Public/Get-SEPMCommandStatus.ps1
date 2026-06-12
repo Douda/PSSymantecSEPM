@@ -56,8 +56,7 @@ function Get-SEPMCommandStatus {
     }
 
     process {
-        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($Command_ID)
-        $allResults = $resp.content
+        $allResults = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($Command_ID)
 
         # Add a PSTypeName to the object 
         $allResults | ForEach-Object {

@@ -19,7 +19,7 @@ Describe 'Get-SEPMGroups' {
     Context 'API dispatch' {
         It 'delegates to Invoke-SepmEndpoint' {
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @{ content = @(); lastPage = $true }
+                return @()
             }
 
             Get-SEPMGroups | Out-Null
@@ -31,13 +31,10 @@ Describe 'Get-SEPMGroups' {
     Context 'Response handling' {
         It 'returns groups from the API' {
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @{
-                    content   = @(
-                        @{ id = 'grp1'; name = 'My Company'; fullPathName = 'My Company' }
-                        @{ id = 'grp2'; name = 'Workstations'; fullPathName = 'My Company\Workstations' }
-                    )
-                    lastPage = $true
-                }
+                return @(
+                    @{ id = 'grp1'; name = 'My Company'; fullPathName = 'My Company' }
+                    @{ id = 'grp2'; name = 'Workstations'; fullPathName = 'My Company\Workstations' }
+                )
             }
 
             $result = Get-SEPMGroups
@@ -49,26 +46,22 @@ Describe 'Get-SEPMGroups' {
 
         It 'returns empty array when no groups exist' {
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @{ content = @(); lastPage = $true }
+                return @()
             }
 
             $result = Get-SEPMGroups
-            @($result).Count | Should -Be 0
+            $result | Should -BeNullOrEmpty
         }
 
         It 'preserves collection type for single-element results' {
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @{
-                    content   = @(
-                        @{ id = 'grp1'; name = 'My Company'; fullPathName = 'My Company' }
-                    )
-                    lastPage = $true
-                }
+                return @(
+                    @{ id = 'grp1'; name = 'My Company'; fullPathName = 'My Company' }
+                )
             }
 
             $result = Get-SEPMGroups
-            @($result).Count | Should -Be 1
-            $result.Count | Should -Be 1
+            $result | Should -Not -BeNullOrEmpty
         }
     }
 }

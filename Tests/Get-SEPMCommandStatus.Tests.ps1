@@ -19,26 +19,23 @@ Describe 'Get-SEPMCommandStatus' {
 
         It 'returns command status with SEPM.CommandStatus type' {
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @{
-                    content     = @(
-                        @{
-                            beginTime            = $null
-                            lastUpdateTime       = '2026-06-07 17:30:00'
-                            computerName         = 'MyWorkstation01'
-                            computerIp           = '192.168.1.1'
-                            domainName           = 'Default'
-                            currentLoginUserName = 'localadmin'
-                            stateId              = 0
-                            subStateId           = 0
-                            subStateDesc         = ''
-                            binaryFileId         = $null
-                            resultInXML          = $null
-                            computerId           = 'ABCDEF1234567890ABCDEF1234567890'
-                            hardwareKey          = 'ABCDEF1234567890ABCDEF1234567890'
-                        }
-                    )
-                    lastPage   = $true
-                }
+                return @(
+                    @{
+                        beginTime            = $null
+                        lastUpdateTime       = '2026-06-07 17:30:00'
+                        computerName         = 'MyWorkstation01'
+                        computerIp           = '192.168.1.1'
+                        domainName           = 'Default'
+                        currentLoginUserName = 'localadmin'
+                        stateId              = 0
+                        subStateId           = 0
+                        subStateDesc         = ''
+                        binaryFileId         = $null
+                        resultInXML          = $null
+                        computerId           = 'ABCDEF1234567890ABCDEF1234567890'
+                        hardwareKey          = 'ABCDEF1234567890ABCDEF1234567890'
+                    }
+                )
             }
 
             $result = Get-SEPMCommandStatus -Command_ID 'CMD123'
@@ -50,7 +47,7 @@ Describe 'Get-SEPMCommandStatus' {
 
         It 'calls Invoke-SepmEndpoint with the correct parameters' {
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @{ content = @(); lastPage = $true }
+                return @()
             }
 
             Get-SEPMCommandStatus -Command_ID 'CMD789' | Out-Null

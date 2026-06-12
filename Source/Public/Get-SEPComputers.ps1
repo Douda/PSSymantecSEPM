@@ -70,16 +70,14 @@ function Get-SEPComputers {
     process {
 
         if ($ComputerName) {
-            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -BoundParameters $PSBoundParameters
-            $allResults = $resp.content
+            $allResults = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -BoundParameters $PSBoundParameters
 
             # Filtering
             $allResults = $allResults | Where-Object { $_.computerName -like $ComputerName }
         }
 
         elseif ($GroupName) {
-            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
-            $allResults = $resp.content
+            $allResults = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
 
             # Filtering
             if ($IncludeSubGroups) {
@@ -90,8 +88,7 @@ function Get-SEPComputers {
         }
 
         else {
-            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
-            $allResults = $resp.content
+            $allResults = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
         }
 
         Write-Output $allResults -NoEnumerate
