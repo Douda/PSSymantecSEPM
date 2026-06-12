@@ -30,13 +30,6 @@
 
 $ErrorActionPreference = "Continue"
 
-# ── Authentication ──
-$SmokeCredPassword = ConvertTo-SecureString -String 'MyComplexPassword1!' -AsPlainText -Force
-$SmokeCredential   = New-Object System.Management.Automation.PSCredential -ArgumentList 'admin', $SmokeCredPassword
-Set-SEPMAuthentication -Credential $SmokeCredential -ErrorAction SilentlyContinue
-
-Get-SEPMAccessToken | Out-Null
-
 # ── Shared helper: T (test runner) ──
 function T {
     <#

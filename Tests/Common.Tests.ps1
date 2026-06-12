@@ -4,55 +4,37 @@
 
 Describe 'Common.ps1' {
 
-    # Functions are tested inline with identical source code to Common.ps1.
-    # Auth (Set-SEPMAuthentication/Get-SEPMAccessToken) is not exercised here —
-    # those require the module and are verified during smoke tests.
+    # Functions are dot-sourced from the real Common.ps1 file.
+    # Auth is no longer in Common.ps1 — it was moved to Bootstrap.ps1.
+    # Write-Summary requires a test-only variant because the real function calls exit 1.
+
+    BeforeAll {
+        $script:CommonRepoRoot = (Resolve-Path "$PSScriptRoot/..").Path
+        . "$script:CommonRepoRoot/Scripts/Smoke/Common.ps1"
+
+        # Test-only variant of Write-Summary that does NOT call exit.
+        # Exit-code behavior is verified during smoke tests.
+        function Write-Summary-Test {
+            param(
+                [hashtable]$Results,
+                [string]$Label = "Smoke Tests"
+            )
+            $pass = 0; $fail = 0; $skip = 0
+            $lines = @()
+            $lines += "`n========== $Label =========="
+            foreach ($k in $Results.Keys | Sort-Object) {
+                $v = $Results[$k]
+                if ($v -eq "PASS") { $pass++; $lines += "  $k : PASS" }
+                elseif ($v -eq "SKIP") { $skip++; $lines += "  $k : SKIP" }
+                else { $fail++; $lines += "  $k : FAIL" }
+            }
+            $total = $pass + $fail + $skip
+            $lines += "TOTAL: $total tests, $pass pass, $fail fail, $skip skip"
+            Write-Host ($lines -join "`n") -ForegroundColor Yellow
+        }
+    }
 
     Context 'T helper' {
-        BeforeAll {
-            function T {
-                param(
-                    $Id,
-                    $Label,
-                    [ScriptBlock]$Action,
-                    [ScriptBlock]$Assert,
-                    [string]$ExpectedError,
-                    [int]$SleepMs = 0,
-                    [ScriptBlock]$AssertTarget
-                )
-                Write-Host "--- $Id : $Label ---" -ForegroundColor Cyan
-                try {
-                    $result = & $Action
-
-                    if ($result -is [string] -and $result -like "Error:*") {
-                        if ($ExpectedError -and $result -like "*$ExpectedError*") {
-                            Write-Host "  VERDICT: PASS (expected error: $ExpectedError)" -ForegroundColor Green
-                            return "PASS"
-                        }
-                        Write-Host "  VERDICT: FAIL (API error: $result)" -ForegroundColor Red
-                        return "FAIL"
-                    }
-
-                    if ($SleepMs -gt 0) { Start-Sleep -Milliseconds $SleepMs }
-                    if ($AssertTarget) {
-                        $assertInput = & $AssertTarget
-                    } else {
-                        $assertInput = $result
-                    }
-                    $ok = & $Assert $assertInput
-                    if ($ok) { Write-Host "  VERDICT: PASS" -ForegroundColor Green; return "PASS" }
-                    else     { Write-Host "  VERDICT: FAIL" -ForegroundColor Red;   return "FAIL" }
-                } catch {
-                    if ($ExpectedError -and $_.Exception.Message -like "*$ExpectedError*") {
-                        Write-Host "  VERDICT: PASS (expected error: $ExpectedError)" -ForegroundColor Green
-                        return "PASS"
-                    }
-                    Write-Host "  ERROR: $($_.Exception.Message)" -ForegroundColor Red
-                    return "FAIL"
-                }
-            }
-        }
-
         It 'returns PASS for passing assertion' {
             $result = T "X1" "passing test" { return 42 } { param($r) $r -eq 42 }
             $result | Should -Be "PASS"
@@ -131,15 +113,6 @@ Describe 'Common.ps1' {
     }
 
     Context 'Skip helper' {
-        BeforeAll {
-            function Skip {
-                param($Id, $Label, $Reason)
-                Write-Host "--- $Id : $Label ---" -ForegroundColor Cyan
-                Write-Host "  SKIP: $Reason" -ForegroundColor Yellow
-                return "SKIP"
-            }
-        }
-
         It 'returns SKIP' {
             $result = Skip "S1" "skipped test" "no data available"
             $result | Should -Be "SKIP"
@@ -147,29 +120,6 @@ Describe 'Common.ps1' {
     }
 
     Context 'Write-Summary' {
-        BeforeAll {
-            # Test variant of Write-Summary that does NOT call exit.
-            # Exit-code behavior is verified during smoke tests.
-            function Write-Summary-Test {
-                param(
-                    [hashtable]$Results,
-                    [string]$Label = "Smoke Tests"
-                )
-                $pass = 0; $fail = 0; $skip = 0
-                $lines = @()
-                $lines += "`n========== $Label =========="
-                foreach ($k in $Results.Keys | Sort-Object) {
-                    $v = $Results[$k]
-                    if ($v -eq "PASS") { $pass++; $lines += "  $k : PASS" }
-                    elseif ($v -eq "SKIP") { $skip++; $lines += "  $k : SKIP" }
-                    else { $fail++; $lines += "  $k : FAIL" }
-                }
-                $total = $pass + $fail + $skip
-                $lines += "TOTAL: $total tests, $pass pass, $fail fail, $skip skip"
-                Write-Host ($lines -join "`n") -ForegroundColor Yellow
-            }
-        }
-
         It 'emits parseable TOTAL line' {
             $results = @{ A1 = "PASS"; A2 = "FAIL"; A3 = "SKIP" }
             $output = & { Write-Summary-Test -Results $results -Label "Unit Test" *>&1 } | Out-String
