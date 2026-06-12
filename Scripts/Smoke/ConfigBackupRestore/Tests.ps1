@@ -16,7 +16,11 @@ $tempDir = [System.IO.Path]::GetTempPath()
 
 # ── A1: Set-SepmConfiguration creates config file ──
 $results.A1 = T "A1" "Set-SepmConfiguration creates config file" `
-    { Set-SepmConfiguration -ServerAddress 'smoke-test' -Port 8080; Get-Content "$HOME/.config/PSSymantecSEPM/config.json" -Raw } `
+    {
+        Set-SepmConfiguration -ServerAddress 'smoke-test' -Port 8080
+        $mod = Get-Module PSSymantecSEPM
+        & $mod { Get-Content $script:configurationFilePath -Raw }
+    } `
     { param($r) $r -match 'smoke-test' }
 
 # ── A2: Read-SepmConfiguration returns persisted config ──
