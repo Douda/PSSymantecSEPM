@@ -147,7 +147,7 @@ Describe 'Get-SEPComputers' {
             Get-SEPComputers -ComputerName "MyComputer" | Out-Null
 
             Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Exactly 1 -Scope It -ParameterFilter {
-                $Uri -match '/computers\?computerName=MyComputer$'
+                $Uri -match '/computers\?.*computerName=MyComputer'
             }
         }
 
