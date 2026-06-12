@@ -36,8 +36,9 @@ if (-not $computers -or $computers.Count -eq 0) {
         $results.A5 = Skip "A5" "Error on invalid" "No valid computer name for context"
     } else {
         $srcGroup = if ($srcGroupObj -is [hashtable]) { $srcGroupObj.name } else { $srcGroupObj.name }
-        $groups = @(Get-SEPMGroups | Where-Object { $_.fullPathName -match 'Workstations' } | Select-Object -First 1)
-        $targetGroup = if ($groups.Count -gt 0) { $groups[0].fullPathName } else { 'My Company' }
+        $allGroups = Get-SEPMGroups
+        $targetGroup = ($allGroups | Where-Object { $_.fullPathName -match 'Workstations' } | Select-Object -First 1).fullPathName
+        if (-not $targetGroup) { $targetGroup = 'My Company' }
 
         Write-Host "Moving '$srcComputer' from '$srcGroup' -> '$targetGroup'" -ForegroundColor Gray
 
