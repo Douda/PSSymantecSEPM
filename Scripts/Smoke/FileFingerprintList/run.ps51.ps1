@@ -9,7 +9,7 @@
     Deploy with UTF-8 BOM to the Windows VM before running:
       pwsh -NoProfile -c "...WriteAllText('/home/douda/Windows/...', ..., UTF8+BOM)"
 
-    Usage: . "$RepoRoot\PSSymantecSEPM\Smoke\FileFingerprintList\run.ps51.ps1"
+    Usage: . "$RepoRoot\Scripts\Smoke\FileFingerprintList\run.ps51.ps1"
 #>
 
 $ErrorActionPreference = "Continue"
