@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Shared smoke tests for Confirm-SEPMEventInfo.
 

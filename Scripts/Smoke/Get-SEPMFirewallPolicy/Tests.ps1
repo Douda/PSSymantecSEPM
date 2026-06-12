@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Shared smoke tests for Get-SEPMFirewallPolicy.
 
@@ -29,9 +29,8 @@ $results.A2 = T "A2" "All returned policies have PSTypeName SEPM.FirewallPolicy"
     }
 
 # ── A3: Verify policy fields are populated ──
-$allPolicies = Get-SEPMFirewallPolicy -All
 $results.A3 = T "A3" "All policies have non-empty name, id, enabled" `
-    { $allPolicies } `
+    { Get-SEPMFirewallPolicy -All } `
     { param($r)
         $ok = $true
         foreach ($p in $r) {
