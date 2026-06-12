@@ -1,15 +1,15 @@
 ﻿<#
 .SYNOPSIS
-    PS5.1 entry point for New-SEPMGroup smoke tests.
+    PS5.1 entry point for Get-SEPMLocations smoke tests.
 
 .DESCRIPTION
     Bootstraps the module and SEPM connection for PS 5.1 on the Windows VM,
-    then dot-sources Common.ps1 (auth + helpers) and Tests.ps1 (test cases).
+    then dot-sources Common.ps1 (helpers) and Tests.ps1 (test cases).
 
     Deploy with UTF-8 BOM to the Windows VM before running:
       pwsh -NoProfile -c "...WriteAllText('/home/douda/Windows/...', ..., UTF8+BOM)"
 
-    Usage: . "$RepoRoot\Scripts\Smoke\New-SEPMGroup\run.ps51.ps1"
+    Usage: . "$RepoRoot\Scripts\Smoke\Get-SEPMLocations\run.ps51.ps1"
 #>
 
 $ErrorActionPreference = "Continue"
@@ -21,4 +21,4 @@ Initialize-SmokeBootstrap -RepoRoot $RepoRoot
 
 # ── Shared infrastructure + tests ──
 . "$RepoRoot\Scripts\Smoke\Common.ps1"
-. "$RepoRoot\Scripts\Smoke\New-SEPMGroup\Tests.ps1"
+. "$RepoRoot\Scripts\Smoke\Get-SEPMLocations\Tests.ps1"
