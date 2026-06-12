@@ -116,6 +116,8 @@ jobs:
     needs: [build, test-ps7, test-ps51]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v6
         with:
