@@ -78,26 +78,10 @@ function Get-SEPComputers {
             $allResults = $allResults | Where-Object { $_.computerName -like $ComputerName }
         }
 
-        # Using computer name API call then filtering
+        # Using group name API call then filtering
         elseif ($GroupName) {
-            $allResults = @()
-
-            $pageParams = @{
-                sort         = "COMPUTER_NAME"
-                pageIndex    = 1
-                pageSize     = 100
-                computerName = $ComputerName
-            }
-
-            do {
-                $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -AdditionalQueryParams $pageParams
-
-                # Process the response
-                $allResults += $resp.content
-
-                # Increment the page index
-                $pageParams.pageIndex++
-            } until ($resp.lastPage -eq $true)
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
+            $allResults = $resp.content
 
             # Filtering
             if ($IncludeSubGroups) {
@@ -109,24 +93,8 @@ function Get-SEPComputers {
 
         # No parameters
         else {
-            $allResults = @()
-
-            # URI query strings
-            $pageParams = @{
-                sort      = "COMPUTER_NAME"
-                pageIndex = 1
-                pageSize  = 100
-            }
-
-            do {
-                $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -AdditionalQueryParams $pageParams
-
-                # Process the response
-                $allResults += $resp.content
-
-                # Increment the page index
-                $pageParams.pageIndex++
-            } until ($resp.lastPage -eq $true)
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
+            $allResults = $resp.content
         }
 
         # return the response
