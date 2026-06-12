@@ -19,26 +19,28 @@ Describe 'Get-SEPMCommandStatus' {
 
         It 'returns command status with SEPM.CommandStatus type' {
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                # Unary comma ensures single-element array on PS 5.1
-                , @{
-                    beginTime            = $null
-                    lastUpdateTime       = '2026-06-07 17:30:00'
-                    computerName         = 'MyWorkstation01'
-                    computerIp           = '192.168.1.1'
-                    domainName           = 'Default'
-                    currentLoginUserName = 'localadmin'
-                    stateId              = 0
-                    subStateId           = 0
-                    subStateDesc         = ''
-                    binaryFileId         = $null
-                    resultInXML          = $null
-                    computerId           = 'ABCDEF1234567890ABCDEF1234567890'
-                    hardwareKey          = 'ABCDEF1234567890ABCDEF1234567890'
-                }
+                # -NoEnumerate preserves single-element array on PS 5.1
+                Write-Output @(
+                    @{
+                        beginTime            = $null
+                        lastUpdateTime       = '2026-06-07 17:30:00'
+                        computerName         = 'MyWorkstation01'
+                        computerIp           = '192.168.1.1'
+                        domainName           = 'Default'
+                        currentLoginUserName = 'localadmin'
+                        stateId              = 0
+                        subStateId           = 0
+                        subStateDesc         = ''
+                        binaryFileId         = $null
+                        resultInXML          = $null
+                        computerId           = 'ABCDEF1234567890ABCDEF1234567890'
+                        hardwareKey          = 'ABCDEF1234567890ABCDEF1234567890'
+                    }
+                ) -NoEnumerate
             }
 
             $result = Get-SEPMCommandStatus -Command_ID 'CMD123'
-            $result | Should -HaveCount 1
+            $result.Count | Should -Be 1
             $result[0].computerName | Should -Be 'MyWorkstation01'
             $result[0].stateId      | Should -Be 0
             $result[0].PSObject.TypeNames[0] | Should -Be 'SEPM.CommandStatus'
