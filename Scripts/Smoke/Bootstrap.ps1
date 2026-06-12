@@ -50,26 +50,18 @@ function Initialize-SmokeBootstrap {
         $ModulePath = Join-Path -Path $OutputRoot -ChildPath 'PSSymantecSEPM/PSSymantecSEPM.psm1'
         Import-Module $ModulePath -Force
 
-        $script:SmokeModulePS7 = Get-Module PSSymantecSEPM
-        & $script:SmokeModulePS7 { $script:SkipCert = $true }
+        $SmokeModule = Get-Module PSSymantecSEPM
+        & $SmokeModule { $script:SkipCert = $true }
 
         Set-SepmConfiguration -ServerAddress 'localhost' -Port 8446 -ErrorAction SilentlyContinue
 
-        # Clean stale credential/token files
         Remove-Item -Path "$HOME/.config/PSSymantecSEPM/creds.xml" -Force -ErrorAction SilentlyContinue
         Remove-Item -Path "$HOME/.local/share/PSSymantecSEPM/accessToken.xml" -Force -ErrorAction SilentlyContinue
-
-        # Authenticate
-        $SmokeCredPassword = ConvertTo-SecureString -String 'MyComplexPassword1!' -AsPlainText -Force
-        $SmokeCredential   = New-Object System.Management.Automation.PSCredential -ArgumentList 'admin', $SmokeCredPassword
-        Set-SEPMAuthentication -Credential $SmokeCredential -ErrorAction SilentlyContinue
-        Get-SEPMAccessToken | Out-Null
     } else {
         # ── PS 5.1 path ──
         [System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
         [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 
-        # Write config.json to PS 5.1's APPDATA path
         $cfg = "$env:APPDATA\PSSymantecSEPM\config.json"
         New-Item -ItemType Directory (Split-Path $cfg) -Force | Out-Null
         @{ port = 8446; ServerAddress = "localhost" } | ConvertTo-Json | Set-Content $cfg -Force
@@ -78,13 +70,13 @@ function Initialize-SmokeBootstrap {
         Import-Module $ModulePath -Force
         $env:PSModulePath = "$RepoRoot;$env:PSModulePath"
 
-        $script:SmokeModulePS51 = Get-Module PSSymantecSEPM
-        & $script:SmokeModulePS51 { $script:SkipCert = $true }
-
-        # Authenticate
-        $SmokeCredPassword = ConvertTo-SecureString -String 'MyComplexPassword1!' -AsPlainText -Force
-        $SmokeCredential   = New-Object System.Management.Automation.PSCredential -ArgumentList 'admin', $SmokeCredPassword
-        Set-SEPMAuthentication -Credential $SmokeCredential -ErrorAction SilentlyContinue
-        Get-SEPMAccessToken | Out-Null
+        $SmokeModule = Get-Module PSSymantecSEPM
+        & $SmokeModule { $script:SkipCert = $true }
     }
+
+    # ── Authenticate (common to both platforms) ──
+    $SmokeCredPassword = ConvertTo-SecureString -String 'MyComplexPassword1!' -AsPlainText -Force
+    $SmokeCredential   = New-Object System.Management.Automation.PSCredential -ArgumentList 'admin', $SmokeCredPassword
+    Set-SEPMAuthentication -Credential $SmokeCredential -ErrorAction SilentlyContinue
+    Get-SEPMAccessToken | Out-Null
 }

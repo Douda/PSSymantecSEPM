@@ -6,32 +6,10 @@ Describe 'Common.ps1' {
 
     # Functions are dot-sourced from the real Common.ps1 file.
     # Auth is no longer in Common.ps1 — it was moved to Bootstrap.ps1.
-    # Write-Summary requires a test-only variant because the real function calls exit 1.
 
     BeforeAll {
         $script:CommonRepoRoot = (Resolve-Path "$PSScriptRoot/..").Path
         . "$script:CommonRepoRoot/Scripts/Smoke/Common.ps1"
-
-        # Test-only variant of Write-Summary that does NOT call exit.
-        # Exit-code behavior is verified during smoke tests.
-        function Write-Summary-Test {
-            param(
-                [hashtable]$Results,
-                [string]$Label = "Smoke Tests"
-            )
-            $pass = 0; $fail = 0; $skip = 0
-            $lines = @()
-            $lines += "`n========== $Label =========="
-            foreach ($k in $Results.Keys | Sort-Object) {
-                $v = $Results[$k]
-                if ($v -eq "PASS") { $pass++; $lines += "  $k : PASS" }
-                elseif ($v -eq "SKIP") { $skip++; $lines += "  $k : SKIP" }
-                else { $fail++; $lines += "  $k : FAIL" }
-            }
-            $total = $pass + $fail + $skip
-            $lines += "TOTAL: $total tests, $pass pass, $fail fail, $skip skip"
-            Write-Host ($lines -join "`n") -ForegroundColor Yellow
-        }
     }
 
     Context 'T helper' {
@@ -122,13 +100,13 @@ Describe 'Common.ps1' {
     Context 'Write-Summary' {
         It 'emits parseable TOTAL line' {
             $results = @{ A1 = "PASS"; A2 = "FAIL"; A3 = "SKIP" }
-            $output = & { Write-Summary-Test -Results $results -Label "Unit Test" *>&1 } | Out-String
+            $output = & { Write-Summary -Results $results -Label "Unit Test" -OnFailure { } *>&1 } | Out-String
             $output | Should -Match 'TOTAL: 3 tests, 1 pass, 1 fail, 1 skip'
         }
 
         It 'emits per-test one-liners sorted by key' {
             $results = @{ C = "PASS"; A = "PASS"; B = "FAIL" }
-            $output = & { Write-Summary-Test -Results $results -Label "Unit Test" *>&1 } | Out-String
+            $output = & { Write-Summary -Results $results -Label "Unit Test" -OnFailure { } *>&1 } | Out-String
             $output | Should -Match 'A : PASS'
             $output | Should -Match 'B : FAIL'
             $output | Should -Match 'C : PASS'
@@ -136,13 +114,13 @@ Describe 'Common.ps1' {
 
         It 'all-pass result has zero fail count' {
             $results = @{ A1 = "PASS"; A2 = "PASS" }
-            $output = & { Write-Summary-Test -Results $results -Label "All Pass" *>&1 } | Out-String
+            $output = & { Write-Summary -Results $results -Label "All Pass" -OnFailure { } *>&1 } | Out-String
             $output | Should -Match 'TOTAL: 2 tests, 2 pass, 0 fail, 0 skip'
         }
 
         It 'fail count matches number of FAIL verdicts' {
             $results = @{ A1 = "PASS"; A2 = "FAIL"; A3 = "FAIL" }
-            $output = & { Write-Summary-Test -Results $results -Label "Two Fail" *>&1 } | Out-String
+            $output = & { Write-Summary -Results $results -Label "Two Fail" -OnFailure { } *>&1 } | Out-String
             $output | Should -Match 'TOTAL: 3 tests, 1 pass, 2 fail, 0 skip'
         }
     }
