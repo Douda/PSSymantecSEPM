@@ -32,7 +32,7 @@ $results = @{}
 # ── A1: Baseline count (before seed) ──
 $results.A1 = & {
     try {
-        $beforeCount = @(Get-SEPMPoliciesSummary | Where-Object { $_.policytype -eq 'exceptions' }).Count
+        $script:beforeCount = @(Get-SEPMPoliciesSummary | Where-Object { $_.policytype -eq 'exceptions' }).Count
         Write-Host "  Before: $beforeCount exceptions policies"
         "PASS"
     } catch {

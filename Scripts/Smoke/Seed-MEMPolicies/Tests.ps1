@@ -45,7 +45,7 @@ $results.A1 = & {
         $s = Initialize-SEPMSession
         $beforeSummary = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/policies/summary/mem" -Headers $s.Headers -SkipCert:$s.SkipCert
         $beforeContent = if ($beforeSummary.ContainsKey('content')) { $beforeSummary.content } else { $beforeSummary }
-        $beforeCount = if ($beforeContent) { $beforeContent.Count } else { 0 }
+        $script:beforeCount = if ($beforeContent) { $beforeContent.Count } else { 0 }
         Write-Host "  Before: $beforeCount MEM policies"
         "PASS"
     } catch {

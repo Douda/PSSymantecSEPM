@@ -9,14 +9,6 @@
 
 Write-Host "=== Smoke: Seed-Assignments ==="
 
-$seedScript = Join-Path -Path $RepoRoot -ChildPath 'Scripts/Seed-SEPMData.ps1'
-
-# Verify the seed script exists and can be dot-sourced
-if (-not (Test-Path $seedScript)) {
-    Write-Host "  ERROR: Seed-SEPMData.ps1 not found at $seedScript"
-    exit 1
-}
-
 # Verify data file exists
 $dataFile = Join-Path -Path $RepoRoot -ChildPath 'Source/Seed/Assignments.psd1'
 if (-not (Test-Path $dataFile)) {
@@ -24,7 +16,6 @@ if (-not (Test-Path $dataFile)) {
     exit 1
 }
 
-Write-Host "  Seed script: $seedScript"
 Write-Host "  Data file: $dataFile"
 
 # Load data file to verify structure

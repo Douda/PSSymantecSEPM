@@ -54,7 +54,7 @@ $results.A1 = & {
     try {
         $s = Initialize-SEPMSession
         $beforeSummary = Invoke-SepmApi -Method GET -Uri "$($s.BaseURLv1)/policies/summary/tdad" -Headers $s.Headers -SkipCert:$s.SkipCert
-        $beforeCount = if ($beforeSummary -and $beforeSummary.ContainsKey('totalElements')) { $beforeSummary.totalElements } else { 0 }
+        $script:beforeCount = if ($beforeSummary -and $beforeSummary.ContainsKey('totalElements')) { $beforeSummary.totalElements } else { 0 }
         Write-Host "  Before: $beforeCount TDAD policies"
         "PASS"
     } catch {
