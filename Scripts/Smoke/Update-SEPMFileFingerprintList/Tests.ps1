@@ -1,10 +1,12 @@
-# Smoke: Update-SEPMFileFingerprintList (PS7)
-# Usage: pwsh -NoProfile -File Scripts/Smoke/Update-SEPMFileFingerprintList/batch.ps7.ps1
+﻿<#
+.SYNOPSIS
+    Shared smoke tests for Update-SEPMFileFingerprintList.
 
-$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
-. "$RepoRoot/Scripts/Smoke/Common.ps1"
-
-Write-Host "=== Smoke: Update-SEPMFileFingerprintList (PS7) ===" -ForegroundColor Yellow
+.DESCRIPTION
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
+    Covers: update by ID, update by name, non-null output, response has id field,
+            error on invalid name, and restores original name.
+#>
 
 $results = @{}
 
@@ -87,17 +89,18 @@ if (-not $fpList) {
             $errs.Count -gt 0
         } `
         { param($r) $r -eq $true }
+
+    # ── Restore: ensure fingerprint list name is restored (in case A4 was skipped/failed) ──
+    Write-Host "`n--- RESTORE ---" -ForegroundColor Yellow
+    try {
+        Update-SEPMFileFingerprintList -FingerprintListID $fpId `
+            -name $fpName -domainId $domainId -HashType 'SHA256' `
+            -hashlist @() -ErrorAction SilentlyContinue | Out-Null
+        Write-Host "  Fingerprint list name restored: $fpName" -ForegroundColor Gray
+    } catch {
+        Write-Host "  Warning: could not restore fingerprint list name: $_" -ForegroundColor Yellow
+    }
 }
 
-# === Summary ===
-Write-Host "`n========== SUMMARY (PS7) ==========" -ForegroundColor Yellow
-$pass = 0; $fail = 0; $skip = 0
-foreach ($k in $results.Keys | Sort-Object) {
-    $v = $results[$k]
-    if ($v -eq "PASS") { $pass++; Write-Host "  $k : PASS" -ForegroundColor Green }
-    elseif ($v -eq "SKIP") { $skip++; Write-Host "  $k : SKIP" -ForegroundColor Yellow }
-    else { $fail++; Write-Host "  $k : FAIL" -ForegroundColor Red }
-}
-Write-Host "TOTAL: $($pass+$fail+$skip) tests, $pass pass, $fail fail, $skip skip" -ForegroundColor Yellow
-
-if ($fail -gt 0) { exit 1 }
+# ── Summary ──
+Write-Summary -Results $results -Label "Update-SEPMFileFingerprintList"
