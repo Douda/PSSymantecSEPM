@@ -69,7 +69,6 @@ function Get-SEPComputers {
 
     process {
 
-        # Using computer name API call
         if ($ComputerName) {
             $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -BoundParameters $PSBoundParameters
             $allResults = $resp.content
@@ -78,7 +77,6 @@ function Get-SEPComputers {
             $allResults = $allResults | Where-Object { $_.computerName -like $ComputerName }
         }
 
-        # Using group name API call then filtering
         elseif ($GroupName) {
             $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
             $allResults = $resp.content
@@ -91,13 +89,11 @@ function Get-SEPComputers {
             }
         }
 
-        # No parameters
         else {
             $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
             $allResults = $resp.content
         }
 
-        # return the response
         Write-Output $allResults -NoEnumerate
     }
 }

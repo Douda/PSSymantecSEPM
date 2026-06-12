@@ -32,4 +32,4 @@ Remove-Item -Path "$HOME/.local/share/PSSymantecSEPM/accessToken.xml" -Force -Er
 
 # ── Shared infrastructure + tests ──
 . "$RepoRoot/Scripts/Smoke/Common.ps1"
-. "$PSScriptRoot/Tests.ps1"
+. "$RepoRoot/Scripts/Smoke/Get-SEPComputers/Tests.ps1"
