@@ -17,8 +17,8 @@ Describe 'Get-SEPMCommandStatus' {
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
         }
 
-        It 'returns command status with SEPM.CommandStatus type (single page)' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+        It 'returns command status with SEPM.CommandStatus type' {
+            Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
                 return @{
                     content     = @(
                         @{
@@ -37,7 +37,6 @@ Describe 'Get-SEPMCommandStatus' {
                             hardwareKey          = 'ABCDEF1234567890ABCDEF1234567890'
                         }
                     )
-                    totalPages = 1
                     lastPage   = $true
                 }
             }
@@ -49,14 +48,14 @@ Describe 'Get-SEPMCommandStatus' {
             $result[0].PSObject.TypeNames[0] | Should -Be 'SEPM.CommandStatus'
         }
 
-        It 'calls the correct API endpoint' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                return @{ content = @(); totalPages = 1; lastPage = $true }
+        It 'calls Invoke-SepmEndpoint with the correct parameters' {
+            Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
+                return @{ content = @(); lastPage = $true }
             }
 
             Get-SEPMCommandStatus -Command_ID 'CMD789' | Out-Null
-            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
-                $Method -eq 'GET' -and $Uri -match '/command-queue/CMD789'
+            Should -Invoke Invoke-SepmEndpoint -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Endpoint.OperationName -eq 'Get-SEPMCommandStatus' -and $PathIds[0] -eq 'CMD789'
             }
         }
     }
