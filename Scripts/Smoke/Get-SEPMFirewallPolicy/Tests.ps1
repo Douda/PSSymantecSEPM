@@ -1,12 +1,11 @@
-# Smoke verification for Get-SEPMFirewallPolicy -All (PS7)
-# Usage: pwsh -NoProfile -File Scripts/Smoke/Get-SEPMFirewallPolicy/batch.ps7.ps1
+<#
+.SYNOPSIS
+    Shared smoke tests for Get-SEPMFirewallPolicy.
 
-[CmdletBinding()]param()
-
-$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
-. "$RepoRoot/Scripts/Smoke/Common.ps1"
-
-Write-Host "=== Smoke: Get-SEPMFirewallPolicy (PS7) ===" -ForegroundColor Yellow
+.DESCRIPTION
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
+    Covers: -All returns all FW policies, type check, field population.
+#>
 
 $results = @{}
 
@@ -42,12 +41,4 @@ $results.A3 = T "A3" "All policies have non-empty name, id, enabled" `
         $ok
     }
 
-# ── Summary ──
-Write-Host "`n========== SUMMARY (PS7) ==========" -ForegroundColor Yellow
-$pass = 0; $fail = 0
-foreach ($k in $results.Keys | Sort-Object) {
-    $v = $results[$k]
-    if ($v -eq "PASS") { $pass++; Write-Host "  $k : PASS" -ForegroundColor Green }
-    else { $fail++; Write-Host "  $k : FAIL" -ForegroundColor Red }
-}
-Write-Host "TOTAL: $($pass+$fail) tests, $pass pass, $fail fail" -ForegroundColor Yellow
+Write-Summary -Results $results -Label "Get-SEPMFirewallPolicy Smoke Tests"

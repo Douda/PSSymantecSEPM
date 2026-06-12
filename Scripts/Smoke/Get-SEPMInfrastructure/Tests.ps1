@@ -1,9 +1,12 @@
-# Smoke batch: infrastructure GET cmdlets (PS7)
-# Covers: Get-SEPGUPList, Get-SEPMLicense, Get-SEPMDatabaseInfo, Get-SEPMLatestDefinition
-# Usage: pwsh -NoProfile -File Scripts/Smoke/Get-SEPMInfrastructure/batch.ps7.ps1
+<#
+.SYNOPSIS
+    Shared smoke tests for infrastructure GET cmdlets.
 
-$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
-. "$RepoRoot/Scripts/Smoke/Common.ps1"
+.DESCRIPTION
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
+    Covers: Get-SEPGUPList, Get-SEPMLicense, Get-SEPMLicense -Summary,
+            Get-SEPMDatabaseInfo, Get-SEPMLatestDefinition.
+#>
 
 $results = @{}
 
@@ -32,12 +35,4 @@ $results.A5 = T "A5" "Get-SEPMLatestDefinition" `
     { Get-SEPMLatestDefinition } `
     { param($r) $r -ne $null -and ($r -is [hashtable]) -and $r.contentName -ne $null }
 
-# === Summary ===
-Write-Host "`n========== SUMMARY (PS7 Infrastructure) ==========" -ForegroundColor Yellow
-$pass = 0; $fail = 0
-foreach ($k in $results.Keys | Sort-Object) {
-    $v = $results[$k]
-    if ($v -eq "PASS") { $pass++; Write-Host "  $k : PASS" -ForegroundColor Green }
-    else { $fail++; Write-Host "  $k : FAIL" -ForegroundColor Red }
-}
-Write-Host "TOTAL: $($pass+$fail) tests, $pass pass, $fail fail" -ForegroundColor Yellow
+Write-Summary -Results $results -Label "Get-SEPMInfrastructure Smoke Tests"

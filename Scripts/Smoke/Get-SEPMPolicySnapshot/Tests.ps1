@@ -1,12 +1,12 @@
-# Smoke verification for Get-SEPMPolicySnapshot (PS7)
-# Usage: pwsh -NoProfile -File Scripts/Smoke/Get-SEPMPolicySnapshot/batch.ps7.ps1
+<#
+.SYNOPSIS
+    Shared smoke tests for Get-SEPMPolicySnapshot.
 
-[CmdletBinding()]param()
-
-$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
-. "$RepoRoot/Scripts/Smoke/Common.ps1"
-
-Write-Host "=== Smoke: Get-SEPMPolicySnapshot (PS7) ===" -ForegroundColor Yellow
+.DESCRIPTION
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
+    Covers: returns PolicySnapshot, FW type check, Summary, LocationMap,
+            FetchedAt, Clixml round-trip, DelayMs.
+#>
 
 $results = @{}
 
@@ -76,12 +76,4 @@ $results.A7 = T "A7" "-DelayMs 100 does not error" `
     { Get-SEPMPolicySnapshot -PolicyType fw -DelayMs 100 } `
     { param($r) $r -ne $null -and $r.FW.Policies.Count -gt 0 }
 
-# ── Summary ──
-Write-Host "`n========== SUMMARY (PS7) ==========" -ForegroundColor Yellow
-$pass = 0; $fail = 0
-foreach ($k in $results.Keys | Sort-Object) {
-    $v = $results[$k]
-    if ($v -eq "PASS") { $pass++; Write-Host "  $k : PASS" -ForegroundColor Green }
-    else { $fail++; Write-Host "  $k : FAIL" -ForegroundColor Red }
-}
-Write-Host "TOTAL: $($pass+$fail) tests, $pass pass, $fail fail" -ForegroundColor Yellow
+Write-Summary -Results $results -Label "Get-SEPMPolicySnapshot Smoke Tests"
