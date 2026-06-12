@@ -194,18 +194,24 @@ if (-not $script:_endpointRegistry) {
             QueryParams   = @{
                 computerName = 'ComputerName'
             }
+            Paginated     = $true
+            PageDefaults  = @{ sort = 'COMPUTER_NAME'; pageSize = 100 }
         }
         'Get-SEPMGroups' = @{
             OperationName = 'Get-SEPMGroups'
             Version       = '1.0'
             Method        = 'GET'
             Path          = '/groups'
+            Paginated     = $true
+            PageDefaults  = @{ pageSize = 25 }
         }
         'Get-SEPMCommandStatus' = @{
             OperationName = 'Get-SEPMCommandStatus'
             Version       = '1.0'
             Method        = 'GET'
             Path          = '/command-queue/{id}'
+            Paginated     = $true
+            PageDefaults  = @{}
         }
         'Get-SEPMLocation' = @{
             OperationName = 'Get-SEPMLocation'

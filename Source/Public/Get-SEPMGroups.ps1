@@ -34,25 +34,7 @@ function Get-SEPMGroups {
     }
 
     process {
-        # QueryString parameters for pagination
-        $pageParams = @{
-            pageSize  = 25
-            pageIndex = 1
-        }
-
-        # Invoke the request
-        $allResults = @()
-        do {
-            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -AdditionalQueryParams $pageParams
-
-            # Process the response
-            $allResults += $resp.content
-
-            # Increment the page index
-            $pageParams.pageIndex++
-        } until ($resp.lastPage -eq $true)
-
-        # return the response
-        Write-Output $allResults -NoEnumerate
+        # Invoke-SepmEndpoint handles pagination internally via Invoke-SepmApiPaginated
+        Write-Output (Invoke-SepmEndpoint -Endpoint $endpoint -Session $session) -NoEnumerate
     }
 }
