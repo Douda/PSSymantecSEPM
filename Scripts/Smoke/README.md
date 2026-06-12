@@ -17,7 +17,7 @@ Each suite uses three files:
 - `Common-PS51.ps1` (old PS 5.1-specific init, superseded by `run.ps51.ps1` per suite)
 - All `batch.ps7.ps1` / `batch.ps51.ps1` files (replaced by run pattern)
 
-## Converted suites (31)
+## Converted suites (32)
 
 These suites use the new `run.ps7.ps1` / `run.ps51.ps1` entry points
 that handle their own platform bootstrapping, then dot-source `Common.ps1`
@@ -40,6 +40,7 @@ and their suite-specific `Tests.ps1`.
 | `Get-SEPMPolicyXML/` | Converted (#174) |
 | `Get-SEPMVersion/` | Converted (#174) |
 | `Get-SEPSimpleGets1/` | Converted (#153) |
+| `Get-SEPMLocations/` | Converted (#172) |
 | `Get-SEPSimpleGets2/` | Converted (#174) |
 | `Move-SEPClientGroup/` | Converted (#176) |
 | `New-SEPMGroup/` | Converted (#154) |
@@ -57,11 +58,4 @@ and their suite-specific `Tests.ps1`.
 | `Update-SEPMExceptionPolicy/` | Converted (#155) — includes `Invoke-BootstrapExtensionList` workaround for SEPM API empty-extension_list rejection |
 | `Update-SEPMFileFingerprintList/` | Converted (#176) |
 
-## Unconverted suites (1)
-
-This suite still uses the old `batch.ps7.ps1` / `batch.ps51.ps1` pattern.
-It was not in scope for #172 and will be converted in a follow-up PR.
-
-| Suite | Status |
-|---|---|
-| `Get-SEPMLocations/` | Unconverted |
+All 32 smoke suites are now converted to the run pattern.
