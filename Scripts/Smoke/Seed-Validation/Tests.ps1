@@ -1,13 +1,13 @@
-# Smoke: Seed-Validation — aggregate existence + count checks (PS7)
-# Validates that all seed categories were correctly created after a full seeding run.
-# Usage: pwsh -NoProfile -File Scripts/Smoke/Seed-Validation/batch.ps7.ps1
+﻿<#
+.SYNOPSIS
+    Shared smoke tests for Seed-Validation.
 
-$ErrorActionPreference = "Continue"
+.DESCRIPTION
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
+    Validates that all seed categories were correctly created after a full seeding run.
+#>
 
-$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
-. "$RepoRoot/Scripts/Smoke/Common.ps1"
-
-Write-Host "=== Smoke: Seed-Validation (PS7) ==="
+Write-Host "=== Smoke: Seed-Validation ==="
 
 # Helper: normalize summary content (handles ConvertTo-Hashtable collapsing 1-element arrays)
 function Get-SummaryContent($response) {
@@ -118,17 +118,4 @@ $results.A10 = T "A10" "Policies assigned to groups >= 10" `
     { param($r) $r -ge 10 }
 
 # ── Summary ──
-Write-Host ""
-Write-Host "=== Results ==="
-$passCount = ($results.Values | Where-Object { $_ -eq 'PASS' }).Count
-$failCount = ($results.Values | Where-Object { $_ -eq 'FAIL' }).Count
-$skipCount = ($results.Values | Where-Object { $_ -eq 'SKIP' }).Count
-$total = $results.Count
-Write-Host "PASS: $passCount / $total  FAIL: $failCount  SKIP: $skipCount"
-
-if ($failCount -gt 0) {
-    Write-Host "`n=== Smoke: Seed-Validation (PS7) — FAILURES DETECTED ===" -ForegroundColor Red
-    exit 1
-}
-
-Write-Host "`n=== Smoke: Seed-Validation (PS7) — ALL PASS ===" -ForegroundColor Green
+Write-Summary -Results $results -Label "Seed-Validation Smoke Tests"

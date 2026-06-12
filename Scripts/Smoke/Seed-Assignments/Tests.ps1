@@ -1,17 +1,19 @@
-$ErrorActionPreference = "Continue"
-$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
-. "$RepoRoot/Scripts/Smoke/Common.ps1"
+﻿<#
+.SYNOPSIS
+    Shared smoke tests for Seed-Assignments.
 
-Write-Host "=== Smoke: Seed-Assignments (PS7) ==="
+.DESCRIPTION
+    Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
+    Verifies the Assignments seed data file structure and content.
+#>
 
-# This smoke test verifies the Assignments seed function works end-to-end.
-# It requires that Groups, Policies, and Fingerprints have already been seeded.
-# Run with: Seed-SEPMData.ps1 -Categories Groups,ExceptionsPolicies,MEMPolicies,UpgradePolicies,TDADPolicies,Fingerprints,Assignments
+Write-Host "=== Smoke: Seed-Assignments ==="
+
+$seedScript = Join-Path -Path $RepoRoot -ChildPath 'Scripts/Seed-SEPMData.ps1'
 
 # Verify the seed script exists and can be dot-sourced
-$seedScript = Join-Path -Path $RepoRoot -ChildPath 'Scripts/Seed-Assignments.ps1'
 if (-not (Test-Path $seedScript)) {
-    Write-Host "  ERROR: Seed-Assignments.ps1 not found at $seedScript"
+    Write-Host "  ERROR: Seed-SEPMData.ps1 not found at $seedScript"
     exit 1
 }
 
@@ -61,11 +63,5 @@ $results.A5 = T "A5" "Contains fingerprint assignment entries" `
     { ($data.Assignments | Where-Object { $_.policyType -eq 'fingerprint' }).Count } `
     { param($r) $r -ge 2 }
 
-Write-Host ""
-Write-Host "=== Results ==="
-$passCount = ($results.Values | Where-Object { $_ -eq 'PASS' }).Count
-$failCount = ($results.Values | Where-Object { $_ -eq 'FAIL' }).Count
-$skipCount = ($results.Values | Where-Object { $_ -eq 'SKIP' }).Count
-Write-Host "PASS: $passCount  FAIL: $failCount  SKIP: $skipCount"
-
-if ($failCount -gt 0) { exit 1 }
+# ── Summary ──
+Write-Summary -Results $results -Label "Seed-Assignments Smoke Tests"
