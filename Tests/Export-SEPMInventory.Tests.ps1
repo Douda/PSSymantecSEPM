@@ -431,7 +431,7 @@ Describe 'Export-SEPMInventory' {
         }
 
         It 'host groups handles pagination (more than 50 Host Groups)' {
-            $hgIds = 1..60 | ForEach-Object { [PSCustomObject]@{ id = "HG$([String]$_).PadLeft(3,'0')"; name = "Host Group $_"; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 } }
+            $hgIds = 1..60 | ForEach-Object { [PSCustomObject]@{ id = "HG$(([String]$_).PadLeft(3,'0'))"; name = "Host Group $_"; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 } }
             Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
                 Write-Output $hgIds -NoEnumerate
             }
@@ -945,6 +945,23 @@ Describe 'Export-SEPMInventory' {
             Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
             Join-Path -Path 'TestDrive:' -ChildPath 'LocationXML_failed.xml' | Should -Exist
+        }
+
+        It 'captures HostGroups summary failure in Failures array' {
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { throw 'HostGroups API unavailable' }
+
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $hgFailures = $result.Failures | Where-Object { $_.Category -eq 'HostGroups' }
+            $hgFailures.Count | Should -Be 1
+            $hgFailures[0].Error | Should -Be 'HostGroups API unavailable'
+        }
+
+        It 'writes HostGroups_failed.xml on summary failure' {
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { throw 'HostGroups API error' }
+
+            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            Join-Path -Path 'TestDrive:' -ChildPath 'HostGroups_failed.xml' | Should -Exist
         }
 
         It 'captures per-host-group failure and continues with remaining Host Groups' {
