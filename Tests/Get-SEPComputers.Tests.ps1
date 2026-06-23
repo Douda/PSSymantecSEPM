@@ -33,12 +33,13 @@ Describe 'Get-SEPComputers' {
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return (, @(New-DummyComputer -ComputerName "MyComputer")) + (1..4 | ForEach-Object { New-DummyComputer })
+                return @(New-DummyComputer -ComputerName "MyComputer") + (1..4 | ForEach-Object { New-DummyComputer })
             }
 
             $result = Get-SEPComputers -ComputerName "MyComputer"
             $result | Should -Not -BeNullOrEmpty
-            $result.computername | Should -Be "MyComputer"
+            $result.Count | Should -Be 1
+            $result[0].computername | Should -Be "MyComputer"
         }
 
         It 'With Computername from the pipeline' {
@@ -46,12 +47,13 @@ Describe 'Get-SEPComputers' {
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return (, @(New-DummyComputer -ComputerName "MyComputer")) + (1..4 | ForEach-Object { New-DummyComputer })
+                return @(New-DummyComputer -ComputerName "MyComputer") + (1..4 | ForEach-Object { New-DummyComputer })
             }
 
             $result = "MyComputer" | Get-SEPComputers
             $result | Should -Not -BeNullOrEmpty
-            $result.computername | Should -Be "MyComputer"
+            $result.Count | Should -Be 1
+            $result[0].computername | Should -Be "MyComputer"
         }
     }
 

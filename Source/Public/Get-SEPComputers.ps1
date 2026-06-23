@@ -72,18 +72,18 @@ function Get-SEPComputers {
         if ($ComputerName) {
             $allResults = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -BoundParameters $PSBoundParameters
 
-            # Filtering
-            $allResults = $allResults | Where-Object { $_.computerName -like $ComputerName }
+            # Filtering (PS 5.1: @() wrapper prevents Where-Object scalar unrolling)
+            $allResults = @($allResults | Where-Object { $_.computerName -like $ComputerName })
         }
 
         elseif ($GroupName) {
             $allResults = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
 
-            # Filtering
+            # Filtering (PS 5.1: @() wrapper prevents Where-Object scalar unrolling)
             if ($IncludeSubGroups) {
-                $allResults = $allResults | Where-Object { $_.group.name -like "$GroupName*" }
+                $allResults = @($allResults | Where-Object { $_.group.name -like "$GroupName*" })
             } else {
-                $allResults = $allResults | Where-Object { $_.group.name -eq $GroupName }
+                $allResults = @($allResults | Where-Object { $_.group.name -eq $GroupName })
             }
         }
 
