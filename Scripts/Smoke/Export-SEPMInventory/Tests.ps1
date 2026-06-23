@@ -229,6 +229,15 @@ $results.A26 = T "A26" "GroupSettings has entries (settings per group-location)"
         $r.GroupSettings.Count -gt 0
     }
 
+# ── A27: HostGroups populated (full detail with hosts[]) ──
+$results.A27 = T "A27" "HostGroups has entries with hosts array" `
+    { $snapshot } `
+    { param($r)
+        $null -ne $r.HostGroups -and
+        $r.HostGroups.Count -gt 0 -and
+        $null -ne ($r.HostGroups | Select-Object -First 1).hosts
+    }
+
 # ── B1: Per-category clixml files written ──
 $results.B1 = T "B1" "Writes all category .clixml files" `
     {
@@ -244,7 +253,8 @@ $results.B1 = T "B1" "Writes all category .clixml files" `
             'all_client_versions.xml', 'all_client_def_versions.xml',
             'all_client_infected.xml',
             'all_groups.xml', 'all_locations.xml',
-            'all_location_xml.xml', 'all_group_settings.xml'
+            'all_location_xml.xml', 'all_group_settings.xml',
+            'all_host_groups.xml'
         )
         foreach ($f in $files) {
             if (-not (Test-Path (Join-Path $outDir $f))) { $allExist = $false }
@@ -288,7 +298,8 @@ $results.B3 = T "B3" "Snapshot blob round-trips with all categories" `
         $null -ne $r.Groups -and
         $null -ne $r.Locations -and
         $null -ne $r.LocationXML -and
-        $null -ne $r.GroupSettings
+        $null -ne $r.GroupSettings -and
+        $null -ne $r.HostGroups
     }
 
 # ── B4: No failures during collection ──

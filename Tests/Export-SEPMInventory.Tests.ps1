@@ -89,6 +89,14 @@ Describe 'Export-SEPMInventory' {
         Mock Get-SEPMExceptionPolicy -ModuleName PSSymantecSEPM {
             return $null
         }
+
+        # Host Group mocks (return empty by default)
+        Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
+            Write-Output @() -NoEnumerate
+        }
+        Mock Get-SEPMHostGroup -ModuleName PSSymantecSEPM {
+            return $null
+        }
     }
 
     AfterAll {
@@ -135,6 +143,11 @@ Describe 'Export-SEPMInventory' {
             $result.Groups.Count | Should -Be 2
             $result.Groups[0].name | Should -Be 'My Company'
             $result.Groups[1].name | Should -Be 'Workstations'
+        }
+
+        It 'snapshot contains HostGroups property' {
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $null -ne $result.HostGroups | Should -BeTrue
         }
     }
 
@@ -367,6 +380,99 @@ Describe 'Export-SEPMInventory' {
         }
     }
 
+    Context 'Host Groups data gathering' {
+        BeforeAll {
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
+            }
+        }
+
+        It 'HostGroups contains full detail for each Host Group from summary' {
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
+                Write-Output @(
+                    [PSCustomObject]@{ id = 'HG001'; name = 'Web Servers'; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
+                    [PSCustomObject]@{ id = 'HG002'; name = 'DB Servers'; domainid = 'DOM001'; lastmodifiedtime = 1700000000001 }
+                ) -NoEnumerate
+            }
+            $script:hgCallCount = 0
+            Mock Get-SEPMHostGroup -ModuleName PSSymantecSEPM {
+                $script:hgCallCount++
+                if ($Id -eq 'HG001') {
+                    return [PSCustomObject]@{
+                        id = 'HG001'
+                        name = 'Web Servers'
+                        hosts = @(
+                            @{ mac = '00:11:22:33:44:55'; ipv4 = '10.0.1.10'; dnsHost = 'web1'; dnsDomain = 'example.com' }
+                            @{ mac = '00:11:22:33:44:66'; ipv6 = 'fe80::1'; dnsHost = 'web2'; dnsDomain = 'example.com' }
+                        )
+                    }
+                }
+                if ($Id -eq 'HG002') {
+                    return [PSCustomObject]@{
+                        id = 'HG002'
+                        name = 'DB Servers'
+                        hosts = @(
+                            @{ mac = '00:AA:BB:CC:DD:EE'; ipv4 = '10.0.2.10'; dnsHost = 'db1'; dnsDomain = 'example.com' }
+                        )
+                    }
+                }
+                return $null
+            }
+
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.HostGroups | Should -Not -BeNullOrEmpty
+            $result.HostGroups.Count | Should -Be 2
+            $result.HostGroups[0].name | Should -Be 'Web Servers'
+            $result.HostGroups[1].name | Should -Be 'DB Servers'
+            $script:hgCallCount | Should -Be 2
+        }
+
+        It 'host groups handles pagination (more than 50 Host Groups)' {
+            $hgIds = 1..60 | ForEach-Object { [PSCustomObject]@{ id = "HG$([String]$_).PadLeft(3,'0')"; name = "Host Group $_"; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 } }
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
+                Write-Output $hgIds -NoEnumerate
+            }
+            Mock Get-SEPMHostGroup -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ id = $Id; name = "Host Group Detail"; hosts = @(@{ mac = '00:11:22:33:44:55'; ipv4 = '10.0.1.10' }) }
+            }
+
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.HostGroups | Should -Not -BeNullOrEmpty
+            $result.HostGroups.Count | Should -Be 60
+        }
+
+        It 'each Host Group includes hosts[] array with network entities' {
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
+                Write-Output @(
+                    [PSCustomObject]@{ id = 'HG001'; name = 'Web Servers'; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
+                ) -NoEnumerate
+            }
+            Mock Get-SEPMHostGroup -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{
+                    id = 'HG001'
+                    name = 'Web Servers'
+                    hosts = @(
+                        @{ mac = '00:11:22:33:44:55'; ipv4 = '10.0.1.10'; dnsHost = 'web1'; dnsDomain = 'example.com' }
+                        @{ ipv4 = '10.0.1.11'; ipv6 = 'fe80::1' }
+                        @{ name = 'DMZ Subnet'; ipRange = '10.0.1.0-10.0.1.255'; ipSubnet = '255.255.255.0' }
+                    )
+                }
+            }
+
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.HostGroups | Should -Not -BeNullOrEmpty
+            $result.HostGroups[0].hosts | Should -Not -BeNullOrEmpty
+            $result.HostGroups[0].hosts.Count | Should -Be 3
+            $result.HostGroups[0].hosts[0].mac | Should -Be '00:11:22:33:44:55'
+            $result.HostGroups[0].hosts[0].ipv4 | Should -Be '10.0.1.10'
+            $result.HostGroups[0].hosts[1].ipv6 | Should -Be 'fe80::1'
+            $result.HostGroups[0].hosts[2].ipRange | Should -Be '10.0.1.0-10.0.1.255'
+        }
+    }
+
     Context 'Groups & Locations data gathering' {
         BeforeAll {
             Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
@@ -561,6 +667,19 @@ Describe 'Export-SEPMInventory' {
             Join-Path -Path 'TestDrive:' -ChildPath 'all_client_versions.xml' | Should -Exist
             Join-Path -Path 'TestDrive:' -ChildPath 'all_client_def_versions.xml' | Should -Exist
             Join-Path -Path 'TestDrive:' -ChildPath 'all_client_infected.xml' | Should -Exist
+        }
+
+        It 'writes all_host_groups.xml when HostGroups data exists' {
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
+                Write-Output @(
+                    [PSCustomObject]@{ id = 'HG001'; name = 'Web Servers'; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
+                ) -NoEnumerate
+            }
+            Mock Get-SEPMHostGroup -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ id = 'HG001'; name = 'Web Servers'; hosts = @() }
+            }
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            Join-Path -Path 'TestDrive:' -ChildPath 'all_host_groups.xml' | Should -Exist
         }
 
         It 'writes groups & locations .clixml files' {
@@ -826,6 +945,45 @@ Describe 'Export-SEPMInventory' {
             Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
             Join-Path -Path 'TestDrive:' -ChildPath 'LocationXML_failed.xml' | Should -Exist
+        }
+
+        It 'captures per-host-group failure and continues with remaining Host Groups' {
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
+                Write-Output @(
+                    [PSCustomObject]@{ id = 'HG001'; name = 'Working HG'; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
+                    [PSCustomObject]@{ id = 'HG002'; name = 'Failing HG'; domainid = 'DOM001'; lastmodifiedtime = 1700000000001 }
+                    [PSCustomObject]@{ id = 'HG003'; name = 'Another HG'; domainid = 'DOM001'; lastmodifiedtime = 1700000000002 }
+                ) -NoEnumerate
+            }
+            $script:hgFailCallCount = 0
+            Mock Get-SEPMHostGroup -ModuleName PSSymantecSEPM {
+                $script:hgFailCallCount++
+                if ($Id -eq 'HG002') { throw 'Host Group API error' }
+                return [PSCustomObject]@{ id = $Id; name = 'Host Group Detail'; hosts = @(@{ mac = '00:11:22:33:44:55' }) }
+            }
+
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $hgFailures = $result.Failures | Where-Object { $_.Category -eq 'HostGroups' }
+            $hgFailures.Count | Should -Be 1
+            $hgFailures[0].HostGroupName | Should -Be 'Failing HG'
+            $hgFailures[0].HostGroupID | Should -Be 'HG002'
+            $result.HostGroups.Count | Should -Be 2
+            $result.HostGroups[0].id | Should -Be 'HG001'
+            $result.HostGroups[1].id | Should -Be 'HG003'
+            $script:hgFailCallCount | Should -Be 3
+        }
+
+        It 'writes HostGroups_failed.xml on per-Host-Group failure' {
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
+                Write-Output @(
+                    [PSCustomObject]@{ id = 'HG001'; name = 'Failing HG'; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
+                ) -NoEnumerate
+            }
+            Mock Get-SEPMHostGroup -ModuleName PSSymantecSEPM { throw 'Host Group error' }
+
+            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            Join-Path -Path 'TestDrive:' -ChildPath 'HostGroups_failed.xml' | Should -Exist
         }
 
         It 'captures GroupSettings failure in Failures array' {

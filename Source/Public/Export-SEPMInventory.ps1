@@ -57,6 +57,7 @@ function Export-SEPMInventory {
             Locations           = $null
             LocationXML         = $null
             GroupSettings       = $null
+            HostGroups          = $null
             Failures            = @()
         }
         $snapshot.PSObject.TypeNames.Insert(0, 'SEPM.Inventory')
@@ -451,6 +452,50 @@ function Export-SEPMInventory {
         $snapshot.LocationXML = $allLocationXml
         $snapshot.GroupSettings = $allGroupSettings
 
+        # ── Host Groups (summary → per-ID detail) ──
+        $allHostGroups = @()
+        try {
+            $hostGroupSummaries = Get-SEPMHostGroupSummary
+            if ($null -ne $hostGroupSummaries) {
+                $hgArray = @($hostGroupSummaries)
+                $hgCount = $hgArray.Count
+                $hgIndex = 0
+                foreach ($hg in $hgArray) {
+                    $hgIndex++
+                    try {
+                        $hgDetail = Get-SEPMHostGroup -Id $hg.id
+                        if ($null -ne $hgDetail) {
+                            $allHostGroups += $hgDetail
+                        }
+                    } catch {
+                        $snapshot.Failures += [PSCustomObject]@{
+                            Category = 'HostGroups'
+                            HostGroupID   = $hg.id
+                            HostGroupName = $hg.name
+                            Error     = $_.Exception.Message
+                        }
+                        [PSCustomObject]@{
+                            Category = 'HostGroups'
+                            HostGroupID   = $hg.id
+                            HostGroupName = $hg.name
+                            Error     = $_.Exception.Message
+                        } | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'HostGroups_failed.xml') -Force
+                    }
+                    if ($hgIndex -lt $hgCount -and $DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
+                }
+            }
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'HostGroups'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{
+                Category = 'HostGroups'
+                Error    = $_.Exception.Message
+            } | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'HostGroups_failed.xml') -Force
+        }
+        $snapshot.HostGroups = $allHostGroups
+
         # ── Write per-category .clixml files ──
         if ($snapshot.Version) {
             $snapshot.Version | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_version.xml') -Force
@@ -523,6 +568,9 @@ function Export-SEPMInventory {
         }
         if ($null -ne $snapshot.GroupSettings -and $snapshot.GroupSettings.Count -gt 0) {
             $snapshot.GroupSettings | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_group_settings.xml') -Force
+        }
+        if ($null -ne $snapshot.HostGroups) {
+            $snapshot.HostGroups | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_host_groups.xml') -Force
         }
 
         # Write timestamped snapshot blob
