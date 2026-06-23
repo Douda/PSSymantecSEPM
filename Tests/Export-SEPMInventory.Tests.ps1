@@ -393,9 +393,7 @@ Describe 'Export-SEPMInventory' {
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
             $result.Locations | Should -Not -BeNullOrEmpty
-            # 2 groups * 1 location each = 2 from Locations section
-            # Plus the LocationXML/GroupSettings section also calls Get-SEPMLocation for each group
-            # So total should be 4 calls, but only the first 2 contribute to $snapshot.Locations
+            # 2 groups * 1 location each = 2 locations
             $result.Locations.Count | Should -Be 2
         }
 

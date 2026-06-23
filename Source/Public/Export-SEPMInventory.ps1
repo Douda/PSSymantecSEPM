@@ -394,58 +394,58 @@ function Export-SEPMInventory {
         $allLocationXml = @()
         $allGroupSettings = @()
         if ($null -ne $snapshot.Locations -and $snapshot.Locations.Count -gt 0) {
-            $locArray = @($snapshot.Locations)
-            $locCount = $locArray.Count
-            $locIndex = 0
-            foreach ($loc in $locArray) {
-                $locIndex++
+            $locations = @($snapshot.Locations)
+            $locationCount = $locations.Count
+            $locationIndex = 0
+            foreach ($location in $locations) {
+                $locationIndex++
                 # LocationXML
                 try {
-                    $locationXml = Get-SEPMLocationXML -GroupID $loc.groupId -LocationID $loc.locationId
+                    $locationXml = Get-SEPMLocationXML -GroupID $location.groupId -LocationID $location.locationId
                     if ($null -ne $locationXml) {
                         $allLocationXml += $locationXml
                     }
                 } catch {
                     $snapshot.Failures += [PSCustomObject]@{
                         Category   = 'LocationXML'
-                        GroupID    = $loc.groupId
-                        GroupName  = $loc.groupName
-                        LocationID = $loc.locationId
+                        GroupID    = $location.groupId
+                        GroupName  = $location.groupName
+                        LocationID = $location.locationId
                         Error      = $_.Exception.Message
                     }
                     [PSCustomObject]@{
                         Category   = 'LocationXML'
-                        GroupID    = $loc.groupId
-                        GroupName  = $loc.groupName
-                        LocationID = $loc.locationId
+                        GroupID    = $location.groupId
+                        GroupName  = $location.groupName
+                        LocationID = $location.locationId
                         Error      = $_.Exception.Message
                     } | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'LocationXML_failed.xml') -Force
                 }
 
                 # GroupSettings
                 try {
-                    $groupSettings = Get-SEPMGroupSettings -groupId $loc.groupId -locationId $loc.locationId
+                    $groupSettings = Get-SEPMGroupSettings -groupId $location.groupId -locationId $location.locationId
                     if ($null -ne $groupSettings) {
                         $allGroupSettings += $groupSettings
                     }
                 } catch {
                     $snapshot.Failures += [PSCustomObject]@{
                         Category   = 'GroupSettings'
-                        GroupID    = $loc.groupId
-                        GroupName  = $loc.groupName
-                        LocationID = $loc.locationId
+                        GroupID    = $location.groupId
+                        GroupName  = $location.groupName
+                        LocationID = $location.locationId
                         Error      = $_.Exception.Message
                     }
                     [PSCustomObject]@{
                         Category   = 'GroupSettings'
-                        GroupID    = $loc.groupId
-                        GroupName  = $loc.groupName
-                        LocationID = $loc.locationId
+                        GroupID    = $location.groupId
+                        GroupName  = $location.groupName
+                        LocationID = $location.locationId
                         Error      = $_.Exception.Message
                     } | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'GroupSettings_failed.xml') -Force
                 }
 
-                if ($locIndex -lt $locCount -and $DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
+                if ($locationIndex -lt $locationCount -and $DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
             }
         }
         $snapshot.LocationXML = $allLocationXml
