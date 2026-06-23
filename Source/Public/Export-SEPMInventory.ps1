@@ -44,6 +44,10 @@ function Export-SEPMInventory {
             ThreatStats         = $null
             LatestDefinitions   = $null
             Events              = $null
+            PolicySummaries      = $null
+            FirewallPolicies     = $null
+            IpsPolicies          = $null
+            ExceptionPolicies    = $null
             Failures            = @()
         }
         $snapshot.PSObject.TypeNames.Insert(0, 'SEPM.Inventory')
@@ -189,6 +193,100 @@ function Export-SEPMInventory {
                 Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'Events_failed.xml') -Force
         }
 
+        # ── PolicySummaries ──
+        try {
+            $snapshot.PolicySummaries = Get-SEPMPoliciesSummary
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'PolicySummaries'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'PolicySummaries_failed.xml') -Force
+        }
+
+        if ($DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
+
+        # ── FirewallPolicies ──
+        try {
+            $snapshot.FirewallPolicies = Get-SEPMFirewallPolicy -All -DelayMs $DelayMs
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'FirewallPolicies'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'FirewallPolicies_failed.xml') -Force
+        }
+
+        # ── IpsPolicies (per-policy fetch from IPS summaries) ──
+        $ipsPolicies = @()
+        if ($null -ne $snapshot.PolicySummaries) {
+            $ipsSummaries = @($snapshot.PolicySummaries | Where-Object { $_.policytype -eq 'ips' })
+            $ipsCount = $ipsSummaries.Count
+            $ipsIndex = 0
+            foreach ($ipsSummary in $ipsSummaries) {
+                $ipsIndex++
+                try {
+                    $ipsPolicy = Get-SEPMIpsPolicy -PolicyName $ipsSummary.name
+                    if ($ipsPolicy) {
+                        $ipsPolicies += $ipsPolicy
+                    }
+                } catch {
+                    $snapshot.Failures += [PSCustomObject]@{
+                        Category = 'IpsPolicies'
+                        PolicyName = $ipsSummary.name
+                        Error    = $_.Exception.Message
+                    }
+                    [PSCustomObject]@{
+                        Category = 'IpsPolicies'
+                        PolicyName = $ipsSummary.name
+                        Error    = $_.Exception.Message
+                    } | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'IpsPolicies_failed.xml') -Force
+                }
+                if ($ipsIndex -lt $ipsCount -and $DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
+            }
+        }
+        if ($ipsPolicies.Count -gt 0) {
+            $snapshot.IpsPolicies = $ipsPolicies
+        } else {
+            $snapshot.IpsPolicies = @()
+        }
+
+        # ── ExceptionPolicies (per-policy fetch from exception summaries) ──
+        $exceptionPolicies = @()
+        if ($null -ne $snapshot.PolicySummaries) {
+            $exceptionSummaries = @($snapshot.PolicySummaries | Where-Object { $_.policytype -eq 'exceptions' })
+            $exceptionCount = $exceptionSummaries.Count
+            $exceptionIndex = 0
+            foreach ($exceptionSummary in $exceptionSummaries) {
+                $exceptionIndex++
+                try {
+                    $exceptionPolicy = Get-SEPMExceptionPolicy -PolicyName $exceptionSummary.name
+                    if ($exceptionPolicy) {
+                        $exceptionPolicies += $exceptionPolicy
+                    }
+                } catch {
+                    $snapshot.Failures += [PSCustomObject]@{
+                        Category = 'ExceptionPolicies'
+                        PolicyName = $exceptionSummary.name
+                        Error    = $_.Exception.Message
+                    }
+                    [PSCustomObject]@{
+                        Category = 'ExceptionPolicies'
+                        PolicyName = $exceptionSummary.name
+                        Error    = $_.Exception.Message
+                    } | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'ExceptionPolicies_failed.xml') -Force
+                }
+                if ($exceptionIndex -lt $exceptionCount -and $DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
+            }
+        }
+        if ($exceptionPolicies.Count -gt 0) {
+            $snapshot.ExceptionPolicies = $exceptionPolicies
+        } else {
+            $snapshot.ExceptionPolicies = @()
+        }
+
         # ── Write per-category .clixml files ──
         if ($snapshot.Version) {
             $snapshot.Version | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_version.xml') -Force
@@ -222,6 +320,18 @@ function Export-SEPMInventory {
         }
         if ($snapshot.Events) {
             $snapshot.Events | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_events.xml') -Force
+        }
+        if ($null -ne $snapshot.PolicySummaries) {
+            $snapshot.PolicySummaries | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_policy_summaries.xml') -Force
+        }
+        if ($null -ne $snapshot.FirewallPolicies) {
+            $snapshot.FirewallPolicies | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_fw_policies.xml') -Force
+        }
+        if ($null -ne $snapshot.IpsPolicies) {
+            $snapshot.IpsPolicies | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_ips_policies.xml') -Force
+        }
+        if ($null -ne $snapshot.ExceptionPolicies) {
+            $snapshot.ExceptionPolicies | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_exception_policies.xml') -Force
         }
 
         # Write timestamped snapshot blob

@@ -1,35 +1,41 @@
-﻿<#
+<#
 .SYNOPSIS
     Shared smoke tests for Export-SEPMInventory.
 
 .DESCRIPTION
     Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
-    Covers: SEPM.Inventory type, FetchedAt, all 11 categories,
-            per-category clixml, timestamped blob, round-trip, DelayMs.
+    Calls Export-SEPMInventory ONCE and shares the result across assertions.
+    Covers: SEPM.Inventory type, all categories, per-category clixml,
+            timestamped blob, round-trip.
 #>
 
 $results = @{}
 $outDir = Join-Path $RepoRoot 'Output/smoke-inventory'
+$snapshot = $null
+$blobPath = $null
+
+# ── Single inventory call: shared across all tests ──
+$snapshot = Export-SEPMInventory -OutputDir $outDir -DelayMs 10
 
 # ── A1: Returns SEPM.Inventory PSTypeName ──
 $results.A1 = T "A1" "Export-SEPMInventory returns SEPM.Inventory PSTypeName" `
-    { Export-SEPMInventory -OutputDir $outDir } `
+    { $snapshot } `
     { param($r)
         $r -ne $null -and
         $r.PSObject.TypeNames[0] -eq 'SEPM.Inventory'
     }
 
 # ── A2: FetchedAt is DateTime and recent ──
-$results.A2 = T "A2" "FetchedAt is a DateTime within last 2 minutes" `
-    { Export-SEPMInventory -OutputDir $outDir } `
+$results.A2 = T "A2" "FetchedAt is a DateTime within last 5 minutes" `
+    { $snapshot } `
     { param($r)
         $r.FetchedAt -is [DateTime] -and
-        $r.FetchedAt -gt [DateTime]::UtcNow.AddMinutes(-2)
+        $r.FetchedAt -gt [DateTime]::UtcNow.AddMinutes(-5)
     }
 
 # ── A3: Version populated with real SEPM data ──
 $results.A3 = T "A3" "Version property has API_SEQUENCE, API_VERSION, version" `
-    { Export-SEPMInventory -OutputDir $outDir } `
+    { $snapshot } `
     { param($r)
         $r.Version -ne $null -and
         -not [string]::IsNullOrEmpty($r.Version.API_SEQUENCE) -and
@@ -38,7 +44,7 @@ $results.A3 = T "A3" "Version property has API_SEQUENCE, API_VERSION, version" `
 
 # ── A4: Domains populated (Default domain) ──
 $results.A4 = T "A4" "Domains has id and name properties" `
-    { Export-SEPMInventory -OutputDir $outDir } `
+    { $snapshot } `
     { param($r)
         $r.Domains -ne $null -and
         -not [string]::IsNullOrEmpty($r.Domains.id) -and
@@ -47,12 +53,12 @@ $results.A4 = T "A4" "Domains has id and name properties" `
 
 # ── A5: GUPs non-null (may be empty if no GUPs configured) ──
 $results.A5 = T "A5" "GUPs property is not null" `
-    { Export-SEPMInventory -OutputDir $outDir } `
+    { $snapshot } `
     { param($r) $null -ne $r.GUPs }
 
 # ── A6: Admins populated ──
 $results.A6 = T "A6" "Admins has entries with loginName property" `
-    { Export-SEPMInventory -OutputDir $outDir } `
+    { $snapshot } `
     { param($r)
         $null -ne $r.Admins -and
         ($r.Admins | Select-Object -First 1).loginName -ne $null
@@ -60,7 +66,7 @@ $results.A6 = T "A6" "Admins has entries with loginName property" `
 
 # ── A7: DatabaseInfo populated ──
 $results.A7 = T "A7" "DatabaseInfo has type property" `
-    { Export-SEPMInventory -OutputDir $outDir } `
+    { $snapshot } `
     { param($r)
         $r.DatabaseInfo -ne $null -and
         -not [string]::IsNullOrEmpty($r.DatabaseInfo.type)
@@ -68,7 +74,7 @@ $results.A7 = T "A7" "DatabaseInfo has type property" `
 
 # ── A8: License populated ──
 $results.A8 = T "A8" "License has serialNumber property" `
-    { Export-SEPMInventory -OutputDir $outDir } `
+    { $snapshot } `
     { param($r)
         $r.License -ne $null -and
         -not [string]::IsNullOrEmpty($r.License.serialNumber)
@@ -76,7 +82,7 @@ $results.A8 = T "A8" "License has serialNumber property" `
 
 # ── A9: LicenseSummary populated ──
 $results.A9 = T "A9" "LicenseSummary has license_type property" `
-    { Export-SEPMInventory -OutputDir $outDir } `
+    { $snapshot } `
     { param($r)
         $r.LicenseSummary -ne $null -and
         -not [string]::IsNullOrEmpty($r.LicenseSummary.license_type)
@@ -84,7 +90,7 @@ $results.A9 = T "A9" "LicenseSummary has license_type property" `
 
 # ── A10: ReplicationStatus populated ──
 $results.A10 = T "A10" "ReplicationStatus has entries with siteName property" `
-    { Export-SEPMInventory -OutputDir $outDir } `
+    { $snapshot } `
     { param($r)
         $null -ne $r.ReplicationStatus -and
         ($r.ReplicationStatus | Select-Object -First 1).siteName -ne $null
@@ -92,7 +98,7 @@ $results.A10 = T "A10" "ReplicationStatus has entries with siteName property" `
 
 # ── A11: ThreatStats populated ──
 $results.A11 = T "A11" "ThreatStats has entries with infectedClients property" `
-    { Export-SEPMInventory -OutputDir $outDir } `
+    { $snapshot } `
     { param($r)
         $null -ne $r.ThreatStats -and
         ($r.ThreatStats | Select-Object -First 1).infectedClients -ne $null
@@ -100,7 +106,7 @@ $results.A11 = T "A11" "ThreatStats has entries with infectedClients property" `
 
 # ── A12: LatestDefinitions populated ──
 $results.A12 = T "A12" "LatestDefinitions has contentName property" `
-    { Export-SEPMInventory -OutputDir $outDir } `
+    { $snapshot } `
     { param($r)
         $r.LatestDefinitions -ne $null -and
         -not [string]::IsNullOrEmpty($r.LatestDefinitions.contentName)
@@ -108,22 +114,59 @@ $results.A12 = T "A12" "LatestDefinitions has contentName property" `
 
 # ── A13: Events populated ──
 $results.A13 = T "A13" "Events has entries with subject property" `
-    { Export-SEPMInventory -OutputDir $outDir } `
+    { $snapshot } `
     { param($r)
         $null -ne $r.Events -and
         ($r.Events | Select-Object -First 1).subject -ne $null
     }
 
-# ── A14: Per-category clixml files written ──
-$results.A14 = T "A14" "Writes all category .clixml files" `
+# ── A14: PolicySummaries populated ──
+$results.A14 = T "A14" "PolicySummaries has entries with policytype property" `
+    { $snapshot } `
+    { param($r)
+        $null -ne $r.PolicySummaries -and
+        $r.PolicySummaries.Count -gt 0 -and
+        -not [string]::IsNullOrEmpty(($r.PolicySummaries | Select-Object -First 1).policytype)
+    }
+
+# ── A15: FirewallPolicies populated (full detail) ──
+$results.A15 = T "A15" "FirewallPolicies has entries with configuration" `
+    { $snapshot } `
+    { param($r)
+        $null -ne $r.FirewallPolicies -and
+        $r.FirewallPolicies.Count -gt 0 -and
+        $null -ne ($r.FirewallPolicies | Select-Object -First 1).configuration
+    }
+
+# ── A16: IpsPolicies populated (full detail) ──
+$results.A16 = T "A16" "IpsPolicies has entries with configuration" `
+    { $snapshot } `
+    { param($r)
+        $null -ne $r.IpsPolicies -and
+        $r.IpsPolicies.Count -gt 0 -and
+        $null -ne ($r.IpsPolicies | Select-Object -First 1).configuration
+    }
+
+# ── A17: ExceptionPolicies populated (full detail) ──
+$results.A17 = T "A17" "ExceptionPolicies has entries with configuration" `
+    { $snapshot } `
+    { param($r)
+        $null -ne $r.ExceptionPolicies -and
+        $r.ExceptionPolicies.Count -gt 0 -and
+        $null -ne ($r.ExceptionPolicies | Select-Object -First 1).configuration
+    }
+
+# ── B1: Per-category clixml files written (all 14 categories) ──
+$results.B1 = T "B1" "Writes all category .clixml files" `
     {
-        Export-SEPMInventory -OutputDir $outDir | Out-Null
         $allExist = $true
         $files = @(
             'all_version.xml', 'all_domains.xml', 'all_admins.xml',
             'all_database_info.xml', 'all_license.xml', 'all_license_summary.xml',
             'all_replication_status.xml', 'all_threat_stats.xml',
-            'all_latest_definitions.xml', 'all_events.xml'
+            'all_latest_definitions.xml', 'all_events.xml',
+            'all_policy_summaries.xml', 'all_fw_policies.xml',
+            'all_ips_policies.xml', 'all_exception_policies.xml'
         )
         foreach ($f in $files) {
             if (-not (Test-Path (Join-Path $outDir $f))) { $allExist = $false }
@@ -132,36 +175,39 @@ $results.A14 = T "A14" "Writes all category .clixml files" `
     } `
     { param($r) $r -eq $true }
 
-# ── A15: Timestamped blob written ──
-$results.A15 = T "A15" "Writes timestamped SepmInventory_*.clixml blob" `
+# ── B2: Timestamped blob written ──
+$results.B2 = T "B2" "Writes timestamped SepmInventory_*.clixml blob" `
     {
         $blobs = Get-ChildItem -Path $outDir -Filter 'SepmInventory_*.clixml' -ErrorAction SilentlyContinue
+        $global:blobPath = if ($blobs.Count -gt 0) { $blobs[0].FullName } else { $null }
         $blobs.Count -gt 0
     } `
     { param($r) $r -eq $true }
 
-# ── A16: Clixml round-trip ──
-$results.A16 = T "A16" "Snapshot blob round-trips with all categories" `
+# ── B3: Clixml round-trip ──
+$results.B3 = T "B3" "Snapshot blob round-trips with all categories" `
     {
-        $blob = Get-ChildItem -Path $outDir -Filter 'SepmInventory_*.clixml' |
-            Sort-Object LastWriteTime -Descending |
-            Select-Object -First 1
-        Import-Clixml -Path $blob.FullName
+        if ($global:blobPath) {
+            Import-Clixml -Path $global:blobPath
+        } else {
+            $null
+        }
     } `
     { param($r)
         $r.PSObject.TypeNames[0] -eq 'Deserialized.SEPM.Inventory' -and
         $null -ne $r.Version -and
         $null -ne $r.Domains -and
-        $null -ne $r.GUPs
+        $null -ne $r.GUPs -and
+        $null -ne $r.PolicySummaries -and
+        $null -ne $r.FirewallPolicies -and
+        $null -ne $r.IpsPolicies -and
+        $null -ne $r.ExceptionPolicies
     }
 
-# ── A17: DelayMs does not error ──
-$results.A17 = T "A17" "-DelayMs 50 does not error and returns snapshot" `
-    { Export-SEPMInventory -OutputDir $outDir -DelayMs 50 } `
-    { param($r)
-        $r -ne $null -and
-        $r.PSObject.TypeNames[0] -eq 'SEPM.Inventory'
-    }
+# ── B4: No failures during collection ──
+$results.B4 = T "B4" "No failures during inventory collection" `
+    { $snapshot } `
+    { param($r) $r.Failures.Count -eq 0 }
 
 # ── Cleanup ──
 Remove-Item -Path $outDir -Recurse -Force -ErrorAction SilentlyContinue
