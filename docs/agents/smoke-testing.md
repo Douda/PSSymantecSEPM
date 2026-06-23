@@ -48,25 +48,29 @@ pwsh -NoProfile -c '
 '
 ```
 
-### Smoke test structure (three-file entry point)
+### Smoke test structure (four-file pattern)
 
-Each smoke suite uses three files under `Scripts/Smoke/<Suite>/`:
+Each smoke suite uses three files under `Scripts/Smoke/<Suite>/`, plus one shared bootstrap file:
 
 | File | Purpose |
 |------|---------|
-| `run.ps7.ps1` | PS7 entry point — module import, `-SkipCertificateCheck`, `Set-SepmConfiguration`, stale cred cleanup |
-| `run.ps51.ps1` | PS5.1 entry point — `ServicePointManager` callback, TLS 1.2, `$env:APPDATA` config, module import from shared volume |
+| `Scripts/Smoke/Bootstrap.ps1` | Shared across all suites — `Initialize-SmokeBootstrap` handles module import, cert bypass, SEPM config, stale cred cleanup, and authentication. Branches on `$PSVersionTable.PSVersion.Major` internally. |
+| `run.ps7.ps1` | PS7 entry point — sets `$RepoRoot`, dot-sources `Bootstrap.ps1` + `Common.ps1` + `Tests.ps1`, calls `Initialize-SmokeBootstrap` |
+| `run.ps51.ps1` | PS5.1 entry point — same pattern, hardcoded Windows `$RepoRoot`, UTF-8 BOM |
 | `Tests.ps1` | Shared test logic — dot-sourced by both entry points after `Common.ps1` |
 
-Entry points handle platform bootstrapping, then dot-source `Scripts/Smoke/Common.ps1`
-(auth + `T`/`Skip`/`Write-Summary` helpers) and the suite's `Tests.ps1`.
+Entry points are thin adapters (~6 lines of code). They set `$RepoRoot`, dot-source
+`Bootstrap.ps1` and `Common.ps1`, call `Initialize-SmokeBootstrap -RepoRoot $RepoRoot`,
+then dot-source the suite's `Tests.ps1`.
 
-`Common.ps1` is platform-agnostic — no `$PSVersionTable` branching, no config paths,
-no module import. Credentials (`admin` / `MyComplexPassword1!`) are centralized there.
+`Common.ps1` is a pure helper library — `T`, `Skip`, `Write-Summary` only. No side
+effects, no `$PSVersionTable` branching, no config paths, no module import.
+Credentials (`admin` / `MyComplexPassword1!`) live inside `Bootstrap.ps1` /
+`Initialize-SmokeBootstrap`.
 
 See `Scripts/Smoke/README.md` for suite conversion status.
 
-### Manual (bypassing Common.ps1)
+### Manual (bypassing Bootstrap.ps1 + Common.ps1)
 
 Only needed when debugging the smoke infrastructure itself:
 
@@ -178,8 +182,10 @@ python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\Scripts\Smoke
 Smoke scripts are organized by cmdlet under `Scripts/Smoke/<CmdletName>/`.
 Each suite uses the three-file entry point pattern (`run.ps7.ps1`, `run.ps51.ps1`, `Tests.ps1`).
 
-All entry points dot-source `Scripts/Smoke/Common.ps1` (platform-agnostic auth + `T`/`Skip`/`Write-Summary` helpers),
-then their suite's `Tests.ps1` (shared test logic). Only the entry point preamble differs between PS7 and PS5.1.
+All entry points dot-source `Scripts/Smoke/Bootstrap.ps1` (platform-specific module import,
+cert bypass, config, auth via `Initialize-SmokeBootstrap`), then `Scripts/Smoke/Common.ps1`
+(pure helpers: `T`, `Skip`, `Write-Summary`), then their suite's `Tests.ps1` (shared test
+logic). Only the entry point preamble differs between PS7 and PS5.1.
 
 See `Scripts/Smoke/README.md` for which suites are converted and which still need migration.
 
@@ -220,7 +226,8 @@ Source/Private/Invoke-ABRestMethod.ps1        # DEPRECATED — replaced by Invok
 Source/Private/Invoke-SepmApi.ps1             # REST layer (PS7: Invoke-RestMethod, PS5.1: HttpWebRequest)
 Source/Private/Initialize-SEPMSession.ps1     # session factory
 Output/PSSymantecSEPM/                        # built module
-Scripts/Smoke/Common.ps1                      # shared smoke infra (auth + T/Skip/Write-Summary)
+Scripts/Smoke/Bootstrap.ps1                   # shared bootstrap (module import, cert bypass, config, auth)
+Scripts/Smoke/Common.ps1                      # pure helper library (T/Skip/Write-Summary)
 Scripts/Smoke/<Suite>/run.ps7.ps1             # PS7 entry point per suite
 Scripts/Smoke/<Suite>/run.ps51.ps1            # PS5.1 entry point per suite
 Scripts/Smoke/<Suite>/Tests.ps1               # shared test logic per suite

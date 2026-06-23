@@ -14,21 +14,9 @@
 $ErrorActionPreference = "Continue"
 $RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
 
-# ── Module import ──
-$OutputRoot = Join-Path -Path $RepoRoot -ChildPath 'Output'
-$env:PSModulePath = "$OutputRoot$([System.IO.Path]::PathSeparator)$env:PSModulePath"
-$ModulePath = Join-Path -Path $OutputRoot -ChildPath 'PSSymantecSEPM/PSSymantecSEPM.psm1'
-Import-Module $ModulePath -Force
-
-$SmokeModule = Get-Module PSSymantecSEPM
-& $SmokeModule { $script:SkipCert = $true }
-
-# ── SEPM connection ──
-Set-SepmConfiguration -ServerAddress 'localhost' -Port 8446 -ErrorAction SilentlyContinue
-
-# ── Clean stale credential/token files ──
-Remove-Item -Path "$HOME/.config/PSSymantecSEPM/creds.xml" -Force -ErrorAction SilentlyContinue
-Remove-Item -Path "$HOME/.local/share/PSSymantecSEPM/accessToken.xml" -Force -ErrorAction SilentlyContinue
+# ── Bootstrap: import module, cert bypass, config, auth ──
+. "$RepoRoot/Scripts/Smoke/Bootstrap.ps1"
+Initialize-SmokeBootstrap -RepoRoot $RepoRoot
 
 # ── Shared infrastructure + tests ──
 . "$RepoRoot/Scripts/Smoke/Common.ps1"

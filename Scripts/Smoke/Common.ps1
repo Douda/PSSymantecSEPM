@@ -1,41 +1,33 @@
-<#
+﻿<#
 .SYNOPSIS
     Unified shared infrastructure for all PSSymantecSEPM smoke scripts.
 
 .DESCRIPTION
-    Dot-source this from any smoke suite entry point after importing the module
-    and configuring the SEPM connection. This file is callable from both PS 5.1
-    and PS 7+ — it contains no platform branching, no config file paths, and no
+    Shared test helpers for all PSSymantecSEPM smoke scripts.
+
+    Dot-source this from any smoke suite entry point after calling
+    Initialize-SmokeBootstrap (which handles module import, config, and
+    authentication). This file is callable from both PS 5.1 and PS 7+ —
+    it contains no platform branching, no config file paths, and no
     module import.
 
     Provides:
-      - Authentication (credential → token)
       - T helper: standardized test execution with PASS/FAIL/SKIP verdicts
       - Skip helper: explicit test skip with reason
       - Write-Summary: parseable TOTAL line + exit code 1 on failure
 
-    The caller must:
-      1. Import the PSSymantecSEPM module
-      2. Call Set-SepmConfiguration (or write config.json / set $script:BaseURLv1)
-      3. Handle certificate bypass ($script:SkipCert or callback)
-      4. Remove stale credential/token files (platform-specific paths)
-      5. Set $RepoRoot before dot-sourcing this file.
+    Example:
 
-    . "$RepoRoot/Scripts/Smoke/Common.ps1"
+        . "$RepoRoot/Scripts/Smoke/Bootstrap.ps1"
+        Initialize-SmokeBootstrap -RepoRoot $RepoRoot
+        . "$RepoRoot/Scripts/Smoke/Common.ps1"
 
 .NOTES
-    Credentials are centralized here. Change once, all smoke scripts update.
     PS 5.1 compatible — no ternary, no null-coalescing, no -SkipCertificateCheck.
+    Authentication was moved to Bootstrap.ps1 / Initialize-SmokeBootstrap.
 #>
 
 $ErrorActionPreference = "Continue"
-
-# ── Authentication ──
-$SmokeCredPassword = ConvertTo-SecureString -String 'MyComplexPassword1!' -AsPlainText -Force
-$SmokeCredential   = New-Object System.Management.Automation.PSCredential -ArgumentList 'admin', $SmokeCredPassword
-Set-SEPMAuthentication -Credential $SmokeCredential -ErrorAction SilentlyContinue
-
-Get-SEPMAccessToken | Out-Null
 
 # ── Shared helper: T (test runner) ──
 function T {
@@ -134,15 +126,20 @@ function Write-Summary {
         Takes a hashtable of { testId: "PASS"|"FAIL"|"SKIP" }, sorts keys,
         emits per-test one-liners, then a parseable TOTAL line:
           TOTAL: N tests, N pass, N fail, N skip
-        Exits with code 1 if any failures.
+        By default exits with code 1 if any failures. Pass -OnFailure { }
+        to suppress the exit (useful in tests).
     .PARAMETER Results
         Hashtable mapping test IDs to verdict strings.
     .PARAMETER Label
         Optional label for the summary header (default: "Smoke Tests").
+    .PARAMETER OnFailure
+        Optional ScriptBlock invoked when failures are present. Defaults to
+        { exit 1 }. Pass { } to suppress exit during unit testing.
     #>
     param(
         [hashtable]$Results,
-        [string]$Label = "Smoke Tests"
+        [string]$Label = "Smoke Tests",
+        [ScriptBlock]$OnFailure = { exit 1 }
     )
     $pass = 0; $fail = 0; $skip = 0
     Write-Host "`n========== $Label ==========" -ForegroundColor Yellow
@@ -155,6 +152,6 @@ function Write-Summary {
     $total = $pass + $fail + $skip
     Write-Host "TOTAL: $total tests, $pass pass, $fail fail, $skip skip" -ForegroundColor Yellow
     if ($fail -gt 0) {
-        exit 1
+        & $OnFailure
     }
 }

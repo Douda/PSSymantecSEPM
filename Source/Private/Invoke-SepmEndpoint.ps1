@@ -1,7 +1,7 @@
 function Invoke-SepmEndpoint {
     <#
     .SYNOPSIS
-        Resolves an endpoint and dispatches it through Invoke-SepmApi.
+        Resolves an endpoint and dispatches it through Invoke-SepmApi or Invoke-SepmApiPaginated.
 
     .DESCRIPTION
         Takes an endpoint definition from the registry and a session, resolves the full
@@ -9,13 +9,13 @@ function Invoke-SepmEndpoint {
         Uri, and Session. This is the single entry point all public cmdlets use to reach
         the transport layer.
 
-        When the endpoint declares BodyParams, builds a flat hashtable body from
-        $BoundParameters using the explicit mapping (API key name = param name).
-        Switch parameters are converted to boolean. Null/empty string values are omitted.
-        The body is serialized to JSON and sent with ContentType 'application/json'.
+        When the endpoint declares BodyParams, delegates body construction to
+        Build-SepmBody. A pre-serialized -Body argument takes precedence
+        over BodyParams auto-build (for cmdlets with complex nested bodies).
 
-        A pre-serialized -Body argument takes precedence over BodyParams auto-build
-        (for cmdlets with complex nested bodies).
+        When the endpoint declares Paginated = $true, delegates to
+        Invoke-SepmApiPaginated which handles page iteration and concatenation,
+        returning the full array of items directly.
 
     .PARAMETER Endpoint
         A hashtable from the endpoint registry with at least Method, Version, and Path.
@@ -39,7 +39,7 @@ function Invoke-SepmEndpoint {
         Use for complex bodies the flat auto-build cannot express.
 
     .OUTPUTS
-        System.Collections.Hashtable. The API response.
+        System.Collections.Hashtable or System.Object[] (paginated endpoints).
 
     .NOTES
         Internal helper method. Not exported.
@@ -62,30 +62,15 @@ function Invoke-SepmEndpoint {
         [string]$Body
     )
 
-    $uri = Resolve-SepmEndpoint -Endpoint $Endpoint -Session $Session -BoundParameters $BoundParameters -AdditionalQueryParams $AdditionalQueryParams -PathIds $PathIds
-
-    # Build body: explicit -Body override takes precedence, then BodyParams auto-build
-    $bodyToSend = $Body
-    if (-not $bodyToSend -and $Endpoint.BodyParams -and $BoundParameters) {
-        $builtBody = @{}
-        foreach ($apiKey in $Endpoint.BodyParams.Keys) {
-            $paramName = $Endpoint.BodyParams[$apiKey]
-            if ($BoundParameters.ContainsKey($paramName)) {
-                $value = $BoundParameters[$paramName]
-                # Omit null/empty values
-                if ($null -eq $value) { continue }
-                if ($value -is [string] -and [string]::IsNullOrEmpty($value)) { continue }
-                # Convert switch to boolean
-                if ($value -is [switch]) { $value = $value.ToBool() }
-                $builtBody[$apiKey] = $value
-            }
-        }
-        if ($builtBody.Count -gt 0) {
-            $bodyToSend = ConvertTo-SEPMJson -InputObject $builtBody
-        }
+    # Paginated endpoint: delegate to Invoke-SepmApiPaginated
+    if ($Endpoint.Paginated) {
+        return Invoke-SepmApiPaginated -Endpoint $Endpoint -Session $Session -BoundParameters $BoundParameters -AdditionalQueryParams $AdditionalQueryParams -PathIds $PathIds -Body $Body
     }
 
-    # Build splat for Invoke-SepmApi
+    $uri = Resolve-SepmEndpoint -Endpoint $Endpoint -Session $Session -BoundParameters $BoundParameters -AdditionalQueryParams $AdditionalQueryParams -PathIds $PathIds
+
+    $bodyToSend = Build-SepmBody -Endpoint $Endpoint -BoundParameters $BoundParameters -Body $Body
+
     $apiSplat = @{
         Method  = $Endpoint.Method
         Uri     = $uri

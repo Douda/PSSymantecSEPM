@@ -153,4 +153,57 @@ Describe 'Invoke-SepmEndpoint' {
             $bodyObj.PSObject.Properties.Name | Should -Not -Contain 'description'
         }
     }
+
+    Context 'paginated branch' {
+        BeforeAll {
+            $fakeSession = New-TestSession -ServerAddress 'sepm.example.com' -Port '8446' -Token 'abc123'
+
+            $script:pagedEndpoint = @{
+                OperationName = 'Get-SEPComputers'
+                Version       = '1.0'
+                Method        = 'GET'
+                Path          = '/computers'
+                Paginated     = $true
+                PageDefaults  = @{ sort = 'COMPUTER_NAME'; pageSize = 100 }
+            }
+
+            $script:nonPagedEndpoint = @{
+                OperationName = 'Get-SEPMVersion'
+                Version       = '1.0'
+                Method        = 'GET'
+                Path          = '/version'
+            }
+        }
+
+        It 'delegates to Invoke-SepmApiPaginated when Paginated = $true' {
+            InModuleScope PSSymantecSEPM -Parameters @{ Endpoint = $script:pagedEndpoint; Session = $fakeSession } {
+                Mock Invoke-SepmApiPaginated {
+                    return @('PC1', 'PC2')
+                }
+
+                $result = Invoke-SepmEndpoint -Endpoint $Endpoint -Session $Session
+
+                # Result is the concatenated array directly
+                $result.Count | Should -Be 2
+                $result[0] | Should -Be 'PC1'
+                $result[1] | Should -Be 'PC2'
+
+                Should -Invoke Invoke-SepmApiPaginated -Times 1 -Exactly
+            }
+        }
+
+        It 'does NOT delegate to Invoke-SepmApiPaginated when Paginated is not set' {
+            InModuleScope PSSymantecSEPM -Parameters @{ Endpoint = $script:nonPagedEndpoint; Session = $fakeSession } {
+                Mock Invoke-SepmApi { return @{ ok = $true } }
+                Mock Invoke-SepmApiPaginated {
+                    return @()
+                }
+
+                $result = Invoke-SepmEndpoint -Endpoint $Endpoint -Session $Session
+
+                $result.ok | Should -Be $true
+                Should -Invoke Invoke-SepmApiPaginated -Times 0 -Exactly
+            }
+        }
+    }
 }

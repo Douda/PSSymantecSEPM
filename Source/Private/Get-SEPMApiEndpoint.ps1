@@ -194,18 +194,39 @@ if (-not $script:_endpointRegistry) {
             QueryParams   = @{
                 computerName = 'ComputerName'
             }
+            Paginated     = $true
+            PageDefaults  = @{ sort = 'COMPUTER_NAME'; pageSize = 100 }
         }
         'Get-SEPMGroups' = @{
             OperationName = 'Get-SEPMGroups'
             Version       = '1.0'
             Method        = 'GET'
             Path          = '/groups'
+            Paginated     = $true
+            PageDefaults  = @{ pageSize = 25 }
+        }
+        'Get-SEPMHostGroupSummary' = @{
+            OperationName = 'Get-SEPMHostGroupSummary'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/policies/policy-objects/hostgroups/summary'
+            QueryParams   = @{
+                domainId = 'DomainId'
+            }
+        }
+        'Get-SEPMHostGroup' = @{
+            OperationName = 'Get-SEPMHostGroup'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/policies/policy-objects/hostgroups/{id}'
         }
         'Get-SEPMCommandStatus' = @{
             OperationName = 'Get-SEPMCommandStatus'
             Version       = '1.0'
             Method        = 'GET'
             Path          = '/command-queue/{id}'
+            Paginated     = $true
+            PageDefaults  = @{}
         }
         'Get-SEPMLocation' = @{
             OperationName = 'Get-SEPMLocation'
