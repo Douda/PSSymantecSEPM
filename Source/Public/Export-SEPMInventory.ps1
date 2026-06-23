@@ -364,13 +364,13 @@ function Export-SEPMInventory {
         # ── Locations (per-group enumeration) ──
         $allLocations = @()
         if ($null -ne $snapshot.Groups) {
-            $groupsArray = @($snapshot.Groups)
+            $groupsArray = $snapshot.Groups
             $groupCount = $groupsArray.Count
             $groupIndex = 0
             foreach ($group in $groupsArray) {
                 $groupIndex++
                 try {
-                    $groupLocs = @(Get-SEPMLocation -GroupID $group.id)
+                    $groupLocs = Get-SEPMLocation -GroupID $group.id
                     $allLocations += $groupLocs
                 } catch {
                     $snapshot.Failures += [PSCustomObject]@{
@@ -395,7 +395,7 @@ function Export-SEPMInventory {
         $allLocationXml = @()
         $allGroupSettings = @()
         if ($null -ne $snapshot.Locations -and $snapshot.Locations.Count -gt 0) {
-            $locations = @($snapshot.Locations)
+            $locations = $snapshot.Locations
             $locationCount = $locations.Count
             $locationIndex = 0
             foreach ($location in $locations) {
@@ -457,10 +457,9 @@ function Export-SEPMInventory {
         try {
             $hostGroupSummaries = Get-SEPMHostGroupSummary
             if ($null -ne $hostGroupSummaries) {
-                $hgArray = @($hostGroupSummaries)
-                $hgCount = $hgArray.Count
+                $hgCount = $hostGroupSummaries.Count
                 $hgIndex = 0
-                foreach ($hg in $hgArray) {
+                foreach ($hg in $hostGroupSummaries) {
                     $hgIndex++
                     try {
                         $hgDetail = Get-SEPMHostGroup -Id $hg.id

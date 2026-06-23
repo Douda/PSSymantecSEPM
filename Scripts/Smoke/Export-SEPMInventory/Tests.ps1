@@ -305,7 +305,22 @@ $results.B3 = T "B3" "Snapshot blob round-trips with all categories" `
 # ── B4: No failures during collection ──
 $results.B4 = T "B4" "No failures during inventory collection" `
     { $snapshot } `
-    { param($r) $r.Failures.Count -eq 0 }
+    { param($r)
+        if ($r.Failures.Count -gt 0) {
+            Write-Host "  FAILURES: $($r.Failures.Count) failure(s):" -ForegroundColor Yellow
+            foreach ($f in $r.Failures) {
+                Write-Host "    Category: $($f.Category)"
+                if ($f.PolicyName)    { Write-Host "    PolicyName: $($f.PolicyName)" }
+                if ($f.GroupID)       { Write-Host "    GroupID: $($f.GroupID)" }
+                if ($f.GroupName)     { Write-Host "    GroupName: $($f.GroupName)" }
+                if ($f.LocationID)    { Write-Host "    LocationID: $($f.LocationID)" }
+                if ($f.HostGroupID)   { Write-Host "    HostGroupID: $($f.HostGroupID)" }
+                if ($f.HostGroupName) { Write-Host "    HostGroupName: $($f.HostGroupName)" }
+                Write-Host "    Error: $($f.Error)"
+            }
+        }
+        $r.Failures.Count -eq 0
+    }
 
 # ── Cleanup ──
 Remove-Item -Path $outDir -Recurse -Force -ErrorAction SilentlyContinue
