@@ -69,67 +69,28 @@ function Get-SEPComputers {
 
     process {
 
-        # Using computer name API call
         if ($ComputerName) {
-            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -BoundParameters $PSBoundParameters
-            $allResults = $resp.content
+            $allResults = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -BoundParameters $PSBoundParameters
 
-            # Filtering
-            $allResults = $allResults | Where-Object { $_.computerName -like $ComputerName }
+            # Filtering (PS 5.1: @() wrapper prevents Where-Object scalar unrolling)
+            $allResults = @($allResults | Where-Object { $_.computerName -like $ComputerName })
         }
 
-        # Using computer name API call then filtering
         elseif ($GroupName) {
-            $allResults = @()
+            $allResults = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
 
-            $pageParams = @{
-                sort         = "COMPUTER_NAME"
-                pageIndex    = 1
-                pageSize     = 100
-                computerName = $ComputerName
-            }
-
-            do {
-                $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -AdditionalQueryParams $pageParams
-
-                # Process the response
-                $allResults += $resp.content
-
-                # Increment the page index
-                $pageParams.pageIndex++
-            } until ($resp.lastPage -eq $true)
-
-            # Filtering
+            # Filtering (PS 5.1: @() wrapper prevents Where-Object scalar unrolling)
             if ($IncludeSubGroups) {
-                $allResults = $allResults | Where-Object { $_.group.name -like "$GroupName*" }
+                $allResults = @($allResults | Where-Object { $_.group.name -like "$GroupName*" })
             } else {
-                $allResults = $allResults | Where-Object { $_.group.name -eq $GroupName }
+                $allResults = @($allResults | Where-Object { $_.group.name -eq $GroupName })
             }
         }
 
-        # No parameters
         else {
-            $allResults = @()
-
-            # URI query strings
-            $pageParams = @{
-                sort      = "COMPUTER_NAME"
-                pageIndex = 1
-                pageSize  = 100
-            }
-
-            do {
-                $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -AdditionalQueryParams $pageParams
-
-                # Process the response
-                $allResults += $resp.content
-
-                # Increment the page index
-                $pageParams.pageIndex++
-            } until ($resp.lastPage -eq $true)
+            $allResults = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
         }
 
-        # return the response
         Write-Output $allResults -NoEnumerate
     }
 }

@@ -17,7 +17,19 @@ _Avoid_: SEPM server, manager server
 **Group**:
 A node in a tree hierarchy used to organize Clients and scope Policy assignments.
 Groups form a parent-child tree; a Client belongs to exactly one Group.
-_Avoid_: Folder, container, organizational unit
+_Avoid_: Folder, container, organizational unit, host group
+
+**Host**:
+A network-addressable entity (MAC, IPv4, IPv6, DNS host, DNS domain, IP range,
+IP subnet) used inside Host Groups and firewall rules to define which network
+traffic a rule matches. Not a Client — Hosts are network identifiers, not machines.
+_Avoid_: Endpoint, target (when referring to a Host inside a rule)
+
+**Host Group**:
+A named, reusable policy object containing a list of Hosts. Host Groups are
+referenced by firewall and other policies so a common set of network entities
+can be shared across rules. Managed under /policies/policy-objects/hostgroups.
+_Avoid_: Network group, IP group, host list
 
 **Location**:
 A network-context-aware profile within a Group. A single Client can have multiple

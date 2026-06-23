@@ -56,19 +56,7 @@ function Get-SEPMCommandStatus {
     }
 
     process {
-        $allResults = @()
-        $pageParams = @{}
-
-        do {
-            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($Command_ID) -AdditionalQueryParams $pageParams
-
-            # Process the response
-            $allResults += $resp.content
-
-            # Increment the page index
-            $pageParams.pageIndex++
-
-        } until ($resp.lastPage -eq $true)
+        $allResults = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($Command_ID)
 
         # Add a PSTypeName to the object 
         $allResults | ForEach-Object {
