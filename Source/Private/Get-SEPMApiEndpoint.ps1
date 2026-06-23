@@ -201,6 +201,15 @@ if (-not $script:_endpointRegistry) {
             Method        = 'GET'
             Path          = '/groups'
         }
+        'Get-SEPMHostGroupSummary' = @{
+            OperationName = 'Get-SEPMHostGroupSummary'
+            Version       = '1.0'
+            Method        = 'GET'
+            Path          = '/policies/policy-objects/hostgroups/summary'
+            QueryParams   = @{
+                domainId = 'DomainId'
+            }
+        }
         'Get-SEPMCommandStatus' = @{
             OperationName = 'Get-SEPMCommandStatus'
             Version       = '1.0'
