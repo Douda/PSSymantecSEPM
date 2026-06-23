@@ -1,12 +1,12 @@
 <#
 .SYNOPSIS
-    PS7 entry point for Update-SEPMExceptionPolicy smoke tests.
+    PS7 entry point for Get-SEPMIpsPolicy smoke tests.
 
 .DESCRIPTION
     Bootstraps the module and SEPM connection for PS 7+, then dot-sources
     Common.ps1 (auth + helpers) and Tests.ps1 (test cases).
 
-    Usage: pwsh -NoProfile -File Scripts/Smoke/Update-SEPMExceptionPolicy/run.ps7.ps1
+    Usage: pwsh -NoProfile -File Scripts/Smoke/Get-SEPMIpsPolicy/run.ps7.ps1
 #>
 
 #Requires -Version 7.0
@@ -20,4 +20,4 @@ Initialize-SmokeBootstrap -RepoRoot $RepoRoot
 
 # ── Shared infrastructure + tests ──
 . "$RepoRoot/Scripts/Smoke/Common.ps1"
-. "$RepoRoot/Scripts/Smoke/Update-SEPMExceptionPolicy/Tests.ps1"
+. "$RepoRoot/Scripts/Smoke/Get-SEPMIpsPolicy/Tests.ps1"
