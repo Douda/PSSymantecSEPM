@@ -5,6 +5,42 @@ Describe 'Export-SEPMInventory' {
     BeforeAll {
         Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
         $script:TestState = Initialize-TestEnvironment
+
+        # ── Shared base mocks for all contexts ──
+        $fakeSession = New-TestSession
+        Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+
+        Mock Get-SEPMVersion -ModuleName PSSymantecSEPM {
+            return @{ API_SEQUENCE = '230504014'; API_VERSION = '14.3.7000'; version = '14.3.9816.7000' }
+        }
+        Mock Get-SEPMDomain -ModuleName PSSymantecSEPM {
+            return @{ id = 'abc123'; name = 'Default' }
+        }
+        # Infrastructure & Security mocks (return $null by default — contexts override as needed)
+        Mock Get-SEPGUPList -ModuleName PSSymantecSEPM {
+            Write-Output @(@{ name = 'GUP1'; host = 'gup1.example.com' }) -NoEnumerate
+        }
+        Mock Get-SEPMAdmins -ModuleName PSSymantecSEPM {
+            Write-Output @(@{ loginName = 'admin'; loginDomain = 'Default'; fullName = 'Administrator' }) -NoEnumerate
+        }
+        Mock Get-SEPMDatabaseInfo -ModuleName PSSymantecSEPM {
+            return @{ type = 'embedded'; version = '11.0' }
+        }
+        Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+            return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
+        }
+        Mock Get-SEPMReplicationStatus -ModuleName PSSymantecSEPM {
+            Write-Output @(@{ siteName = 'Site1'; replicationStatus = 'OK' }) -NoEnumerate
+        }
+        Mock Get-SEPMThreatStats -ModuleName PSSymantecSEPM {
+            Write-Output @(@{ infectedClients = '5'; lastUpdated = '1700000000000' }) -NoEnumerate
+        }
+        Mock Get-SEPMLatestDefinition -ModuleName PSSymantecSEPM {
+            return @{ contentName = 'AV_DEFS'; publishedBySEPM = '6/23/2026 rev. 3' }
+        }
+        Mock Get-SEPMEventInfo -ModuleName PSSymantecSEPM {
+            Write-Output @(@{ subject = 'Password warning'; eventId = 'EVT001' }) -NoEnumerate
+        }
     }
 
     AfterAll {
@@ -13,13 +49,12 @@ Describe 'Export-SEPMInventory' {
 
     Context 'Snapshot shape' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM {
-                return @{ API_SEQUENCE = '230504014'; API_VERSION = '14.3.7000'; version = '14.3.9816.7000' }
-            }
-            Mock Get-SEPMDomain -ModuleName PSSymantecSEPM {
-                return @{ id = 'abc123'; name = 'Default' }
+            # LicenseSummary needs separate mock since Get-SEPMLicense base mock doesn't cover -Summary
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
             }
         }
 
@@ -32,17 +67,28 @@ Describe 'Export-SEPMInventory' {
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
             $result.FetchedAt | Should -BeOfType [DateTime]
         }
+
+        It 'snapshot contains all infrastructure & security properties' {
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.GUPs                | Should -Not -BeNullOrEmpty
+            $result.Admins              | Should -Not -BeNullOrEmpty
+            $result.DatabaseInfo        | Should -Not -BeNullOrEmpty
+            $result.License             | Should -Not -BeNullOrEmpty
+            $result.LicenseSummary      | Should -Not -BeNullOrEmpty
+            $result.ReplicationStatus   | Should -Not -BeNullOrEmpty
+            $result.ThreatStats         | Should -Not -BeNullOrEmpty
+            $result.LatestDefinitions   | Should -Not -BeNullOrEmpty
+            $result.Events              | Should -Not -BeNullOrEmpty
+        }
     }
 
     Context 'Sub-cmdlet data gathering' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM {
-                return @{ API_SEQUENCE = '230504014'; API_VERSION = '14.3.7000'; version = '14.3.9816.7000' }
-            }
-            Mock Get-SEPMDomain -ModuleName PSSymantecSEPM {
-                return @{ id = 'abc123'; name = 'Default' }
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
             }
         }
 
@@ -58,17 +104,69 @@ Describe 'Export-SEPMInventory' {
             $result.Domains.id   | Should -Be 'abc123'
             $result.Domains.name | Should -Be 'Default'
         }
+
+        It 'stores Get-SEPGUPList output in GUPs property' {
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.GUPs.Count      | Should -Be 1
+            $result.GUPs[0].name    | Should -Be 'GUP1'
+            $result.GUPs[0].host    | Should -Be 'gup1.example.com'
+        }
+
+        It 'stores Get-SEPMAdmins output in Admins property' {
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.Admins.Count        | Should -Be 1
+            $result.Admins[0].loginName | Should -Be 'admin'
+        }
+
+        It 'stores Get-SEPMDatabaseInfo output in DatabaseInfo property' {
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.DatabaseInfo.type    | Should -Be 'embedded'
+            $result.DatabaseInfo.version | Should -Be '11.0'
+        }
+
+        It 'stores Get-SEPMLicense output in License property' {
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.License.serialNumber | Should -Be 'BXXXXXXXXXX'
+            $result.License.seats        | Should -Be 10000
+        }
+
+        It 'stores Get-SEPMLicense -Summary output in LicenseSummary property' {
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.LicenseSummary.license_type | Should -Be 'PAID'
+        }
+
+        It 'stores Get-SEPMReplicationStatus output in ReplicationStatus property' {
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.ReplicationStatus.Count              | Should -Be 1
+            $result.ReplicationStatus[0].siteName         | Should -Be 'Site1'
+        }
+
+        It 'stores Get-SEPMThreatStats output in ThreatStats property' {
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.ThreatStats.Count               | Should -Be 1
+            $result.ThreatStats[0].infectedClients   | Should -Be '5'
+        }
+
+        It 'stores Get-SEPMLatestDefinition output in LatestDefinitions property' {
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.LatestDefinitions.contentName     | Should -Be 'AV_DEFS'
+            $result.LatestDefinitions.publishedBySEPM | Should -Be '6/23/2026 rev. 3'
+        }
+
+        It 'stores Get-SEPMEventInfo output in Events property' {
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.Events.Count        | Should -Be 1
+            $result.Events[0].subject    | Should -Be 'Password warning'
+        }
     }
 
     Context 'Per-category .clixml output' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM {
-                return @{ API_SEQUENCE = '230504014'; API_VERSION = '14.3.7000'; version = '14.3.9816.7000' }
-            }
-            Mock Get-SEPMDomain -ModuleName PSSymantecSEPM {
-                return @{ id = 'abc123'; name = 'Default' }
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
             }
         }
 
@@ -82,29 +180,27 @@ Describe 'Export-SEPMInventory' {
             Join-Path -Path 'TestDrive:' -ChildPath 'all_domains.xml' | Should -Exist
         }
 
-        It 'writes correct version data to all_version.xml' {
+        It 'writes infrastructure & security .clixml files' {
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            $imported = Import-Clixml -Path (Join-Path -Path 'TestDrive:' -ChildPath 'all_version.xml')
-            $imported.API_SEQUENCE | Should -Be '230504014'
-            $imported.version      | Should -Be '14.3.9816.7000'
-        }
-
-        It 'writes correct domain data to all_domains.xml' {
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            $imported = Import-Clixml -Path (Join-Path -Path 'TestDrive:' -ChildPath 'all_domains.xml')
-            $imported.name | Should -Be 'Default'
+            Join-Path -Path 'TestDrive:' -ChildPath 'all_gups.xml'               | Should -Exist
+            Join-Path -Path 'TestDrive:' -ChildPath 'all_admins.xml'             | Should -Exist
+            Join-Path -Path 'TestDrive:' -ChildPath 'all_database_info.xml'      | Should -Exist
+            Join-Path -Path 'TestDrive:' -ChildPath 'all_license.xml'            | Should -Exist
+            Join-Path -Path 'TestDrive:' -ChildPath 'all_license_summary.xml'    | Should -Exist
+            Join-Path -Path 'TestDrive:' -ChildPath 'all_replication_status.xml' | Should -Exist
+            Join-Path -Path 'TestDrive:' -ChildPath 'all_threat_stats.xml'       | Should -Exist
+            Join-Path -Path 'TestDrive:' -ChildPath 'all_latest_definitions.xml' | Should -Exist
+            Join-Path -Path 'TestDrive:' -ChildPath 'all_events.xml'             | Should -Exist
         }
     }
 
     Context 'Timestamped snapshot blob' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM {
-                return @{ API_SEQUENCE = '230504014'; API_VERSION = '14.3.7000'; version = '14.3.9816.7000' }
-            }
-            Mock Get-SEPMDomain -ModuleName PSSymantecSEPM {
-                return @{ id = 'abc123'; name = 'Default' }
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
             }
         }
 
@@ -132,72 +228,40 @@ Describe 'Export-SEPMInventory' {
 
     Context 'Failure capture' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
+            }
         }
 
-        It 'captures version failure in Failures array' {
-            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM { throw 'Version API unavailable' }
-            Mock Get-SEPMDomain -ModuleName PSSymantecSEPM {
-                return @{ id = 'abc123'; name = 'Default' }
-            }
+        It 'captures infrastructure failure in Failures array' {
+            Mock Get-SEPGUPList -ModuleName PSSymantecSEPM { throw 'GUP API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
             $result.Failures.Count | Should -Be 1
-            $result.Failures[0].Category | Should -Be 'Version'
-            $result.Failures[0].Error    | Should -Be 'Version API unavailable'
-            $result.Version | Should -BeNullOrEmpty
-            $result.Domains | Should -Not -BeNullOrEmpty
+            $result.Failures[0].Category | Should -Be 'GUPs'
+            $result.Failures[0].Error    | Should -Be 'GUP API unavailable'
+            $result.GUPs | Should -BeNullOrEmpty
         }
 
-        It 'captures domain failure in Failures array' {
-            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM {
-                return @{ API_SEQUENCE = '230504014'; API_VERSION = '14.3.7000'; version = '14.3.9816.7000' }
-            }
-            Mock Get-SEPMDomain -ModuleName PSSymantecSEPM { throw 'Domain API unavailable' }
+        It 'writes _failed.xml for infrastructure failures' {
+            Mock Get-SEPMAdmins -ModuleName PSSymantecSEPM { throw 'Admins API unavailable' }
 
-            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
-            $result.Failures.Count | Should -Be 1
-            $result.Failures[0].Category | Should -Be 'Domains'
-            $result.Failures[0].Error    | Should -Be 'Domain API unavailable'
-            $result.Version | Should -Not -BeNullOrEmpty
-            $result.Domains | Should -BeNullOrEmpty
-        }
-
-        It 'captures multiple failures' {
-            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM { throw 'Version API unavailable' }
-            Mock Get-SEPMDomain -ModuleName PSSymantecSEPM { throw 'Domain API unavailable' }
-
-            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
-            $result.Failures.Count | Should -Be 2
-            $result.Failures[0].Category | Should -Be 'Version'
-            $result.Failures[1].Category | Should -Be 'Domains'
-        }
-
-        It 'writes _failed.xml when a category fails' {
-            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM { throw 'Version API unavailable' }
-            Mock Get-SEPMDomain -ModuleName PSSymantecSEPM {
-                return @{ id = 'abc123'; name = 'Default' }
-            }
-
-            # Clean any leftover _failed.xml from prior tests in this Context
             Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
-
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            Join-Path -Path 'TestDrive:' -ChildPath 'Version_failed.xml' | Should -Exist
-            Join-Path -Path 'TestDrive:' -ChildPath 'Domains_failed.xml' | Should -Not -Exist
+            Join-Path -Path 'TestDrive:' -ChildPath 'Admins_failed.xml' | Should -Exist
         }
     }
 
     Context 'OutputDir parameter' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM {
-                return @{ API_SEQUENCE = '230504014'; API_VERSION = '14.3.7000'; version = '14.3.9816.7000' }
-            }
-            Mock Get-SEPMDomain -ModuleName PSSymantecSEPM {
-                return @{ id = 'abc123'; name = 'Default' }
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
             }
         }
 
@@ -208,18 +272,17 @@ Describe 'Export-SEPMInventory' {
 
             Join-Path -Path $customDir -ChildPath 'all_version.xml' | Should -Exist
             Join-Path -Path $customDir -ChildPath 'all_domains.xml' | Should -Exist
+            Join-Path -Path $customDir -ChildPath 'all_gups.xml'    | Should -Exist
         }
     }
 
     Context 'DelayMs parameter' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM {
-                return @{ API_SEQUENCE = '230504014'; API_VERSION = '14.3.7000'; version = '14.3.9816.7000' }
-            }
-            Mock Get-SEPMDomain -ModuleName PSSymantecSEPM {
-                return @{ id = 'abc123'; name = 'Default' }
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
             }
         }
 

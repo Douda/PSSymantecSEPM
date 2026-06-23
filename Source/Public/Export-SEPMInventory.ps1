@@ -32,16 +32,25 @@ function Export-SEPMInventory {
         }
 
         $snapshot = [PSCustomObject]@{
-            FetchedAt = [DateTime]::UtcNow
-            Version   = $null
-            Domains   = $null
-            Failures  = @()
+            FetchedAt           = [DateTime]::UtcNow
+            Version             = $null
+            Domains             = $null
+            GUPs                = $null
+            Admins              = $null
+            DatabaseInfo        = $null
+            License             = $null
+            LicenseSummary      = $null
+            ReplicationStatus   = $null
+            ThreatStats         = $null
+            LatestDefinitions   = $null
+            Events              = $null
+            Failures            = @()
         }
         $snapshot.PSObject.TypeNames.Insert(0, 'SEPM.Inventory')
     }
 
     process {
-        # Version
+        # ── Version ──
         try {
             $snapshot.Version = Get-SEPMVersion
         } catch {
@@ -55,7 +64,7 @@ function Export-SEPMInventory {
 
         if ($DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
 
-        # Domains
+        # ── Domains ──
         try {
             $snapshot.Domains = Get-SEPMDomain
         } catch {
@@ -67,12 +76,152 @@ function Export-SEPMInventory {
                 Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'Domains_failed.xml') -Force
         }
 
-        # Write per-category .clixml files
+        if ($DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
+
+        # ── Infrastructure & Security state ──
+        # (no DelayMs between these single-call categories)
+
+        # GUPs
+        try {
+            $snapshot.GUPs = Get-SEPGUPList
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'GUPs'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'GUPs_failed.xml') -Force
+        }
+
+        # Admins
+        try {
+            $snapshot.Admins = Get-SEPMAdmins
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'Admins'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'Admins_failed.xml') -Force
+        }
+
+        # DatabaseInfo
+        try {
+            $snapshot.DatabaseInfo = Get-SEPMDatabaseInfo
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'DatabaseInfo'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'DatabaseInfo_failed.xml') -Force
+        }
+
+        # License
+        try {
+            $snapshot.License = Get-SEPMLicense
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'License'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'License_failed.xml') -Force
+        }
+
+        # LicenseSummary
+        try {
+            $snapshot.LicenseSummary = Get-SEPMLicense -Summary
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'LicenseSummary'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'LicenseSummary_failed.xml') -Force
+        }
+
+        # ReplicationStatus
+        try {
+            $snapshot.ReplicationStatus = Get-SEPMReplicationStatus
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'ReplicationStatus'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'ReplicationStatus_failed.xml') -Force
+        }
+
+        # ThreatStats
+        try {
+            $snapshot.ThreatStats = Get-SEPMThreatStats
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'ThreatStats'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'ThreatStats_failed.xml') -Force
+        }
+
+        # LatestDefinitions
+        try {
+            $snapshot.LatestDefinitions = Get-SEPMLatestDefinition
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'LatestDefinitions'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'LatestDefinitions_failed.xml') -Force
+        }
+
+        # Events
+        try {
+            $snapshot.Events = Get-SEPMEventInfo
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'Events'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'Events_failed.xml') -Force
+        }
+
+        # ── Write per-category .clixml files ──
         if ($snapshot.Version) {
             $snapshot.Version | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_version.xml') -Force
         }
         if ($snapshot.Domains) {
             $snapshot.Domains | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_domains.xml') -Force
+        }
+        if ($snapshot.GUPs) {
+            $snapshot.GUPs | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_gups.xml') -Force
+        }
+        if ($snapshot.Admins) {
+            $snapshot.Admins | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_admins.xml') -Force
+        }
+        if ($snapshot.DatabaseInfo) {
+            $snapshot.DatabaseInfo | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_database_info.xml') -Force
+        }
+        if ($snapshot.License) {
+            $snapshot.License | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_license.xml') -Force
+        }
+        if ($snapshot.LicenseSummary) {
+            $snapshot.LicenseSummary | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_license_summary.xml') -Force
+        }
+        if ($snapshot.ReplicationStatus) {
+            $snapshot.ReplicationStatus | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_replication_status.xml') -Force
+        }
+        if ($snapshot.ThreatStats) {
+            $snapshot.ThreatStats | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_threat_stats.xml') -Force
+        }
+        if ($snapshot.LatestDefinitions) {
+            $snapshot.LatestDefinitions | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_latest_definitions.xml') -Force
+        }
+        if ($snapshot.Events) {
+            $snapshot.Events | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_events.xml') -Force
         }
 
         # Write timestamped snapshot blob
