@@ -15,6 +15,7 @@
 import * as sandcastle from "@ai-hero/sandcastle";
 import { docker } from "@ai-hero/sandcastle/sandboxes/docker";
 import { execSync } from "child_process";
+import * as fs from "fs";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -254,7 +255,6 @@ function updatePRChecklist(prNumber: number, issueNumber: number): void {
   );
 
   if (updated !== body) {
-    const fs = require("fs");
     const tmpFile = `/tmp/pr-body-${prNumber}.md`;
     fs.writeFileSync(tmpFile, updated);
     sh(`gh pr edit ${prNumber} --body-file ${tmpFile} 2>&1`);
