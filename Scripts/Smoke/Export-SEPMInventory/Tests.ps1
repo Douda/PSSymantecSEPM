@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Shared smoke tests for Export-SEPMInventory.
 
@@ -11,8 +11,6 @@
 
 $results = @{}
 $outDir = Join-Path $RepoRoot 'Output/smoke-inventory'
-$snapshot = $null
-$blobPath = $null
 
 # ── Single inventory call: shared across all tests ──
 $snapshot = Export-SEPMInventory -OutputDir $outDir -DelayMs 10

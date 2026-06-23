@@ -247,11 +247,7 @@ function Export-SEPMInventory {
                 if ($ipsIndex -lt $ipsCount -and $DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
             }
         }
-        if ($ipsPolicies.Count -gt 0) {
-            $snapshot.IpsPolicies = $ipsPolicies
-        } else {
-            $snapshot.IpsPolicies = @()
-        }
+        $snapshot.IpsPolicies = $ipsPolicies
 
         # ── ExceptionPolicies (per-policy fetch from exception summaries) ──
         $exceptionPolicies = @()
@@ -281,11 +277,7 @@ function Export-SEPMInventory {
                 if ($exceptionIndex -lt $exceptionCount -and $DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
             }
         }
-        if ($exceptionPolicies.Count -gt 0) {
-            $snapshot.ExceptionPolicies = $exceptionPolicies
-        } else {
-            $snapshot.ExceptionPolicies = @()
-        }
+        $snapshot.ExceptionPolicies = $exceptionPolicies
 
         # ── Write per-category .clixml files ──
         if ($snapshot.Version) {
