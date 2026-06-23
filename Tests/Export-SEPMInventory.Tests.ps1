@@ -59,6 +59,23 @@ Describe 'Export-SEPMInventory' {
             Write-Output @() -NoEnumerate
         }
 
+        # Groups & Locations mocks
+        Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+            Write-Output @(
+                [PSCustomObject]@{ id = 'GRP001'; name = 'My Company'; fullPathName = 'My Company' }
+                [PSCustomObject]@{ id = 'GRP002'; name = 'Workstations'; fullPathName = 'My Company\Workstations' }
+            ) -NoEnumerate
+        }
+        Mock Get-SEPMLocation -ModuleName PSSymantecSEPM {
+            Write-Output @([PSCustomObject]@{ locationName = 'Default'; locationId = 'LOC001'; groupName = 'My Company'; groupId = 'GRP001'; groupFullPathName = 'My Company' }) -NoEnumerate
+        }
+        Mock Get-SEPMLocationXML -ModuleName PSSymantecSEPM {
+            return $null
+        }
+        Mock Get-SEPMGroupSettings -ModuleName PSSymantecSEPM {
+            return $null
+        }
+
         # Policy mocks (return empty by default — contexts override as needed)
         Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
             Write-Output @() -NoEnumerate
@@ -110,6 +127,14 @@ Describe 'Export-SEPMInventory' {
             $result.ThreatStats         | Should -Not -BeNullOrEmpty
             $result.LatestDefinitions   | Should -Not -BeNullOrEmpty
             $result.Events              | Should -Not -BeNullOrEmpty
+        }
+
+        It 'snapshot contains Groups property with all groups' {
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.Groups | Should -Not -BeNullOrEmpty
+            $result.Groups.Count | Should -Be 2
+            $result.Groups[0].name | Should -Be 'My Company'
+            $result.Groups[1].name | Should -Be 'Workstations'
         }
     }
 
@@ -342,6 +367,81 @@ Describe 'Export-SEPMInventory' {
         }
     }
 
+    Context 'Groups & Locations data gathering' {
+        BeforeAll {
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
+            }
+        }
+
+        It 'stores Get-SEPMGroups output in Groups property' {
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.Groups | Should -Not -BeNullOrEmpty
+            $result.Groups.Count | Should -Be 2
+            $result.Groups[0].name | Should -Be 'My Company'
+            $result.Groups[1].name | Should -Be 'Workstations'
+        }
+
+        It 'stores per-group Get-SEPMLocation output in Locations property' {
+            # Use a simple mock that always returns 1 location per call to test
+            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM {
+                return @([PSCustomObject]@{ locationName = $GroupID; locationId = 'LOC'; groupName = ''; groupId = ''; groupFullPathName = '' })
+            }
+
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.Locations | Should -Not -BeNullOrEmpty
+            # 2 groups * 1 location each = 2 from Locations section
+            # Plus the LocationXML/GroupSettings section also calls Get-SEPMLocation for each group
+            # So total should be 4 calls, but only the first 2 contribute to $snapshot.Locations
+            $result.Locations.Count | Should -Be 2
+        }
+
+        It 'stores per-group-location Get-SEPMLocationXML output in LocationXML property' {
+            # Override Get-SEPMLocationXML to return XML strings
+            $script:xmlCallCount = 0
+            Mock Get-SEPMLocationXML -ModuleName PSSymantecSEPM {
+                $script:xmlCallCount++
+                return "<Location><Id>$LocationID</Id></Location>"
+            }
+            # Override Get-SEPMLocation to return locations with real group IDs
+            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM {
+                if ($GroupID -eq 'GRP001') {
+                    return @([PSCustomObject]@{ locationName = 'Default'; locationId = 'LOC001'; groupName = 'My Company'; groupId = 'GRP001'; groupFullPathName = 'My Company' })
+                }
+                return @([PSCustomObject]@{ locationName = 'Default'; locationId = 'LOC002'; groupName = 'Workstations'; groupId = 'GRP002'; groupFullPathName = 'My Company\Workstations' })
+            }
+
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.LocationXML | Should -Not -BeNullOrEmpty
+            $result.LocationXML.Count | Should -Be 2
+            $script:xmlCallCount | Should -Be 2
+        }
+
+        It 'stores per-group-location Get-SEPMGroupSettings output in GroupSettings property' {
+            # Override Get-SEPMGroupSettings to return settings objects
+            $script:settingsCallCount = 0
+            Mock Get-SEPMGroupSettings -ModuleName PSSymantecSEPM {
+                $script:settingsCallCount++
+                return @{ groupId = $groupId; locationId = $locationId; setting = 'value' }
+            }
+            # Override Get-SEPMLocation to return locations with real group IDs
+            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM {
+                if ($GroupID -eq 'GRP001') {
+                    return @([PSCustomObject]@{ locationName = 'Default'; locationId = 'LOC001'; groupName = 'My Company'; groupId = 'GRP001'; groupFullPathName = 'My Company' })
+                }
+                return @([PSCustomObject]@{ locationName = 'Default'; locationId = 'LOC002'; groupName = 'Workstations'; groupId = 'GRP002'; groupFullPathName = 'My Company\Workstations' })
+            }
+
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $result.GroupSettings | Should -Not -BeNullOrEmpty
+            $result.GroupSettings.Count | Should -Be 2
+            $script:settingsCallCount | Should -Be 2
+        }
+    }
+
     Context 'Per-category .clixml output' {
         BeforeAll {
             Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
@@ -463,6 +563,20 @@ Describe 'Export-SEPMInventory' {
             Join-Path -Path 'TestDrive:' -ChildPath 'all_client_versions.xml' | Should -Exist
             Join-Path -Path 'TestDrive:' -ChildPath 'all_client_def_versions.xml' | Should -Exist
             Join-Path -Path 'TestDrive:' -ChildPath 'all_client_infected.xml' | Should -Exist
+        }
+
+        It 'writes groups & locations .clixml files' {
+            Mock Get-SEPMLocationXML -ModuleName PSSymantecSEPM {
+                return "<Location><Id>$LocationID</Id></Location>"
+            }
+            Mock Get-SEPMGroupSettings -ModuleName PSSymantecSEPM {
+                return @{ groupId = $groupId; setting = 'value' }
+            }
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            Join-Path -Path 'TestDrive:' -ChildPath 'all_groups.xml'           | Should -Exist
+            Join-Path -Path 'TestDrive:' -ChildPath 'all_locations.xml'        | Should -Exist
+            Join-Path -Path 'TestDrive:' -ChildPath 'all_location_xml.xml'     | Should -Exist
+            Join-Path -Path 'TestDrive:' -ChildPath 'all_group_settings.xml'   | Should -Exist
         }
     }
 
@@ -662,6 +776,75 @@ Describe 'Export-SEPMInventory' {
             $ciFailures = $result.Failures | Where-Object { $_.Category -eq 'ClientInfected' }
             $ciFailures.Count | Should -Be 1
             $ciFailures[0].Error | Should -Be 'ClientInfected API unavailable'
+        }
+
+        It 'captures Groups failure in Failures array' {
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { throw 'Groups API unavailable' }
+
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $gFailures = $result.Failures | Where-Object { $_.Category -eq 'Groups' }
+            $gFailures.Count | Should -Be 1
+            $gFailures[0].Error | Should -Be 'Groups API unavailable'
+            $result.Groups | Should -BeNullOrEmpty
+        }
+
+        It 'writes Groups_failed.xml on failure' {
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { throw 'Groups API error' }
+
+            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            Join-Path -Path 'TestDrive:' -ChildPath 'Groups_failed.xml' | Should -Exist
+        }
+
+        It 'captures Locations failure in Failures array' {
+            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM { throw 'Locations API unavailable' }
+
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $locFailures = $result.Failures | Where-Object { $_.Category -eq 'Locations' }
+            $locFailures.Count | Should -Be 2
+            $locFailures[0].Error | Should -Be 'Locations API unavailable'
+        }
+
+        It 'writes Locations_failed.xml on failure' {
+            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM { throw 'Locations API error' }
+
+            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            Join-Path -Path 'TestDrive:' -ChildPath 'Locations_failed.xml' | Should -Exist
+        }
+
+        It 'captures LocationXML failure in Failures array' {
+            Mock Get-SEPMLocationXML -ModuleName PSSymantecSEPM { throw 'LocationXML API unavailable' }
+
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $xmlFailures = $result.Failures | Where-Object { $_.Category -eq 'LocationXML' }
+            $xmlFailures.Count | Should -Be 2
+            $xmlFailures[0].Error | Should -Be 'LocationXML API unavailable'
+        }
+
+        It 'writes LocationXML_failed.xml on failure' {
+            Mock Get-SEPMLocationXML -ModuleName PSSymantecSEPM { throw 'LocationXML API error' }
+
+            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            Join-Path -Path 'TestDrive:' -ChildPath 'LocationXML_failed.xml' | Should -Exist
+        }
+
+        It 'captures GroupSettings failure in Failures array' {
+            Mock Get-SEPMGroupSettings -ModuleName PSSymantecSEPM { throw 'GroupSettings API unavailable' }
+
+            $result = Export-SEPMInventory -OutputDir 'TestDrive:'
+            $gsFailures = $result.Failures | Where-Object { $_.Category -eq 'GroupSettings' }
+            $gsFailures.Count | Should -Be 2
+            $gsFailures[0].Error | Should -Be 'GroupSettings API unavailable'
+        }
+
+        It 'writes GroupSettings_failed.xml on failure' {
+            Mock Get-SEPMGroupSettings -ModuleName PSSymantecSEPM { throw 'GroupSettings API error' }
+
+            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            Join-Path -Path 'TestDrive:' -ChildPath 'GroupSettings_failed.xml' | Should -Exist
         }
     }
 

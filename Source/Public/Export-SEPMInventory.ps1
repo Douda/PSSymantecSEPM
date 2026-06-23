@@ -53,6 +53,10 @@ function Export-SEPMInventory {
             ClientVersions      = $null
             ClientDefVersions   = $null
             ClientInfected      = $null
+            Groups              = $null
+            Locations           = $null
+            LocationXML         = $null
+            GroupSettings       = $null
             Failures            = @()
         }
         $snapshot.PSObject.TypeNames.Insert(0, 'SEPM.Inventory')
@@ -344,6 +348,109 @@ function Export-SEPMInventory {
                 Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'ClientInfected_failed.xml') -Force
         }
 
+        # ── Groups ──
+        try {
+            $snapshot.Groups = Get-SEPMGroups
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'Groups'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'Groups_failed.xml') -Force
+        }
+
+        # ── Locations (per-group enumeration) ──
+        $allLocations = @()
+        if ($null -ne $snapshot.Groups) {
+            $groupsArray = @($snapshot.Groups)
+            $groupCount = $groupsArray.Count
+            $groupIndex = 0
+            foreach ($group in $groupsArray) {
+                $groupIndex++
+                try {
+                    $groupLocs = @(Get-SEPMLocation -GroupID $group.id)
+                    $allLocations += $groupLocs
+                } catch {
+                    $snapshot.Failures += [PSCustomObject]@{
+                        Category  = 'Locations'
+                        GroupID   = $group.id
+                        GroupName = $group.name
+                        Error     = $_.Exception.Message
+                    }
+                    [PSCustomObject]@{
+                        Category  = 'Locations'
+                        GroupID   = $group.id
+                        GroupName = $group.name
+                        Error     = $_.Exception.Message
+                    } | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'Locations_failed.xml') -Force
+                }
+                if ($groupIndex -lt $groupCount -and $DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
+            }
+        }
+        $snapshot.Locations = $allLocations
+
+        # ── LocationXML & GroupSettings (per-group-location drill-down) ──
+        $allLocationXml = @()
+        $allGroupSettings = @()
+        if ($null -ne $snapshot.Locations -and $snapshot.Locations.Count -gt 0) {
+            $locArray = @($snapshot.Locations)
+            $locCount = $locArray.Count
+            $locIndex = 0
+            foreach ($loc in $locArray) {
+                $locIndex++
+                # LocationXML
+                try {
+                    $locationXml = Get-SEPMLocationXML -GroupID $loc.groupId -LocationID $loc.locationId
+                    if ($null -ne $locationXml) {
+                        $allLocationXml += $locationXml
+                    }
+                } catch {
+                    $snapshot.Failures += [PSCustomObject]@{
+                        Category   = 'LocationXML'
+                        GroupID    = $loc.groupId
+                        GroupName  = $loc.groupName
+                        LocationID = $loc.locationId
+                        Error      = $_.Exception.Message
+                    }
+                    [PSCustomObject]@{
+                        Category   = 'LocationXML'
+                        GroupID    = $loc.groupId
+                        GroupName  = $loc.groupName
+                        LocationID = $loc.locationId
+                        Error      = $_.Exception.Message
+                    } | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'LocationXML_failed.xml') -Force
+                }
+
+                # GroupSettings
+                try {
+                    $groupSettings = Get-SEPMGroupSettings -groupId $loc.groupId -locationId $loc.locationId
+                    if ($null -ne $groupSettings) {
+                        $allGroupSettings += $groupSettings
+                    }
+                } catch {
+                    $snapshot.Failures += [PSCustomObject]@{
+                        Category   = 'GroupSettings'
+                        GroupID    = $loc.groupId
+                        GroupName  = $loc.groupName
+                        LocationID = $loc.locationId
+                        Error      = $_.Exception.Message
+                    }
+                    [PSCustomObject]@{
+                        Category   = 'GroupSettings'
+                        GroupID    = $loc.groupId
+                        GroupName  = $loc.groupName
+                        LocationID = $loc.locationId
+                        Error      = $_.Exception.Message
+                    } | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'GroupSettings_failed.xml') -Force
+                }
+
+                if ($locIndex -lt $locCount -and $DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
+            }
+        }
+        $snapshot.LocationXML = $allLocationXml
+        $snapshot.GroupSettings = $allGroupSettings
+
         # ── Write per-category .clixml files ──
         if ($snapshot.Version) {
             $snapshot.Version | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_version.xml') -Force
@@ -404,6 +511,18 @@ function Export-SEPMInventory {
         }
         if ($null -ne $snapshot.ClientInfected) {
             $snapshot.ClientInfected | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_client_infected.xml') -Force
+        }
+        if ($null -ne $snapshot.Groups) {
+            $snapshot.Groups | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_groups.xml') -Force
+        }
+        if ($null -ne $snapshot.Locations) {
+            $snapshot.Locations | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_locations.xml') -Force
+        }
+        if ($null -ne $snapshot.LocationXML -and $snapshot.LocationXML.Count -gt 0) {
+            $snapshot.LocationXML | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_location_xml.xml') -Force
+        }
+        if ($null -ne $snapshot.GroupSettings -and $snapshot.GroupSettings.Count -gt 0) {
+            $snapshot.GroupSettings | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_group_settings.xml') -Force
         }
 
         # Write timestamped snapshot blob

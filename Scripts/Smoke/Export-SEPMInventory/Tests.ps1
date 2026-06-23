@@ -195,6 +195,40 @@ $results.A17 = T "A17" "ExceptionPolicies has entries with configuration" `
         $null -ne ($r.ExceptionPolicies | Select-Object -First 1).configuration
     }
 
+# ── A23: Groups populated ──
+$results.A23 = T "A23" "Groups has entries with name and id properties" `
+    { $snapshot } `
+    { param($r)
+        $null -ne $r.Groups -and
+        $r.Groups.Count -gt 0 -and
+        -not [string]::IsNullOrEmpty(($r.Groups | Select-Object -First 1).name)
+    }
+
+# ── A24: Locations populated ──
+$results.A24 = T "A24" "Locations has entries with locationName property" `
+    { $snapshot } `
+    { param($r)
+        $null -ne $r.Locations -and
+        $r.Locations.Count -gt 0 -and
+        -not [string]::IsNullOrEmpty(($r.Locations | Select-Object -First 1).locationName)
+    }
+
+# ── A25: LocationXML populated ──
+$results.A25 = T "A25" "LocationXML has entries (XML content per group-location)" `
+    { $snapshot } `
+    { param($r)
+        $null -ne $r.LocationXML -and
+        $r.LocationXML.Count -gt 0
+    }
+
+# ── A26: GroupSettings populated ──
+$results.A26 = T "A26" "GroupSettings has entries (settings per group-location)" `
+    { $snapshot } `
+    { param($r)
+        $null -ne $r.GroupSettings -and
+        $r.GroupSettings.Count -gt 0
+    }
+
 # ── B1: Per-category clixml files written ──
 $results.B1 = T "B1" "Writes all category .clixml files" `
     {
@@ -208,7 +242,9 @@ $results.B1 = T "B1" "Writes all category .clixml files" `
             'all_ips_policies.xml', 'all_exception_policies.xml',
             'all_computers.xml', 'all_client_status.xml',
             'all_client_versions.xml', 'all_client_def_versions.xml',
-            'all_client_infected.xml'
+            'all_client_infected.xml',
+            'all_groups.xml', 'all_locations.xml',
+            'all_location_xml.xml', 'all_group_settings.xml'
         )
         foreach ($f in $files) {
             if (-not (Test-Path (Join-Path $outDir $f))) { $allExist = $false }
@@ -248,7 +284,11 @@ $results.B3 = T "B3" "Snapshot blob round-trips with all categories" `
         $null -ne $r.ClientStatus -and
         $null -ne $r.ClientVersions -and
         $null -ne $r.ClientDefVersions -and
-        $null -ne $r.ClientInfected
+        $null -ne $r.ClientInfected -and
+        $null -ne $r.Groups -and
+        $null -ne $r.Locations -and
+        $null -ne $r.LocationXML -and
+        $null -ne $r.GroupSettings
     }
 
 # ── B4: No failures during collection ──
