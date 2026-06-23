@@ -42,13 +42,19 @@ Report pass/fail count. If failures: **stop here**. Do not proceed.
 
 ### 4. Run Pester (PS 5.1 — WinRM)
 
-Deploy the built module and test suite to the shared volume, then run Pester via WinRM:
+Deploy the built module, source, and test suite to the shared volume, then run Pester via WinRM.
+
+**CRITICAL:** Always `rm -rf` targets first — `cp -r` into an existing directory nests
+(e.g. `Tests/Tests/`), which breaks `Initialize-TestEnvironment`'s repo-root resolution
+and makes `Build-Module` fail with "Source must point to a valid module."
 
 ```bash
-# 1. Deploy module
-cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM
+# 1. Clean any stale deployments (prevents double-nesting)
+rm -rf /home/douda/Windows/Tests /home/douda/Windows/PSSymantecSEPM /home/douda/Windows/Source
 
-# 2. Deploy test files
+# 2. Deploy module, source (needed by Build-Module in TestHelpers), and tests
+cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM
+cp -r ./Source /home/douda/Windows/Source
 cp -r ./Tests /home/douda/Windows/Tests
 
 # 3. Write and deploy test runner with UTF-8 BOM
