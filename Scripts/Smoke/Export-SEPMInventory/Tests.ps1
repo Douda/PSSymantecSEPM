@@ -195,7 +195,7 @@ $results.A17 = T "A17" "ExceptionPolicies has entries with configuration" `
         $null -ne ($r.ExceptionPolicies | Select-Object -First 1).configuration
     }
 
-# ── B1: Per-category clixml files written (all 14 categories) ──
+# ── B1: Per-category clixml files written ──
 $results.B1 = T "B1" "Writes all category .clixml files" `
     {
         $allExist = $true
