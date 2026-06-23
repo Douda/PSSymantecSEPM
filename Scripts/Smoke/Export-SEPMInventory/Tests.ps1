@@ -145,6 +145,47 @@ $results.A16 = T "A16" "IpsPolicies has entries with configuration" `
         $null -ne ($r.IpsPolicies | Select-Object -First 1).configuration
     }
 
+# ── A18: Computers populated ──
+$results.A18 = T "A18" "Computers has entries with computerName property" `
+    { $snapshot } `
+    { param($r)
+        $null -ne $r.Computers -and
+        $r.Computers.Count -gt 0 -and
+        -not [string]::IsNullOrEmpty(($r.Computers | Select-Object -First 1).computerName)
+    }
+
+# ── A19: ClientStatus populated ──
+$results.A19 = T "A19" "ClientStatus has entries with status property" `
+    { $snapshot } `
+    { param($r)
+        $null -ne $r.ClientStatus -and
+        $r.ClientStatus.Count -gt 0 -and
+        -not [string]::IsNullOrEmpty(($r.ClientStatus | Select-Object -First 1).status)
+    }
+
+# ── A20: ClientVersions populated ──
+$results.A20 = T "A20" "ClientVersions has entries with version property" `
+    { $snapshot } `
+    { param($r)
+        $null -ne $r.ClientVersions -and
+        $r.ClientVersions.Count -gt 0 -and
+        -not [string]::IsNullOrEmpty(($r.ClientVersions | Select-Object -First 1).version)
+    }
+
+# ── A21: ClientDefVersions populated ──
+$results.A21 = T "A21" "ClientDefVersions has entries with version property" `
+    { $snapshot } `
+    { param($r)
+        $null -ne $r.ClientDefVersions -and
+        $r.ClientDefVersions.Count -gt 0 -and
+        -not [string]::IsNullOrEmpty(($r.ClientDefVersions | Select-Object -First 1).version)
+    }
+
+# ── A22: ClientInfected populated (may be empty if no infected clients) ──
+$results.A22 = T "A22" "ClientInfected property is not null" `
+    { $snapshot } `
+    { param($r) $null -ne $r.ClientInfected }
+
 # ── A17: ExceptionPolicies populated (full detail) ──
 $results.A17 = T "A17" "ExceptionPolicies has entries with configuration" `
     { $snapshot } `
@@ -164,7 +205,10 @@ $results.B1 = T "B1" "Writes all category .clixml files" `
             'all_replication_status.xml', 'all_threat_stats.xml',
             'all_latest_definitions.xml', 'all_events.xml',
             'all_policy_summaries.xml', 'all_fw_policies.xml',
-            'all_ips_policies.xml', 'all_exception_policies.xml'
+            'all_ips_policies.xml', 'all_exception_policies.xml',
+            'all_computers.xml', 'all_client_status.xml',
+            'all_client_versions.xml', 'all_client_def_versions.xml',
+            'all_client_infected.xml'
         )
         foreach ($f in $files) {
             if (-not (Test-Path (Join-Path $outDir $f))) { $allExist = $false }
@@ -199,7 +243,12 @@ $results.B3 = T "B3" "Snapshot blob round-trips with all categories" `
         $null -ne $r.PolicySummaries -and
         $null -ne $r.FirewallPolicies -and
         $null -ne $r.IpsPolicies -and
-        $null -ne $r.ExceptionPolicies
+        $null -ne $r.ExceptionPolicies -and
+        $null -ne $r.Computers -and
+        $null -ne $r.ClientStatus -and
+        $null -ne $r.ClientVersions -and
+        $null -ne $r.ClientDefVersions -and
+        $null -ne $r.ClientInfected
     }
 
 # ── B4: No failures during collection ──

@@ -48,6 +48,11 @@ function Export-SEPMInventory {
             FirewallPolicies     = $null
             IpsPolicies          = $null
             ExceptionPolicies    = $null
+            Computers           = $null
+            ClientStatus        = $null
+            ClientVersions      = $null
+            ClientDefVersions   = $null
+            ClientInfected      = $null
             Failures            = @()
         }
         $snapshot.PSObject.TypeNames.Insert(0, 'SEPM.Inventory')
@@ -279,6 +284,66 @@ function Export-SEPMInventory {
         }
         $snapshot.ExceptionPolicies = $exceptionPolicies
 
+        # ── Computers ──
+        try {
+            $snapshot.Computers = Get-SEPComputers
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'Computers'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'Computers_failed.xml') -Force
+        }
+
+        # ── ClientStatus ──
+        try {
+            $snapshot.ClientStatus = Get-SEPClientStatus
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'ClientStatus'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'ClientStatus_failed.xml') -Force
+        }
+
+        # ── ClientVersions ──
+        try {
+            $snapshot.ClientVersions = Get-SEPClientVersion
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'ClientVersions'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'ClientVersions_failed.xml') -Force
+        }
+
+        # ── ClientDefVersions ──
+        try {
+            $snapshot.ClientDefVersions = Get-SEPClientDefVersions
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'ClientDefVersions'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'ClientDefVersions_failed.xml') -Force
+        }
+
+        # ── ClientInfected ──
+        try {
+            $snapshot.ClientInfected = Get-SEPClientInfectedStatus
+        } catch {
+            $snapshot.Failures += [PSCustomObject]@{
+                Category = 'ClientInfected'
+                Error    = $_.Exception.Message
+            }
+            [PSCustomObject]@{ Error = $_.Exception.Message } |
+                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'ClientInfected_failed.xml') -Force
+        }
+
         # ── Write per-category .clixml files ──
         if ($snapshot.Version) {
             $snapshot.Version | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_version.xml') -Force
@@ -324,6 +389,21 @@ function Export-SEPMInventory {
         }
         if ($null -ne $snapshot.ExceptionPolicies) {
             $snapshot.ExceptionPolicies | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_exception_policies.xml') -Force
+        }
+        if ($null -ne $snapshot.Computers) {
+            $snapshot.Computers | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_computers.xml') -Force
+        }
+        if ($null -ne $snapshot.ClientStatus) {
+            $snapshot.ClientStatus | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_client_status.xml') -Force
+        }
+        if ($null -ne $snapshot.ClientVersions) {
+            $snapshot.ClientVersions | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_client_versions.xml') -Force
+        }
+        if ($null -ne $snapshot.ClientDefVersions) {
+            $snapshot.ClientDefVersions | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_client_def_versions.xml') -Force
+        }
+        if ($null -ne $snapshot.ClientInfected) {
+            $snapshot.ClientInfected | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_client_infected.xml') -Force
         }
 
         # Write timestamped snapshot blob
