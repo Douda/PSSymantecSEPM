@@ -318,7 +318,14 @@ Describe 'Export-SEPMInventory' {
             $result.PolicySummaries[1].name | Should -Be 'FW Policy'
         }
 
-        It 'calls Get-SEPMFirewallPolicy with -All without -SuppressProgress' {
+        It 'passes only fw-type summaries to Get-SEPMFirewallPolicy -PolicyList' {
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                Write-Output @(
+                    @{ id = 'F001'; name = 'FW Policy'; policytype = 'fw'; enabled = $true }
+                    @{ id = 'I001'; name = 'IPS Policy'; policytype = 'ips'; enabled = $true }
+                    @{ id = 'E001'; name = 'Exception'; policytype = 'exceptions'; enabled = $true }
+                ) -NoEnumerate
+            }
             Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM {
                 Write-Output @() -NoEnumerate
             }
@@ -326,7 +333,43 @@ Describe 'Export-SEPMInventory' {
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
 
             Should -Invoke Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM -Scope It -Exactly 1 -ParameterFilter {
-                $All -eq $true -and -not $PSBoundParameters.ContainsKey('SuppressProgress')
+                $All -eq $true -and
+                $PolicyList.Count -eq 1 -and
+                $PolicyList[0].policytype -eq 'fw' -and
+                $PolicyList[0].name -eq 'FW Policy'
+            }
+        }
+
+        It 'passes pre-fetched group list to Get-SEPMLocation as -GroupList' {
+            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM {
+                return @([PSCustomObject]@{ locationName = $GroupID; locationId = 'LOC'; groupName = ''; groupId = ''; groupFullPathName = '' })
+            }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            Should -Invoke Get-SEPMLocation -ModuleName PSSymantecSEPM -Scope It -Exactly 2 -ParameterFilter {
+                $GroupList.Count -eq 2 -and
+                $GroupList[0].id -eq 'GRP001' -and
+                $GroupList[1].id -eq 'GRP002'
+            }
+        }
+
+        It 'passes pre-fetched computer list to Get-SEPClientInfectedStatus as -ComputerList' {
+            Mock Get-SEPComputers -ModuleName PSSymantecSEPM {
+                Write-Output @(
+                    @{ computerName = 'PC-001'; infected = 0 }
+                    @{ computerName = 'PC-002'; infected = 1 }
+                ) -NoEnumerate
+            }
+            Mock Get-SEPClientInfectedStatus -ModuleName PSSymantecSEPM {
+                Write-Output @() -NoEnumerate
+            }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            Should -Invoke Get-SEPClientInfectedStatus -ModuleName PSSymantecSEPM -Scope It -Exactly 1 -ParameterFilter {
+                $ComputerList.Count -eq 2 -and
+                $ComputerList[0].computerName -eq 'PC-001'
             }
         }
 

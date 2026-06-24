@@ -36,4 +36,27 @@ $results.A3 = T "A3" "Get-SEPMExceptionPolicy -List directories returns flattene
         $r.Count -ge 0
     }
 
+# ── A4: Retrieve exception policy with -PolicyList ──
+$allPolicies = Get-SEPMPoliciesSummary
+$results.A4 = T "A4" "Get-SEPMExceptionPolicy -PolicyList skips summary fetch" `
+    { Get-SEPMExceptionPolicy -PolicyName "Exceptions policy" -PolicyList $allPolicies } `
+    { param($r)
+        $r -ne $null -and
+        $r.PSObject.TypeNames[0] -eq 'SEPM.ExceptionPolicy' -and
+        $r.name -eq 'Exceptions policy'
+    }
+
+# ── A5: -PolicyList output matches standard call ──
+$results.A5 = T "A5" "Get-SEPMExceptionPolicy with -PolicyList matches standard call" `
+    {
+        $standard  = Get-SEPMExceptionPolicy -PolicyName "Exceptions policy"
+        $fromList  = Get-SEPMExceptionPolicy -PolicyName "Exceptions policy" -PolicyList $allPolicies
+        return @{ standard = $standard; fromList = $fromList }
+    } `
+    { param($r)
+        $r.standard.name -eq $r.fromList.name -and
+        $r.standard.enabled -eq $r.fromList.enabled -and
+        $r.standard.PSObject.TypeNames[0] -eq $r.fromList.PSObject.TypeNames[0]
+    }
+
 Write-Summary -Results $results -Label "Get-SEPMExceptionPolicy Smoke Tests"

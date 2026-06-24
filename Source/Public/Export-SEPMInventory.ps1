@@ -227,7 +227,16 @@ function Export-SEPMInventory {
         if ($DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
 
         # ── FirewallPolicies ──
-        Invoke-CategoryFetch -Category 'FirewallPolicies' -FetchScript { Get-SEPMFirewallPolicy -All -DelayMs $DelayMs }
+        Invoke-CategoryFetch -Category 'FirewallPolicies' -FetchScript {
+            $fwParams = @{ All = $true; DelayMs = $DelayMs }
+            if ($null -ne $snapshot.PolicySummaries) {
+                $fwSummaries = @($snapshot.PolicySummaries | Where-Object { $_.policytype -eq 'fw' })
+                if ($fwSummaries.Count -gt 0) {
+                    $fwParams.PolicyList = $fwSummaries
+                }
+            }
+            Get-SEPMFirewallPolicy @fwParams
+        }
 
         # ── IpsPolicies (per-policy fetch from IPS summaries) ──
         Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'IpsPolicies'
@@ -326,7 +335,13 @@ function Export-SEPMInventory {
         Invoke-CategoryFetch -Category 'ClientDefVersions' -FetchScript { Get-SEPClientDefVersions }
 
         # ── ClientInfected ──
-        Invoke-CategoryFetch -Category 'ClientInfected' -FetchScript { Get-SEPClientInfectedStatus }
+        Invoke-CategoryFetch -Category 'ClientInfected' -FetchScript {
+            $ciParams = @{}
+            if ($null -ne $snapshot.Computers) {
+                $ciParams.ComputerList = $snapshot.Computers
+            }
+            Get-SEPClientInfectedStatus @ciParams
+        }
 
         # ── Groups ──
         Invoke-CategoryFetch -Category 'Groups' -FetchScript { Get-SEPMGroups }
@@ -348,7 +363,8 @@ function Export-SEPMInventory {
                     Write-PerItemProgress -Category 'Locations' -ItemIndex $groupIndex -ItemCount $groupCount -ItemName $group.name
                 }
                 try {
-                    $groupLocs = Get-SEPMLocation -GroupID $group.id
+                    $locParams = @{ GroupID = $group.id; GroupList = $groupsArray }
+                    $groupLocs = Get-SEPMLocation @locParams
                     $allLocations += $groupLocs
                 } catch {
                     $categoryFailed = $true

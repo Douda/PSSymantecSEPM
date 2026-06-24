@@ -41,5 +41,19 @@ if ($allLocs -and $allLocs.Count -gt 0) {
     Write-Error "No locations found in group"
 }
 
+# ── C4: Get-SEPMLocation with -GroupList ──
+$results.C4 = T "C4" "Get-SEPMLocation -GroupID -GroupList" `
+    { Get-SEPMLocation -GroupID $groupId -GroupList $allGroups } `
+    { param($r) $r -ne $null -and $r.Count -gt 0 -and $r[0].groupName -ne $null -and $r[0].locationName -ne $null }
+
+# ── C5: -GroupList skips Get-SEPMGroups (verify output matches) ──
+$results.C5 = T "C5" "Get-SEPMLocation with -GroupList matches standard call" `
+    {
+        $standard  = Get-SEPMLocation -GroupID $groupId
+        $fromList  = Get-SEPMLocation -GroupID $groupId -GroupList $allGroups
+        return @{ standard = $standard; fromList = $fromList }
+    } `
+    { param($r) $r.standard.Count -eq $r.fromList.Count -and $r.standard[0].locationName -eq $r.fromList[0].locationName }
+
 # ── Summary ──
 Write-Summary -Results $results -Label "Get-SEPMLocations"

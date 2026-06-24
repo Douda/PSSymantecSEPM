@@ -10,6 +10,9 @@ function Get-SEPClientInfectedStatus {
         None
     .OUTPUTS
         List of SEP Clients with Infected status
+    .PARAMETER ComputerList
+        An array of computer objects to filter by infected status.
+        When provided, the cmdlet filters this list instead of calling Get-SEPComputers.
     .PARAMETER Clean
         If specified, returns SEP Clients with Clean status
     .EXAMPLE
@@ -20,22 +23,36 @@ function Get-SEPClientInfectedStatus {
         Get-SEPClientInfectedStatus -Clean
 
         Gets computer details for all computers in the domain that are not infected
+    .EXAMPLE
+        Get-SEPComputers | Get-SEPClientInfectedStatus -ComputerList $_ -Clean
+
+        Filters already fetched computers for clean status
 #>
 
     [CmdletBinding()]
     param (
+        [Parameter()]
+        [object[]]
+        $ComputerList,
+
         [Parameter()]
         [switch]
         $Clean
     )
 
     process {
-        if ($clean) {
-            $non_infected = @(Get-SEPComputers | Where-Object { $_.infected -ne 1 })
+        if ($PSBoundParameters.ContainsKey('ComputerList')) {
+            $computers = $ComputerList
+        } else {
+            $computers = Get-SEPComputers
+        }
+
+        if ($Clean) {
+            $non_infected = @($computers | Where-Object { $_.infected -ne 1 })
             Write-Output $non_infected -NoEnumerate
         } else {
-            $infected = @(Get-SEPComputers | Where-Object { $_.infected -eq 1 })
-            Write-Output $Infected -NoEnumerate
+            $infected = @($computers | Where-Object { $_.infected -eq 1 })
+            Write-Output $infected -NoEnumerate
         }
     }
 }
