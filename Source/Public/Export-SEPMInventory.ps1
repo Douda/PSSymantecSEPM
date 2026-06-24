@@ -216,7 +216,7 @@ function Export-SEPMInventory {
         if ($DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
 
         # ── FirewallPolicies ──
-        Invoke-CategoryFetch -Category 'FirewallPolicies' -FetchScript { Get-SEPMFirewallPolicy -All -DelayMs $DelayMs -SuppressProgress }
+        Invoke-CategoryFetch -Category 'FirewallPolicies' -FetchScript { Get-SEPMFirewallPolicy -All -DelayMs $DelayMs }
 
         # ── IpsPolicies (per-policy fetch from IPS summaries) ──
         Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'IpsPolicies'

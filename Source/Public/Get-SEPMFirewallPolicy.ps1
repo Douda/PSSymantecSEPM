@@ -13,9 +13,6 @@ function Get-SEPMFirewallPolicy {
         Fetch all firewall policies.
     .PARAMETER DelayMs
         Delay in milliseconds between individual policy fetches when -All is used. Default: 200.
-    .PARAMETER SuppressProgress
-        Suppresses Write-Progress output during the -All loop. Used by Export-SEPMInventory to prevent
-        nested progress bars.
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMFirewallPolicy -PolicyName "Standard Servers - Firewall policy"
 
@@ -68,14 +65,7 @@ function Get-SEPMFirewallPolicy {
             ParameterSetName = 'All'
         )]
         [int]
-        $DelayMs = 200,
-
-        # SuppressProgress
-        [Parameter(
-            ParameterSetName = 'All'
-        )]
-        [switch]
-        $SuppressProgress
+        $DelayMs = 200
     )
 
     begin {
@@ -95,9 +85,7 @@ function Get-SEPMFirewallPolicy {
             foreach ($fwPolicy in $fwPolicies) {
                 $i++
 
-                if (-not $SuppressProgress) {
-                    Write-Progress -Activity "Fetching firewall policies" -Status "$i/$total` : $($fwPolicy.name)" -PercentComplete ($i / $total * 100)
-                }
+                Write-Progress -Activity "Fetching firewall policies" -Status "$i/$total` : $($fwPolicy.name)" -PercentComplete ($i / $total * 100)
 
                 $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($fwPolicy.id)
 

@@ -318,7 +318,7 @@ Describe 'Export-SEPMInventory' {
             $result.PolicySummaries[1].name | Should -Be 'FW Policy'
         }
 
-        It 'calls Get-SEPMFirewallPolicy with -SuppressProgress:$true' {
+        It 'calls Get-SEPMFirewallPolicy with -All without -SuppressProgress' {
             Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM {
                 Write-Output @() -NoEnumerate
             }
@@ -326,7 +326,7 @@ Describe 'Export-SEPMInventory' {
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
 
             Should -Invoke Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM -Scope It -Exactly 1 -ParameterFilter {
-                $All -eq $true -and $SuppressProgress -eq $true
+                $All -eq $true -and -not $PSBoundParameters.ContainsKey('SuppressProgress')
             }
         }
 
