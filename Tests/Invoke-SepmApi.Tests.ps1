@@ -167,12 +167,12 @@ Describe 'Invoke-SepmApi' {
                 $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
 
                 Mock Invoke-RestMethod { return '{"ok":true}' }
-                $verboseMessage = $null
-                Mock Write-Verbose { $global:verboseMessage = $Message }
 
-                Invoke-SepmApi -Method GET -Uri 'https://SEPM01:8446/api/v1/test' -Session $session -Verbose | Out-Null
+                $output = Invoke-SepmApi -Method GET -Uri 'https://SEPM01:8446/api/v1/test' -Session $session -Verbose *>&1
 
-                Should -Invoke Write-Verbose -Times 1 -Exactly
+                $verboseRecords = @($output | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] })
+                $verboseRecords.Count | Should -BeGreaterThan 0
+                $verboseRecords[0].Message | Should -Be 'Invoke-SepmApi: GET https://SEPM01:8446/api/v1/test'
             }
         }
 
@@ -181,14 +181,14 @@ Describe 'Invoke-SepmApi' {
                 $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
 
                 Mock Invoke-RestMethod { return '{"manual":"ok"}' }
-                $verboseMessage = $null
-                Mock Write-Verbose { $global:verboseMessage = $Message }
 
-                Invoke-SepmApi -Method POST -Uri 'https://example.com/api/v1/test' `
+                $output = Invoke-SepmApi -Method POST -Uri 'https://example.com/api/v1/test' `
                     -Headers @{ Authorization = 'Bearer ManualVerbose' } `
-                    -SkipCert $false -Body '{}' -Verbose | Out-Null
+                    -SkipCert $false -Body '{}' -Verbose *>&1
 
-                Should -Invoke Write-Verbose -Times 1 -Exactly
+                $verboseRecords = @($output | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] })
+                $verboseRecords.Count | Should -BeGreaterThan 0
+                $verboseRecords[0].Message | Should -Be 'Invoke-SepmApi: POST https://example.com/api/v1/test'
             }
         }
     }
