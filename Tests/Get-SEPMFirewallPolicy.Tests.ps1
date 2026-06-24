@@ -185,4 +185,43 @@ Describe 'Get-SEPMFirewallPolicy' {
             } -Exactly 2
         }
     }
+
+    Context 'PolicyList parameter' {
+        BeforeAll {
+            $script:fakeSession = New-TestSession -SkipCert
+        }
+
+        It 'skips Get-SEPMPoliciesSummary when -PolicyList is provided with -All' {
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { throw 'should not be called' }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
+                if ($Uri -match '/groups') {
+                    return @{ content = @(); firstPage = $true; lastPage = $true }
+                }
+                if ($Uri -match '/policies/firewall/F001') {
+                    return New-DummyFirewallPolicy -PolicyName 'FW Policy 1' -PolicyID 'F001'
+                }
+                if ($Uri -match '/policies/firewall/F002') {
+                    return New-DummyFirewallPolicy -PolicyName 'FW Policy 2' -PolicyID 'F002'
+                }
+                return $null
+            }
+            Mock Write-Host -ModuleName PSSymantecSEPM {}
+            Mock Start-Sleep -ModuleName PSSymantecSEPM {}
+
+            $policyList = @(
+                @{ id = 'F001'; name = 'FW Policy 1' }
+                @{ id = 'F002'; name = 'FW Policy 2' }
+            )
+
+            $result = Get-SEPMFirewallPolicy -All -PolicyList $policyList
+
+            $result | Should -Not -BeNullOrEmpty
+            $result.Count | Should -Be 2
+            $result[0].PSObject.TypeNames[0] | Should -Be 'SEPM.FirewallPolicy'
+            $result[1].PSObject.TypeNames[0] | Should -Be 'SEPM.FirewallPolicy'
+            # Verify Get-SEPMPoliciesSummary was NOT called
+            Should -Invoke Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM -Exactly 0 -Scope It
+        }
+    }
 }

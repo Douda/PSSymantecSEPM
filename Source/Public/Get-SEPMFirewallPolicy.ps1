@@ -11,6 +11,11 @@ function Get-SEPMFirewallPolicy {
         The ID of the policy to get the details of
     .PARAMETER All
         Fetch all firewall policies.
+    .PARAMETER PolicyList
+        Optional array of policy summary objects to use when -All is specified.
+        When provided, skips the internal Get-SEPMPoliciesSummary call and
+        enumerates from this list instead. Ignored in the PolicyName and
+        PolicyID parameter sets.
     .PARAMETER DelayMs
         Delay in milliseconds between individual policy fetches when -All is used. Default: 200.
     .EXAMPLE
@@ -60,6 +65,13 @@ function Get-SEPMFirewallPolicy {
         [switch]
         $All,
 
+        # PolicyList (skip summary fetch when provided with -All)
+        [Parameter(
+            ParameterSetName = 'All'
+        )]
+        [object[]]
+        $PolicyList,
+
         # DelayMs
         [Parameter(
             ParameterSetName = 'All'
@@ -76,8 +88,12 @@ function Get-SEPMFirewallPolicy {
     process {
 
         if ($All) {
-            # Fetch all FW policy summaries
-            $fwPolicies = Get-SEPMPoliciesSummary -PolicyType fw
+            # Use provided policy list or fetch FW policy summaries
+            if ($PSBoundParameters.ContainsKey('PolicyList')) {
+                $fwPolicies = $PolicyList
+            } else {
+                $fwPolicies = Get-SEPMPoliciesSummary -PolicyType fw
+            }
             $allResults = @()
             $total = $fwPolicies.Count
             $i = 0
