@@ -231,7 +231,7 @@ function Export-SEPMInventory {
             foreach ($ipsSummary in $ipsSummaries) {
                 $ipsIndex++
                 if ($ipsIndex % $ipsHeartbeatInterval -eq 0) {
-                    Write-Verbose "  → policy $ipsIndex/$ipsCount $($ipsSummary.name)"
+                    Write-Verbose "  -> policy $ipsIndex/$ipsCount $($ipsSummary.name)"
                 }
                 try {
                     $ipsPolicy = Get-SEPMIpsPolicy -PolicyName $ipsSummary.name
@@ -272,7 +272,7 @@ function Export-SEPMInventory {
             foreach ($exceptionSummary in $exceptionSummaries) {
                 $exceptionIndex++
                 if ($exceptionIndex % $excHeartbeatInterval -eq 0) {
-                    Write-Verbose "  → policy $exceptionIndex/$exceptionCount $($exceptionSummary.name)"
+                    Write-Verbose "  -> policy $exceptionIndex/$exceptionCount $($exceptionSummary.name)"
                 }
                 try {
                     $exceptionPolicy = Get-SEPMExceptionPolicy -PolicyName $exceptionSummary.name
@@ -331,7 +331,7 @@ function Export-SEPMInventory {
             foreach ($group in $groupsArray) {
                 $groupIndex++
                 if ($groupIndex % $locHeartbeatInterval -eq 0) {
-                    Write-Verbose "  → group $groupIndex/$groupCount $($group.name)"
+                    Write-Verbose "  -> group $groupIndex/$groupCount $($group.name)"
                 }
                 try {
                     $groupLocs = Get-SEPMLocation -GroupID $group.id
@@ -373,7 +373,7 @@ function Export-SEPMInventory {
             foreach ($location in $locations) {
                 $locationIndex++
                 if ($locationIndex % $locXmlHeartbeatInterval -eq 0) {
-                    Write-Verbose "  → location $locationIndex/$locationCount $($location.locationName)"
+                    Write-Verbose "  -> location $locationIndex/$locationCount $($location.locationName)"
                 }
                 # LocationXML
                 try {
@@ -447,7 +447,7 @@ function Export-SEPMInventory {
                 foreach ($hg in $hostGroupSummaries) {
                     $hgIndex++
                     if ($hgIndex % $hgHeartbeatInterval -eq 0) {
-                        Write-Verbose "  → group $hgIndex/$hgCount $($hg.name)"
+                        Write-Verbose "  -> group $hgIndex/$hgCount $($hg.name)"
                     }
                     try {
                         $hgDetail = Get-SEPMHostGroup -Id $hg.id
