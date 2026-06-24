@@ -1141,7 +1141,7 @@ Describe 'Export-SEPMInventory' {
 
         It 'IpsPolicies shows per-item progress (itemIndex/total): policyName when >10 items' {
             $policies = 1..15 | ForEach-Object {
-                @{ id = "I$([String]$_).PadLeft(3,'0')"; name = "IPS Policy $_"; policytype = 'ips'; enabled = $true }
+                @{ id = ('I{0:D3}' -f $_); name = "IPS Policy $_"; policytype = 'ips'; enabled = $true }
             }
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 Write-Output $policies -NoEnumerate
@@ -1168,7 +1168,7 @@ Describe 'Export-SEPMInventory' {
 
         It 'ExceptionPolicies shows per-item progress (itemIndex/total): policyName when >10 items' {
             $policies = 1..12 | ForEach-Object {
-                @{ id = "E$([String]$_).PadLeft(3,'0')"; name = "Exc Policy $_"; policytype = 'exceptions'; enabled = $true }
+                @{ id = ('E{0:D3}' -f $_); name = "Exc Policy $_"; policytype = 'exceptions'; enabled = $true }
             }
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 Write-Output $policies -NoEnumerate
@@ -1192,7 +1192,7 @@ Describe 'Export-SEPMInventory' {
 
         It 'Locations shows per-item progress (itemIndex/total): groupName when >10 groups' {
             $groups = 1..14 | ForEach-Object {
-                [PSCustomObject]@{ id = "GRP$([String]$_).PadLeft(3,'0')"; name = "Group $_"; fullPathName = "Group $_" }
+                [PSCustomObject]@{ id = ('GRP{0:D3}' -f $_); name = "Group $_"; fullPathName = "Group $_" }
             }
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
                 Write-Output $groups -NoEnumerate
@@ -1215,7 +1215,7 @@ Describe 'Export-SEPMInventory' {
 
         It 'LocationXML shows per-item progress (itemIndex/total): locationName when >10 locations' {
             $groups = 1..11 | ForEach-Object {
-                [PSCustomObject]@{ id = "GRP$([String]$_).PadLeft(3,'0')"; name = "Group $_"; fullPathName = "Group $_" }
+                [PSCustomObject]@{ id = ('GRP{0:D3}' -f $_); name = "Group $_"; fullPathName = "Group $_" }
             }
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
                 Write-Output $groups -NoEnumerate
@@ -1223,11 +1223,12 @@ Describe 'Export-SEPMInventory' {
             $script:locPipCallCount = 0
             Mock Get-SEPMLocation -ModuleName PSSymantecSEPM {
                 $script:locPipCallCount++
+                $padded = '{0:D3}' -f $script:locPipCallCount
                 return @([PSCustomObject]@{
                     locationName = "Location $script:locPipCallCount"
                     locationId = "LOC$script:locPipCallCount"
                     groupName = "Group $script:locPipCallCount"
-                    groupId = "GRP$([String]$script:locPipCallCount).PadLeft(3,'0')"
+                    groupId = "GRP$padded"
                     groupFullPathName = "Group $script:locPipCallCount"
                 })
             }
@@ -1251,7 +1252,7 @@ Describe 'Export-SEPMInventory' {
         It 'GroupSettings shows per-item progress (itemIndex/total): locationName when >10 locations' {
             # Uses same setup as LocationXML test — Location and GroupSettings are in the same loop
             $groups = 1..13 | ForEach-Object {
-                [PSCustomObject]@{ id = "GRP$([String]$_).PadLeft(3,'0')"; name = "Group $_"; fullPathName = "Group $_" }
+                [PSCustomObject]@{ id = ('GRP{0:D3}' -f $_); name = "Group $_"; fullPathName = "Group $_" }
             }
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
                 Write-Output $groups -NoEnumerate
@@ -1259,11 +1260,12 @@ Describe 'Export-SEPMInventory' {
             $script:gsPipCallCount = 0
             Mock Get-SEPMLocation -ModuleName PSSymantecSEPM {
                 $script:gsPipCallCount++
+                $padded = '{0:D3}' -f $script:gsPipCallCount
                 return @([PSCustomObject]@{
                     locationName = "GS Location $script:gsPipCallCount"
                     locationId = "LOC$script:gsPipCallCount"
                     groupName = "Group $script:gsPipCallCount"
-                    groupId = "GRP$([String]$script:gsPipCallCount).PadLeft(3,'0')"
+                    groupId = "GRP$padded"
                     groupFullPathName = "Group $script:gsPipCallCount"
                 })
             }
@@ -1286,7 +1288,7 @@ Describe 'Export-SEPMInventory' {
 
         It 'HostGroups shows per-item progress (itemIndex/total): groupName when >10 host groups' {
             $hgItems = 1..20 | ForEach-Object {
-                [PSCustomObject]@{ id = "HG$([String]$_).PadLeft(3,'0')"; name = "HG $_"; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
+                [PSCustomObject]@{ id = ('HG{0:D3}' -f $_); name = "HG $_"; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
             }
             Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
                 Write-Output $hgItems -NoEnumerate
