@@ -106,7 +106,7 @@ Describe 'Get-SEPMFirewallPolicy' {
             Should -Invoke Start-Sleep -ModuleName PSSymantecSEPM -Exactly 2 -Scope It -ParameterFilter { $Milliseconds -eq 500 }
         }
 
-        It 'shows Write-Progress with policy name and count' {
+        It 'shows per-policy lines with policy name and count' {
             $apiState = @{ policyCallCount = 0 }
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
@@ -128,46 +128,17 @@ Describe 'Get-SEPMFirewallPolicy' {
                 return $null
             }
             Mock Start-Sleep -ModuleName PSSymantecSEPM {}
-            Mock Write-Progress -ModuleName PSSymantecSEPM {}
+            Mock Write-Host -ModuleName PSSymantecSEPM {}
 
             Get-SEPMFirewallPolicy -All | Out-Null
 
-            Should -Invoke Write-Progress -ModuleName PSSymantecSEPM -Exactly 2 -Scope It
-            Should -Invoke Write-Progress -ModuleName PSSymantecSEPM -Scope It -ParameterFilter {
-                $Status -match '1/2 : FW Policy A'
+            Should -Invoke Write-Host -ModuleName PSSymantecSEPM -Exactly 2 -Scope It
+            Should -Invoke Write-Host -ModuleName PSSymantecSEPM -Scope It -ParameterFilter {
+                $Object -match 'FirewallPolicies \(1/2\): FW Policy A'
             }
-            Should -Invoke Write-Progress -ModuleName PSSymantecSEPM -Scope It -ParameterFilter {
-                $Status -match '2/2 : FW Policy B'
+            Should -Invoke Write-Host -ModuleName PSSymantecSEPM -Scope It -ParameterFilter {
+                $Object -match 'FirewallPolicies \(2/2\): FW Policy B'
             }
-        }
-
-        It 'suppresses Write-Progress when -SuppressProgress is passed' {
-            $apiState = @{ policyCallCount = 0 }
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
-                if ($Uri -match '/groups') {
-                    return @{ content = @(); firstPage = $true; lastPage = $true }
-                }
-                if ($Uri -match '/policies/summary/fw') {
-                    return @{
-                        content = @(
-                            New-DummyPolicySummary -PolicyName 'FW Policy 1' -PolicyType 'fw'
-                            New-DummyPolicySummary -PolicyName 'FW Policy 2' -PolicyType 'fw'
-                        )
-                    }
-                }
-                if ($Uri -match '/policies/firewall/') {
-                    $apiState.policyCallCount++
-                    return New-DummyFirewallPolicy -PolicyName "FW Policy $($apiState.policyCallCount)"
-                }
-                return $null
-            }
-            Mock Start-Sleep -ModuleName PSSymantecSEPM {}
-            Mock Write-Progress -ModuleName PSSymantecSEPM {}
-
-            Get-SEPMFirewallPolicy -All -SuppressProgress | Out-Null
-
-            Should -Invoke Write-Progress -ModuleName PSSymantecSEPM -Exactly 0 -Scope It
         }
 
         It 'halts on first API error with terminating error and no partial results' {
@@ -196,7 +167,7 @@ Describe 'Get-SEPMFirewallPolicy' {
                 return $null
             }
             Mock Start-Sleep -ModuleName PSSymantecSEPM {}
-            Mock Write-Progress -ModuleName PSSymantecSEPM {}
+            Mock Write-Host -ModuleName PSSymantecSEPM {}
 
             $errored = $false
             $result = $null
