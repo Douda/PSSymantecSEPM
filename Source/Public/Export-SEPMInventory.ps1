@@ -234,7 +234,7 @@ function Export-SEPMInventory {
                     Write-Verbose "  -> policy $ipsIndex/$ipsCount $($ipsSummary.name)"
                 }
                 try {
-                    $ipsPolicy = Get-SEPMIpsPolicy -PolicyName $ipsSummary.name
+                    $ipsPolicy = Get-SEPMIpsPolicy -PolicySummary $ipsSummary
                     if ($ipsPolicy) {
                         $ipsPolicies += $ipsPolicy
                     }
@@ -275,7 +275,7 @@ function Export-SEPMInventory {
                     Write-Verbose "  -> policy $exceptionIndex/$exceptionCount $($exceptionSummary.name)"
                 }
                 try {
-                    $exceptionPolicy = Get-SEPMExceptionPolicy -PolicyName $exceptionSummary.name
+                    $exceptionPolicy = Get-SEPMExceptionPolicy -PolicySummary $exceptionSummary
                     if ($exceptionPolicy) {
                         $exceptionPolicies += $exceptionPolicy
                     }
