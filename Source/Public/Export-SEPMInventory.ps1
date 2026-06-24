@@ -219,7 +219,7 @@ function Export-SEPMInventory {
 
         # ── FirewallPolicies ──
         try {
-            $snapshot.FirewallPolicies = Get-SEPMFirewallPolicy -All -DelayMs $DelayMs
+            $snapshot.FirewallPolicies = Get-SEPMFirewallPolicy -All -DelayMs $DelayMs -SuppressProgress
         } catch {
             $snapshot.Failures += [PSCustomObject]@{
                 Category = 'FirewallPolicies'
