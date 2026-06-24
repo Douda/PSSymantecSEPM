@@ -75,7 +75,7 @@ function Export-SEPMInventory {
                 [string]$StepName
             )
             $Counter.Value++
-            Write-Progress -Activity 'Export-SEPMInventory' -Status "[$($Counter.Value)/$Total] $StepName" -PercentComplete ($Counter.Value / $Total * 100)
+            Write-Host "[$($Counter.Value)/$Total] $StepName" -ForegroundColor Cyan
         }
 
         function Write-PerItemProgress {
@@ -86,7 +86,7 @@ function Export-SEPMInventory {
                 [int]$ItemCount,
                 [string]$ItemName
             )
-            Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/$totalSteps] $Category ($ItemIndex/$ItemCount): $ItemName" -PercentComplete ($progressCounter / $totalSteps * 100)
+            Write-Host "  -> $Category ($ItemIndex/$ItemCount): $ItemName" -ForegroundColor DarkGray
         }
 
         function Get-CategoryMetric {

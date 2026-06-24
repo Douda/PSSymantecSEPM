@@ -1072,51 +1072,30 @@ Describe 'Export-SEPMInventory' {
             }
 
             $script:progressCalls = @()
-            Mock Write-Progress -ModuleName PSSymantecSEPM {
-                $script:progressCalls += @{
-                    Activity = $Activity
-                    Status = $Status
-                    PercentComplete = $PercentComplete
-                }
+            Mock Write-Host -ModuleName PSSymantecSEPM {
+                $script:progressCalls += @{ Text = $Object }
             }
         }
 
-        It 'calls Write-Progress exactly 25 times' {
+        It 'writes exactly 25 category-level lines' {
             $script:progressCalls = @()
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
             $script:progressCalls.Count | Should -Be 25
         }
 
-        It 'all calls have Activity set to Export-SEPMInventory' {
-            $script:progressCalls = @()
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            $script:progressCalls | ForEach-Object { $_.Activity | Should -Be 'Export-SEPMInventory' }
-        }
-
-        It 'Status format matches [N/25] CategoryName for all calls' {
+        It 'line format matches [N/25] CategoryName for all calls' {
             $script:progressCalls = @()
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
             for ($i = 0; $i -lt 25; $i++) {
-                $script:progressCalls[$i].Status | Should -Match '^\[\d+/25\] \w+$'
+                $script:progressCalls[$i].Text | Should -Match '^\[\d+/25\] \w+$'
             }
         }
 
-        It 'Status starts at [1/25] and ends at [25/25]' {
+        It 'first line is [1/25] and last is [25/25]' {
             $script:progressCalls = @()
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            $script:progressCalls[0].Status | Should -Match '^\[1/25\]'
-            $script:progressCalls[24].Status | Should -Match '^\[25/25\]'
-        }
-
-        It 'PercentComplete increases from 0 to 100' {
-            $script:progressCalls = @()
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            $script:progressCalls[0].PercentComplete | Should -Be 4
-            $script:progressCalls[24].PercentComplete | Should -Be 100
-            # Verify monotonic increase
-            for ($i = 1; $i -lt 25; $i++) {
-                $script:progressCalls[$i].PercentComplete | Should -BeGreaterThan $script:progressCalls[$i-1].PercentComplete
-            }
+            $script:progressCalls[0].Text | Should -Match '^\[1/25\]'
+            $script:progressCalls[24].Text | Should -Match '^\[25/25\]'
         }
     }
 
@@ -1129,14 +1108,6 @@ Describe 'Export-SEPMInventory' {
                 return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
             }
 
-            $script:pipProgressCalls = @()
-            Mock Write-Progress -ModuleName PSSymantecSEPM {
-                $script:pipProgressCalls += @{
-                    Activity = $Activity
-                    Status = $Status
-                    PercentComplete = $PercentComplete
-                }
-            }
         }
 
         It 'IpsPolicies shows per-item progress (itemIndex/total): policyName when >10 items' {
@@ -1155,15 +1126,11 @@ Describe 'Export-SEPMInventory' {
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
             Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
 
-            $script:pipProgressCalls = @()
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            $output = Export-SEPMInventory -OutputDir 'TestDrive:' 6>&1 | Out-String
 
-            # Find throttled IpsPolicies progress calls (those with (N/M) format)
-            $ipsPerItemCalls = @($script:pipProgressCalls | Where-Object { $_.Status -match 'IpsPolicies \(\d+/\d+\)' })
-            # With 15 items, interval = Max(10, Floor(15/10)) = Max(10, 1) = 10
-            # Throttled calls at 10, 20? No, only 15 items, so at item 10 only
+            $ipsPerItemCalls = @($output -split "`n" | Where-Object { $_ -match 'IpsPolicies \(\d+/\d+\)' })
             $ipsPerItemCalls.Count | Should -Be 1
-            $ipsPerItemCalls[0].Status | Should -Match 'IpsPolicies \(10/15\): IPS Policy 10$'
+            $ipsPerItemCalls[0] | Should -Match 'IpsPolicies \(10/15\): IPS Policy 10$'
         }
 
         It 'ExceptionPolicies shows per-item progress (itemIndex/total): policyName when >10 items' {
@@ -1181,13 +1148,12 @@ Describe 'Export-SEPMInventory' {
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
             Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
 
-            $script:pipProgressCalls = @()
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            $output = Export-SEPMInventory -OutputDir 'TestDrive:' 6>&1 | Out-String
 
-            $excPerItemCalls = @($script:pipProgressCalls | Where-Object { $_.Status -match 'ExceptionPolicies \(\d+/\d+\)' })
+            $excPerItemCalls = @($output -split "`n" | Where-Object { $_ -match 'ExceptionPolicies \(\d+/\d+\)' })
             # With 12 items, interval = Max(10, Floor(12/10)) = Max(10, 1) = 10
             $excPerItemCalls.Count | Should -Be 1
-            $excPerItemCalls[0].Status | Should -Match 'ExceptionPolicies \(10/12\): Exc Policy 10$'
+            $excPerItemCalls[0] | Should -Match 'ExceptionPolicies \(10/12\): Exc Policy 10$'
         }
 
         It 'Locations shows per-item progress (itemIndex/total): groupName when >10 groups' {
@@ -1204,13 +1170,12 @@ Describe 'Export-SEPMInventory' {
             Mock Get-SEPMGroupSettings -ModuleName PSSymantecSEPM { return $null }
             Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
 
-            $script:pipProgressCalls = @()
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            $output = Export-SEPMInventory -OutputDir 'TestDrive:' 6>&1 | Out-String
 
-            $locPerItemCalls = @($script:pipProgressCalls | Where-Object { $_.Status -match 'Locations \(\d+/\d+\)' })
+            $locPerItemCalls = @($output -split "`n" | Where-Object { $_ -match 'Locations \(\d+/\d+\)' })
             # With 14 items, interval = Max(10, Floor(14/10)) = Max(10, 1) = 10
             $locPerItemCalls.Count | Should -Be 1
-            $locPerItemCalls[0].Status | Should -Match 'Locations \(10/14\): Group 10$'
+            $locPerItemCalls[0] | Should -Match 'Locations \(10/14\): Group 10$'
         }
 
         It 'LocationXML shows per-item progress (itemIndex/total): locationName when >10 locations' {
@@ -1240,13 +1205,12 @@ Describe 'Export-SEPMInventory' {
             }
             Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
 
-            $script:pipProgressCalls = @()
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            $output = Export-SEPMInventory -OutputDir 'TestDrive:' 6>&1 | Out-String
 
-            $locXmlCalls = @($script:pipProgressCalls | Where-Object { $_.Status -match 'LocationXML \(\d+/\d+\)' })
+            $locXmlCalls = @($output -split "`n" | Where-Object { $_ -match 'LocationXML \(\d+/\d+\)' })
             # With 11 items, interval = Max(10, Floor(11/10)) = Max(10, 1) = 10
             $locXmlCalls.Count | Should -Be 1
-            $locXmlCalls[0].Status | Should -Match 'LocationXML \(10/11\): Location 10$'
+            $locXmlCalls[0] | Should -Match 'LocationXML \(10/11\): Location 10$'
         }
 
         It 'GroupSettings shows per-item progress (itemIndex/total): locationName when >10 locations' {
@@ -1277,13 +1241,12 @@ Describe 'Export-SEPMInventory' {
             }
             Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
 
-            $script:pipProgressCalls = @()
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            $output = Export-SEPMInventory -OutputDir 'TestDrive:' 6>&1 | Out-String
 
-            $gsCalls = @($script:pipProgressCalls | Where-Object { $_.Status -match 'GroupSettings \(\d+/\d+\)' })
+            $gsCalls = @($output -split "`n" | Where-Object { $_ -match 'GroupSettings \(\d+/\d+\)' })
             # With 13 items, interval = Max(10, Floor(13/10)) = Max(10, 1) = 10
             $gsCalls.Count | Should -Be 1
-            $gsCalls[0].Status | Should -Match 'GroupSettings \(10/13\): GS Location 10$'
+            $gsCalls[0] | Should -Match 'GroupSettings \(10/13\): GS Location 10$'
         }
 
         It 'HostGroups shows per-item progress (itemIndex/total): groupName when >10 host groups' {
@@ -1298,15 +1261,14 @@ Describe 'Export-SEPMInventory' {
             }
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
 
-            $script:pipProgressCalls = @()
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            $output = Export-SEPMInventory -OutputDir 'TestDrive:' 6>&1 | Out-String
 
-            $hgCalls = @($script:pipProgressCalls | Where-Object { $_.Status -match 'HostGroups \(\d+/\d+\)' })
+            $hgCalls = @($output -split "`n" | Where-Object { $_ -match 'HostGroups \(\d+/\d+\)' })
             # With 20 items, interval = Max(10, Floor(20/10)) = Max(10, 2) = 10
             # Throttled calls at 10 and 20
             $hgCalls.Count | Should -Be 2
-            $hgCalls[0].Status | Should -Match 'HostGroups \(10/20\): HG 10$'
-            $hgCalls[1].Status | Should -Match 'HostGroups \(20/20\): HG 20$'
+            $hgCalls[0] | Should -Match 'HostGroups \(10/20\): HG 10$'
+            $hgCalls[1] | Should -Match 'HostGroups \(20/20\): HG 20$'
         }
     }
 

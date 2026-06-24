@@ -106,7 +106,7 @@ Describe 'Get-SEPMFirewallPolicy' {
             Should -Invoke Start-Sleep -ModuleName PSSymantecSEPM -Exactly 2 -Scope It -ParameterFilter { $Milliseconds -eq 500 }
         }
 
-        It 'shows Write-Progress with policy name and count' {
+        It 'shows per-policy lines with policy name and count' {
             $apiState = @{ policyCallCount = 0 }
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
@@ -128,16 +128,16 @@ Describe 'Get-SEPMFirewallPolicy' {
                 return $null
             }
             Mock Start-Sleep -ModuleName PSSymantecSEPM {}
-            Mock Write-Progress -ModuleName PSSymantecSEPM {}
+            Mock Write-Host -ModuleName PSSymantecSEPM {}
 
             Get-SEPMFirewallPolicy -All | Out-Null
 
-            Should -Invoke Write-Progress -ModuleName PSSymantecSEPM -Exactly 2 -Scope It
-            Should -Invoke Write-Progress -ModuleName PSSymantecSEPM -Scope It -ParameterFilter {
-                $Status -match '1/2 : FW Policy A'
+            Should -Invoke Write-Host -ModuleName PSSymantecSEPM -Exactly 2 -Scope It
+            Should -Invoke Write-Host -ModuleName PSSymantecSEPM -Scope It -ParameterFilter {
+                $Object -match 'FirewallPolicies \(1/2\): FW Policy A'
             }
-            Should -Invoke Write-Progress -ModuleName PSSymantecSEPM -Scope It -ParameterFilter {
-                $Status -match '2/2 : FW Policy B'
+            Should -Invoke Write-Host -ModuleName PSSymantecSEPM -Scope It -ParameterFilter {
+                $Object -match 'FirewallPolicies \(2/2\): FW Policy B'
             }
         }
 
@@ -167,7 +167,7 @@ Describe 'Get-SEPMFirewallPolicy' {
                 return $null
             }
             Mock Start-Sleep -ModuleName PSSymantecSEPM {}
-            Mock Write-Progress -ModuleName PSSymantecSEPM {}
+            Mock Write-Host -ModuleName PSSymantecSEPM {}
 
             $errored = $false
             $result = $null

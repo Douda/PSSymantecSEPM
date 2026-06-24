@@ -85,7 +85,7 @@ function Get-SEPMFirewallPolicy {
             foreach ($fwPolicy in $fwPolicies) {
                 $i++
 
-                Write-Progress -Activity "Fetching firewall policies" -Status "$i/$total` : $($fwPolicy.name)" -PercentComplete ($i / $total * 100)
+                Write-Host "  -> FirewallPolicies ($i/$total): $($fwPolicy.name)" -ForegroundColor DarkGray
 
                 $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($fwPolicy.id)
 
