@@ -6,6 +6,9 @@ function Get-SEPMLocation {
         Gets a list of locations for a specific group
     .PARAMETER GroupID
         Mandatory parameter for the group ID
+    .PARAMETER GroupList
+        Pre-fetched group list from Get-SEPMGroups. When provided, skips the
+        internal Get-SEPMGroups call, avoiding a redundant API round-trip.
     .INPUTS
         System.String
     .OUTPUTS
@@ -49,9 +52,8 @@ function Get-SEPMLocation {
         [String]
         $GroupID,
 
-        # Pre-fetched group list to skip redundant Get-SEPMGroups call
         [Parameter()]
-        [object[]]
+        [Object[]]
         $GroupList
     )
 

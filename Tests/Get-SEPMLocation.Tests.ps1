@@ -132,33 +132,25 @@ Describe 'Get-SEPMLocation' {
             $script:fakeSession = New-TestSession -SkipCert
 
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-
-            # Mock Get-SEPMGroups to throw — if called, test fails
-            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { throw 'Get-SEPMGroups should not have been called' }
-
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { throw 'Get-SEPMGroups should not be called' }
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                return @('Default:api/v1/locations/LOC001')
+                return @('Default:api/v1/locations/DEFAULT01')
             }
-
-            $script:groupList = @(
-                [PSCustomObject]@{ id = 'GRP005'; name = 'PreFetched Group'; fullPathName = 'My Company\PreFetched' }
-            )
         }
 
-        It 'does not call Get-SEPMGroups when -GroupList is provided' {
-            $result = Get-SEPMLocation -GroupID 'GRP005' -GroupList $script:groupList
+        It 'does not call Get-SEPMGroups when GroupList is provided' {
+            $groupList = @(
+                [PSCustomObject]@{ id = 'GRP001'; name = 'From List'; fullPathName = 'My Company\FromList' }
+            )
+
+            $result = Get-SEPMLocation -GroupID 'GRP001' -GroupList $groupList
 
             $result | Should -Not -BeNullOrEmpty
-            $result.Count | Should -Be 1
+            $result.groupName | Should -Be 'From List'
+            $result.groupId | Should -Be 'GRP001'
+            $result.groupFullPathName | Should -Be 'My Company\FromList'
+
             Should -Invoke Get-SEPMGroups -ModuleName PSSymantecSEPM -Exactly 0 -Scope It
-        }
-
-        It 'resolves group metadata from passed GroupList' {
-            $result = Get-SEPMLocation -GroupID 'GRP005' -GroupList $script:groupList
-
-            $result.groupName | Should -Be 'PreFetched Group'
-            $result.groupId | Should -Be 'GRP005'
-            $result.groupFullPathName | Should -Be 'My Company\PreFetched'
         }
     }
 
