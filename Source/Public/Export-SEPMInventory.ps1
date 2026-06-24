@@ -176,7 +176,7 @@ function Export-SEPMInventory {
                 $snapshot.$Category = & $FetchScript
             } catch {
                 $categoryFailed = $true
-                Write-Warning "[$($progressCounter)/$totalSteps] $Category`: $($_.Exception.Message)"
+                Write-Warning "[$($progressCounter)/$totalSteps] $($Category): $($_.Exception.Message)"
                 $snapshot.Failures += [PSCustomObject]@{
                     Category = $Category
                     Error    = $_.Exception.Message
