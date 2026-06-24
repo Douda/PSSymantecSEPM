@@ -496,37 +496,37 @@ function Export-SEPMInventory {
         $snapshot.HostGroups = $allHostGroups
 
         # ── Write per-category .clixml files ──
-        if ($snapshot.Version) {
+        if ($null -ne $snapshot.Version) {
             $snapshot.Version | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_version.xml') -Force
         }
-        if ($snapshot.Domains) {
+        if ($null -ne $snapshot.Domains) {
             $snapshot.Domains | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_domains.xml') -Force
         }
-        if ($snapshot.GUPs) {
+        if ($null -ne $snapshot.GUPs) {
             $snapshot.GUPs | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_gups.xml') -Force
         }
-        if ($snapshot.Admins) {
+        if ($null -ne $snapshot.Admins) {
             $snapshot.Admins | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_admins.xml') -Force
         }
-        if ($snapshot.DatabaseInfo) {
+        if ($null -ne $snapshot.DatabaseInfo) {
             $snapshot.DatabaseInfo | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_database_info.xml') -Force
         }
-        if ($snapshot.License) {
+        if ($null -ne $snapshot.License) {
             $snapshot.License | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_license.xml') -Force
         }
-        if ($snapshot.LicenseSummary) {
+        if ($null -ne $snapshot.LicenseSummary) {
             $snapshot.LicenseSummary | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_license_summary.xml') -Force
         }
-        if ($snapshot.ReplicationStatus) {
+        if ($null -ne $snapshot.ReplicationStatus) {
             $snapshot.ReplicationStatus | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_replication_status.xml') -Force
         }
-        if ($snapshot.ThreatStats) {
+        if ($null -ne $snapshot.ThreatStats) {
             $snapshot.ThreatStats | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_threat_stats.xml') -Force
         }
-        if ($snapshot.LatestDefinitions) {
+        if ($null -ne $snapshot.LatestDefinitions) {
             $snapshot.LatestDefinitions | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_latest_definitions.xml') -Force
         }
-        if ($snapshot.Events) {
+        if ($null -ne $snapshot.Events) {
             $snapshot.Events | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_events.xml') -Force
         }
         if ($null -ne $snapshot.PolicySummaries) {
