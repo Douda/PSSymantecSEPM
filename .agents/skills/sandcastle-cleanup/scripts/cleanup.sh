@@ -6,7 +6,7 @@ if [[ "${1:-}" == "--force" ]]; then
   DRY_RUN=false
 fi
 
-BRANCHES=$(git branch --list 'sandcastle/*' | sed 's/^[* ]*//')
+BRANCHES=$(git branch --list 'sandcastle/*' | sed 's/^[+* ]*//')
 
 if [[ -z "$BRANCHES" ]]; then
   echo "No sandcastle branches found."

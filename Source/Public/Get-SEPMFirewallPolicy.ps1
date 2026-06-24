@@ -11,11 +11,13 @@ function Get-SEPMFirewallPolicy {
         The ID of the policy to get the details of
     .PARAMETER All
         Fetch all firewall policies.
+    .PARAMETER PolicyList
+        Optional array of policy summary objects to use when -All is specified.
+        When provided, skips the internal Get-SEPMPoliciesSummary call and
+        enumerates from this list instead. Ignored in the PolicyName and
+        PolicyID parameter sets.
     .PARAMETER DelayMs
         Delay in milliseconds between individual policy fetches when -All is used. Default: 200.
-    .PARAMETER SuppressProgress
-        Suppresses Write-Progress output during the -All loop. Used by Export-SEPMInventory to prevent
-        nested progress bars.
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMFirewallPolicy -PolicyName "Standard Servers - Firewall policy"
 
@@ -63,19 +65,19 @@ function Get-SEPMFirewallPolicy {
         [switch]
         $All,
 
+        # PolicyList (skip summary fetch when provided with -All)
+        [Parameter(
+            ParameterSetName = 'All'
+        )]
+        [object[]]
+        $PolicyList,
+
         # DelayMs
         [Parameter(
             ParameterSetName = 'All'
         )]
         [int]
-        $DelayMs = 200,
-
-        # SuppressProgress
-        [Parameter(
-            ParameterSetName = 'All'
-        )]
-        [switch]
-        $SuppressProgress
+        $DelayMs = 200
     )
 
     begin {
@@ -86,8 +88,12 @@ function Get-SEPMFirewallPolicy {
     process {
 
         if ($All) {
-            # Fetch all FW policy summaries
-            $fwPolicies = Get-SEPMPoliciesSummary -PolicyType fw
+            # Use provided policy list or fetch FW policy summaries
+            if ($PSBoundParameters.ContainsKey('PolicyList')) {
+                $fwPolicies = $PolicyList
+            } else {
+                $fwPolicies = Get-SEPMPoliciesSummary -PolicyType fw
+            }
             $allResults = @()
             $total = $fwPolicies.Count
             $i = 0
@@ -95,9 +101,7 @@ function Get-SEPMFirewallPolicy {
             foreach ($fwPolicy in $fwPolicies) {
                 $i++
 
-                if (-not $SuppressProgress) {
-                    Write-Progress -Activity "Fetching firewall policies" -Status "$i/$total` : $($fwPolicy.name)" -PercentComplete ($i / $total * 100)
-                }
+                Write-Host "  -> FirewallPolicies ($i/$total): $($fwPolicy.name)" -ForegroundColor DarkGray
 
                 $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($fwPolicy.id)
 

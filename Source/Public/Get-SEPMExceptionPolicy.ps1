@@ -12,6 +12,10 @@ function Get-SEPMExceptionPolicy {
         List a specific exception category
         Valid values are "files", "directories", "webdomains"
         # TODO : add all the other exception types in example
+    .PARAMETER PolicyList
+        Optional array of policy summary objects (from Get-SEPMPoliciesSummary).
+        When provided with -PolicyName, skips the internal Get-SEPMPoliciesSummary
+        call and resolves the policy ID from this list instead.
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMExceptionPolicy -PolicyName "Standard Servers - Exception policy"
 
@@ -93,7 +97,13 @@ function Get-SEPMExceptionPolicy {
         [Parameter()]
         [ValidateSet("files", "directories", "webdomains", "extensions", "tamper")]
         [String]
-        $List
+        $List,
+
+        # Pre-fetched policy list from Get-SEPMPoliciesSummary. When provided, skips the
+        # internal Get-SEPMPoliciesSummary call, avoiding a redundant API round-trip.
+        [Parameter()]
+        [object[]]
+        $PolicyList
     )
 
     begin {
@@ -102,7 +112,11 @@ function Get-SEPMExceptionPolicy {
 
         # Only fetch all summaries when resolving by name
         if ($PSCmdlet.ParameterSetName -eq 'ByName') {
-            $policies = Get-SEPMPoliciesSummary
+            if ($PSBoundParameters.ContainsKey('PolicyList')) {
+                $policies = $PolicyList
+            } else {
+                $policies = Get-SEPMPoliciesSummary
+            }
         }
     }
 

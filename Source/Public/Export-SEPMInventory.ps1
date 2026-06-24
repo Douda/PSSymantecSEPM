@@ -75,7 +75,18 @@ function Export-SEPMInventory {
                 [string]$StepName
             )
             $Counter.Value++
-            Write-Progress -Activity 'Export-SEPMInventory' -Status "[$($Counter.Value)/$Total] $StepName" -PercentComplete ($Counter.Value / $Total * 100)
+            Write-Host "[$($Counter.Value)/$Total] $StepName" -ForegroundColor Cyan
+        }
+
+        function Write-PerItemProgress {
+            [CmdletBinding()]
+            param(
+                [string]$Category,
+                [int]$ItemIndex,
+                [int]$ItemCount,
+                [string]$ItemName
+            )
+            Write-Host "  -> $Category ($ItemIndex/$ItemCount): $ItemName" -ForegroundColor DarkGray
         }
 
         function Get-CategoryMetric {
@@ -216,7 +227,16 @@ function Export-SEPMInventory {
         if ($DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
 
         # ── FirewallPolicies ──
-        Invoke-CategoryFetch -Category 'FirewallPolicies' -FetchScript { Get-SEPMFirewallPolicy -All -DelayMs $DelayMs -SuppressProgress }
+        Invoke-CategoryFetch -Category 'FirewallPolicies' -FetchScript {
+            $fwParams = @{ All = $true; DelayMs = $DelayMs }
+            if ($null -ne $snapshot.PolicySummaries) {
+                $fwSummaries = @($snapshot.PolicySummaries | Where-Object { $_.policytype -eq 'fw' })
+                if ($fwSummaries.Count -gt 0) {
+                    $fwParams.PolicyList = $fwSummaries
+                }
+            }
+            Get-SEPMFirewallPolicy @fwParams
+        }
 
         # ── IpsPolicies (per-policy fetch from IPS summaries) ──
         Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'IpsPolicies'
@@ -232,6 +252,7 @@ function Export-SEPMInventory {
                 $ipsIndex++
                 if ($ipsIndex % $ipsHeartbeatInterval -eq 0) {
                     Write-Verbose "  -> policy $ipsIndex/$ipsCount $($ipsSummary.name)"
+                    Write-PerItemProgress -Category 'IpsPolicies' -ItemIndex $ipsIndex -ItemCount $ipsCount -ItemName $ipsSummary.name
                 }
                 try {
                     $ipsPolicy = Get-SEPMIpsPolicy -PolicySummary $ipsSummary
@@ -273,6 +294,7 @@ function Export-SEPMInventory {
                 $exceptionIndex++
                 if ($exceptionIndex % $excHeartbeatInterval -eq 0) {
                     Write-Verbose "  -> policy $exceptionIndex/$exceptionCount $($exceptionSummary.name)"
+                    Write-PerItemProgress -Category 'ExceptionPolicies' -ItemIndex $exceptionIndex -ItemCount $exceptionCount -ItemName $exceptionSummary.name
                 }
                 try {
                     $exceptionPolicy = Get-SEPMExceptionPolicy -PolicySummary $exceptionSummary
@@ -313,7 +335,13 @@ function Export-SEPMInventory {
         Invoke-CategoryFetch -Category 'ClientDefVersions' -FetchScript { Get-SEPClientDefVersions }
 
         # ── ClientInfected ──
-        Invoke-CategoryFetch -Category 'ClientInfected' -FetchScript { Get-SEPClientInfectedStatus }
+        Invoke-CategoryFetch -Category 'ClientInfected' -FetchScript {
+            $ciParams = @{}
+            if ($null -ne $snapshot.Computers) {
+                $ciParams.ComputerList = $snapshot.Computers
+            }
+            Get-SEPClientInfectedStatus @ciParams
+        }
 
         # ── Groups ──
         Invoke-CategoryFetch -Category 'Groups' -FetchScript { Get-SEPMGroups }
@@ -332,9 +360,11 @@ function Export-SEPMInventory {
                 $groupIndex++
                 if ($groupIndex % $locHeartbeatInterval -eq 0) {
                     Write-Verbose "  -> group $groupIndex/$groupCount $($group.name)"
+                    Write-PerItemProgress -Category 'Locations' -ItemIndex $groupIndex -ItemCount $groupCount -ItemName $group.name
                 }
                 try {
-                    $groupLocs = Get-SEPMLocation -GroupID $group.id
+                    $locParams = @{ GroupID = $group.id; GroupList = $groupsArray }
+                    $groupLocs = Get-SEPMLocation @locParams
                     $allLocations += $groupLocs
                 } catch {
                     $categoryFailed = $true
@@ -374,6 +404,8 @@ function Export-SEPMInventory {
                 $locationIndex++
                 if ($locationIndex % $locXmlHeartbeatInterval -eq 0) {
                     Write-Verbose "  -> location $locationIndex/$locationCount $($location.locationName)"
+                    Write-PerItemProgress -Category 'LocationXML' -ItemIndex $locationIndex -ItemCount $locationCount -ItemName $location.locationName
+                    Write-PerItemProgress -Category 'GroupSettings' -ItemIndex $locationIndex -ItemCount $locationCount -ItemName $location.locationName
                 }
                 # LocationXML
                 try {
@@ -448,6 +480,7 @@ function Export-SEPMInventory {
                     $hgIndex++
                     if ($hgIndex % $hgHeartbeatInterval -eq 0) {
                         Write-Verbose "  -> group $hgIndex/$hgCount $($hg.name)"
+                        Write-PerItemProgress -Category 'HostGroups' -ItemIndex $hgIndex -ItemCount $hgCount -ItemName $hg.name
                     }
                     try {
                         $hgDetail = Get-SEPMHostGroup -Id $hg.id

@@ -127,6 +127,33 @@ Describe 'Get-SEPMLocation' {
         }
     }
 
+    Context 'GroupList parameter skips Get-SEPMGroups' {
+        BeforeAll {
+            $script:fakeSession = New-TestSession -SkipCert
+
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { throw 'Get-SEPMGroups should not be called' }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                return @('Default:api/v1/locations/DEFAULT01')
+            }
+        }
+
+        It 'does not call Get-SEPMGroups when GroupList is provided' {
+            $groupList = @(
+                [PSCustomObject]@{ id = 'GRP001'; name = 'From List'; fullPathName = 'My Company\FromList' }
+            )
+
+            $result = Get-SEPMLocation -GroupID 'GRP001' -GroupList $groupList
+
+            $result | Should -Not -BeNullOrEmpty
+            $result.groupName | Should -Be 'From List'
+            $result.groupId | Should -Be 'GRP001'
+            $result.groupFullPathName | Should -Be 'My Company\FromList'
+
+            Should -Invoke Get-SEPMGroups -ModuleName PSSymantecSEPM -Exactly 0 -Scope It
+        }
+    }
+
     Context 'Pipeline support' {
         BeforeAll {
             $script:fakeSession = New-TestSession -SkipCert

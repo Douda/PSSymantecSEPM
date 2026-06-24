@@ -1,11 +1,14 @@
 function Get-SEPMLocation {
-    <# TODO update help for Location
+    <#
     .SYNOPSIS
         Gets a list of locations for a specific group
     .DESCRIPTION
         Gets a list of locations for a specific group
     .PARAMETER GroupID
         Mandatory parameter for the group ID
+    .PARAMETER GroupList
+        Pre-fetched group list from Get-SEPMGroups. When provided, skips the
+        internal Get-SEPMGroups call, avoiding a redundant API round-trip.
     .INPUTS
         System.String
     .OUTPUTS
@@ -47,14 +50,22 @@ function Get-SEPMLocation {
             ValueFromPipelineByPropertyName = $true
         )]
         [String]
-        $GroupID
+        $GroupID,
+
+        [Parameter()]
+        [object[]]
+        $GroupList
     )
 
     begin {
         $session = Initialize-SEPMSession
         $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMLocation'
 
-        $allGroupsInfo = Get-SEPMGroups
+        if ($PSBoundParameters.ContainsKey('GroupList')) {
+            $allGroupsInfo = $GroupList
+        } else {
+            $allGroupsInfo = Get-SEPMGroups
+        }
     }
 
     process {

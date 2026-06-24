@@ -99,6 +99,38 @@ Describe 'Get-SEPMIpsPolicy' {
         }
     }
 
+    Context 'Using -PolicyList to skip summary fetch' {
+        BeforeAll {
+            $script:fakeSession = New-TestSession -SkipCert
+
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+
+            # Get-SEPMPoliciesSummary should throw if called
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { throw 'Should not be called' }
+
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                return @{
+                    sources          = $null
+                    configuration    = @{ blocked_hosts = @(); enabled_signatures = @() }
+                    enabled          = $true
+                    desc             = 'Policy from list'
+                    name             = 'Policy From List'
+                    lastmodifiedtime = 1693559858824
+                }
+            }
+
+            $script:policyList = New-DummyPolicySummary -PolicyName 'Policy From List' -PolicyType 'ips'
+        }
+
+        It 'resolves policy from -PolicyList without calling Get-SEPMPoliciesSummary' {
+            $result = Get-SEPMIpsPolicy -PolicyName 'Policy From List' -PolicyList $script:policyList
+
+            $result | Should -Not -BeNullOrEmpty
+            $result.name | Should -Be 'Policy From List'
+            Assert-MockCalled -CommandName Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM -Times 0
+        }
+    }
+
     Context 'Error handling' {
         BeforeAll {
             $script:fakeSession = New-TestSession -SkipCert

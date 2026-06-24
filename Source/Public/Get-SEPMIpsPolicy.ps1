@@ -24,6 +24,10 @@ function Get-SEPMIpsPolicy {
         A policy summary object (from Get-SEPMPoliciesSummary) for an IPS policy.
         When provided, skips the redundant summary fetch — the ID and type are extracted directly.
         Mutually exclusive with -PolicyName.
+    .PARAMETER PolicyList
+        Optional array of policy summary objects (from Get-SEPMPoliciesSummary).
+        When provided with -PolicyName, skips the internal Get-SEPMPoliciesSummary
+        call and resolves the policy ID from this list instead.
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMIpsPolicy -PolicyName "Intrusion Prevention policy PRODUCTION"
 
@@ -62,7 +66,14 @@ function Get-SEPMIpsPolicy {
             Mandatory = $true
         )]
         [PSCustomObject]
-        $PolicySummary
+        $PolicySummary,
+
+        # PolicyList
+        [Parameter(
+            ParameterSetName = 'ByName'
+        )]
+        [object[]]
+        $PolicyList
     )
 
     begin {
@@ -71,7 +82,11 @@ function Get-SEPMIpsPolicy {
 
         # Only fetch all summaries when resolving by name
         if ($PSCmdlet.ParameterSetName -eq 'ByName') {
-            $policies = Get-SEPMPoliciesSummary
+            if ($PSBoundParameters.ContainsKey('PolicyList')) {
+                $policies = $PolicyList
+            } else {
+                $policies = Get-SEPMPoliciesSummary
+            }
         }
     }
 

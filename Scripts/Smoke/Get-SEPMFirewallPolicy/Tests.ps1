@@ -40,4 +40,18 @@ $results.A3 = T "A3" "All policies have non-empty name, id, enabled" `
         $ok
     }
 
+# ── B1: -All -PolicyList returns same results as -All alone ──
+$results.B1 = T "B1" "Get-SEPMFirewallPolicy -All -PolicyList from summaries returns all FW policies" `
+    { 
+        $summaries = Get-SEPMPoliciesSummary -PolicyType fw
+        if ($null -eq $summaries -or $summaries.Count -eq 0) { throw 'No FW policy summaries found' }
+        Get-SEPMFirewallPolicy -All -PolicyList $summaries
+    } `
+    { param($r)
+        $r -ne $null -and
+        $r.Count -gt 0 -and
+        $r[0].PSObject.TypeNames[0] -eq 'SEPM.FirewallPolicy' -and
+        -not [string]::IsNullOrEmpty($r[0].name)
+    }
+
 Write-Summary -Results $results -Label "Get-SEPMFirewallPolicy Smoke Tests"

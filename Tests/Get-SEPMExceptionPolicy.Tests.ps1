@@ -282,4 +282,44 @@ Describe 'Get-SEPMExceptionPolicy' {
             $result.PSObject.TypeNames[0] | Should -Be 'SEPM.ExceptionPolicy'
         }
     }
+
+    Context 'PolicyList parameter skips Get-SEPMPoliciesSummary' {
+        BeforeAll {
+            $script:fakeSession = New-TestSession -SkipCert
+
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { throw 'Get-SEPMPoliciesSummary should not be called' }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                return @{
+                    sources          = @{}
+                    configuration    = @{
+                        files = @()
+                        directories = @()
+                        webdomains = @()
+                        extension_list = @()
+                        tamper_files = @()
+                        mac = @{ files = @() }
+                        linux = @{ directories = @(); extension_list = @() }
+                    }
+                    lockedoptions    = @{}
+                    enabled          = $true
+                    desc             = ''
+                    name             = 'From PolicyList'
+                    lastmodifiedtime = 1646398353107
+                }
+            }
+        }
+
+        It 'does not call Get-SEPMPoliciesSummary when PolicyList is provided' {
+            $policyList = New-DummyPolicySummary -PolicyName 'From PolicyList' -PolicyType 'exceptions'
+
+            $result = Get-SEPMExceptionPolicy -PolicyName 'From PolicyList' -PolicyList $policyList
+
+            $result | Should -Not -BeNullOrEmpty
+            $result.name | Should -Be 'From PolicyList'
+            $result.PSObject.TypeNames[0] | Should -Be 'SEPM.ExceptionPolicy'
+
+            Should -Invoke Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM -Exactly 0 -Scope It
+        }
+    }
 }
