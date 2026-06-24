@@ -78,6 +78,17 @@ function Export-SEPMInventory {
             Write-Progress -Activity 'Export-SEPMInventory' -Status "[$($Counter.Value)/$Total] $StepName" -PercentComplete ($Counter.Value / $Total * 100)
         }
 
+        function Write-PerItemProgress {
+            [CmdletBinding()]
+            param(
+                [string]$Category,
+                [int]$ItemIndex,
+                [int]$ItemCount,
+                [string]$ItemName
+            )
+            Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/$totalSteps] $Category ($ItemIndex/$ItemCount): $ItemName" -PercentComplete ($progressCounter / $totalSteps * 100)
+        }
+
         function Get-CategoryMetric {
             [CmdletBinding()]
             param([string]$Category, [object]$Data, [bool]$Failed = $false)
@@ -232,6 +243,7 @@ function Export-SEPMInventory {
                 $ipsIndex++
                 if ($ipsIndex % $ipsHeartbeatInterval -eq 0) {
                     Write-Verbose "  -> policy $ipsIndex/$ipsCount $($ipsSummary.name)"
+                    Write-PerItemProgress -Category 'IpsPolicies' -ItemIndex $ipsIndex -ItemCount $ipsCount -ItemName $ipsSummary.name
                 }
                 try {
                     $ipsPolicy = Get-SEPMIpsPolicy -PolicyName $ipsSummary.name
@@ -273,6 +285,7 @@ function Export-SEPMInventory {
                 $exceptionIndex++
                 if ($exceptionIndex % $excHeartbeatInterval -eq 0) {
                     Write-Verbose "  -> policy $exceptionIndex/$exceptionCount $($exceptionSummary.name)"
+                    Write-PerItemProgress -Category 'ExceptionPolicies' -ItemIndex $exceptionIndex -ItemCount $exceptionCount -ItemName $exceptionSummary.name
                 }
                 try {
                     $exceptionPolicy = Get-SEPMExceptionPolicy -PolicyName $exceptionSummary.name
@@ -332,6 +345,7 @@ function Export-SEPMInventory {
                 $groupIndex++
                 if ($groupIndex % $locHeartbeatInterval -eq 0) {
                     Write-Verbose "  -> group $groupIndex/$groupCount $($group.name)"
+                    Write-PerItemProgress -Category 'Locations' -ItemIndex $groupIndex -ItemCount $groupCount -ItemName $group.name
                 }
                 try {
                     $groupLocs = Get-SEPMLocation -GroupID $group.id
@@ -374,6 +388,8 @@ function Export-SEPMInventory {
                 $locationIndex++
                 if ($locationIndex % $locXmlHeartbeatInterval -eq 0) {
                     Write-Verbose "  -> location $locationIndex/$locationCount $($location.locationName)"
+                    Write-PerItemProgress -Category 'LocationXML' -ItemIndex $locationIndex -ItemCount $locationCount -ItemName $location.locationName
+                    Write-PerItemProgress -Category 'GroupSettings' -ItemIndex $locationIndex -ItemCount $locationCount -ItemName $location.locationName
                 }
                 # LocationXML
                 try {
@@ -448,6 +464,7 @@ function Export-SEPMInventory {
                     $hgIndex++
                     if ($hgIndex % $hgHeartbeatInterval -eq 0) {
                         Write-Verbose "  -> group $hgIndex/$hgCount $($hg.name)"
+                        Write-PerItemProgress -Category 'HostGroups' -ItemIndex $hgIndex -ItemCount $hgCount -ItemName $hg.name
                     }
                     try {
                         $hgDetail = Get-SEPMHostGroup -Id $hg.id

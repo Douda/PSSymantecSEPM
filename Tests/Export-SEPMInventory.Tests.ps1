@@ -1120,6 +1120,196 @@ Describe 'Export-SEPMInventory' {
         }
     }
 
+    Context 'Per-item progress' {
+        BeforeAll {
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
+            }
+
+            $script:pipProgressCalls = @()
+            Mock Write-Progress -ModuleName PSSymantecSEPM {
+                $script:pipProgressCalls += @{
+                    Activity = $Activity
+                    Status = $Status
+                    PercentComplete = $PercentComplete
+                }
+            }
+        }
+
+        It 'IpsPolicies shows per-item progress (itemIndex/total): policyName when >10 items' {
+            $policies = 1..15 | ForEach-Object {
+                @{ id = ('I{0:D3}' -f $_); name = "IPS Policy $_"; policytype = 'ips'; enabled = $true }
+            }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                Write-Output $policies -NoEnumerate
+            }
+            $script:ipsPipCallCount = 0
+            Mock Get-SEPMIpsPolicy -ModuleName PSSymantecSEPM {
+                $script:ipsPipCallCount++
+                return @{ name = $PolicyName; configuration = @{ blocked_hosts = @() } }
+            }
+            # Suppress other fan-out categories to isolate IpsPolicies
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
+
+            $script:pipProgressCalls = @()
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            # Find throttled IpsPolicies progress calls (those with (N/M) format)
+            $ipsPerItemCalls = @($script:pipProgressCalls | Where-Object { $_.Status -match 'IpsPolicies \(\d+/\d+\)' })
+            # With 15 items, interval = Max(10, Floor(15/10)) = Max(10, 1) = 10
+            # Throttled calls at 10, 20? No, only 15 items, so at item 10 only
+            $ipsPerItemCalls.Count | Should -Be 1
+            $ipsPerItemCalls[0].Status | Should -Match 'IpsPolicies \(10/15\): IPS Policy 10$'
+        }
+
+        It 'ExceptionPolicies shows per-item progress (itemIndex/total): policyName when >10 items' {
+            $policies = 1..12 | ForEach-Object {
+                @{ id = ('E{0:D3}' -f $_); name = "Exc Policy $_"; policytype = 'exceptions'; enabled = $true }
+            }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                Write-Output $policies -NoEnumerate
+            }
+            $script:excPipCallCount = 0
+            Mock Get-SEPMExceptionPolicy -ModuleName PSSymantecSEPM {
+                $script:excPipCallCount++
+                return @{ name = $PolicyName; configuration = @{ files = @() } }
+            }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
+
+            $script:pipProgressCalls = @()
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $excPerItemCalls = @($script:pipProgressCalls | Where-Object { $_.Status -match 'ExceptionPolicies \(\d+/\d+\)' })
+            # With 12 items, interval = Max(10, Floor(12/10)) = Max(10, 1) = 10
+            $excPerItemCalls.Count | Should -Be 1
+            $excPerItemCalls[0].Status | Should -Match 'ExceptionPolicies \(10/12\): Exc Policy 10$'
+        }
+
+        It 'Locations shows per-item progress (itemIndex/total): groupName when >10 groups' {
+            $groups = 1..14 | ForEach-Object {
+                [PSCustomObject]@{ id = ('GRP{0:D3}' -f $_); name = "Group $_"; fullPathName = "Group $_" }
+            }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                Write-Output $groups -NoEnumerate
+            }
+            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM {
+                return @([PSCustomObject]@{ locationName = 'Default'; locationId = 'LOC'; groupName = ''; groupId = ''; groupFullPathName = '' })
+            }
+            Mock Get-SEPMLocationXML -ModuleName PSSymantecSEPM { return $null }
+            Mock Get-SEPMGroupSettings -ModuleName PSSymantecSEPM { return $null }
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
+
+            $script:pipProgressCalls = @()
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $locPerItemCalls = @($script:pipProgressCalls | Where-Object { $_.Status -match 'Locations \(\d+/\d+\)' })
+            # With 14 items, interval = Max(10, Floor(14/10)) = Max(10, 1) = 10
+            $locPerItemCalls.Count | Should -Be 1
+            $locPerItemCalls[0].Status | Should -Match 'Locations \(10/14\): Group 10$'
+        }
+
+        It 'LocationXML shows per-item progress (itemIndex/total): locationName when >10 locations' {
+            $groups = 1..11 | ForEach-Object {
+                [PSCustomObject]@{ id = ('GRP{0:D3}' -f $_); name = "Group $_"; fullPathName = "Group $_" }
+            }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                Write-Output $groups -NoEnumerate
+            }
+            $script:locPipCallCount = 0
+            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM {
+                $script:locPipCallCount++
+                $padded = '{0:D3}' -f $script:locPipCallCount
+                return @([PSCustomObject]@{
+                    locationName = "Location $script:locPipCallCount"
+                    locationId = "LOC$script:locPipCallCount"
+                    groupName = "Group $script:locPipCallCount"
+                    groupId = "GRP$padded"
+                    groupFullPathName = "Group $script:locPipCallCount"
+                })
+            }
+            Mock Get-SEPMLocationXML -ModuleName PSSymantecSEPM {
+                return "<Location><Id>$locationId</Id></Location>"
+            }
+            Mock Get-SEPMGroupSettings -ModuleName PSSymantecSEPM {
+                return @{ groupId = $groupId; locationId = $locationId }
+            }
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
+
+            $script:pipProgressCalls = @()
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $locXmlCalls = @($script:pipProgressCalls | Where-Object { $_.Status -match 'LocationXML \(\d+/\d+\)' })
+            # With 11 items, interval = Max(10, Floor(11/10)) = Max(10, 1) = 10
+            $locXmlCalls.Count | Should -Be 1
+            $locXmlCalls[0].Status | Should -Match 'LocationXML \(10/11\): Location 10$'
+        }
+
+        It 'GroupSettings shows per-item progress (itemIndex/total): locationName when >10 locations' {
+            # Uses same setup as LocationXML test — Location and GroupSettings are in the same loop
+            $groups = 1..13 | ForEach-Object {
+                [PSCustomObject]@{ id = ('GRP{0:D3}' -f $_); name = "Group $_"; fullPathName = "Group $_" }
+            }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                Write-Output $groups -NoEnumerate
+            }
+            $script:gsPipCallCount = 0
+            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM {
+                $script:gsPipCallCount++
+                $padded = '{0:D3}' -f $script:gsPipCallCount
+                return @([PSCustomObject]@{
+                    locationName = "GS Location $script:gsPipCallCount"
+                    locationId = "LOC$script:gsPipCallCount"
+                    groupName = "Group $script:gsPipCallCount"
+                    groupId = "GRP$padded"
+                    groupFullPathName = "Group $script:gsPipCallCount"
+                })
+            }
+            Mock Get-SEPMLocationXML -ModuleName PSSymantecSEPM {
+                return "<Location><Id>$locationId</Id></Location>"
+            }
+            Mock Get-SEPMGroupSettings -ModuleName PSSymantecSEPM {
+                return @{ groupId = $groupId; locationId = $locationId }
+            }
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
+
+            $script:pipProgressCalls = @()
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $gsCalls = @($script:pipProgressCalls | Where-Object { $_.Status -match 'GroupSettings \(\d+/\d+\)' })
+            # With 13 items, interval = Max(10, Floor(13/10)) = Max(10, 1) = 10
+            $gsCalls.Count | Should -Be 1
+            $gsCalls[0].Status | Should -Match 'GroupSettings \(10/13\): GS Location 10$'
+        }
+
+        It 'HostGroups shows per-item progress (itemIndex/total): groupName when >10 host groups' {
+            $hgItems = 1..20 | ForEach-Object {
+                [PSCustomObject]@{ id = ('HG{0:D3}' -f $_); name = "HG $_"; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
+            }
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
+                Write-Output $hgItems -NoEnumerate
+            }
+            Mock Get-SEPMHostGroup -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ id = $Id; name = 'Detail'; hosts = @() }
+            }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
+
+            $script:pipProgressCalls = @()
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $hgCalls = @($script:pipProgressCalls | Where-Object { $_.Status -match 'HostGroups \(\d+/\d+\)' })
+            # With 20 items, interval = Max(10, Floor(20/10)) = Max(10, 2) = 10
+            # Throttled calls at 10 and 20
+            $hgCalls.Count | Should -Be 2
+            $hgCalls[0].Status | Should -Match 'HostGroups \(10/20\): HG 10$'
+            $hgCalls[1].Status | Should -Match 'HostGroups \(20/20\): HG 20$'
+        }
+    }
+
     Context 'Verbose output' {
         BeforeAll {
             Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
