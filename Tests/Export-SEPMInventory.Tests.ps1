@@ -355,8 +355,8 @@ Describe 'Export-SEPMInventory' {
             $script:ipsCallCount = 0
             Mock Get-SEPMIpsPolicy -ModuleName PSSymantecSEPM {
                 $script:ipsCallCount++
-                if ($PolicyName -eq 'IPS Policy A') { return @{ name = 'IPS Policy A'; configuration = @{ blocked_hosts = @() } } }
-                if ($PolicyName -eq 'IPS Policy B') { return @{ name = 'IPS Policy B'; configuration = @{ blocked_hosts = @() } } }
+                if ($PolicySummary.name -eq 'IPS Policy A') { return @{ name = 'IPS Policy A'; configuration = @{ blocked_hosts = @() } } }
+                if ($PolicySummary.name -eq 'IPS Policy B') { return @{ name = 'IPS Policy B'; configuration = @{ blocked_hosts = @() } } }
                 return $null
             }
 
@@ -378,8 +378,8 @@ Describe 'Export-SEPMInventory' {
             $script:excCallCount = 0
             Mock Get-SEPMExceptionPolicy -ModuleName PSSymantecSEPM {
                 $script:excCallCount++
-                if ($PolicyName -eq 'Exception Policy X') { return @{ name = 'Exception Policy X'; configuration = @{ files = @() } } }
-                if ($PolicyName -eq 'Exception Policy Y') { return @{ name = 'Exception Policy Y'; configuration = @{ files = @() } } }
+                if ($PolicySummary.name -eq 'Exception Policy X') { return @{ name = 'Exception Policy X'; configuration = @{ files = @() } } }
+                if ($PolicySummary.name -eq 'Exception Policy Y') { return @{ name = 'Exception Policy Y'; configuration = @{ files = @() } } }
                 return $null
             }
 
@@ -796,8 +796,8 @@ Describe 'Export-SEPMInventory' {
             $script:ipsFailCallCount = 0
             Mock Get-SEPMIpsPolicy -ModuleName PSSymantecSEPM {
                 $script:ipsFailCallCount++
-                if ($PolicyName -eq 'Failing IPS') { throw 'IPS API error' }
-                return @{ name = $PolicyName; configuration = @{ blocked_hosts = @() } }
+                if ($PolicySummary.name -eq 'Failing IPS') { throw 'IPS API error' }
+                return @{ name = $PolicySummary.name; configuration = @{ blocked_hosts = @() } }
             }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
@@ -817,8 +817,8 @@ Describe 'Export-SEPMInventory' {
             $script:excFailCallCount = 0
             Mock Get-SEPMExceptionPolicy -ModuleName PSSymantecSEPM {
                 $script:excFailCallCount++
-                if ($PolicyName -eq 'Bad Exc') { throw 'Exception API error' }
-                return @{ name = $PolicyName; configuration = @{ files = @() } }
+                if ($PolicySummary.name -eq 'Bad Exc') { throw 'Exception API error' }
+                return @{ name = $PolicySummary.name; configuration = @{ files = @() } }
             }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
@@ -1352,8 +1352,8 @@ Describe 'Export-SEPMInventory' {
                 ) -NoEnumerate
             }
             Mock Get-SEPMIpsPolicy -ModuleName PSSymantecSEPM {
-                if ($PolicyName -eq 'Failing IPS') { throw 'IPS API error' }
-                return @{ name = $PolicyName; configuration = @{ blocked_hosts = @() } }
+                if ($PolicySummary.name -eq 'Failing IPS') { throw 'IPS API error' }
+                return @{ name = $PolicySummary.name; configuration = @{ blocked_hosts = @() } }
             }
 
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
@@ -1373,8 +1373,8 @@ Describe 'Export-SEPMInventory' {
                 ) -NoEnumerate
             }
             Mock Get-SEPMExceptionPolicy -ModuleName PSSymantecSEPM {
-                if ($PolicyName -eq 'Bad Exc') { throw 'Exception API error' }
-                return @{ name = $PolicyName; configuration = @{ files = @() } }
+                if ($PolicySummary.name -eq 'Bad Exc') { throw 'Exception API error' }
+                return @{ name = $PolicySummary.name; configuration = @{ files = @() } }
             }
 
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
@@ -1494,8 +1494,8 @@ Describe 'Export-SEPMInventory' {
             }
             $script:ipsDelayCallOrder = @()
             Mock Get-SEPMIpsPolicy -ModuleName PSSymantecSEPM {
-                $script:ipsDelayCallOrder += $PolicyName
-                return @{ name = $PolicyName; configuration = @{ blocked_hosts = @() } }
+                $script:ipsDelayCallOrder += $PolicySummary.name
+                return @{ name = $PolicySummary.name; configuration = @{ blocked_hosts = @() } }
             }
             Mock Start-Sleep -ModuleName PSSymantecSEPM {}
 
@@ -1516,8 +1516,8 @@ Describe 'Export-SEPMInventory' {
             }
             $script:excDelayCallOrder = @()
             Mock Get-SEPMExceptionPolicy -ModuleName PSSymantecSEPM {
-                $script:excDelayCallOrder += $PolicyName
-                return @{ name = $PolicyName; configuration = @{ files = @() } }
+                $script:excDelayCallOrder += $PolicySummary.name
+                return @{ name = $PolicySummary.name; configuration = @{ files = @() } }
             }
             Mock Start-Sleep -ModuleName PSSymantecSEPM {}
 
