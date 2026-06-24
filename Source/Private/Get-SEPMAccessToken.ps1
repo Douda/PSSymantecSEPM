@@ -60,7 +60,7 @@ function Get-SEPMAccessToken {
         $message = "SEPM Server name not found. Provide server name :"
         Write-Warning -Message $message
         $ServerAddress = Read-Host -Prompt $message
-        Set-SepmConfiguration -ServerAddress $ServerAddress
+        Set-SEPMConfiguration -ServerAddress $ServerAddress
     }
 
     # Look for credentials stored in the disk

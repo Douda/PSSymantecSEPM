@@ -9,7 +9,7 @@ Describe 'Invoke-SepmApiPaginated' {
         $script:fakeSession = New-TestSession -ServerAddress 'sepm.example.com' -Port '8446' -Token 'abc123'
 
         $script:pagedEndpoint = @{
-            OperationName = 'Get-SEPComputers'
+            OperationName = 'Get-SEPMComputers'
             Version       = '1.0'
             Method        = 'GET'
             Path          = '/computers'

@@ -17,7 +17,7 @@ param (
     $Days = 7
 )
 
-$Computers = Get-SEPComputers
+$Computers = Get-SEPMComputers
 
 # Parsing the AV definition format - eg : 210602017 - yyMMddxxx (xxx is the revision number)
 $ComputersWithOldDefs = @()

@@ -171,7 +171,7 @@ function Get-SEPMExceptionPolicy {
                 #     $files += $f
                 # }
 
-                $result = $files | ConvertTo-FlatObject
+                $result = $files | ConvertTo-SEPMFlatObject
                 Write-Output $result -NoEnumerate
             }
             "directories" {
@@ -195,11 +195,11 @@ function Get-SEPMExceptionPolicy {
                     $directories += $d
                 }
 
-                $result = $directories | ConvertTo-FlatObject
+                $result = $directories | ConvertTo-SEPMFlatObject
                 Write-Output $result -NoEnumerate
             }
             "webdomains" {
-                $result = $resp.configuration.webdomains | ConvertTo-FlatObject
+                $result = $resp.configuration.webdomains | ConvertTo-SEPMFlatObject
                 if ($result -is [array]) {
                     Write-Output $result -NoEnumerate
                 } else {
@@ -220,11 +220,11 @@ function Get-SEPMExceptionPolicy {
                     $extensions += $e
                 }
 
-                $result = $extensions | ConvertTo-FlatObject
+                $result = $extensions | ConvertTo-SEPMFlatObject
                 Write-Output $result -NoEnumerate
             }
             "tamper" {
-                $result = $resp.configuration.tamper_files | ConvertTo-FlatObject
+                $result = $resp.configuration.tamper_files | ConvertTo-SEPMFlatObject
                 if ($result -is [array]) {
                     Write-Output $result -NoEnumerate
                 } else {

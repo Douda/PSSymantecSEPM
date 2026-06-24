@@ -47,7 +47,7 @@ function Resolve-SepmCommandTarget {
     $unmatchedNames = @()
 
     foreach ($name in $ComputerName) {
-        $computer = Get-SEPComputers -ComputerName $name | Select-Object -First 1
+        $computer = Get-SEPMComputers -ComputerName $name | Select-Object -First 1
         if ($computer) {
             $computerIds += $computer.uniqueId
         } else {

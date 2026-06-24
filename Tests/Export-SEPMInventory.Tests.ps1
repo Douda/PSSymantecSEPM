@@ -17,7 +17,7 @@ Describe 'Export-SEPMInventory' {
             return @{ id = 'abc123'; name = 'Default' }
         }
         # Infrastructure & Security mocks (return $null by default — contexts override as needed)
-        Mock Get-SEPGUPList -ModuleName PSSymantecSEPM {
+        Mock Get-SEPMGUPList -ModuleName PSSymantecSEPM {
             Write-Output @(@{ name = 'GUP1'; host = 'gup1.example.com' }) -NoEnumerate
         }
         Mock Get-SEPMAdmins -ModuleName PSSymantecSEPM {
@@ -43,19 +43,19 @@ Describe 'Export-SEPMInventory' {
         }
 
         # Client/Computer mocks (return empty by default — contexts override as needed)
-        Mock Get-SEPComputers -ModuleName PSSymantecSEPM {
+        Mock Get-SEPMComputers -ModuleName PSSymantecSEPM {
             Write-Output @() -NoEnumerate
         }
-        Mock Get-SEPClientStatus -ModuleName PSSymantecSEPM {
+        Mock Get-SEPMClientStatus -ModuleName PSSymantecSEPM {
             Write-Output @() -NoEnumerate
         }
-        Mock Get-SEPClientVersion -ModuleName PSSymantecSEPM {
+        Mock Get-SEPMClientVersion -ModuleName PSSymantecSEPM {
             Write-Output @() -NoEnumerate
         }
-        Mock Get-SEPClientDefVersions -ModuleName PSSymantecSEPM {
+        Mock Get-SEPMClientDefVersions -ModuleName PSSymantecSEPM {
             Write-Output @() -NoEnumerate
         }
-        Mock Get-SEPClientInfectedStatus -ModuleName PSSymantecSEPM {
+        Mock Get-SEPMClientInfectedStatus -ModuleName PSSymantecSEPM {
             Write-Output @() -NoEnumerate
         }
 
@@ -174,8 +174,8 @@ Describe 'Export-SEPMInventory' {
             $result.Domains.name | Should -Be 'Default'
         }
 
-        It 'stores Get-SEPClientInfectedStatus output in ClientInfected property' {
-            Mock Get-SEPClientInfectedStatus -ModuleName PSSymantecSEPM {
+        It 'stores Get-SEPMClientInfectedStatus output in ClientInfected property' {
+            Mock Get-SEPMClientInfectedStatus -ModuleName PSSymantecSEPM {
                 Write-Output @(
                     @{ computerName = 'INFECTED-PC-01'; infected = 1 }
                     @{ computerName = 'INFECTED-PC-02'; infected = 1 }
@@ -189,8 +189,8 @@ Describe 'Export-SEPMInventory' {
             $result.ClientInfected[1].infected | Should -Be 1
         }
 
-        It 'stores Get-SEPClientDefVersions output in ClientDefVersions property' {
-            Mock Get-SEPClientDefVersions -ModuleName PSSymantecSEPM {
+        It 'stores Get-SEPMClientDefVersions output in ClientDefVersions property' {
+            Mock Get-SEPMClientDefVersions -ModuleName PSSymantecSEPM {
                 Write-Output @(
                     @{ version = '2023-09-04 rev. 002'; clientsCount = 15 }
                     @{ version = '2023-09-03 rev. 002'; clientsCount = 4 }
@@ -204,8 +204,8 @@ Describe 'Export-SEPMInventory' {
             $result.ClientDefVersions[1].clientsCount | Should -Be 4
         }
 
-        It 'stores Get-SEPClientVersions output in ClientVersions property' {
-            Mock Get-SEPClientVersion -ModuleName PSSymantecSEPM {
+        It 'stores Get-SEPMClientVersions output in ClientVersions property' {
+            Mock Get-SEPMClientVersion -ModuleName PSSymantecSEPM {
                 Write-Output @(
                     @{ version = '14.3.510.0000'; clientsCount = 12; formattedVersion = '14.3 (14.3) build 0000' }
                     @{ version = '14.2.1031.0100'; clientsCount = 21; formattedVersion = '14.2.1 (14.2 RU1) build 0100' }
@@ -219,8 +219,8 @@ Describe 'Export-SEPMInventory' {
             $result.ClientVersions[1].clientsCount | Should -Be 21
         }
 
-        It 'stores Get-SEPClientStatus output in ClientStatus property' {
-            Mock Get-SEPClientStatus -ModuleName PSSymantecSEPM {
+        It 'stores Get-SEPMClientStatus output in ClientStatus property' {
+            Mock Get-SEPMClientStatus -ModuleName PSSymantecSEPM {
                 Write-Output @(
                     @{ status = 'ONLINE'; clientsCount = 10 }
                     @{ status = 'OFFLINE'; clientsCount = 3 }
@@ -234,8 +234,8 @@ Describe 'Export-SEPMInventory' {
             $result.ClientStatus[1].clientsCount | Should -Be 3
         }
 
-        It 'stores Get-SEPComputers output in Computers property' {
-            Mock Get-SEPComputers -ModuleName PSSymantecSEPM {
+        It 'stores Get-SEPMComputers output in Computers property' {
+            Mock Get-SEPMComputers -ModuleName PSSymantecSEPM {
                 Write-Output @(
                     @{ computerName = 'PC-001'; group = @{ name = 'My Company' }; infected = 0 }
                     @{ computerName = 'PC-002'; group = @{ name = 'My Company' }; infected = 1 }
@@ -249,7 +249,7 @@ Describe 'Export-SEPMInventory' {
             $result.Computers[1].computerName | Should -Be 'PC-002'
         }
 
-        It 'stores Get-SEPGUPList output in GUPs property' {
+        It 'stores Get-SEPMGUPList output in GUPs property' {
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
             $result.GUPs.Count      | Should -Be 1
             $result.GUPs[0].name    | Should -Be 'GUP1'
@@ -691,27 +691,27 @@ Describe 'Export-SEPMInventory' {
         }
 
         It 'writes client & computer .clixml files' {
-            Mock Get-SEPComputers -ModuleName PSSymantecSEPM {
+            Mock Get-SEPMComputers -ModuleName PSSymantecSEPM {
                 Write-Output @(
                     @{ computerName = 'PC-001'; group = @{ name = 'Group1' }; infected = 0 }
                 ) -NoEnumerate
             }
-            Mock Get-SEPClientStatus -ModuleName PSSymantecSEPM {
+            Mock Get-SEPMClientStatus -ModuleName PSSymantecSEPM {
                 Write-Output @(
                     @{ status = 'ONLINE'; clientsCount = 10 }
                 ) -NoEnumerate
             }
-            Mock Get-SEPClientVersion -ModuleName PSSymantecSEPM {
+            Mock Get-SEPMClientVersion -ModuleName PSSymantecSEPM {
                 Write-Output @(
                     @{ version = '14.3.510.0000'; clientsCount = 12; formattedVersion = '14.3 (14.3) build 0000' }
                 ) -NoEnumerate
             }
-            Mock Get-SEPClientDefVersions -ModuleName PSSymantecSEPM {
+            Mock Get-SEPMClientDefVersions -ModuleName PSSymantecSEPM {
                 Write-Output @(
                     @{ version = '2023-09-04 rev. 002'; clientsCount = 15 }
                 ) -NoEnumerate
             }
-            Mock Get-SEPClientInfectedStatus -ModuleName PSSymantecSEPM {
+            Mock Get-SEPMClientInfectedStatus -ModuleName PSSymantecSEPM {
                 Write-Output @(
                     @{ computerName = 'INFECTED-PC'; infected = 1 }
                 ) -NoEnumerate
@@ -795,7 +795,7 @@ Describe 'Export-SEPMInventory' {
         }
 
         It 'captures infrastructure failure in Failures array' {
-            Mock Get-SEPGUPList -ModuleName PSSymantecSEPM { throw 'GUP API unavailable' }
+            Mock Get-SEPMGUPList -ModuleName PSSymantecSEPM { throw 'GUP API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
             $result.Failures.Count | Should -Be 1
@@ -898,7 +898,7 @@ Describe 'Export-SEPMInventory' {
         }
 
         It 'captures Computers failure in Failures array' {
-            Mock Get-SEPComputers -ModuleName PSSymantecSEPM { throw 'Computers API unavailable' }
+            Mock Get-SEPMComputers -ModuleName PSSymantecSEPM { throw 'Computers API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
             $compFailures = @($result.Failures | Where-Object { $_.Category -eq 'Computers' })
@@ -907,7 +907,7 @@ Describe 'Export-SEPMInventory' {
         }
 
         It 'writes Computers_failed.xml on failure' {
-            Mock Get-SEPComputers -ModuleName PSSymantecSEPM { throw 'Computers API error' }
+            Mock Get-SEPMComputers -ModuleName PSSymantecSEPM { throw 'Computers API error' }
 
             Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
@@ -915,7 +915,7 @@ Describe 'Export-SEPMInventory' {
         }
 
         It 'captures ClientStatus failure in Failures array' {
-            Mock Get-SEPClientStatus -ModuleName PSSymantecSEPM { throw 'ClientStatus API unavailable' }
+            Mock Get-SEPMClientStatus -ModuleName PSSymantecSEPM { throw 'ClientStatus API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
             $csFailures = @($result.Failures | Where-Object { $_.Category -eq 'ClientStatus' })
@@ -924,7 +924,7 @@ Describe 'Export-SEPMInventory' {
         }
 
         It 'captures ClientVersions failure in Failures array' {
-            Mock Get-SEPClientVersion -ModuleName PSSymantecSEPM { throw 'ClientVersions API unavailable' }
+            Mock Get-SEPMClientVersion -ModuleName PSSymantecSEPM { throw 'ClientVersions API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
             $cvFailures = @($result.Failures | Where-Object { $_.Category -eq 'ClientVersions' })
@@ -933,7 +933,7 @@ Describe 'Export-SEPMInventory' {
         }
 
         It 'captures ClientDefVersions failure in Failures array' {
-            Mock Get-SEPClientDefVersions -ModuleName PSSymantecSEPM { throw 'ClientDefVersions API unavailable' }
+            Mock Get-SEPMClientDefVersions -ModuleName PSSymantecSEPM { throw 'ClientDefVersions API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
             $cdvFailures = @($result.Failures | Where-Object { $_.Category -eq 'ClientDefVersions' })
@@ -942,7 +942,7 @@ Describe 'Export-SEPMInventory' {
         }
 
         It 'captures ClientInfected failure in Failures array' {
-            Mock Get-SEPClientInfectedStatus -ModuleName PSSymantecSEPM { throw 'ClientInfected API unavailable' }
+            Mock Get-SEPMClientInfectedStatus -ModuleName PSSymantecSEPM { throw 'ClientInfected API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
             $ciFailures = @($result.Failures | Where-Object { $_.Category -eq 'ClientInfected' })

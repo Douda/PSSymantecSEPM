@@ -22,26 +22,26 @@ if (-not $script:_endpointRegistry) {
             Method        = 'GET'
             Path          = '/domains'
         }
-        'Get-SEPClientStatus' = @{
-            OperationName = 'Get-SEPClientStatus'
+        'Get-SEPMClientStatus' = @{
+            OperationName = 'Get-SEPMClientStatus'
             Version       = '1.0'
             Method        = 'GET'
             Path          = '/stats/client/onlinestatus'
         }
-        'Get-SEPClientVersion' = @{
-            OperationName = 'Get-SEPClientVersion'
+        'Get-SEPMClientVersion' = @{
+            OperationName = 'Get-SEPMClientVersion'
             Version       = '1.0'
             Method        = 'GET'
             Path          = '/stats/client/version'
         }
-        'Get-SEPClientDefVersions' = @{
-            OperationName = 'Get-SEPClientDefVersions'
+        'Get-SEPMClientDefVersions' = @{
+            OperationName = 'Get-SEPMClientDefVersions'
             Version       = '1.0'
             Method        = 'GET'
             Path          = '/stats/client/content'
         }
-        'Get-SEPGUPList' = @{
-            OperationName = 'Get-SEPGUPList'
+        'Get-SEPMGUPList' = @{
+            OperationName = 'Get-SEPMGUPList'
             Version       = '1.0'
             Method        = 'GET'
             Path          = '/gup/status'
@@ -180,14 +180,14 @@ if (-not $script:_endpointRegistry) {
             Path          = '/replication/replicatenow'
             QueryParams   = @{ partnerSiteName = 'partnerSiteName' }
         }
-        'Move-SEPClientGroup' = @{
-            OperationName = 'Move-SEPClientGroup'
+        'Move-SEPMClientGroup' = @{
+            OperationName = 'Move-SEPMClientGroup'
             Version       = '1.0'
             Method        = 'PATCH'
             Path          = '/computers'
         }
-        'Get-SEPComputers' = @{
-            OperationName = 'Get-SEPComputers'
+        'Get-SEPMComputers' = @{
+            OperationName = 'Get-SEPMComputers'
             Version       = '1.0'
             Method        = 'GET'
             Path          = '/computers'
@@ -249,8 +249,8 @@ if (-not $script:_endpointRegistry) {
                 name = 'FingerprintListName'
             }
         }
-        'Get-SEPFileDetails' = @{
-            OperationName = 'Get-SEPFileDetails'
+        'Get-SEPMFileDetails' = @{
+            OperationName = 'Get-SEPMFileDetails'
             Version       = '1.0'
             Method        = 'GET'
             Path          = '/command-queue/file/{id}/details'
