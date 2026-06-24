@@ -1120,6 +1120,182 @@ Describe 'Export-SEPMInventory' {
         }
     }
 
+    Context 'Verbose output' {
+        BeforeAll {
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
+            }
+        }
+
+        It 'emits exactly 25 category-level Write-Verbose messages' {
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+            $verboseMsgs.Count | Should -Be 25
+        }
+
+        It 'each verbose line has timestamp, elapsed, step counter, category, status, metric, and duration' {
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+
+            foreach ($msg in $verboseMsgs) {
+                # Check each format component separately
+                $msg | Should -Match '^\[\d{2}:\d{2}:\d{2}\]'          # Timestamp [HH:mm:ss]
+                $msg | Should -Match '\[\+\d+s\]'                        # Elapsed [+SSs]
+                $msg | Should -Match '\[\d{2}/25\]'                      # Step counter [NN/25]
+                $msg | Should -Match '\s(OK|OK \(empty\)|FAILED)\s'     # Status
+                $msg | Should -Match '\(\d+ms\)'                         # Duration (Nms)
+            }
+        }
+
+        It 'shows OK status with version metric for Version category' {
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+
+            # First message should be Version with OK status and version string
+            $verboseMsgs[0] | Should -Match '\bVersion\b.*\bOK\b'
+            $verboseMsgs[0] | Should -Match '\b14\.3\.9816\.7000\b'
+        }
+
+        It 'shows OK (empty) for a category with empty results' {
+            # PolicySummaries mock returns empty array by default
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+
+            # PolicySummaries is step 12 (0-indexed: 11)
+            $verboseMsgs[11] | Should -Match 'PolicySummaries.*OK \(empty\)'
+        }
+
+        It 'shows FAILED status for a category that throws an exception' {
+            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM { throw 'Version API unavailable' }
+
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+
+            $verboseMsgs[0] | Should -Match 'Version.*FAILED'
+        }
+
+        It 'shows OK (empty) for Locations when no groups exist' {
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                Write-Output @() -NoEnumerate
+            }
+
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+
+            # Locations is step 22 (0-indexed: 21)
+            $verboseMsgs[21] | Should -Match 'Locations.*OK \(empty\)'
+        }
+    }
+
+    Context 'Heartbeat verbose output' {
+        BeforeAll {
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
+            }
+        }
+
+        It 'emits heartbeat lines at expected interval when HostGroups has >10 items' {
+            $hgItems = 1..60 | ForEach-Object {
+                [PSCustomObject]@{ id = "HG$([String]$_).PadLeft(3,'0')"; name = "Host Group $_"; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
+            }
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
+                Write-Output $hgItems -NoEnumerate
+            }
+            Mock Get-SEPMHostGroup -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ id = $Id; name = 'Detail'; hosts = @() }
+            }
+            # Suppress heartbeat collisions from other fan-out categories
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
+
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+
+            # Filter heartbeat lines
+            $heartbeats = $verboseMsgs | Where-Object { $_ -match '^  →' }
+            # With 60 items, interval = max(10, floor(60/10)) = max(10, 6) = 10
+            # Heartbeats at 10, 20, 30, 40, 50, 60 = 6 heartbeats
+            $heartbeats.Count | Should -Be 6
+        }
+
+        It 'heartbeat lines follow "  → N/total ContextName" format' {
+            $hgItems = 1..60 | ForEach-Object {
+                [PSCustomObject]@{ id = "HG$([String]$_).PadLeft(3,'0')"; name = "Host Group $_"; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
+            }
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
+                Write-Output $hgItems -NoEnumerate
+            }
+            Mock Get-SEPMHostGroup -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ id = $Id; name = 'Detail'; hosts = @() }
+            }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
+
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+
+            $heartbeats = $verboseMsgs | Where-Object { $_ -match '^  →' }
+            foreach ($hb in $heartbeats) {
+                $hb | Should -Match '^  → group \d+/60 '  # Format: "  → group N/60 Name"
+            }
+            # First heartbeat at 10/60
+            $heartbeats[0] | Should -Match '  → group 10/60 '
+        }
+
+        It 'no heartbeat lines when fan-out has ≤10 items' {
+            # With 2 groups, Locations has 2 items → interval = max(10, 0) = 10 → no heartbeats
+            # Default mock has 2 groups
+
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+
+            $heartbeats = $verboseMsgs | Where-Object { $_ -match '^  →' }
+            $heartbeats.Count | Should -Be 0
+        }
+    }
+
     Context 'DelayMs parameter' {
         BeforeAll {
             Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
