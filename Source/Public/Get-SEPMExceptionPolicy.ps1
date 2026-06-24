@@ -93,7 +93,13 @@ function Get-SEPMExceptionPolicy {
         [Parameter()]
         [ValidateSet("files", "directories", "webdomains", "extensions", "tamper")]
         [String]
-        $List
+        $List,
+
+        # Pre-fetched policy list from Get-SEPMPoliciesSummary. When provided, skips the
+        # internal Get-SEPMPoliciesSummary call, avoiding a redundant API round-trip.
+        [Parameter()]
+        [object[]]
+        $PolicyList
     )
 
     begin {
@@ -102,7 +108,11 @@ function Get-SEPMExceptionPolicy {
 
         # Only fetch all summaries when resolving by name
         if ($PSCmdlet.ParameterSetName -eq 'ByName') {
-            $policies = Get-SEPMPoliciesSummary
+            if ($PSBoundParameters.ContainsKey('PolicyList')) {
+                $policies = $PolicyList
+            } else {
+                $policies = Get-SEPMPoliciesSummary
+            }
         }
     }
 
