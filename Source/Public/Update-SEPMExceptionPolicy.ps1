@@ -178,11 +178,7 @@ function Update-SEPMExceptionPolicy {
         [Parameter(ParameterSetName = 'MacFile')]
         [ValidateSet('[NONE]', '[HOME]', '[APPLICATION]', '[LIBRARY]')]
         [string]
-        $MacPathVariable = '[NONE]',
-
-        [Parameter()]
-        [switch]
-        $PassThru
+        $MacPathVariable = '[NONE]'
     )
 
     begin {

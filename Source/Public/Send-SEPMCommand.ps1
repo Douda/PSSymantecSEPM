@@ -76,11 +76,7 @@ function Send-SEPMCommand {
         [string]$SHA1,
 
         [Parameter()]
-        [string]$Source,
-
-        [Parameter()]
-        [switch]
-        $PassThru
+        [string]$Source
     )
 
     begin {
@@ -141,7 +137,7 @@ function Send-SEPMCommand {
         # Common parameters can appear in $PSBoundParameters when explicitly passed
         # by the user (e.g. -ErrorAction Stop). Skip them during type-specific validation.
         $commonParams = @('ErrorAction', 'WarningAction', 'Verbose', 'Debug', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction')
-        $alwaysValid = @('Type', 'ComputerName', 'GroupName', 'PassThru') + $commonParams
+        $alwaysValid = @('Type', 'ComputerName', 'GroupName') + $commonParams
         $allowedParamNames = if ($commandEntry.ContainsKey('Params')) { $commandEntry.Params.Keys } else { @() }
         foreach ($boundParam in $PSBoundParameters.Keys) {
             if ($boundParam -in $alwaysValid) { continue }

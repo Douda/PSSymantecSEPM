@@ -313,22 +313,6 @@ Describe 'Send-SEPMCommand' {
         }
     }
 
-    Context 'PassThru behavior' {
-        It 'emits output without -PassThru' {
-            $result = Send-SEPMCommand -Type ActiveScan -ComputerName 'PC1'
-
-            $result | Should -Not -BeNullOrEmpty
-            $result.command_id | Should -Be 'CMD-001'
-        }
-
-        It 'emits output with -PassThru' {
-            $result = Send-SEPMCommand -Type ActiveScan -ComputerName 'PC1' -PassThru
-
-            $result | Should -Not -BeNullOrEmpty
-            $result.command_id | Should -Be 'CMD-001'
-        }
-    }
-
     Context 'GetFile dispatch' {
         It 'includes sha256 hash in query params' {
             $hash = 'ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890'

@@ -118,8 +118,7 @@ Describe 'Move-SEPMClientGroup' {
 
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
                 return @(
-                    [PSCustomObject]@{ id = 'group-456'; name = 'Servers'; fullPathName = 'My Company\Servers' },
-                    [PSCustomObject]@{ id = 'group-789'; name = 'Workstations'; fullPathName = 'My Company\Workstations' }
+                    [PSCustomObject]@{ id = 'group-456'; name = 'Servers'; fullPathName = 'My Company\Servers' }
                 )
             }
 
@@ -139,31 +138,17 @@ Describe 'Move-SEPMClientGroup' {
             }
         }
 
-        It 'emits output without -PassThru' {
-            $result = Move-SEPMClientGroup -ComputerName 'MyComputer' -GroupName 'My Company\Workstations'
-
-            $result | Should -Not -BeNullOrEmpty
-            $result.computerName | Should -Be 'MyComputer'
-        }
-
-        It 'emits output with -PassThru' {
-            $result = Move-SEPMClientGroup -ComputerName 'MyComputer' -GroupName 'My Company\Workstations' -PassThru
-
-            $result | Should -Not -BeNullOrEmpty
-            $result.computerName | Should -Be 'MyComputer'
-        }
-
         It 'processes multiple computers via pipeline' {
             'PC1', 'PC2', 'PC3' | Move-SEPMClientGroup -GroupName 'My Company\Servers'
 
-            $script:apiCalls.Count | Should -Be 5
-            $script:apiCalls[2].Uri    | Should -Be "$($fakeSession.BaseURLv1)/computers"
-            $script:apiCalls[2].Method | Should -Be 'PATCH'
+            $script:apiCalls.Count | Should -Be 3
+            $script:apiCalls[0].Uri    | Should -Be "$($fakeSession.BaseURLv1)/computers"
+            $script:apiCalls[0].Method | Should -Be 'PATCH'
 
             # Each call should target a different computer
-            $body0 = $script:apiCalls[2].Body | ConvertFrom-Json
-            $body1 = $script:apiCalls[3].Body | ConvertFrom-Json
-            $body2 = $script:apiCalls[4].Body | ConvertFrom-Json
+            $body0 = $script:apiCalls[0].Body | ConvertFrom-Json
+            $body1 = $script:apiCalls[1].Body | ConvertFrom-Json
+            $body2 = $script:apiCalls[2].Body | ConvertFrom-Json
 
             $body0[0].hardwareKey | Should -Be 'HK-PC1'
             $body1[0].hardwareKey | Should -Be 'HK-PC2'

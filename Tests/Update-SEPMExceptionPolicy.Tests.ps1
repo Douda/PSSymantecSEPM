@@ -551,27 +551,5 @@ Describe 'Update-SEPMExceptionPolicy' {
             { Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -EnablePolicy -DisablePolicy } |
                 Should -Throw -ExpectedMessage '*EnablePolicy*DisablePolicy*'
         }
-
-        It 'emits output without -PassThru' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                return [PSCustomObject]@{ status = 'success' }
-            }
-
-            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -EnablePolicy
-
-            $result | Should -Not -BeNullOrEmpty
-            $result.status | Should -Be 'success'
-        }
-
-        It 'emits output with -PassThru' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                return [PSCustomObject]@{ status = 'success' }
-            }
-
-            $result = Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -EnablePolicy -PassThru
-
-            $result | Should -Not -BeNullOrEmpty
-            $result.status | Should -Be 'success'
-        }
     }
 }

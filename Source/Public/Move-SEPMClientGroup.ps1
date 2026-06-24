@@ -47,11 +47,7 @@ function Move-SEPMClientGroup {
         )]
         [Alias("Group")]
         [String]
-        $GroupName,
-
-        [Parameter()]
-        [switch]
-        $PassThru
+        $GroupName
     )
 
     begin {

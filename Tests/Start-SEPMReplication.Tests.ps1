@@ -16,7 +16,6 @@ Describe 'Start-SEPMReplication' {
             $fakeSession = New-TestSession
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
 
-            $script:apiCalls = @()
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
                 $script:apiCalls += [PSCustomObject]@{
                     Method = $Method
@@ -24,6 +23,10 @@ Describe 'Start-SEPMReplication' {
                 }
                 return @{ code = 0; message = 'Replication initiated' }
             }
+        }
+
+        BeforeEach {
+            $script:apiCalls = @()
         }
 
         It 'sends POST to /replication/replicatenow' {
@@ -37,8 +40,7 @@ Describe 'Start-SEPMReplication' {
         It 'includes partnerSiteName in query string' {
             Start-SEPMReplication -partnerSiteName 'RemoteSiteEurope'
 
-            $script:apiCalls.Count | Should -Be 2
-            $script:apiCalls[1].Uri | Should -Match 'partnerSiteName=RemoteSiteEurope'
+            $script:apiCalls[0].Uri | Should -Match 'partnerSiteName=RemoteSiteEurope'
         }
 
         It 'returns the Invoke-SepmApi response' {
@@ -57,8 +59,7 @@ Describe 'Start-SEPMReplication' {
         It 'can be called without partnerSiteName parameter' {
             Start-SEPMReplication
 
-            $script:apiCalls.Count | Should -Be 5
-            $script:apiCalls[4].Method | Should -Be 'POST'
+            $script:apiCalls[0].Method | Should -Be 'POST'
         }
 
         It 'URI includes base path for replication endpoint' {
