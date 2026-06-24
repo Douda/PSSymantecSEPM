@@ -68,6 +68,7 @@ function Export-SEPMInventory {
         $progressCounter = 0
 
         function Write-ExportProgress {
+            [CmdletBinding()]
             param(
                 [ref]$Counter,
                 [int]$Total,
@@ -78,6 +79,7 @@ function Export-SEPMInventory {
         }
 
         function Get-CategoryMetric {
+            [CmdletBinding()]
             param([string]$Category, [object]$Data, [bool]$Failed = $false)
 
             if ($Failed) { return 'error' }
@@ -123,6 +125,7 @@ function Export-SEPMInventory {
         }
 
         function Write-CategoryVerbose {
+            [CmdletBinding()]
             param(
                 [string]$Category,
                 [object]$Data,
@@ -163,6 +166,7 @@ function Export-SEPMInventory {
         # Helper that encapsulates the repeated pattern:
         #   Write-ExportProgress → try/catch fetch → Write-CategoryVerbose
         function Invoke-CategoryFetch {
+            [CmdletBinding()]
             param(
                 [string]$Category,
                 [scriptblock]$FetchScript
