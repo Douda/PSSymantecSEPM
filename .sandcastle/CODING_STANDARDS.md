@@ -28,7 +28,7 @@
 
 ## Naming
 
-- **Exported cmdlets**: `Verb-Noun` format (e.g., `Get-SEPComputers`, `Set-SepmAuthentication`)
+- **Exported cmdlets**: `Verb-Noun` format with `SEPM` prefix (e.g., `Get-SEPMComputers`, `Set-SEPMAuthentication`)
 - **Internal functions** (Private/): `Verb-Noun` or descriptive PascalCase
 - **Variables**: `camelCase` for locals, `PascalCase` for parameters
 - **Script-scope**: `$script:VariableName` for module-level state
@@ -58,7 +58,7 @@ Required on all exported functions. Minimum sections:
 - Test lifecycle/bootstrap via `Tests/TestHelpers/` module (`Initialize-TestEnvironment`, `Clear-TestEnvironment`, `New-TestSession`)
 - JSON fixtures in `Tests/fixtures/` for SEPM API response data
 - Run: `Invoke-Pester -Path ./Tests -Output Normal`
-- Run single file: `Invoke-Pester -Path ./Tests/Get-SEPComputers.Tests.ps1 -Output Normal`
+- Run single file: `Invoke-Pester -Path ./Tests/Get-SEPMComputers.Tests.ps1 -Output Normal`
 
 ## Module Build
 

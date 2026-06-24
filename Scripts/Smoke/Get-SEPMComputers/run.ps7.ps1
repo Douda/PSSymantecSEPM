@@ -24,7 +24,7 @@ $SmokeModule = Get-Module PSSymantecSEPM
 & $SmokeModule { $script:SkipCert = $true }
 
 # ── SEPM connection ──
-Set-SepmConfiguration -ServerAddress 'localhost' -Port 8446 -ErrorAction SilentlyContinue
+Set-SEPMConfiguration -ServerAddress 'localhost' -Port 8446 -ErrorAction SilentlyContinue
 
 # ── Clean stale credential/token files ──
 Remove-Item -Path "$HOME/.config/PSSymantecSEPM/creds.xml" -Force -ErrorAction SilentlyContinue
