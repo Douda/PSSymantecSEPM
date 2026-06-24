@@ -47,14 +47,23 @@ function Get-SEPMLocation {
             ValueFromPipelineByPropertyName = $true
         )]
         [String]
-        $GroupID
+        $GroupID,
+
+        # Pre-fetched group list to skip redundant Get-SEPMGroups call
+        [Parameter()]
+        [object[]]
+        $GroupList
     )
 
     begin {
         $session = Initialize-SEPMSession
         $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMLocation'
 
-        $allGroupsInfo = Get-SEPMGroups
+        if ($PSBoundParameters.ContainsKey('GroupList')) {
+            $allGroupsInfo = $GroupList
+        } else {
+            $allGroupsInfo = Get-SEPMGroups
+        }
     }
 
     process {

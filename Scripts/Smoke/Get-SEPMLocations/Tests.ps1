@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Smoke tests for Get-SEPMLocation and Get-SEPMLocationXML cmdlets.
 
@@ -28,13 +28,18 @@ $results.C2 = T "C2" "Get-SEPMGroups | Get-SEPMLocation" `
     { $allGroups | Select-Object -First 1 | Get-SEPMLocation } `
     { param($r) $r -ne $null -and $r.Count -gt 0 }
 
+# ── C3: Get-SEPMLocation -GroupList (pre-fetched groups) ──
+$results.C3 = T "C3" "Get-SEPMLocation -GroupList (pre-fetched groups)" `
+    { Get-SEPMLocation -GroupID $groupId -GroupList $allGroups } `
+    { param($r) $r -ne $null -and $r.Count -gt 0 -and $r[0].groupName -eq $allGroups[0].name }
+
 # ── Discover location for XML ──
 $allLocs = Get-SEPMLocation -GroupID $groupId
 if ($allLocs -and $allLocs.Count -gt 0) {
     $locId = $allLocs[0].locationId
     Write-Host "Location: $($allLocs[0].locationName) ($locId)" -ForegroundColor Gray
 
-    $results.C3 = T "C3" "Get-SEPMLocationXML" `
+    $results.C4 = T "C4" "Get-SEPMLocationXML" `
         { Get-SEPMLocationXML -GroupID $groupId -LocationID $locId } `
         { param($r) $r -ne $null }
 } else {
