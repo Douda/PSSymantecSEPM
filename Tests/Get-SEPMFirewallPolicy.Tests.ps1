@@ -141,8 +141,6 @@ Describe 'Get-SEPMFirewallPolicy' {
             }
         }
 
-
-
         It 'halts on first API error with terminating error and no partial results' {
             $apiState = @{ policyCallCount = 0 }
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
