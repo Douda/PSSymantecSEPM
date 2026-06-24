@@ -108,8 +108,10 @@ Describe 'ConvertTo-SEPMFlatObject' {
 
             $result = $root | ConvertTo-SEPMFlatObject
 
-            # Depth limit means some deep properties are truncated (not flattened)
-            $result.PSObject.Properties.Name | Should -Not -BeNullOrEmpty
+            # Depth 5 truncates at the 6th level: the innermost object
+            # is stored as-is, not further flattened into its leaf properties.
+            $result.'Root.L1.L2.L3.L4' | Should -Not -BeNullOrEmpty
+            $result.PSObject.Properties.Name -contains 'Root.L1.L2.L3.L4.Value' | Should -Be $false
         }
 
         It 'With -Uncut flattens deeply nested objects beyond default depth' {
