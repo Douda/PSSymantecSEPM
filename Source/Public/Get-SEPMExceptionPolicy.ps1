@@ -12,6 +12,10 @@ function Get-SEPMExceptionPolicy {
         List a specific exception category
         Valid values are "files", "directories", "webdomains"
         # TODO : add all the other exception types in example
+    .PARAMETER PolicyList
+        Optional array of policy summary objects (from Get-SEPMPoliciesSummary).
+        When provided with -PolicyName, skips the internal Get-SEPMPoliciesSummary
+        call and resolves the policy ID from this list instead.
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMExceptionPolicy -PolicyName "Standard Servers - Exception policy"
 

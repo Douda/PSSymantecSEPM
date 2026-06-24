@@ -24,6 +24,10 @@ function Get-SEPMIpsPolicy {
         A policy summary object (from Get-SEPMPoliciesSummary) for an IPS policy.
         When provided, skips the redundant summary fetch — the ID and type are extracted directly.
         Mutually exclusive with -PolicyName.
+    .PARAMETER PolicyList
+        Optional array of policy summary objects (from Get-SEPMPoliciesSummary).
+        When provided with -PolicyName, skips the internal Get-SEPMPoliciesSummary
+        call and resolves the policy ID from this list instead.
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMIpsPolicy -PolicyName "Intrusion Prevention policy PRODUCTION"
 
