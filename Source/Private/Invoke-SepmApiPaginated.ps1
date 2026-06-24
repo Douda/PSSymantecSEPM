@@ -103,9 +103,21 @@ function Invoke-SepmApiPaginated {
             $allResults += $resp.content
         }
 
+        # Emit Write-Progress for multi-page fetches
+        $currentPage = $queryParams['pageIndex']
+        if ($resp.totalPages -and $resp.totalPages -gt 1) {
+            $percent = [math]::Floor(($currentPage / $resp.totalPages) * 100)
+            Write-Progress -Activity $Endpoint.OperationName -Status "Page $currentPage of $($resp.totalPages)" -PercentComplete $percent
+        } elseif ($currentPage -gt 1) {
+            Write-Progress -Activity $Endpoint.OperationName -Status "Page $currentPage" -PercentComplete -1
+        }
+
         $queryParams['pageIndex']++
 
     } until ($resp.lastPage -eq $true)
+
+    # Clear the progress bar
+    Write-Progress -Activity $Endpoint.OperationName -Completed
 
     Write-Output $allResults -NoEnumerate
 }

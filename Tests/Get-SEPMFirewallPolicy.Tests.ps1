@@ -128,10 +128,15 @@ Describe 'Get-SEPMFirewallPolicy' {
                 return $null
             }
             Mock Start-Sleep -ModuleName PSSymantecSEPM {}
+            Mock Write-Progress -ModuleName PSSymantecSEPM {}
             Mock Write-Host -ModuleName PSSymantecSEPM {}
 
             Get-SEPMFirewallPolicy -All | Out-Null
 
+            Should -Invoke Write-Progress -ModuleName PSSymantecSEPM -Exactly 3 -Scope It
+            Should -Invoke Write-Progress -ModuleName PSSymantecSEPM -Scope It -ParameterFilter {
+                $Status -match '1/2 : FW Policy A'
+            }
             Should -Invoke Write-Host -ModuleName PSSymantecSEPM -Exactly 2 -Scope It
             Should -Invoke Write-Host -ModuleName PSSymantecSEPM -Scope It -ParameterFilter {
                 $Object -match 'FirewallPolicies \(1/2\): FW Policy A'
