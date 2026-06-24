@@ -1,0 +1,35 @@
+<#
+.SYNOPSIS
+    PS7 entry point for Get-SEPClientInfectedStatus smoke tests.
+
+.DESCRIPTION
+    Bootstraps the module and SEPM connection for PS 7+, then dot-sources
+    Common.ps1 and Tests.ps1.
+
+    Usage: pwsh -NoProfile -File Scripts/Smoke/Get-SEPClientInfectedStatus/run.ps7.ps1
+#>
+
+#Requires -Version 7.0
+
+$ErrorActionPreference = "Continue"
+$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
+
+# ── Module import ──
+$OutputRoot = Join-Path -Path $RepoRoot -ChildPath 'Output'
+$env:PSModulePath = "$OutputRoot$([System.IO.Path]::PathSeparator)$env:PSModulePath"
+$ModulePath = Join-Path -Path $OutputRoot -ChildPath 'PSSymantecSEPM/PSSymantecSEPM.psm1'
+Import-Module $ModulePath -Force
+
+$SmokeModule = Get-Module PSSymantecSEPM
+& $SmokeModule { $script:SkipCert = $true }
+
+# ── SEPM connection ──
+Set-SepmConfiguration -ServerAddress 'localhost' -Port 8446 -ErrorAction SilentlyContinue
+
+# ── Clean stale credential/token files ──
+Remove-Item -Path "$HOME/.config/PSSymantecSEPM/creds.xml" -Force -ErrorAction SilentlyContinue
+Remove-Item -Path "$HOME/.local/share/PSSymantecSEPM/accessToken.xml" -Force -ErrorAction SilentlyContinue
+
+# ── Shared infrastructure + tests ──
+. "$RepoRoot/Scripts/Smoke/Common.ps1"
+. "$RepoRoot/Scripts/Smoke/Get-SEPClientInfectedStatus/Tests.ps1"
