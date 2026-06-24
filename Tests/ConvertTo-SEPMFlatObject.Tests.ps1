@@ -88,6 +88,45 @@ Describe 'ConvertTo-SEPMFlatObject' {
         }
     }
 
+    Context '-Uncut switch parameter' {
+        It 'Accepts -Uncut without a value (switch semantics)' {
+            $input = [PSCustomObject]@{ Name = 'Test' }
+
+            $result = $input | ConvertTo-SEPMFlatObject -Uncut
+
+            $result | Should -Not -BeNullOrEmpty
+            $result.Name | Should -Be 'Test'
+        }
+
+        It 'Without -Uncut defaults to depth 5 and truncates deeper nesting' {
+            $inner = [PSCustomObject]@{ Value = 'deep' }
+            $level4 = [PSCustomObject]@{ L4 = $inner }
+            $level3 = [PSCustomObject]@{ L3 = $level4 }
+            $level2 = [PSCustomObject]@{ L2 = $level3 }
+            $level1 = [PSCustomObject]@{ L1 = $level2 }
+            $root   = [PSCustomObject]@{ Root = $level1 }
+
+            $result = $root | ConvertTo-SEPMFlatObject
+
+            # Depth limit means some deep properties are truncated (not flattened)
+            $result.PSObject.Properties.Name | Should -Not -BeNullOrEmpty
+        }
+
+        It 'With -Uncut flattens deeply nested objects beyond default depth' {
+            $inner = [PSCustomObject]@{ Value = 'deep' }
+            $level4 = [PSCustomObject]@{ L4 = $inner }
+            $level3 = [PSCustomObject]@{ L3 = $level4 }
+            $level2 = [PSCustomObject]@{ L2 = $level3 }
+            $level1 = [PSCustomObject]@{ L1 = $level2 }
+            $root   = [PSCustomObject]@{ Root = $level1 }
+
+            $result = $root | ConvertTo-SEPMFlatObject -Uncut
+
+            # Should flatten all 6+ levels to find the leaf property
+            $result.'Root.L1.L2.L3.L4.Value' | Should -Be 'deep'
+        }
+    }
+
     Context 'Edge cases' {
         It 'Handles null input gracefully' {
             $result = $null | ConvertTo-SEPMFlatObject

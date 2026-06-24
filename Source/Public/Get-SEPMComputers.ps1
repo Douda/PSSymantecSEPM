@@ -47,6 +47,7 @@ function Get-SEPMComputers {
 
         # group name
         [Parameter(
+            ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true,
             ParameterSetName = 'GroupName'
         )]

@@ -23,7 +23,8 @@ Function ConvertTo-SEPMFlatObject {
     The maximal depth of flattening a recursive property. Any negative value will result in an unlimited depth and could cause a infinitive loop.
 
     .PARAMETER Uncut
-    The maximal depth of flattening a recursive property. Any negative value will result in an unlimited depth and could cause a infinitive loop.
+    When specified, disables the depth limit and flattens nested objects completely.
+    Equivalent to setting -Depth to a negative value (unlimited).
 
     .PARAMETER ExcludeProperty
     The propertys to be excluded from the output.
@@ -77,6 +78,7 @@ Function ConvertTo-SEPMFlatObject {
         [String]$Separator = ".",
         [ValidateSet("", 0, 1)]$Base = 1,
         [int]$Depth = 5,
+        [switch]$Uncut,
         [string[]] $ExcludeProperty,
         [Parameter(DontShow)][String[]]$Path,
         [Parameter(DontShow)][System.Collections.IDictionary] $OutputObject
@@ -92,6 +94,10 @@ Function ConvertTo-SEPMFlatObject {
         }
     }
     End {
+        if ($Uncut) {
+            $Depth = -1
+        }
+
         If ($PSBoundParameters.ContainsKey("OutputObject")) {
             $Object = $InputObjects[0]
             $Iterate = [ordered] @{}

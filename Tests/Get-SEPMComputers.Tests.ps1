@@ -58,6 +58,34 @@ Describe 'Get-SEPMComputers' {
     }
 
     Context 'GroupName parameter' {
+        It 'Should accept GroupName from the pipeline (via ForEach-Object)' {
+            $fakeSession = New-TestSession -SkipCert
+
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
+                return 1..5 | ForEach-Object { New-DummyComputer -GroupName 'My Company\Workstations' }
+            }
+
+            $result = 'My Company\Workstations' | ForEach-Object { Get-SEPMComputers -GroupName $_ }
+            $result | Should -Not -BeNullOrEmpty
+            $result.Count | Should -Be 5
+            $result[0].group.name | Should -Be 'My Company\Workstations'
+        }
+
+        It 'Should accept GroupName from the pipeline with -IncludeSubGroups' {
+            $fakeSession = New-TestSession -SkipCert
+
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
+                $a = 1..5 | ForEach-Object { New-DummyComputer -GroupName 'My Company\Workstations' }
+                $b = 1..3 | ForEach-Object { New-DummyComputer -GroupName 'My Company\Workstations\Sub' }
+                return $a + $b
+            }
+
+            $result = 'My Company\Workstations' | ForEach-Object { Get-SEPMComputers -GroupName $_ -IncludeSubGroups }
+            $result | Should -Not -BeNullOrEmpty
+            $result.Count | Should -Be 8
+        }
         It 'Should contain only computers from the group "My Company\\MyGroup"' {
             $fakeSession = New-TestSession -SkipCert
 
