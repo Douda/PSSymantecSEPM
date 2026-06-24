@@ -340,6 +340,39 @@ Describe 'Export-SEPMInventory' {
             }
         }
 
+        It 'passes pre-fetched group list to Get-SEPMLocation as -GroupList' {
+            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM {
+                return @([PSCustomObject]@{ locationName = $GroupID; locationId = 'LOC'; groupName = ''; groupId = ''; groupFullPathName = '' })
+            }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            Should -Invoke Get-SEPMLocation -ModuleName PSSymantecSEPM -Scope It -Exactly 2 -ParameterFilter {
+                $GroupList.Count -eq 2 -and
+                $GroupList[0].id -eq 'GRP001' -and
+                $GroupList[1].id -eq 'GRP002'
+            }
+        }
+
+        It 'passes pre-fetched computer list to Get-SEPClientInfectedStatus as -ComputerList' {
+            Mock Get-SEPComputers -ModuleName PSSymantecSEPM {
+                Write-Output @(
+                    @{ computerName = 'PC-001'; infected = 0 }
+                    @{ computerName = 'PC-002'; infected = 1 }
+                ) -NoEnumerate
+            }
+            Mock Get-SEPClientInfectedStatus -ModuleName PSSymantecSEPM {
+                Write-Output @() -NoEnumerate
+            }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            Should -Invoke Get-SEPClientInfectedStatus -ModuleName PSSymantecSEPM -Scope It -Exactly 1 -ParameterFilter {
+                $ComputerList.Count -eq 2 -and
+                $ComputerList[0].computerName -eq 'PC-001'
+            }
+        }
+
         It 'stores Get-SEPMFirewallPolicy -All output in FirewallPolicies property' {
             Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM {
                 Write-Output @(

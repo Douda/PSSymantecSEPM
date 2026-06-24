@@ -335,7 +335,13 @@ function Export-SEPMInventory {
         Invoke-CategoryFetch -Category 'ClientDefVersions' -FetchScript { Get-SEPClientDefVersions }
 
         # ── ClientInfected ──
-        Invoke-CategoryFetch -Category 'ClientInfected' -FetchScript { Get-SEPClientInfectedStatus }
+        Invoke-CategoryFetch -Category 'ClientInfected' -FetchScript {
+            $ciParams = @{}
+            if ($null -ne $snapshot.Computers) {
+                $ciParams.ComputerList = $snapshot.Computers
+            }
+            Get-SEPClientInfectedStatus @ciParams
+        }
 
         # ── Groups ──
         Invoke-CategoryFetch -Category 'Groups' -FetchScript { Get-SEPMGroups }
@@ -357,7 +363,8 @@ function Export-SEPMInventory {
                     Write-PerItemProgress -Category 'Locations' -ItemIndex $groupIndex -ItemCount $groupCount -ItemName $group.name
                 }
                 try {
-                    $groupLocs = Get-SEPMLocation -GroupID $group.id
+                    $locParams = @{ GroupID = $group.id; GroupList = $groupsArray }
+                    $groupLocs = Get-SEPMLocation @locParams
                     $allLocations += $groupLocs
                 } catch {
                     $categoryFailed = $true
