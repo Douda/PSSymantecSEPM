@@ -232,6 +232,7 @@ function Export-SEPMInventory {
                 $ipsIndex++
                 if ($ipsIndex % $ipsHeartbeatInterval -eq 0) {
                     Write-Verbose "  -> policy $ipsIndex/$ipsCount $($ipsSummary.name)"
+                    Write-Progress -Activity 'Export-SEPMInventory' -Status "[$($progressCounter)/$totalSteps] IpsPolicies ($ipsIndex/$ipsCount): $($ipsSummary.name)" -PercentComplete ($progressCounter / $totalSteps * 100)
                 }
                 try {
                     $ipsPolicy = Get-SEPMIpsPolicy -PolicyName $ipsSummary.name
@@ -273,6 +274,7 @@ function Export-SEPMInventory {
                 $exceptionIndex++
                 if ($exceptionIndex % $excHeartbeatInterval -eq 0) {
                     Write-Verbose "  -> policy $exceptionIndex/$exceptionCount $($exceptionSummary.name)"
+                    Write-Progress -Activity 'Export-SEPMInventory' -Status "[$($progressCounter)/$totalSteps] ExceptionPolicies ($exceptionIndex/$exceptionCount): $($exceptionSummary.name)" -PercentComplete ($progressCounter / $totalSteps * 100)
                 }
                 try {
                     $exceptionPolicy = Get-SEPMExceptionPolicy -PolicyName $exceptionSummary.name
@@ -332,6 +334,7 @@ function Export-SEPMInventory {
                 $groupIndex++
                 if ($groupIndex % $locHeartbeatInterval -eq 0) {
                     Write-Verbose "  -> group $groupIndex/$groupCount $($group.name)"
+                    Write-Progress -Activity 'Export-SEPMInventory' -Status "[$($progressCounter)/$totalSteps] Locations ($groupIndex/$groupCount): $($group.name)" -PercentComplete ($progressCounter / $totalSteps * 100)
                 }
                 try {
                     $groupLocs = Get-SEPMLocation -GroupID $group.id
@@ -374,6 +377,8 @@ function Export-SEPMInventory {
                 $locationIndex++
                 if ($locationIndex % $locXmlHeartbeatInterval -eq 0) {
                     Write-Verbose "  -> location $locationIndex/$locationCount $($location.locationName)"
+                    Write-Progress -Activity 'Export-SEPMInventory' -Status "[$($progressCounter)/$totalSteps] LocationXML ($locationIndex/$locationCount): $($location.locationName)" -PercentComplete ($progressCounter / $totalSteps * 100)
+                    Write-Progress -Activity 'Export-SEPMInventory' -Status "[$($progressCounter)/$totalSteps] GroupSettings ($locationIndex/$locationCount): $($location.locationName)" -PercentComplete ($progressCounter / $totalSteps * 100)
                 }
                 # LocationXML
                 try {
@@ -448,6 +453,7 @@ function Export-SEPMInventory {
                     $hgIndex++
                     if ($hgIndex % $hgHeartbeatInterval -eq 0) {
                         Write-Verbose "  -> group $hgIndex/$hgCount $($hg.name)"
+                        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$($progressCounter)/$totalSteps] HostGroups ($hgIndex/$hgCount): $($hg.name)" -PercentComplete ($progressCounter / $totalSteps * 100)
                     }
                     try {
                         $hgDetail = Get-SEPMHostGroup -Id $hg.id
