@@ -1173,7 +1173,7 @@ Describe 'Export-SEPMInventory' {
 
             $ipsPerItemCalls = @($output -split "`n" | Where-Object { $_ -match 'IpsPolicies \(\d+/\d+\)' })
             $ipsPerItemCalls.Count | Should -Be 1
-            $ipsPerItemCalls[0] | Should -Match 'IpsPolicies \(10/15\): IPS Policy 10$'
+            $ipsPerItemCalls[0] | Should -Match 'IpsPolicies \(10/15\): IPS Policy 10\r?$'
         }
 
         It 'ExceptionPolicies shows per-item progress (itemIndex/total): policyName when >10 items' {
@@ -1196,7 +1196,7 @@ Describe 'Export-SEPMInventory' {
             $excPerItemCalls = @($output -split "`n" | Where-Object { $_ -match 'ExceptionPolicies \(\d+/\d+\)' })
             # With 12 items, interval = Max(10, Floor(12/10)) = Max(10, 1) = 10
             $excPerItemCalls.Count | Should -Be 1
-            $excPerItemCalls[0] | Should -Match 'ExceptionPolicies \(10/12\): Exc Policy 10$'
+            $excPerItemCalls[0] | Should -Match 'ExceptionPolicies \(10/12\): Exc Policy 10\r?$'
         }
 
         It 'Locations shows per-item progress (itemIndex/total): groupName when >10 groups' {
@@ -1218,7 +1218,7 @@ Describe 'Export-SEPMInventory' {
             $locPerItemCalls = @($output -split "`n" | Where-Object { $_ -match 'Locations \(\d+/\d+\)' })
             # With 14 items, interval = Max(10, Floor(14/10)) = Max(10, 1) = 10
             $locPerItemCalls.Count | Should -Be 1
-            $locPerItemCalls[0] | Should -Match 'Locations \(10/14\): Group 10$'
+            $locPerItemCalls[0] | Should -Match 'Locations \(10/14\): Group 10\r?$'
         }
 
         It 'LocationXML shows per-item progress (itemIndex/total): locationName when >10 locations' {
@@ -1253,7 +1253,7 @@ Describe 'Export-SEPMInventory' {
             $locXmlCalls = @($output -split "`n" | Where-Object { $_ -match 'LocationXML \(\d+/\d+\)' })
             # With 11 items, interval = Max(10, Floor(11/10)) = Max(10, 1) = 10
             $locXmlCalls.Count | Should -Be 1
-            $locXmlCalls[0] | Should -Match 'LocationXML \(10/11\): Location 10$'
+            $locXmlCalls[0] | Should -Match 'LocationXML \(10/11\): Location 10\r?$'
         }
 
         It 'GroupSettings shows per-item progress (itemIndex/total): locationName when >10 locations' {
@@ -1289,7 +1289,7 @@ Describe 'Export-SEPMInventory' {
             $gsCalls = @($output -split "`n" | Where-Object { $_ -match 'GroupSettings \(\d+/\d+\)' })
             # With 13 items, interval = Max(10, Floor(13/10)) = Max(10, 1) = 10
             $gsCalls.Count | Should -Be 1
-            $gsCalls[0] | Should -Match 'GroupSettings \(10/13\): GS Location 10$'
+            $gsCalls[0] | Should -Match 'GroupSettings \(10/13\): GS Location 10\r?$'
         }
 
         It 'HostGroups shows per-item progress (itemIndex/total): groupName when >10 host groups' {
@@ -1310,8 +1310,8 @@ Describe 'Export-SEPMInventory' {
             # With 20 items, interval = Max(10, Floor(20/10)) = Max(10, 2) = 10
             # Throttled calls at 10 and 20
             $hgCalls.Count | Should -Be 2
-            $hgCalls[0] | Should -Match 'HostGroups \(10/20\): HG 10$'
-            $hgCalls[1] | Should -Match 'HostGroups \(20/20\): HG 20$'
+            $hgCalls[0] | Should -Match 'HostGroups \(10/20\): HG 10\r?$'
+            $hgCalls[1] | Should -Match 'HostGroups \(20/20\): HG 20\r?$'
         }
     }
 
