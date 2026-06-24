@@ -62,7 +62,14 @@ function Get-SEPMIpsPolicy {
             Mandatory = $true
         )]
         [PSCustomObject]
-        $PolicySummary
+        $PolicySummary,
+
+        # PolicyList
+        [Parameter(
+            ParameterSetName = 'ByName'
+        )]
+        [object[]]
+        $PolicyList
     )
 
     begin {
@@ -71,7 +78,11 @@ function Get-SEPMIpsPolicy {
 
         # Only fetch all summaries when resolving by name
         if ($PSCmdlet.ParameterSetName -eq 'ByName') {
-            $policies = Get-SEPMPoliciesSummary
+            if ($PSBoundParameters.ContainsKey('PolicyList')) {
+                $policies = $PolicyList
+            } else {
+                $policies = Get-SEPMPoliciesSummary
+            }
         }
     }
 
