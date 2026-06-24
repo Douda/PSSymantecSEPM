@@ -12,8 +12,21 @@
 $results = @{}
 $outDir = Join-Path $RepoRoot 'Output/smoke-inventory'
 
-# ── Single inventory call: shared across all tests ──
-$snapshot = Export-SEPMInventory -OutputDir $outDir -DelayMs 10
+# ── Single inventory call: capture snapshot + verbose/warning streams ──
+$verboseRecords = @()
+$warningRecords = @()
+$snapshot = $null
+
+$mergedOutput = Export-SEPMInventory -OutputDir $outDir -DelayMs 10 -Verbose *>&1
+foreach ($_ in $mergedOutput) {
+    if ($_ -is [System.Management.Automation.VerboseRecord]) {
+        $verboseRecords += $_.Message
+    } elseif ($_ -is [System.Management.Automation.WarningRecord]) {
+        $warningRecords += $_.Message
+    } else {
+        $snapshot = $_
+    }
+}
 
 # ── A1: Returns SEPM.Inventory PSTypeName ──
 $results.A1 = T "A1" "Export-SEPMInventory returns SEPM.Inventory PSTypeName" `
@@ -322,7 +335,70 @@ $results.B4 = T "B4" "No failures during inventory collection" `
         $r.Failures.Count -eq 0
     }
 
-# ── Cleanup ──
-Remove-Item -Path $outDir -Recurse -Force -ErrorAction SilentlyContinue
+# ── C1: Verbose output has at least 25 category-level lines ──
+$results.C1 = T "C1" "Verbose output has at least 25 category-level lines" `
+    { $verboseRecords } `
+    { param($r)
+        $catLines = 0
+        foreach ($line in $r) {
+            if ($line -match '\[\d{2}/25\]') { $catLines++ }
+        }
+        $catLines -ge 25
+    }
+
+# ── C2: Verbose format check ──
+$results.C2 = T "C2" "Verbose lines contain expected format (timestamp, step counter, status, duration)" `
+    { $verboseRecords } `
+    { param($r)
+        $allMatch = $true
+        $checked = 0
+        foreach ($line in $r) {
+            # Only check lines with step counter [NN/25] — skip WebRequest/WebResponse/heartbeat
+            if ($line -notmatch '\[\d{2}/25\]') { continue }
+            $checked++
+
+            if (-not ($line -match '\[\d{2}:\d{2}:\d{2}\]' -and
+                       $line -match '\[\+\d+[ms]' -and
+                       $line -match '\[\d{2}/25\]' -and
+                       $line -match '(OK|OK \(empty\)|FAILED)' -and
+                       $line -match '\(\d+ms\)|\(\d+\.\ds\)')) {
+                $allMatch = $false
+            }
+        }
+        $allMatch -and $checked -eq 25
+    }
+
+# ── C3: No warnings when healthy ──
+$results.C3 = T "C3" "No spurious Write-Warning output when SEPM is healthy" `
+    { $warningRecords } `
+    { param($r)
+        $nonEmpty = @($r | Where-Object { -not [string]::IsNullOrEmpty($_) })
+        if ($nonEmpty.Count -gt 0) {
+            Write-Host "  WARNINGS DETECTED ($($nonEmpty.Count)):" -ForegroundColor Yellow
+            foreach ($w in $nonEmpty) { Write-Host "    $w" -ForegroundColor Yellow }
+        }
+        $nonEmpty.Count -eq 0
+    }
+
+# ── C4: Heartbeat format check (if any) ──
+$results.C4 = T "C4" "Heartbeat lines follow '  → word N/total Name' format" `
+    { $verboseRecords } `
+    { param($r)
+        $heartbeats = @($r | Where-Object { $_ -match '^\s{2}→' })
+        Write-Host "  Heartbeat count: $($heartbeats.Count)" -ForegroundColor Cyan
+        if ($heartbeats.Count -eq 0) {
+            return $true  # No heartbeats is OK (small env)
+        }
+        $allMatch = $true
+        foreach ($hb in $heartbeats) {
+            if ($hb -notmatch '^\s{2}→\s+\w+\s+\d+/\d+\s+') {
+                Write-Host "  MISMATCHED HEARTBEAT: [$hb]" -ForegroundColor Yellow
+                $allMatch = $false
+            }
+        }
+        $allMatch
+    }
+
+# ── No cleanup — output files kept for inspection at $RepoRoot/Output/smoke-inventory/ ──
 
 Write-Summary -Results $results -Label "Export-SEPMInventory Smoke Tests"

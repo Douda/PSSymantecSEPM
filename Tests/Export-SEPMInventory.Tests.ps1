@@ -318,6 +318,18 @@ Describe 'Export-SEPMInventory' {
             $result.PolicySummaries[1].name | Should -Be 'FW Policy'
         }
 
+        It 'calls Get-SEPMFirewallPolicy with -SuppressProgress:$true' {
+            Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM {
+                Write-Output @() -NoEnumerate
+            }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            Should -Invoke Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM -Scope It -Exactly 1 -ParameterFilter {
+                $All -eq $true -and $SuppressProgress -eq $true
+            }
+        }
+
         It 'stores Get-SEPMFirewallPolicy -All output in FirewallPolicies property' {
             Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM {
                 Write-Output @(
@@ -1047,6 +1059,403 @@ Describe 'Export-SEPMInventory' {
             Join-Path -Path $customDir -ChildPath 'all_version.xml' | Should -Exist
             Join-Path -Path $customDir -ChildPath 'all_domains.xml' | Should -Exist
             Join-Path -Path $customDir -ChildPath 'all_gups.xml'    | Should -Exist
+        }
+    }
+
+    Context 'Progress bar' {
+        BeforeAll {
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
+            }
+
+            $script:progressCalls = @()
+            Mock Write-Progress -ModuleName PSSymantecSEPM {
+                $script:progressCalls += @{
+                    Activity = $Activity
+                    Status = $Status
+                    PercentComplete = $PercentComplete
+                }
+            }
+        }
+
+        It 'calls Write-Progress exactly 25 times' {
+            $script:progressCalls = @()
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            $script:progressCalls.Count | Should -Be 25
+        }
+
+        It 'all calls have Activity set to Export-SEPMInventory' {
+            $script:progressCalls = @()
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            $script:progressCalls | ForEach-Object { $_.Activity | Should -Be 'Export-SEPMInventory' }
+        }
+
+        It 'Status format matches [N/25] CategoryName for all calls' {
+            $script:progressCalls = @()
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            for ($i = 0; $i -lt 25; $i++) {
+                $script:progressCalls[$i].Status | Should -Match '^\[\d+/25\] \w+$'
+            }
+        }
+
+        It 'Status starts at [1/25] and ends at [25/25]' {
+            $script:progressCalls = @()
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            $script:progressCalls[0].Status | Should -Match '^\[1/25\]'
+            $script:progressCalls[24].Status | Should -Match '^\[25/25\]'
+        }
+
+        It 'PercentComplete increases from 0 to 100' {
+            $script:progressCalls = @()
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            $script:progressCalls[0].PercentComplete | Should -Be 4
+            $script:progressCalls[24].PercentComplete | Should -Be 100
+            # Verify monotonic increase
+            for ($i = 1; $i -lt 25; $i++) {
+                $script:progressCalls[$i].PercentComplete | Should -BeGreaterThan $script:progressCalls[$i-1].PercentComplete
+            }
+        }
+    }
+
+    Context 'Verbose output' {
+        BeforeAll {
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
+            }
+        }
+
+        It 'emits exactly 25 category-level Write-Verbose messages' {
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+            $verboseMsgs.Count | Should -Be 25
+        }
+
+        It 'each verbose line has timestamp, elapsed, step counter, category, status, metric, and duration' {
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+
+            foreach ($msg in $verboseMsgs) {
+                # Check each format component separately
+                $msg | Should -Match '^\[\d{2}:\d{2}:\d{2}\]'          # Timestamp [HH:mm:ss]
+                $msg | Should -Match '\[\+\d+s\]'                        # Elapsed [+SSs]
+                $msg | Should -Match '\[\d{2}/25\]'                      # Step counter [NN/25]
+                $msg | Should -Match '\s(OK|OK \(empty\)|FAILED)\s'     # Status
+                $msg | Should -Match '\(\d+ms\)'                         # Duration (Nms)
+            }
+        }
+
+        It 'shows OK status with version metric for Version category' {
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+
+            # First message should be Version with OK status and version string
+            $verboseMsgs[0] | Should -Match '\bVersion\b.*\bOK\b'
+            $verboseMsgs[0] | Should -Match '\b14\.3\.9816\.7000\b'
+        }
+
+        It 'shows OK (empty) for a category with empty results' {
+            # PolicySummaries mock returns empty array by default
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+
+            # PolicySummaries is step 12 (0-indexed: 11)
+            $verboseMsgs[11] | Should -Match 'PolicySummaries.*OK \(empty\)'
+        }
+
+        It 'shows FAILED status for a category that throws an exception' {
+            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM { throw 'Version API unavailable' }
+
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+
+            $verboseMsgs[0] | Should -Match 'Version.*FAILED'
+        }
+
+        It 'shows OK (empty) for Locations when no groups exist' {
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                Write-Output @() -NoEnumerate
+            }
+
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+
+            # Locations is step 22 (0-indexed: 21)
+            $verboseMsgs[21] | Should -Match 'Locations.*OK \(empty\)'
+        }
+    }
+
+    Context 'Heartbeat verbose output' {
+        BeforeAll {
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
+            }
+        }
+
+        It 'emits heartbeat lines at expected interval when HostGroups has >10 items' {
+            $hgItems = 1..60 | ForEach-Object {
+                [PSCustomObject]@{ id = ('HG' + $_.ToString('000')); name = "Host Group $_"; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
+            }
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
+                Write-Output $hgItems -NoEnumerate
+            }
+            Mock Get-SEPMHostGroup -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ id = $Id; name = 'Detail'; hosts = @() }
+            }
+            # Suppress heartbeat collisions from other fan-out categories
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
+
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+
+            # Filter heartbeat lines
+            $heartbeats = $verboseMsgs | Where-Object { $_ -match '^  →' }
+            # With 60 items, interval = max(10, floor(60/10)) = max(10, 6) = 10
+            # Heartbeats at 10, 20, 30, 40, 50, 60 = 6 heartbeats
+            $heartbeats.Count | Should -Be 6
+        }
+
+        It 'heartbeat lines follow "  → N/total ContextName" format' {
+            $hgItems = 1..60 | ForEach-Object {
+                [PSCustomObject]@{ id = ('HG' + $_.ToString('000')); name = "Host Group $_"; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
+            }
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
+                Write-Output $hgItems -NoEnumerate
+            }
+            Mock Get-SEPMHostGroup -ModuleName PSSymantecSEPM {
+                return [PSCustomObject]@{ id = $Id; name = 'Detail'; hosts = @() }
+            }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
+
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+
+            $heartbeats = $verboseMsgs | Where-Object { $_ -match '^  →' }
+            foreach ($hb in $heartbeats) {
+                $hb | Should -Match '^  → group \d+/60 '  # Format: "  → group N/60 Name"
+            }
+            # First heartbeat at 10/60
+            $heartbeats[0] | Should -Match '  → group 10/60 '
+        }
+
+        It 'no heartbeat lines when fan-out has ≤10 items' {
+            # With 2 groups, Locations has 2 items → interval = max(10, 0) = 10 → no heartbeats
+            # Default mock has 2 groups
+
+            $verboseMsgs = [System.Collections.Generic.List[string]]::new()
+            $null = Export-SEPMInventory -OutputDir 'TestDrive:' -Verbose *>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.VerboseRecord]) {
+                    $verboseMsgs.Add($_.Message)
+                }
+            }
+
+            $heartbeats = $verboseMsgs | Where-Object { $_ -match '^  →' }
+            $heartbeats.Count | Should -Be 0
+        }
+    }
+
+    Context 'Warning output' {
+        BeforeAll {
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
+            }
+
+            $script:warningMessages = @()
+            Mock Write-Warning -ModuleName PSSymantecSEPM {
+                $script:warningMessages += $Message
+            }
+        }
+
+        It 'emits Write-Warning when a sub-cmdlet throws in Invoke-CategoryFetch' {
+            $script:warningMessages = @()
+            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM { throw 'Version API unavailable' }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $script:warningMessages.Count | Should -BeGreaterThan 0
+            $versionWarning = $script:warningMessages | Where-Object { $_ -match 'Version' }
+            $versionWarning | Should -Not -BeNullOrEmpty
+        }
+
+        It 'warning message contains category name and error message' {
+            $script:warningMessages = @()
+            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM { throw '(500) Internal Server Error' }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $versionWarning = $script:warningMessages | Where-Object { $_ -match 'Version' }
+            $versionWarning | Should -Match 'Version'
+            $versionWarning | Should -Match '500'
+        }
+
+        It 'warning message has step counter format [N/25]' {
+            $script:warningMessages = @()
+            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM { throw 'Version API error' }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $versionWarning = $script:warningMessages | Where-Object { $_ -match 'Version' }
+            $versionWarning | Should -Match '\[\d+/25\]'
+        }
+
+        It 'emits Write-Warning per-policy for IpsPolicies failure with PolicyName' {
+            $script:warningMessages = @()
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                Write-Output @(
+                    @{ id = 'I001'; name = 'Failing IPS'; policytype = 'ips'; enabled = $true }
+                    @{ id = 'I002'; name = 'Working IPS'; policytype = 'ips'; enabled = $true }
+                ) -NoEnumerate
+            }
+            Mock Get-SEPMIpsPolicy -ModuleName PSSymantecSEPM {
+                if ($PolicyName -eq 'Failing IPS') { throw 'IPS API error' }
+                return @{ name = $PolicyName; configuration = @{ blocked_hosts = @() } }
+            }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $ipsWarning = $script:warningMessages | Where-Object { $_ -match 'IpsPolicies' }
+            $ipsWarning | Should -Not -BeNullOrEmpty
+            $ipsWarning | Should -Match 'Failing IPS'
+            $ipsWarning | Should -Match 'IPS API error'
+            $ipsWarning | Should -Match '\[\d+/25\]'
+        }
+
+        It 'emits Write-Warning per-policy for ExceptionPolicies failure with PolicyName' {
+            $script:warningMessages = @()
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                Write-Output @(
+                    @{ id = 'E001'; name = 'Bad Exc'; policytype = 'exceptions'; enabled = $true }
+                ) -NoEnumerate
+            }
+            Mock Get-SEPMExceptionPolicy -ModuleName PSSymantecSEPM {
+                if ($PolicyName -eq 'Bad Exc') { throw 'Exception API error' }
+                return @{ name = $PolicyName; configuration = @{ files = @() } }
+            }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $excWarning = $script:warningMessages | Where-Object { $_ -match 'ExceptionPolicies' }
+            $excWarning | Should -Not -BeNullOrEmpty
+            $excWarning | Should -Match 'Bad Exc'
+            $excWarning | Should -Match 'Exception API error'
+        }
+
+        It 'emits Write-Warning for Locations per-group failure with GroupName' {
+            $script:warningMessages = @()
+            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM { throw 'Locations API error' }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $locWarnings = $script:warningMessages | Where-Object { $_ -match 'Locations' }
+            $locWarnings.Count | Should -Be 2
+            $locWarnings[0] | Should -Match 'Locations API error'
+            $locWarnings[0] | Should -Match '\[\d+/25\]'
+            # At least one warning contains a group name
+            $locWarnings | Where-Object { $_ -match 'My Company' } | Should -Not -BeNullOrEmpty
+        }
+
+        It 'emits Write-Warning for LocationXML per-location failure' {
+            $script:warningMessages = @()
+            Mock Get-SEPMLocationXML -ModuleName PSSymantecSEPM { throw 'LocationXML API error' }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $xmlWarning = $script:warningMessages | Where-Object { $_ -match 'LocationXML' }
+            $xmlWarning | Should -Not -BeNullOrEmpty
+            $xmlWarning | Should -Match 'LocationXML API error'
+        }
+
+        It 'emits Write-Warning for GroupSettings per-location failure' {
+            $script:warningMessages = @()
+            Mock Get-SEPMGroupSettings -ModuleName PSSymantecSEPM { throw 'GroupSettings API error' }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $gsWarning = $script:warningMessages | Where-Object { $_ -match 'GroupSettings' }
+            $gsWarning | Should -Not -BeNullOrEmpty
+            $gsWarning | Should -Match 'GroupSettings API error'
+        }
+
+        It 'emits Write-Warning for HostGroups summary failure' {
+            $script:warningMessages = @()
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { throw 'HostGroups API error' }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $hgWarning = $script:warningMessages | Where-Object { $_ -match 'HostGroups' }
+            $hgWarning | Should -Not -BeNullOrEmpty
+            $hgWarning | Should -Match 'HostGroups API error'
+        }
+
+        It 'emits Write-Warning for per-HostGroup detail failure with HostGroupName' {
+            $script:warningMessages = @()
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
+                Write-Output @(
+                    [PSCustomObject]@{ id = 'HG001'; name = 'Failing HG'; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
+                ) -NoEnumerate
+            }
+            Mock Get-SEPMHostGroup -ModuleName PSSymantecSEPM { throw 'Host Group detail error' }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $hgWarning = $script:warningMessages | Where-Object { $_ -match 'HostGroups' }
+            $hgWarning | Should -Not -BeNullOrEmpty
+            $hgWarning | Should -Match 'Failing HG'
+            $hgWarning | Should -Match 'Host Group detail error'
+        }
+
+        It 'does NOT emit Write-Warning when all sub-cmdlets succeed' {
+            $script:warningMessages = @()
+            # Use default mocks which all succeed
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $script:warningMessages.Count | Should -Be 0
         }
     }
 
