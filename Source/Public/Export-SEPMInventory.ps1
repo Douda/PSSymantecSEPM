@@ -176,6 +176,7 @@ function Export-SEPMInventory {
                 $snapshot.$Category = & $FetchScript
             } catch {
                 $categoryFailed = $true
+                Write-Warning "[$($progressCounter)/$totalSteps] $Category`: $($_.Exception.Message)"
                 $snapshot.Failures += [PSCustomObject]@{
                     Category = $Category
                     Error    = $_.Exception.Message
@@ -235,6 +236,7 @@ function Export-SEPMInventory {
                     }
                 } catch {
                     $categoryFailed = $true
+                    Write-Warning "[$($progressCounter)/$totalSteps] IpsPolicies ($($ipsSummary.name)): $($_.Exception.Message)"
                     $snapshot.Failures += [PSCustomObject]@{
                         Category = 'IpsPolicies'
                         PolicyName = $ipsSummary.name
@@ -275,6 +277,7 @@ function Export-SEPMInventory {
                     }
                 } catch {
                     $categoryFailed = $true
+                    Write-Warning "[$($progressCounter)/$totalSteps] ExceptionPolicies ($($exceptionSummary.name)): $($_.Exception.Message)"
                     $snapshot.Failures += [PSCustomObject]@{
                         Category = 'ExceptionPolicies'
                         PolicyName = $exceptionSummary.name
@@ -331,6 +334,7 @@ function Export-SEPMInventory {
                     $allLocations += $groupLocs
                 } catch {
                     $categoryFailed = $true
+                    Write-Warning "[$($progressCounter)/$totalSteps] Locations ($($group.name)): $($_.Exception.Message)"
                     $snapshot.Failures += [PSCustomObject]@{
                         Category  = 'Locations'
                         GroupID   = $group.id
@@ -375,6 +379,7 @@ function Export-SEPMInventory {
                     }
                 } catch {
                     $categoryFailed = $true
+                    Write-Warning "[$($progressCounter)/$totalSteps] LocationXML ($($location.groupName)): $($_.Exception.Message)"
                     $snapshot.Failures += [PSCustomObject]@{
                         Category   = 'LocationXML'
                         GroupID    = $location.groupId
@@ -399,6 +404,7 @@ function Export-SEPMInventory {
                     }
                 } catch {
                     $categoryFailed = $true
+                    Write-Warning "[$($progressCounter)/$totalSteps] GroupSettings ($($location.groupName)): $($_.Exception.Message)"
                     $snapshot.Failures += [PSCustomObject]@{
                         Category   = 'GroupSettings'
                         GroupID    = $location.groupId
@@ -446,6 +452,7 @@ function Export-SEPMInventory {
                         }
                     } catch {
                         $categoryFailed = $true
+                        Write-Warning "[$($progressCounter)/$totalSteps] HostGroups ($($hg.name)): $($_.Exception.Message)"
                         $snapshot.Failures += [PSCustomObject]@{
                             Category = 'HostGroups'
                             HostGroupID   = $hg.id
@@ -464,6 +471,7 @@ function Export-SEPMInventory {
             }
         } catch {
             $categoryFailed = $true
+            Write-Warning "[$($progressCounter)/$totalSteps] HostGroups: $($_.Exception.Message)"
             $snapshot.Failures += [PSCustomObject]@{
                 Category = 'HostGroups'
                 Error    = $_.Exception.Message

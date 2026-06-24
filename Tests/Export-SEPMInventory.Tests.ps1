@@ -1296,6 +1296,169 @@ Describe 'Export-SEPMInventory' {
         }
     }
 
+    Context 'Warning output' {
+        BeforeAll {
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
+            }
+
+            $script:warningMessages = @()
+            Mock Write-Warning -ModuleName PSSymantecSEPM {
+                $script:warningMessages += $Message
+            }
+        }
+
+        It 'emits Write-Warning when a sub-cmdlet throws in Invoke-CategoryFetch' {
+            $script:warningMessages = @()
+            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM { throw 'Version API unavailable' }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $script:warningMessages.Count | Should -BeGreaterThan 0
+            $versionWarning = $script:warningMessages | Where-Object { $_ -match 'Version' }
+            $versionWarning | Should -Not -BeNullOrEmpty
+        }
+
+        It 'warning message contains category name and error message' {
+            $script:warningMessages = @()
+            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM { throw '(500) Internal Server Error' }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $versionWarning = $script:warningMessages | Where-Object { $_ -match 'Version' }
+            $versionWarning | Should -Match 'Version'
+            $versionWarning | Should -Match '500'
+        }
+
+        It 'warning message has step counter format [N/25]' {
+            $script:warningMessages = @()
+            Mock Get-SEPMVersion -ModuleName PSSymantecSEPM { throw 'Version API error' }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $versionWarning = $script:warningMessages | Where-Object { $_ -match 'Version' }
+            $versionWarning | Should -Match '\[\d+/25\]'
+        }
+
+        It 'emits Write-Warning per-policy for IpsPolicies failure with PolicyName' {
+            $script:warningMessages = @()
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                Write-Output @(
+                    @{ id = 'I001'; name = 'Failing IPS'; policytype = 'ips'; enabled = $true }
+                    @{ id = 'I002'; name = 'Working IPS'; policytype = 'ips'; enabled = $true }
+                ) -NoEnumerate
+            }
+            Mock Get-SEPMIpsPolicy -ModuleName PSSymantecSEPM {
+                if ($PolicyName -eq 'Failing IPS') { throw 'IPS API error' }
+                return @{ name = $PolicyName; configuration = @{ blocked_hosts = @() } }
+            }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $ipsWarning = $script:warningMessages | Where-Object { $_ -match 'IpsPolicies' }
+            $ipsWarning | Should -Not -BeNullOrEmpty
+            $ipsWarning | Should -Match 'Failing IPS'
+            $ipsWarning | Should -Match 'IPS API error'
+            $ipsWarning | Should -Match '\[\d+/25\]'
+        }
+
+        It 'emits Write-Warning per-policy for ExceptionPolicies failure with PolicyName' {
+            $script:warningMessages = @()
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                Write-Output @(
+                    @{ id = 'E001'; name = 'Bad Exc'; policytype = 'exceptions'; enabled = $true }
+                ) -NoEnumerate
+            }
+            Mock Get-SEPMExceptionPolicy -ModuleName PSSymantecSEPM {
+                if ($PolicyName -eq 'Bad Exc') { throw 'Exception API error' }
+                return @{ name = $PolicyName; configuration = @{ files = @() } }
+            }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $excWarning = $script:warningMessages | Where-Object { $_ -match 'ExceptionPolicies' }
+            $excWarning | Should -Not -BeNullOrEmpty
+            $excWarning | Should -Match 'Bad Exc'
+            $excWarning | Should -Match 'Exception API error'
+        }
+
+        It 'emits Write-Warning for Locations per-group failure with GroupName' {
+            $script:warningMessages = @()
+            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM { throw 'Locations API error' }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $locWarnings = $script:warningMessages | Where-Object { $_ -match 'Locations' }
+            $locWarnings.Count | Should -Be 2
+            $locWarnings[0] | Should -Match 'Locations API error'
+            $locWarnings[0] | Should -Match '\[\d+/25\]'
+            # At least one warning contains a group name
+            $locWarnings | Where-Object { $_ -match 'My Company' } | Should -Not -BeNullOrEmpty
+        }
+
+        It 'emits Write-Warning for LocationXML per-location failure' {
+            $script:warningMessages = @()
+            Mock Get-SEPMLocationXML -ModuleName PSSymantecSEPM { throw 'LocationXML API error' }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $xmlWarning = $script:warningMessages | Where-Object { $_ -match 'LocationXML' }
+            $xmlWarning | Should -Not -BeNullOrEmpty
+            $xmlWarning | Should -Match 'LocationXML API error'
+        }
+
+        It 'emits Write-Warning for GroupSettings per-location failure' {
+            $script:warningMessages = @()
+            Mock Get-SEPMGroupSettings -ModuleName PSSymantecSEPM { throw 'GroupSettings API error' }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $gsWarning = $script:warningMessages | Where-Object { $_ -match 'GroupSettings' }
+            $gsWarning | Should -Not -BeNullOrEmpty
+            $gsWarning | Should -Match 'GroupSettings API error'
+        }
+
+        It 'emits Write-Warning for HostGroups summary failure' {
+            $script:warningMessages = @()
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { throw 'HostGroups API error' }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $hgWarning = $script:warningMessages | Where-Object { $_ -match 'HostGroups' }
+            $hgWarning | Should -Not -BeNullOrEmpty
+            $hgWarning | Should -Match 'HostGroups API error'
+        }
+
+        It 'emits Write-Warning for per-HostGroup detail failure with HostGroupName' {
+            $script:warningMessages = @()
+            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
+                Write-Output @(
+                    [PSCustomObject]@{ id = 'HG001'; name = 'Failing HG'; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
+                ) -NoEnumerate
+            }
+            Mock Get-SEPMHostGroup -ModuleName PSSymantecSEPM { throw 'Host Group detail error' }
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $hgWarning = $script:warningMessages | Where-Object { $_ -match 'HostGroups' }
+            $hgWarning | Should -Not -BeNullOrEmpty
+            $hgWarning | Should -Match 'Failing HG'
+            $hgWarning | Should -Match 'Host Group detail error'
+        }
+
+        It 'does NOT emit Write-Warning when all sub-cmdlets succeed' {
+            $script:warningMessages = @()
+            # Use default mocks which all succeed
+
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+
+            $script:warningMessages.Count | Should -Be 0
+        }
+    }
+
     Context 'DelayMs parameter' {
         BeforeAll {
             Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
