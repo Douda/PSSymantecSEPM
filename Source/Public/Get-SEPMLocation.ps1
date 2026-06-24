@@ -1,5 +1,5 @@
 function Get-SEPMLocation {
-    <# TODO update help for Location
+    <#
     .SYNOPSIS
         Gets a list of locations for a specific group
     .DESCRIPTION
@@ -53,7 +53,7 @@ function Get-SEPMLocation {
         $GroupID,
 
         [Parameter()]
-        [Object[]]
+        [object[]]
         $GroupList
     )
 
