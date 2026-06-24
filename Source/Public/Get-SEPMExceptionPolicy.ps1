@@ -68,10 +68,11 @@ function Get-SEPMExceptionPolicy {
                     True AutoProtect  dk.tmp          extension2      Linux
 #>
 
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'ByName')]
     Param (
         # PolicyName
         [Parameter(
+            ParameterSetName = 'ByName',
             ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true,
             Mandatory = $true
@@ -79,6 +80,14 @@ function Get-SEPMExceptionPolicy {
         [Alias("Policy_Name")]
         [String]
         $PolicyName,
+
+        # PolicySummary
+        [Parameter(
+            ParameterSetName = 'BySummary',
+            Mandatory = $true
+        )]
+        [PSCustomObject]
+        $PolicySummary,
 
         # List a specific exception category
         [Parameter()]
@@ -91,15 +100,23 @@ function Get-SEPMExceptionPolicy {
         $session = Initialize-SEPMSession
         $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMExceptionPolicy'
 
-        # Stores the policy summary for all policies only once
-        $policies = Get-SEPMPoliciesSummary
+        # Only fetch all summaries when resolving by name
+        if ($PSCmdlet.ParameterSetName -eq 'ByName') {
+            $policies = Get-SEPMPoliciesSummary
+        }
     }
 
     process {
-        # Get Policy ID from policy name
-        $policy = $policies | Where-Object { $_.name -eq $PolicyName }
-        $policyID = $policy.id
-        $policy_type = $policy.policytype
+        if ($PSCmdlet.ParameterSetName -eq 'ByName') {
+            # Get Policy ID from policy name
+            $policy = $policies | Where-Object { $_.name -eq $PolicyName }
+            $policyID = $policy.id
+            $policy_type = $policy.policytype
+        } else {
+            # Extract directly from the pre-fetched summary
+            $policyID = $PolicySummary.id
+            $policy_type = $PolicySummary.policytype
+        }
 
         if ($policy_type -ne "exceptions") {
             $message = "policy type is not of type EXCEPTIONS or does not exist - Please verify the policy name"

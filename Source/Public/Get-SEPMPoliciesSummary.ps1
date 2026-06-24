@@ -83,14 +83,24 @@ function Get-SEPMPoliciesSummary {
         # Invoke the request
         try {
             $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds $pathIds
+            # Build a hashtable for O(1) group ID → fullPathName lookup
+            $groupLookup = @{}
+            foreach ($g in $groups) {
+                if (-not $groupLookup.ContainsKey($g.id)) {
+                    $groupLookup[$g.id] = $g.fullPathName
+                }
+            }
+
             # Add group FullPath to the response from their Group ID for ease of use
             # Parsing every response object
             foreach ($policy in $resp.content) {
                 # Parsing every location this policy is applied to
                 foreach ($location in $policy.assignedtolocations) {
-                    # Getting the group name from the group ID, and adding it to the response object
-                    $group = $groups | Where-Object { $_.id -match $location.groupid } | Get-Unique
-                    $location | Add-Member -NotePropertyName "groupNameFullPath" -NotePropertyValue $group.fullPathName
+                    # Getting the group name from the group ID via O(1) hashtable lookup
+                    $groupFullPath = $groupLookup[$location.groupid]
+                    if ($groupFullPath) {
+                        $location | Add-Member -NotePropertyName "groupNameFullPath" -NotePropertyValue $groupFullPath
+                    }
                 }
             }
         } catch {
