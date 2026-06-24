@@ -773,7 +773,7 @@ Describe 'Export-SEPMInventory' {
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { throw 'Policies API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
-            $result.Failures | Where-Object { $_.Category -eq 'PolicySummaries' } | Should -Not -BeNullOrEmpty
+            @($result.Failures | Where-Object { $_.Category -eq 'PolicySummaries' }) | Should -Not -BeNullOrEmpty
             $result.Failures[0].Error | Should -Be 'Policies API unavailable'
         }
 
@@ -801,7 +801,7 @@ Describe 'Export-SEPMInventory' {
             }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
-            $ipsFailures = $result.Failures | Where-Object { $_.Category -eq 'IpsPolicies' }
+            $ipsFailures = @($result.Failures | Where-Object { $_.Category -eq 'IpsPolicies' })
             $ipsFailures.Count | Should -Be 1
             $ipsFailures[0].PolicyName | Should -Be 'Failing IPS'
             $result.IpsPolicies.Count | Should -Be 2
@@ -822,7 +822,7 @@ Describe 'Export-SEPMInventory' {
             }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
-            $excFailures = $result.Failures | Where-Object { $_.Category -eq 'ExceptionPolicies' }
+            $excFailures = @($result.Failures | Where-Object { $_.Category -eq 'ExceptionPolicies' })
             $excFailures.Count | Should -Be 1
             $excFailures[0].PolicyName | Should -Be 'Bad Exc'
             $result.ExceptionPolicies.Count | Should -Be 1
@@ -858,7 +858,7 @@ Describe 'Export-SEPMInventory' {
             Mock Get-SEPComputers -ModuleName PSSymantecSEPM { throw 'Computers API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
-            $compFailures = $result.Failures | Where-Object { $_.Category -eq 'Computers' }
+            $compFailures = @($result.Failures | Where-Object { $_.Category -eq 'Computers' })
             $compFailures.Count | Should -Be 1
             $compFailures[0].Error | Should -Be 'Computers API unavailable'
         }
@@ -875,7 +875,7 @@ Describe 'Export-SEPMInventory' {
             Mock Get-SEPClientStatus -ModuleName PSSymantecSEPM { throw 'ClientStatus API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
-            $csFailures = $result.Failures | Where-Object { $_.Category -eq 'ClientStatus' }
+            $csFailures = @($result.Failures | Where-Object { $_.Category -eq 'ClientStatus' })
             $csFailures.Count | Should -Be 1
             $csFailures[0].Error | Should -Be 'ClientStatus API unavailable'
         }
@@ -884,7 +884,7 @@ Describe 'Export-SEPMInventory' {
             Mock Get-SEPClientVersion -ModuleName PSSymantecSEPM { throw 'ClientVersions API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
-            $cvFailures = $result.Failures | Where-Object { $_.Category -eq 'ClientVersions' }
+            $cvFailures = @($result.Failures | Where-Object { $_.Category -eq 'ClientVersions' })
             $cvFailures.Count | Should -Be 1
             $cvFailures[0].Error | Should -Be 'ClientVersions API unavailable'
         }
@@ -893,7 +893,7 @@ Describe 'Export-SEPMInventory' {
             Mock Get-SEPClientDefVersions -ModuleName PSSymantecSEPM { throw 'ClientDefVersions API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
-            $cdvFailures = $result.Failures | Where-Object { $_.Category -eq 'ClientDefVersions' }
+            $cdvFailures = @($result.Failures | Where-Object { $_.Category -eq 'ClientDefVersions' })
             $cdvFailures.Count | Should -Be 1
             $cdvFailures[0].Error | Should -Be 'ClientDefVersions API unavailable'
         }
@@ -902,7 +902,7 @@ Describe 'Export-SEPMInventory' {
             Mock Get-SEPClientInfectedStatus -ModuleName PSSymantecSEPM { throw 'ClientInfected API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
-            $ciFailures = $result.Failures | Where-Object { $_.Category -eq 'ClientInfected' }
+            $ciFailures = @($result.Failures | Where-Object { $_.Category -eq 'ClientInfected' })
             $ciFailures.Count | Should -Be 1
             $ciFailures[0].Error | Should -Be 'ClientInfected API unavailable'
         }
@@ -911,7 +911,7 @@ Describe 'Export-SEPMInventory' {
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { throw 'Groups API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
-            $gFailures = $result.Failures | Where-Object { $_.Category -eq 'Groups' }
+            $gFailures = @($result.Failures | Where-Object { $_.Category -eq 'Groups' })
             $gFailures.Count | Should -Be 1
             $gFailures[0].Error | Should -Be 'Groups API unavailable'
             $result.Groups | Should -BeNullOrEmpty
@@ -929,7 +929,7 @@ Describe 'Export-SEPMInventory' {
             Mock Get-SEPMLocation -ModuleName PSSymantecSEPM { throw 'Locations API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
-            $locFailures = $result.Failures | Where-Object { $_.Category -eq 'Locations' }
+            $locFailures = @($result.Failures | Where-Object { $_.Category -eq 'Locations' })
             $locFailures.Count | Should -Be 2
             $locFailures[0].Error | Should -Be 'Locations API unavailable'
         }
@@ -946,7 +946,7 @@ Describe 'Export-SEPMInventory' {
             Mock Get-SEPMLocationXML -ModuleName PSSymantecSEPM { throw 'LocationXML API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
-            $xmlFailures = $result.Failures | Where-Object { $_.Category -eq 'LocationXML' }
+            $xmlFailures = @($result.Failures | Where-Object { $_.Category -eq 'LocationXML' })
             $xmlFailures.Count | Should -Be 2
             $xmlFailures[0].Error | Should -Be 'LocationXML API unavailable'
         }
@@ -963,7 +963,7 @@ Describe 'Export-SEPMInventory' {
             Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { throw 'HostGroups API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
-            $hgFailures = $result.Failures | Where-Object { $_.Category -eq 'HostGroups' }
+            $hgFailures = @($result.Failures | Where-Object { $_.Category -eq 'HostGroups' })
             $hgFailures.Count | Should -Be 1
             $hgFailures[0].Error | Should -Be 'HostGroups API unavailable'
         }
@@ -992,7 +992,7 @@ Describe 'Export-SEPMInventory' {
             }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
-            $hgFailures = $result.Failures | Where-Object { $_.Category -eq 'HostGroups' }
+            $hgFailures = @($result.Failures | Where-Object { $_.Category -eq 'HostGroups' })
             $hgFailures.Count | Should -Be 1
             $hgFailures[0].HostGroupName | Should -Be 'Failing HG'
             $hgFailures[0].HostGroupID | Should -Be 'HG002'
@@ -1019,7 +1019,7 @@ Describe 'Export-SEPMInventory' {
             Mock Get-SEPMGroupSettings -ModuleName PSSymantecSEPM { throw 'GroupSettings API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
-            $gsFailures = $result.Failures | Where-Object { $_.Category -eq 'GroupSettings' }
+            $gsFailures = @($result.Failures | Where-Object { $_.Category -eq 'GroupSettings' })
             $gsFailures.Count | Should -Be 2
             $gsFailures[0].Error | Should -Be 'GroupSettings API unavailable'
         }
@@ -1246,13 +1246,13 @@ Describe 'Export-SEPMInventory' {
             }
 
             # Filter heartbeat lines
-            $heartbeats = $verboseMsgs | Where-Object { $_ -match '^  →' }
+            $heartbeats = $verboseMsgs | Where-Object { $_ -match '^  ->' }
             # With 60 items, interval = max(10, floor(60/10)) = max(10, 6) = 10
             # Heartbeats at 10, 20, 30, 40, 50, 60 = 6 heartbeats
             $heartbeats.Count | Should -Be 6
         }
 
-        It 'heartbeat lines follow "  → N/total ContextName" format' {
+        It 'heartbeat lines follow "  -> N/total ContextName" format' {
             $hgItems = 1..60 | ForEach-Object {
                 [PSCustomObject]@{ id = ('HG' + $_.ToString('000')); name = "Host Group $_"; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
             }
@@ -1272,12 +1272,12 @@ Describe 'Export-SEPMInventory' {
                 }
             }
 
-            $heartbeats = $verboseMsgs | Where-Object { $_ -match '^  →' }
+            $heartbeats = $verboseMsgs | Where-Object { $_ -match '^  ->' }
             foreach ($hb in $heartbeats) {
-                $hb | Should -Match '^  → group \d+/60 '  # Format: "  → group N/60 Name"
+                $hb | Should -Match '^  -> group \d+/60 '  # Format: "  -> group N/60 Name"
             }
             # First heartbeat at 10/60
-            $heartbeats[0] | Should -Match '  → group 10/60 '
+            $heartbeats[0] | Should -Match '  -> group 10/60 '
         }
 
         It 'no heartbeat lines when fan-out has ≤10 items' {
@@ -1291,7 +1291,7 @@ Describe 'Export-SEPMInventory' {
                 }
             }
 
-            $heartbeats = $verboseMsgs | Where-Object { $_ -match '^  →' }
+            $heartbeats = $verboseMsgs | Where-Object { $_ -match '^  ->' }
             $heartbeats.Count | Should -Be 0
         }
     }
