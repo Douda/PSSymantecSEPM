@@ -1062,6 +1062,64 @@ Describe 'Export-SEPMInventory' {
         }
     }
 
+    Context 'Progress bar' {
+        BeforeAll {
+            Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
+                if ($Summary) {
+                    return @{ license_type = 'PAID'; serial_number = 'BXXXXXXXXXX' }
+                }
+                return @{ serialNumber = 'BXXXXXXXXXX'; seats = 10000; productName = 'Symantec Endpoint Security Complete' }
+            }
+
+            $script:progressCalls = @()
+            Mock Write-Progress -ModuleName PSSymantecSEPM {
+                $script:progressCalls += @{
+                    Activity = $Activity
+                    Status = $Status
+                    PercentComplete = $PercentComplete
+                }
+            }
+        }
+
+        It 'calls Write-Progress exactly 25 times' {
+            $script:progressCalls = @()
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            $script:progressCalls.Count | Should -Be 25
+        }
+
+        It 'all calls have Activity set to Export-SEPMInventory' {
+            $script:progressCalls = @()
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            $script:progressCalls | ForEach-Object { $_.Activity | Should -Be 'Export-SEPMInventory' }
+        }
+
+        It 'Status format matches [N/25] CategoryName for all calls' {
+            $script:progressCalls = @()
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            for ($i = 0; $i -lt 25; $i++) {
+                $script:progressCalls[$i].Status | Should -Match '^\[\d+/25\] \w+$'
+            }
+        }
+
+        It 'Status starts at [1/25] and ends at [25/25]' {
+            $script:progressCalls = @()
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            $script:progressCalls[0].Status | Should -Match '^\[1/25\]'
+            $script:progressCalls[24].Status | Should -Match '^\[25/25\]'
+        }
+
+        It 'PercentComplete increases from 0 to 100' {
+            $script:progressCalls = @()
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            $script:progressCalls[0].PercentComplete | Should -Be 4
+            $script:progressCalls[24].PercentComplete | Should -Be 100
+            # Verify monotonic increase
+            for ($i = 1; $i -lt 25; $i++) {
+                $script:progressCalls[$i].PercentComplete | Should -BeGreaterThan $script:progressCalls[$i-1].PercentComplete
+            }
+        }
+    }
+
     Context 'DelayMs parameter' {
         BeforeAll {
             Mock Get-SEPMLicense -ModuleName PSSymantecSEPM {
