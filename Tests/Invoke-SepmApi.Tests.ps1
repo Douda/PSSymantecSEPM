@@ -159,6 +159,40 @@ Describe 'Invoke-SepmApi' {
         }
     }
 
+    Context 'Verbose output' {
+        It 'writes verbose message with method and URI via Session parameter set' {
+            $session = New-TestSession -Token 'VerboseTestToken'
+
+            InModuleScope PSSymantecSEPM -Parameters @{ session = $session } {
+                $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
+
+                Mock Invoke-RestMethod { return '{"ok":true}' }
+                $verboseMessage = $null
+                Mock Write-Verbose { $global:verboseMessage = $Message }
+
+                Invoke-SepmApi -Method GET -Uri 'https://SEPM01:8446/api/v1/test' -Session $session -Verbose | Out-Null
+
+                Should -Invoke Write-Verbose -Times 1 -Exactly
+            }
+        }
+
+        It 'writes verbose message with method and URI via Manual parameter set' {
+            InModuleScope PSSymantecSEPM {
+                $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
+
+                Mock Invoke-RestMethod { return '{"manual":"ok"}' }
+                $verboseMessage = $null
+                Mock Write-Verbose { $global:verboseMessage = $Message }
+
+                Invoke-SepmApi -Method POST -Uri 'https://example.com/api/v1/test' `
+                    -Headers @{ Authorization = 'Bearer ManualVerbose' } `
+                    -SkipCert $false -Body '{}' -Verbose | Out-Null
+
+                Should -Invoke Write-Verbose -Times 1 -Exactly
+            }
+        }
+    }
+
     Context 'Return type consistency' {
         It 'returns [hashtable] for JSON object response on PS7' {
             $session = New-TestSession -Token 'ReturnTypeToken'

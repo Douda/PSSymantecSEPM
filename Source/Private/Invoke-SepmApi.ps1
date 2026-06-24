@@ -77,6 +77,9 @@ function Invoke-SepmApi {
         $effectiveHeaders = $Headers.Clone()
     }
 
+    # === Emit verbose message ===
+    Write-Verbose "Invoke-SepmApi: $Method $Uri"
+
     # === PS 7+ path: Invoke-RestMethod ===
     if ($PSVersionTable.PSVersion.Major -ge 6) {
         $irmParams = @{
