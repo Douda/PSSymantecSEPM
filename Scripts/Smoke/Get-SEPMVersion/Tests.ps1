@@ -25,10 +25,12 @@ $results.A3 = T "A3" "version is a non-empty string" `
 Write-Host "--- A4 : verbose output shows Invoke-SepmApi call ---" -ForegroundColor Cyan
 try {
     $allOutput = Get-SEPMVersion -Verbose *>&1
-    $verboseLines = @($allOutput | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] })
-    $found = ($verboseLines | Where-Object { $_.Message -match 'Invoke-SepmApi: GET' }).Count -gt 0
-    if ($found) {
-        Write-Host "  VERBOSE: $($verboseLines[0].Message)" -ForegroundColor Gray
+    $matched = @($allOutput | Where-Object {
+        $_ -is [System.Management.Automation.VerboseRecord] -and
+        $_.Message -match 'Invoke-SepmApi: GET'
+    })
+    if ($matched.Count -gt 0) {
+        Write-Host "  VERBOSE: $($matched[0].Message)" -ForegroundColor Gray
         Write-Host "  VERDICT: PASS" -ForegroundColor Green
         $results.A4 = "PASS"
     } else {
