@@ -64,11 +64,21 @@ function Export-SEPMInventory {
     }
 
     process {
+        $totalSteps = 25
         $progressCounter = 0
 
+        function Write-ExportProgress {
+            param(
+                [ref]$Counter,
+                [int]$Total,
+                [string]$StepName
+            )
+            $Counter.Value++
+            Write-Progress -Activity 'Export-SEPMInventory' -Status "[$($Counter.Value)/$Total] $StepName" -PercentComplete ($Counter.Value / $Total * 100)
+        }
+
         # ── Version ──
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] Version" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Version'
         try {
             $snapshot.Version = Get-SEPMVersion
         } catch {
@@ -83,8 +93,7 @@ function Export-SEPMInventory {
         if ($DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
 
         # ── Domains ──
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] Domains" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Domains'
         try {
             $snapshot.Domains = Get-SEPMDomain
         } catch {
@@ -102,8 +111,7 @@ function Export-SEPMInventory {
         # (no DelayMs between these single-call categories)
 
         # GUPs
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] GUPs" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'GUPs'
         try {
             $snapshot.GUPs = Get-SEPGUPList
         } catch {
@@ -116,8 +124,7 @@ function Export-SEPMInventory {
         }
 
         # Admins
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] Admins" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Admins'
         try {
             $snapshot.Admins = Get-SEPMAdmins
         } catch {
@@ -130,8 +137,7 @@ function Export-SEPMInventory {
         }
 
         # DatabaseInfo
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] DatabaseInfo" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'DatabaseInfo'
         try {
             $snapshot.DatabaseInfo = Get-SEPMDatabaseInfo
         } catch {
@@ -144,8 +150,7 @@ function Export-SEPMInventory {
         }
 
         # License
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] License" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'License'
         try {
             $snapshot.License = Get-SEPMLicense
         } catch {
@@ -158,8 +163,7 @@ function Export-SEPMInventory {
         }
 
         # LicenseSummary
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] LicenseSummary" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'LicenseSummary'
         try {
             $snapshot.LicenseSummary = Get-SEPMLicense -Summary
         } catch {
@@ -172,8 +176,7 @@ function Export-SEPMInventory {
         }
 
         # ReplicationStatus
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] ReplicationStatus" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'ReplicationStatus'
         try {
             $snapshot.ReplicationStatus = Get-SEPMReplicationStatus
         } catch {
@@ -186,8 +189,7 @@ function Export-SEPMInventory {
         }
 
         # ThreatStats
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] ThreatStats" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'ThreatStats'
         try {
             $snapshot.ThreatStats = Get-SEPMThreatStats
         } catch {
@@ -200,8 +202,7 @@ function Export-SEPMInventory {
         }
 
         # LatestDefinitions
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] LatestDefinitions" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'LatestDefinitions'
         try {
             $snapshot.LatestDefinitions = Get-SEPMLatestDefinition
         } catch {
@@ -214,8 +215,7 @@ function Export-SEPMInventory {
         }
 
         # Events
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] Events" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Events'
         try {
             $snapshot.Events = Get-SEPMEventInfo
         } catch {
@@ -228,8 +228,7 @@ function Export-SEPMInventory {
         }
 
         # ── PolicySummaries ──
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] PolicySummaries" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'PolicySummaries'
         try {
             $snapshot.PolicySummaries = Get-SEPMPoliciesSummary
         } catch {
@@ -244,8 +243,7 @@ function Export-SEPMInventory {
         if ($DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
 
         # ── FirewallPolicies ──
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] FirewallPolicies" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'FirewallPolicies'
         try {
             $snapshot.FirewallPolicies = Get-SEPMFirewallPolicy -All -DelayMs $DelayMs -SuppressProgress
         } catch {
@@ -258,8 +256,7 @@ function Export-SEPMInventory {
         }
 
         # ── IpsPolicies (per-policy fetch from IPS summaries) ──
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] IpsPolicies" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'IpsPolicies'
         $ipsPolicies = @()
         if ($null -ne $snapshot.PolicySummaries) {
             $ipsSummaries = @($snapshot.PolicySummaries | Where-Object { $_.policytype -eq 'ips' })
@@ -290,8 +287,7 @@ function Export-SEPMInventory {
         $snapshot.IpsPolicies = $ipsPolicies
 
         # ── ExceptionPolicies (per-policy fetch from exception summaries) ──
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] ExceptionPolicies" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'ExceptionPolicies'
         $exceptionPolicies = @()
         if ($null -ne $snapshot.PolicySummaries) {
             $exceptionSummaries = @($snapshot.PolicySummaries | Where-Object { $_.policytype -eq 'exceptions' })
@@ -322,8 +318,7 @@ function Export-SEPMInventory {
         $snapshot.ExceptionPolicies = $exceptionPolicies
 
         # ── Computers ──
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] Computers" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Computers'
         try {
             $snapshot.Computers = Get-SEPComputers
         } catch {
@@ -336,8 +331,7 @@ function Export-SEPMInventory {
         }
 
         # ── ClientStatus ──
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] ClientStatus" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'ClientStatus'
         try {
             $snapshot.ClientStatus = Get-SEPClientStatus
         } catch {
@@ -350,8 +344,7 @@ function Export-SEPMInventory {
         }
 
         # ── ClientVersions ──
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] ClientVersions" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'ClientVersions'
         try {
             $snapshot.ClientVersions = Get-SEPClientVersion
         } catch {
@@ -364,8 +357,7 @@ function Export-SEPMInventory {
         }
 
         # ── ClientDefVersions ──
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] ClientDefVersions" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'ClientDefVersions'
         try {
             $snapshot.ClientDefVersions = Get-SEPClientDefVersions
         } catch {
@@ -378,8 +370,7 @@ function Export-SEPMInventory {
         }
 
         # ── ClientInfected ──
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] ClientInfected" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'ClientInfected'
         try {
             $snapshot.ClientInfected = Get-SEPClientInfectedStatus
         } catch {
@@ -392,8 +383,7 @@ function Export-SEPMInventory {
         }
 
         # ── Groups ──
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] Groups" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Groups'
         try {
             $snapshot.Groups = Get-SEPMGroups
         } catch {
@@ -406,8 +396,7 @@ function Export-SEPMInventory {
         }
 
         # ── Locations (per-group enumeration) ──
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] Locations" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Locations'
         $allLocations = @()
         if ($null -ne $snapshot.Groups) {
             $groupsArray = $snapshot.Groups
@@ -438,8 +427,7 @@ function Export-SEPMInventory {
         $snapshot.Locations = $allLocations
 
         # ── LocationXML & GroupSettings (per-group-location drill-down) ──
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] LocationXML" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'LocationXML'
         $allLocationXml = @()
         $allGroupSettings = @()
         if ($null -ne $snapshot.Locations -and $snapshot.Locations.Count -gt 0) {
@@ -501,8 +489,7 @@ function Export-SEPMInventory {
         $snapshot.GroupSettings = $allGroupSettings
 
         # ── Host Groups (summary → per-ID detail) ──
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] HostGroups" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'HostGroups'
         $allHostGroups = @()
         try {
             $hostGroupSummaries = Get-SEPMHostGroupSummary
@@ -546,8 +533,7 @@ function Export-SEPMInventory {
         $snapshot.HostGroups = $allHostGroups
 
         # ── Write per-category .clixml files ──
-        $progressCounter++
-        Write-Progress -Activity 'Export-SEPMInventory' -Status "[$progressCounter/25] Snapshot" -PercentComplete ($progressCounter / 25 * 100)
+        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Snapshot'
         if ($null -ne $snapshot.Version) {
             $snapshot.Version | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_version.xml') -Force
         }
