@@ -32,7 +32,7 @@ Describe 'Add-SEPMFileFingerprintList' {
         }
 
         It 'sends POST with correct body fields' {
-            $result = Add-SEPMFileFingerprintList -name 'NewList' -domainId 'DOM01' -HashType 'SHA256' -description 'Test list' -hashlist @('hash1', 'hash2')
+            $result = Add-SEPMFileFingerprintList -name 'NewList' -domainId 'DOM01' -HashType 'SHA256' -description 'Test list' -hashlist @('hash1', 'hash2') -PassThru
 
             $result.id | Should -Be 'NEWFP001'
             $script:capturedMethod | Should -Be 'POST'
@@ -66,10 +66,34 @@ Describe 'Add-SEPMFileFingerprintList' {
         }
 
         It 'returns the API response hashtable' {
-            $result = Add-SEPMFileFingerprintList -name 'ReturnTest' -domainId 'DOM03' -HashType 'SHA256' -description '' -hashlist @()
+            $result = Add-SEPMFileFingerprintList -name 'ReturnTest' -domainId 'DOM03' -HashType 'SHA256' -description '' -hashlist @() -PassThru
 
             $result | Should -Not -BeNullOrEmpty
             $result.id | Should -Be 'API123'
+        }
+    }
+
+    Context 'PassThru behavior' {
+        BeforeAll {
+            $script:fakeSession = New-TestSession
+
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                return @{ id = 'PASSTHRU001' }
+            }
+        }
+
+        It 'suppresses output when -PassThru is not specified' {
+            $result = Add-SEPMFileFingerprintList -name 'Quiet' -domainId 'D01' -HashType 'SHA256' -description '' -hashlist @()
+
+            $result | Should -BeNullOrEmpty
+        }
+
+        It 'emits response when -PassThru is specified' {
+            $result = Add-SEPMFileFingerprintList -name 'Emit' -domainId 'D02' -HashType 'SHA256' -description '' -hashlist @() -PassThru
+
+            $result | Should -Not -BeNullOrEmpty
+            $result.id | Should -Be 'PASSTHRU001'
         }
     }
 
@@ -88,7 +112,7 @@ Describe 'Add-SEPMFileFingerprintList' {
         }
 
         It 'sends MD5 hash type in the body' {
-            $result = Add-SEPMFileFingerprintList -name 'MD5List' -domainId 'DOM04' -HashType 'MD5' -description 'MD5 type' -hashlist @('d41d8cd98f00b204e9800998ecf8427e')
+            $result = Add-SEPMFileFingerprintList -name 'MD5List' -domainId 'DOM04' -HashType 'MD5' -description 'MD5 type' -hashlist @('d41d8cd98f00b204e9800998ecf8427e') -PassThru
 
             $result.id | Should -Be 'MD5001'
             $body = $script:capturedBodyMD5 | ConvertFrom-Json

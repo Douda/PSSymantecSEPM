@@ -11,7 +11,7 @@ Describe 'Remove-SEPMGroup' {
         Clear-TestEnvironment -State $script:TestState
     }
 
-    Context 'Deletion' {
+    Context 'basic ops' {
         BeforeAll {
             $fakeSession = New-TestSession -SkipCert
             Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
@@ -30,6 +30,8 @@ Describe 'Remove-SEPMGroup' {
                     Method = $Method
                     Uri    = $Uri
                 }
+                # Return a non-null value
+                return @{ deleted = $true }
             }
         }
 
@@ -39,6 +41,25 @@ Describe 'Remove-SEPMGroup' {
             $script:apiCalls.Count | Should -Be 1
             $script:apiCalls[0].Method | Should -Be 'DELETE'
             $script:apiCalls[0].Uri    | Should -Be "$($fakeSession.BaseURLv1)/groups/target-id"
+        }
+
+        It 'suppresses output when -PassThru is not specified' {
+            $result = Remove-SEPMGroup -GroupName 'TestGroup' -ParentGroup 'My Company'
+
+            $result | Should -BeNullOrEmpty
+        }
+
+        It 'emits response when -PassThru is specified' {
+            $result = Remove-SEPMGroup -GroupName 'TestGroup' -ParentGroup 'My Company' -PassThru
+
+            $result | Should -Not -BeNullOrEmpty
+            $result.deleted | Should -BeTrue
+        }
+
+        It 'calls Invoke-SepmApi' {
+            Remove-SEPMGroup -GroupName 'TestGroup' -ParentGroup 'My Company' -PassThru
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
         }
     }
 

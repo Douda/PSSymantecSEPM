@@ -68,10 +68,38 @@ Describe 'New-SEPMGroup' {
         }
 
         It 'returns the Invoke-SepmApi response' {
-            $result = New-SEPMGroup -GroupName 'LinuxServers' -ParentGroup 'My Company\Workstations'
+            $result = New-SEPMGroup -GroupName 'LinuxServers' -ParentGroup 'My Company\Workstations' -PassThru
 
             $result.id   | Should -Be 'new-group-001'
             $result.name | Should -Be 'Win7'
+        }
+    }
+
+    Context 'PassThru behavior' {
+        BeforeAll {
+            $fakeSession = New-TestSession
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                return @([PSCustomObject]@{ id = 'parent-789'; name = 'Workstations'; fullPathName = 'My Company\Workstations' })
+            }
+
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                return @{ id = 'new-group-001'; name = 'Win7' }
+            }
+        }
+
+        It 'suppresses output when -PassThru is not specified' {
+            $result = New-SEPMGroup -GroupName 'QuietGroup' -ParentGroup 'My Company\Workstations'
+
+            $result | Should -BeNullOrEmpty
+        }
+
+        It 'emits response when -PassThru is specified' {
+            $result = New-SEPMGroup -GroupName 'EmitGroup' -ParentGroup 'My Company\Workstations' -PassThru
+
+            $result | Should -Not -BeNullOrEmpty
+            $result.id | Should -Be 'new-group-001'
         }
     }
 

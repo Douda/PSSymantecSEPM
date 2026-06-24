@@ -43,7 +43,11 @@ function Add-SEPMFileFingerprintList {
         [string]$description,
 
         [Parameter()]
-        $hashlist
+        $hashlist,
+
+        [Parameter()]
+        [switch]
+        $PassThru
     )
 
     begin {
@@ -53,6 +57,9 @@ function Add-SEPMFileFingerprintList {
 
     process {
         $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -BoundParameters $PSBoundParameters
-        return $resp
+
+        if ($PassThru) {
+            Write-Output $resp
+        }
     }
 }

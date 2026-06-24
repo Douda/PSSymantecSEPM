@@ -42,17 +42,23 @@ Describe 'Start-SEPMReplication' {
         }
 
         It 'returns the Invoke-SepmApi response' {
-            $result = Start-SEPMReplication -partnerSiteName 'RemoteSiteAsia'
+            $result = Start-SEPMReplication -partnerSiteName 'RemoteSiteAsia' -PassThru
 
             $result.code    | Should -Be 0
             $result.message | Should -Be 'Replication initiated'
         }
 
+        It 'suppresses output when -PassThru is not specified' {
+            $result = Start-SEPMReplication -partnerSiteName 'RemoteSiteAsia'
+
+            $result | Should -BeNullOrEmpty
+        }
+
         It 'can be called without partnerSiteName parameter' {
             Start-SEPMReplication
 
-            $script:apiCalls.Count | Should -Be 4
-            $script:apiCalls[3].Method | Should -Be 'POST'
+            $script:apiCalls.Count | Should -Be 5
+            $script:apiCalls[4].Method | Should -Be 'POST'
         }
 
         It 'URI includes base path for replication endpoint' {
