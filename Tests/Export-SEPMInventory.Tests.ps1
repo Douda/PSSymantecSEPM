@@ -1226,7 +1226,7 @@ Describe 'Export-SEPMInventory' {
 
         It 'emits heartbeat lines at expected interval when HostGroups has >10 items' {
             $hgItems = 1..60 | ForEach-Object {
-                [PSCustomObject]@{ id = "HG$([String]$_).PadLeft(3,'0')"; name = "Host Group $_"; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
+                [PSCustomObject]@{ id = ('HG' + $_.ToString('000')); name = "Host Group $_"; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
             }
             Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
                 Write-Output $hgItems -NoEnumerate
@@ -1254,7 +1254,7 @@ Describe 'Export-SEPMInventory' {
 
         It 'heartbeat lines follow "  → N/total ContextName" format' {
             $hgItems = 1..60 | ForEach-Object {
-                [PSCustomObject]@{ id = "HG$([String]$_).PadLeft(3,'0')"; name = "Host Group $_"; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
+                [PSCustomObject]@{ id = ('HG' + $_.ToString('000')); name = "Host Group $_"; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
             }
             Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
                 Write-Output $hgItems -NoEnumerate

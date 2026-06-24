@@ -160,253 +160,63 @@ function Export-SEPMInventory {
             Write-Verbose "[$ts] $elapsedStr $stepStr $($Category.PadRight(20)) $status`t$metric`t$durationStr"
         }
 
-        # ── Version ──
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Version'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.Version = Get-SEPMVersion
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'Version'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'Version_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'Version' -Data $snapshot.Version -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
+        # Helper that encapsulates the repeated pattern:
+        #   Write-ExportProgress → try/catch fetch → Write-CategoryVerbose
+        function Invoke-CategoryFetch {
+            param(
+                [string]$Category,
+                [scriptblock]$FetchScript
+            )
 
+            Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName $Category
+
+            $categoryFailed = $false
+            $categoryStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+            try {
+                $snapshot.$Category = & $FetchScript
+            } catch {
+                $categoryFailed = $true
+                $snapshot.Failures += [PSCustomObject]@{
+                    Category = $Category
+                    Error    = $_.Exception.Message
+                }
+                [PSCustomObject]@{ Error = $_.Exception.Message } |
+                    Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath "${Category}_failed.xml") -Force
+            }
+            $categoryStopwatch.Stop()
+            Write-CategoryVerbose -Category $Category -Data $snapshot.$Category -Stopwatch $categoryStopwatch -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $categoryFailed
+        }
+
+        # ── Version ──
+        Invoke-CategoryFetch -Category 'Version' -FetchScript { Get-SEPMVersion }
         if ($DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
 
         # ── Domains ──
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Domains'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.Domains = Get-SEPMDomain
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'Domains'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'Domains_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'Domains' -Data $snapshot.Domains -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
-
+        Invoke-CategoryFetch -Category 'Domains' -FetchScript { Get-SEPMDomain }
         if ($DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
 
-        # ── Infrastructure & Security state ──
-        # (no DelayMs between these single-call categories)
-
-        # GUPs
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'GUPs'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.GUPs = Get-SEPGUPList
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'GUPs'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'GUPs_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'GUPs' -Data $snapshot.GUPs -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
-
-        # Admins
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Admins'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.Admins = Get-SEPMAdmins
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'Admins'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'Admins_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'Admins' -Data $snapshot.Admins -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
-
-        # DatabaseInfo
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'DatabaseInfo'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.DatabaseInfo = Get-SEPMDatabaseInfo
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'DatabaseInfo'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'DatabaseInfo_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'DatabaseInfo' -Data $snapshot.DatabaseInfo -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
-
-        # License
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'License'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.License = Get-SEPMLicense
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'License'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'License_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'License' -Data $snapshot.License -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
-
-        # LicenseSummary
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'LicenseSummary'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.LicenseSummary = Get-SEPMLicense -Summary
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'LicenseSummary'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'LicenseSummary_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'LicenseSummary' -Data $snapshot.LicenseSummary -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
-
-        # ReplicationStatus
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'ReplicationStatus'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.ReplicationStatus = Get-SEPMReplicationStatus
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'ReplicationStatus'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'ReplicationStatus_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'ReplicationStatus' -Data $snapshot.ReplicationStatus -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
-
-        # ThreatStats
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'ThreatStats'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.ThreatStats = Get-SEPMThreatStats
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'ThreatStats'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'ThreatStats_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'ThreatStats' -Data $snapshot.ThreatStats -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
-
-        # LatestDefinitions
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'LatestDefinitions'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.LatestDefinitions = Get-SEPMLatestDefinition
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'LatestDefinitions'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'LatestDefinitions_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'LatestDefinitions' -Data $snapshot.LatestDefinitions -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
-
-        # Events
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Events'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.Events = Get-SEPMEventInfo
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'Events'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'Events_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'Events' -Data $snapshot.Events -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
+        # ── Infrastructure & Security state (no DelayMs between these) ──
+        Invoke-CategoryFetch -Category 'GUPs' -FetchScript { Get-SEPGUPList }
+        Invoke-CategoryFetch -Category 'Admins' -FetchScript { Get-SEPMAdmins }
+        Invoke-CategoryFetch -Category 'DatabaseInfo' -FetchScript { Get-SEPMDatabaseInfo }
+        Invoke-CategoryFetch -Category 'License' -FetchScript { Get-SEPMLicense }
+        Invoke-CategoryFetch -Category 'LicenseSummary' -FetchScript { Get-SEPMLicense -Summary }
+        Invoke-CategoryFetch -Category 'ReplicationStatus' -FetchScript { Get-SEPMReplicationStatus }
+        Invoke-CategoryFetch -Category 'ThreatStats' -FetchScript { Get-SEPMThreatStats }
+        Invoke-CategoryFetch -Category 'LatestDefinitions' -FetchScript { Get-SEPMLatestDefinition }
+        Invoke-CategoryFetch -Category 'Events' -FetchScript { Get-SEPMEventInfo }
 
         # ── PolicySummaries ──
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'PolicySummaries'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.PolicySummaries = Get-SEPMPoliciesSummary
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'PolicySummaries'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'PolicySummaries_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'PolicySummaries' -Data $snapshot.PolicySummaries -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
-
+        Invoke-CategoryFetch -Category 'PolicySummaries' -FetchScript { Get-SEPMPoliciesSummary }
         if ($DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
 
         # ── FirewallPolicies ──
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'FirewallPolicies'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.FirewallPolicies = Get-SEPMFirewallPolicy -All -DelayMs $DelayMs -SuppressProgress
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'FirewallPolicies'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'FirewallPolicies_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'FirewallPolicies' -Data $snapshot.FirewallPolicies -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
+        Invoke-CategoryFetch -Category 'FirewallPolicies' -FetchScript { Get-SEPMFirewallPolicy -All -DelayMs $DelayMs -SuppressProgress }
 
         # ── IpsPolicies (per-policy fetch from IPS summaries) ──
         Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'IpsPolicies'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
+        $categoryFailed = $false
+        $categoryStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
         $ipsPolicies = @()
         if ($null -ne $snapshot.PolicySummaries) {
             $ipsSummaries = @($snapshot.PolicySummaries | Where-Object { $_.policytype -eq 'ips' })
@@ -424,7 +234,7 @@ function Export-SEPMInventory {
                         $ipsPolicies += $ipsPolicy
                     }
                 } catch {
-                    $__catFailed = $true
+                    $categoryFailed = $true
                     $snapshot.Failures += [PSCustomObject]@{
                         Category = 'IpsPolicies'
                         PolicyName = $ipsSummary.name
@@ -440,13 +250,13 @@ function Export-SEPMInventory {
             }
         }
         $snapshot.IpsPolicies = $ipsPolicies
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'IpsPolicies' -Data $snapshot.IpsPolicies -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
+        $categoryStopwatch.Stop()
+        Write-CategoryVerbose -Category 'IpsPolicies' -Data $snapshot.IpsPolicies -Stopwatch $categoryStopwatch -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $categoryFailed
 
         # ── ExceptionPolicies (per-policy fetch from exception summaries) ──
         Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'ExceptionPolicies'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
+        $categoryFailed = $false
+        $categoryStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
         $exceptionPolicies = @()
         if ($null -ne $snapshot.PolicySummaries) {
             $exceptionSummaries = @($snapshot.PolicySummaries | Where-Object { $_.policytype -eq 'exceptions' })
@@ -464,7 +274,7 @@ function Export-SEPMInventory {
                         $exceptionPolicies += $exceptionPolicy
                     }
                 } catch {
-                    $__catFailed = $true
+                    $categoryFailed = $true
                     $snapshot.Failures += [PSCustomObject]@{
                         Category = 'ExceptionPolicies'
                         PolicyName = $exceptionSummary.name
@@ -480,121 +290,31 @@ function Export-SEPMInventory {
             }
         }
         $snapshot.ExceptionPolicies = $exceptionPolicies
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'ExceptionPolicies' -Data $snapshot.ExceptionPolicies -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
+        $categoryStopwatch.Stop()
+        Write-CategoryVerbose -Category 'ExceptionPolicies' -Data $snapshot.ExceptionPolicies -Stopwatch $categoryStopwatch -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $categoryFailed
 
         # ── Computers ──
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Computers'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.Computers = Get-SEPComputers
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'Computers'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'Computers_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'Computers' -Data $snapshot.Computers -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
+        Invoke-CategoryFetch -Category 'Computers' -FetchScript { Get-SEPComputers }
 
         # ── ClientStatus ──
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'ClientStatus'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.ClientStatus = Get-SEPClientStatus
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'ClientStatus'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'ClientStatus_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'ClientStatus' -Data $snapshot.ClientStatus -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
+        Invoke-CategoryFetch -Category 'ClientStatus' -FetchScript { Get-SEPClientStatus }
 
         # ── ClientVersions ──
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'ClientVersions'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.ClientVersions = Get-SEPClientVersion
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'ClientVersions'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'ClientVersions_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'ClientVersions' -Data $snapshot.ClientVersions -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
+        Invoke-CategoryFetch -Category 'ClientVersions' -FetchScript { Get-SEPClientVersion }
 
         # ── ClientDefVersions ──
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'ClientDefVersions'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.ClientDefVersions = Get-SEPClientDefVersions
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'ClientDefVersions'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'ClientDefVersions_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'ClientDefVersions' -Data $snapshot.ClientDefVersions -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
+        Invoke-CategoryFetch -Category 'ClientDefVersions' -FetchScript { Get-SEPClientDefVersions }
 
         # ── ClientInfected ──
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'ClientInfected'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.ClientInfected = Get-SEPClientInfectedStatus
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'ClientInfected'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'ClientInfected_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'ClientInfected' -Data $snapshot.ClientInfected -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
+        Invoke-CategoryFetch -Category 'ClientInfected' -FetchScript { Get-SEPClientInfectedStatus }
 
         # ── Groups ──
-        Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Groups'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
-        try {
-            $snapshot.Groups = Get-SEPMGroups
-        } catch {
-            $__catFailed = $true
-            $snapshot.Failures += [PSCustomObject]@{
-                Category = 'Groups'
-                Error    = $_.Exception.Message
-            }
-            [PSCustomObject]@{ Error = $_.Exception.Message } |
-                Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'Groups_failed.xml') -Force
-        }
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'Groups' -Data $snapshot.Groups -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
+        Invoke-CategoryFetch -Category 'Groups' -FetchScript { Get-SEPMGroups }
 
         # ── Locations (per-group enumeration) ──
         Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Locations'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
+        $categoryFailed = $false
+        $categoryStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
         $allLocations = @()
         if ($null -ne $snapshot.Groups) {
             $groupsArray = $snapshot.Groups
@@ -610,7 +330,7 @@ function Export-SEPMInventory {
                     $groupLocs = Get-SEPMLocation -GroupID $group.id
                     $allLocations += $groupLocs
                 } catch {
-                    $__catFailed = $true
+                    $categoryFailed = $true
                     $snapshot.Failures += [PSCustomObject]@{
                         Category  = 'Locations'
                         GroupID   = $group.id
@@ -628,13 +348,13 @@ function Export-SEPMInventory {
             }
         }
         $snapshot.Locations = $allLocations
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'Locations' -Data $snapshot.Locations -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
+        $categoryStopwatch.Stop()
+        Write-CategoryVerbose -Category 'Locations' -Data $snapshot.Locations -Stopwatch $categoryStopwatch -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $categoryFailed
 
         # ── LocationXML & GroupSettings (per-group-location drill-down) ──
         Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'LocationXML'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
+        $categoryFailed = $false
+        $categoryStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
         $allLocationXml = @()
         $allGroupSettings = @()
         if ($null -ne $snapshot.Locations -and $snapshot.Locations.Count -gt 0) {
@@ -654,7 +374,7 @@ function Export-SEPMInventory {
                         $allLocationXml += $locationXml
                     }
                 } catch {
-                    $__catFailed = $true
+                    $categoryFailed = $true
                     $snapshot.Failures += [PSCustomObject]@{
                         Category   = 'LocationXML'
                         GroupID    = $location.groupId
@@ -678,7 +398,7 @@ function Export-SEPMInventory {
                         $allGroupSettings += $groupSettings
                     }
                 } catch {
-                    $__catFailed = $true
+                    $categoryFailed = $true
                     $snapshot.Failures += [PSCustomObject]@{
                         Category   = 'GroupSettings'
                         GroupID    = $location.groupId
@@ -700,13 +420,13 @@ function Export-SEPMInventory {
         }
         $snapshot.LocationXML = $allLocationXml
         $snapshot.GroupSettings = $allGroupSettings
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'LocationXML' -Data $snapshot.LocationXML -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
+        $categoryStopwatch.Stop()
+        Write-CategoryVerbose -Category 'LocationXML' -Data $snapshot.LocationXML -Stopwatch $categoryStopwatch -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $categoryFailed
 
         # ── Host Groups (summary → per-ID detail) ──
         Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'HostGroups'
-        $__catFailed = $false
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
+        $categoryFailed = $false
+        $categoryStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
         $allHostGroups = @()
         try {
             $hostGroupSummaries = Get-SEPMHostGroupSummary
@@ -725,7 +445,7 @@ function Export-SEPMInventory {
                             $allHostGroups += $hgDetail
                         }
                     } catch {
-                        $__catFailed = $true
+                        $categoryFailed = $true
                         $snapshot.Failures += [PSCustomObject]@{
                             Category = 'HostGroups'
                             HostGroupID   = $hg.id
@@ -743,7 +463,7 @@ function Export-SEPMInventory {
                 }
             }
         } catch {
-            $__catFailed = $true
+            $categoryFailed = $true
             $snapshot.Failures += [PSCustomObject]@{
                 Category = 'HostGroups'
                 Error    = $_.Exception.Message
@@ -754,8 +474,8 @@ function Export-SEPMInventory {
             } | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'HostGroups_failed.xml') -Force
         }
         $snapshot.HostGroups = $allHostGroups
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'HostGroups' -Data $snapshot.HostGroups -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $__catFailed
+        $categoryStopwatch.Stop()
+        Write-CategoryVerbose -Category 'HostGroups' -Data $snapshot.HostGroups -Stopwatch $categoryStopwatch -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $categoryFailed
 
         # ── Write per-category .clixml files ──
         Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Snapshot'
@@ -837,10 +557,10 @@ function Export-SEPMInventory {
 
         # Write timestamped snapshot blob
         $timestamp = $snapshot.FetchedAt.ToString('yyyy-MM-ddTHH-mm-ss')
-        $__catSw = [System.Diagnostics.Stopwatch]::StartNew()
+        $snapshotStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
         $snapshot | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath "SepmInventory_$timestamp.clixml") -Force
-        $__catSw.Stop()
-        Write-CategoryVerbose -Category 'Snapshot' -Data 'written' -Stopwatch $__catSw -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $false
+        $snapshotStopwatch.Stop()
+        Write-CategoryVerbose -Category 'Snapshot' -Data 'written' -Stopwatch $snapshotStopwatch -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $false
 
         $snapshot
     }
