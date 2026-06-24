@@ -31,6 +31,13 @@ referenced by firewall and other policies so a common set of network entities
 can be shared across rules. Managed under /policies/policy-objects/hostgroups.
 _Avoid_: Network group, IP group, host list
 
+**Inventory**:
+A point-in-time snapshot of SEPM state collected by `Export-SEPMInventory` —
+Version, Domains, Groups, Locations, Policies, Clients, Host Groups, and
+infrastructure metadata — persisted as a timestamped `.clixml` blob with
+per-category files alongside it. Not a live view; reflects state at fetch time.
+_Avoid_: Dump, export, backup
+
 **Location**:
 A network-context-aware profile within a Group. A single Client can have multiple
 Locations (e.g., Internal, VPN, External) with different Policies applied depending
