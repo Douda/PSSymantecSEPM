@@ -318,7 +318,14 @@ Describe 'Export-SEPMInventory' {
             $result.PolicySummaries[1].name | Should -Be 'FW Policy'
         }
 
-        It 'calls Get-SEPMFirewallPolicy with -All without -SuppressProgress' {
+        It 'passes only fw-type summaries to Get-SEPMFirewallPolicy -PolicyList' {
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                Write-Output @(
+                    @{ id = 'F001'; name = 'FW Policy'; policytype = 'fw'; enabled = $true }
+                    @{ id = 'I001'; name = 'IPS Policy'; policytype = 'ips'; enabled = $true }
+                    @{ id = 'E001'; name = 'Exception'; policytype = 'exceptions'; enabled = $true }
+                ) -NoEnumerate
+            }
             Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM {
                 Write-Output @() -NoEnumerate
             }
@@ -326,7 +333,10 @@ Describe 'Export-SEPMInventory' {
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
 
             Should -Invoke Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM -Scope It -Exactly 1 -ParameterFilter {
-                $All -eq $true -and -not $PSBoundParameters.ContainsKey('SuppressProgress')
+                $All -eq $true -and
+                $PolicyList.Count -eq 1 -and
+                $PolicyList[0].policytype -eq 'fw' -and
+                $PolicyList[0].name -eq 'FW Policy'
             }
         }
 

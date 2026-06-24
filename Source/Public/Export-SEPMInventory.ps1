@@ -230,7 +230,10 @@ function Export-SEPMInventory {
         Invoke-CategoryFetch -Category 'FirewallPolicies' -FetchScript {
             $fwParams = @{ All = $true; DelayMs = $DelayMs }
             if ($null -ne $snapshot.PolicySummaries) {
-                $fwParams.PolicyList = $snapshot.PolicySummaries
+                $fwSummaries = @($snapshot.PolicySummaries | Where-Object { $_.policytype -eq 'fw' })
+                if ($fwSummaries.Count -gt 0) {
+                    $fwParams.PolicyList = $fwSummaries
+                }
             }
             Get-SEPMFirewallPolicy @fwParams
         }
