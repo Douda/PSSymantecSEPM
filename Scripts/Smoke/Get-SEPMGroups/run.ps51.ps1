@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     PS5.1 entry point for Get-SEPMGroups smoke tests.
 
@@ -15,23 +15,10 @@
 $ErrorActionPreference = "Continue"
 $RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
 
-# -- PS5.1 transport prerequisites --
-[System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
-[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+# ── Bootstrap: import module, cert bypass, config, auth ──
+. "$RepoRoot\Scripts\Smoke\Bootstrap.ps1"
+Initialize-SmokeBootstrap -RepoRoot $RepoRoot
 
-# -- SEPM configuration (PS5.1 uses $env:APPDATA) --
-$cfg = "$env:APPDATA\PSSymantecSEPM\config.json"
-New-Item -ItemType Directory (Split-Path $cfg) -Force | Out-Null
-@{ port = 8446; ServerAddress = "localhost" } | ConvertTo-Json | Set-Content $cfg -Force
-
-# -- Module import --
-$ModulePath = "$RepoRoot\PSSymantecSEPM\PSSymantecSEPM.psm1"
-Import-Module $ModulePath -Force
-$env:PSModulePath = "$RepoRoot;$env:PSModulePath"
-
-$SmokeModule = Get-Module PSSymantecSEPM
-& $SmokeModule { $script:SkipCert = $true }
-
-# -- Shared infrastructure + tests --
+# ── Shared infrastructure + tests ──
 . "$RepoRoot\Scripts\Smoke\Common.ps1"
 . "$RepoRoot\Scripts\Smoke\Get-SEPMGroups\Tests.ps1"
