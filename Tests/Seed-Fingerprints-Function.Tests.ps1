@@ -79,8 +79,8 @@ Describe 'Invoke-SeedFingerprints' {
             $script:result = Invoke-SeedFingerprints -State $State
         }
 
-        It 'populates FingerprintMap with 2 entries' {
-            $script:result.FingerprintMap.Count | Should -Be 2
+        It 'populates FingerprintMap with 3 entries' {
+            $script:result.FingerprintMap.Count | Should -Be 3
         }
 
         It 'maps Known Malware Hashes to server ID' {
@@ -89,6 +89,10 @@ Describe 'Invoke-SeedFingerprints' {
 
         It 'maps Approved Binaries to server ID' {
             $script:result.FingerprintMap['Approved Binaries'] | Should -Be 'id-Approved-Binaries'
+        }
+
+        It 'maps Suspicious Tools to server ID' {
+            $script:result.FingerprintMap['Suspicious Tools'] | Should -Be 'id-Suspicious-Tools'
         }
     }
 
@@ -122,14 +126,14 @@ Describe 'Invoke-SeedFingerprints' {
             $null = Invoke-SeedFingerprints -State $State
         }
 
-        It 'POSTs exactly 2 fingerprint lists' {
-            $script:postBodies.Count | Should -Be 2
+        It 'POSTs exactly 3 fingerprint lists' {
+            $script:postBodies.Count | Should -Be 3
         }
 
         It 'Known Malware Hashes body has name and description' {
             $body = $script:postBodies[0] | ConvertFrom-Json
             $body.name | Should -Be 'Known Malware Hashes'
-            $body.description | Should -Be 'Seed data — simulated malware hashes'
+            $body.description | Should -Be 'Seed data — simulated malware/ransomware hashes'
             $body.hashType | Should -Be 'SHA256'
         }
 
@@ -149,7 +153,7 @@ Describe 'Invoke-SeedFingerprints' {
         It 'Approved Binaries body has name and description' {
             $body = $script:postBodies[1] | ConvertFrom-Json
             $body.name | Should -Be 'Approved Binaries'
-            $body.description | Should -Be 'Seed data — simulated approved binaries'
+            $body.description | Should -Be 'Seed data — simulated approved/trusted binary hashes'
             $body.hashType | Should -Be 'SHA256'
         }
 
@@ -253,10 +257,12 @@ Describe 'Invoke-SeedFingerprints' {
             $script:result = Invoke-SeedFingerprints -State $State
         }
 
-        It 'POSTs only missing fingerprint list (Approved Binaries)' {
-            $script:postCalls.Count | Should -Be 1
-            $body = $script:postCalls[0] | ConvertFrom-Json
-            $body.name | Should -Be 'Approved Binaries'
+        It 'POSTs only missing fingerprint lists (Approved Binaries and Suspicious Tools)' {
+            $script:postCalls.Count | Should -Be 2
+            $body0 = $script:postCalls[0] | ConvertFrom-Json
+            $body1 = $script:postCalls[1] | ConvertFrom-Json
+            $body0.name | Should -Be 'Approved Binaries'
+            $body1.name | Should -Be 'Suspicious Tools'
         }
 
         It 'uses existing ID for Known Malware Hashes' {
@@ -266,16 +272,21 @@ Describe 'Invoke-SeedFingerprints' {
         It 'assigns new ID for Approved Binaries' {
             $script:result.FingerprintMap['Approved Binaries'] | Should -Be 'new-Approved-Binaries'
         }
+
+        It 'assigns new ID for Suspicious Tools' {
+            $script:result.FingerprintMap['Suspicious Tools'] | Should -Be 'new-Suspicious-Tools'
+        }
     }
 
     Context 'Force mode deletes and recreates' {
         BeforeAll {
             $fakeSession = New-TestSession -SkipCert
 
-            # Both seed fingerprint lists already exist
+            # All seed fingerprint lists already exist
             $script:fpLookup = [System.Collections.Generic.List[object]]::new()
             $script:fpLookup.Add(@{ name = 'Known Malware Hashes'; id = 'old-malware-id' })
             $script:fpLookup.Add(@{ name = 'Approved Binaries'; id = 'old-binaries-id' })
+            $script:fpLookup.Add(@{ name = 'Suspicious Tools'; id = 'old-suspicious-id' })
 
             $script:deletedIds = @()
             $script:postCalls = @()
@@ -317,16 +328,17 @@ Describe 'Invoke-SeedFingerprints' {
         }
 
         It 'attempts to delete existing seed fingerprint lists' {
-            $script:deletedIds.Count | Should -Be 2
+            $script:deletedIds.Count | Should -Be 3
         }
 
-        It 'recreates both fingerprint lists despite DELETE failure' {
-            $script:postCalls.Count | Should -Be 2
+        It 'recreates all fingerprint lists despite DELETE failure' {
+            $script:postCalls.Count | Should -Be 3
         }
 
         It 'assigns new IDs after recreation' {
             $script:result.FingerprintMap['Known Malware Hashes'] | Should -Be 'new-Known-Malware-Hashes'
             $script:result.FingerprintMap['Approved Binaries'] | Should -Be 'new-Approved-Binaries'
+            $script:result.FingerprintMap['Suspicious Tools'] | Should -Be 'new-Suspicious-Tools'
         }
     }
 
