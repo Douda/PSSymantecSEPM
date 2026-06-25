@@ -284,7 +284,7 @@ Describe 'Seed-SEPMData' {
 
             $output | Should -Not -BeNullOrEmpty
             ($output -match '=== Seeding Fingerprints ===') | Should -Not -BeNullOrEmpty
-            ($output -match 'Fingerprints seeded: 2') | Should -Not -BeNullOrEmpty
+            ($output -match 'Fingerprints seeded: 3') | Should -Not -BeNullOrEmpty
         }
     }
 
