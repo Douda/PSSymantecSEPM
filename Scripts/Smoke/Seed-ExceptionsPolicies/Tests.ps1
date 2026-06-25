@@ -42,7 +42,8 @@ $results = @{}
 # ── A1: Baseline count (before seed) ──
 $results.A1 = & {
     try {
-        $script:beforeCount = @(Get-SEPMPoliciesSummary | Where-Object { $_.policytype -eq 'exceptions' }).Count
+        $script:beforePolicies = Get-SEPMPoliciesSummary | Where-Object { $_.policytype -eq 'exceptions' }
+        $script:beforeCount = if ($script:beforePolicies) { $script:beforePolicies.Count } else { 0 }
         Write-Host "  Before: $beforeCount exceptions policies"
         "PASS"
     } catch {
@@ -70,7 +71,8 @@ $results.A2 = & {
 # ── A3: Count +4 ──
 $results.A3 = & {
     try {
-        $afterCount = @(Get-SEPMPoliciesSummary | Where-Object { $_.policytype -eq 'exceptions' }).Count
+        $afterPolicies = Get-SEPMPoliciesSummary | Where-Object { $_.policytype -eq 'exceptions' }
+        $afterCount = if ($afterPolicies) { $afterPolicies.Count } else { 0 }
         Write-Host "  After: $afterCount exceptions policies"
         if ($afterCount -ne ($beforeCount + 4)) {
             throw "expected $($beforeCount + 4) policies, got $afterCount"
@@ -172,9 +174,11 @@ $results.A8 = & {
 $results.A9 = & {
     try {
         Write-Host "--- Idempotency ---"
-        $idemBefore = @(Get-SEPMPoliciesSummary | Where-Object { $_.policytype -eq 'exceptions' }).Count
+        $idemBeforePolicies = Get-SEPMPoliciesSummary | Where-Object { $_.policytype -eq 'exceptions' }
+        $idemBefore = if ($idemBeforePolicies) { $idemBeforePolicies.Count } else { 0 }
         $result = & $seedScript -Categories ExceptionsPolicies 6>&1
-        $idemAfter = @(Get-SEPMPoliciesSummary | Where-Object { $_.policytype -eq 'exceptions' }).Count
+        $idemAfterPolicies = Get-SEPMPoliciesSummary | Where-Object { $_.policytype -eq 'exceptions' }
+        $idemAfter = if ($idemAfterPolicies) { $idemAfterPolicies.Count } else { 0 }
         if ($idemAfter -ne $idemBefore) { throw "count changed ($idemBefore -> $idemAfter)" }
         Write-Host "  Idempotent: $idemAfter policies - PASS" -ForegroundColor Green
         "PASS"

@@ -39,7 +39,10 @@ $results.E1 = T "E1" "Get-SEPMClientDefVersions" `
 # ── F1: Get-SEPMReplicationStatus ──
 $results.F1 = T "F1" "Get-SEPMReplicationStatus" `
     { Get-SEPMReplicationStatus } `
-    { param($r) $r.Count -gt 0 -and $r[0].siteName -ne $null -and $r[0].id -ne $null }
+    { param($r)
+        # Accept empty result when no replication partners are configured
+        $null -eq $r -or $r.Count -eq 0 -or ($r.Count -gt 0 -and $r[0].siteName -ne $null -and $r[0].id -ne $null)
+    }
 
 # ── G1: Get-SEPMThreatStats ──
 $results.G1 = T "G1" "Get-SEPMThreatStats" `

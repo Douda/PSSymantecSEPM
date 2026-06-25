@@ -98,10 +98,10 @@ $results.A8 = T "A8" "Host Groups >= 2" `
     } `
     { param($r) if ($r) { $r.Count -ge 2 } else { $false } }
 
-# ── A9: Fingerprint lists >= 2 (Known Malware Hashes, Approved Binaries) ──
-$results.A9 = T "A9" "Fingerprint lists >= 2" `
+# ── A9: Fingerprint lists >= 3 (Known Malware Hashes, Approved Binaries, Suspicious Tools) ──
+$results.A9 = T "A9" "Fingerprint lists >= 3" `
     {
-        $seedNames = @('Known Malware Hashes', 'Approved Binaries')
+        $seedNames = @('Known Malware Hashes', 'Approved Binaries', 'Suspicious Tools')
         $found = @()
         foreach ($name in $seedNames) {
             try {
@@ -111,7 +111,7 @@ $results.A9 = T "A9" "Fingerprint lists >= 2" `
         }
         $found
     } `
-    { param($r) $r.Count -ge 2 }
+    { param($r) $r.Count -ge 3 }
 
 # ── A10: Policies assigned to groups >= 10 ──
 $results.A10 = T "A10" "Policies assigned to groups >= 10" `
