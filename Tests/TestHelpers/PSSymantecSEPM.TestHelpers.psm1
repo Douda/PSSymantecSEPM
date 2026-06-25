@@ -44,6 +44,9 @@ function Initialize-TestEnvironment {
     Write-Verbose "Building PSSymantecSEPM from $manifestPath"
     Build-Module -SourcePath $manifestPath -SemVer 0.0.1
 
+    Write-Verbose "Removing stale module before re-import"
+    Remove-Module PSSymantecSEPM -Force -ErrorAction SilentlyContinue
+
     Write-Verbose "Importing PSSymantecSEPM from $modulePath"
     Import-Module -Name $modulePath -Force -Global
 
