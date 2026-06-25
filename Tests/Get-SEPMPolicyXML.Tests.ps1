@@ -13,8 +13,7 @@ Describe 'Get-SEPMPolicyXML' {
 
     Context 'by PolicyName' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            $null = Set-TestMocks -Transport { return $null }
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return @(
                     [PSCustomObject]@{

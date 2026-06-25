@@ -225,28 +225,44 @@ function Set-TestMocks {
     .PARAMETER SkipCert
         If set, SkipCert is $true in the session object.
 
+    .PARAMETER SkipTransport
+        If set, only Initialize-SEPMSession is mocked; Invoke-SepmApi is NOT mocked.
+        Use this when tests need to define their own Invoke-SepmApi mock with a
+        ParameterFilter (e.g. Get-SEPMFirewallPolicy tests that filter by URI).
+
     .EXAMPLE
         $session = Set-TestMocks -Transport {
             return @{ API_SEQUENCE = '123'; API_VERSION = '1.0'; version = '1.0.0.0' }
         }
 
+    .EXAMPLE
+        # Skip transport mocking; define Invoke-SepmApi mock separately
+        Set-TestMocks -SkipCert -SkipTransport
+        Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { \$Method -eq 'GET' } { ... }
+
     .OUTPUTS
         System.Management.Automation.PSCustomObject. The fake session object.
     #>
     param(
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true, ParameterSetName = 'WithTransport')]
         [scriptblock] $Transport,
 
         [string] $Token = 'FakeToken',
 
-        [switch] $SkipCert
+        [switch] $SkipCert,
+
+        [Parameter(ParameterSetName = 'SkipTransport')]
+        [switch] $SkipTransport
     )
 
     $session = New-TestSession -Token $Token -SkipCert:$SkipCert
 
     $mockBody = { return $session }.GetNewClosure()
     Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM -MockWith $mockBody
-    Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -MockWith $Transport
+
+    if (-not $SkipTransport) {
+        Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -MockWith $Transport
+    }
 
     return $session
 }

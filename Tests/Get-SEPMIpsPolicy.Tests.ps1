@@ -13,13 +13,7 @@ Describe 'Get-SEPMIpsPolicy' {
 
     Context 'Retrieving an IPS policy with configuration' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
-                return New-DummyPolicySummary -PolicyName 'My IPS Policy' -PolicyType 'ips'
-            }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{
                     sources          = $null
                     configuration    = @{
@@ -35,6 +29,9 @@ Describe 'Get-SEPMIpsPolicy' {
                     name             = 'My IPS Policy'
                     lastmodifiedtime = 1693559858824
                 }
+            }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                return New-DummyPolicySummary -PolicyName 'My IPS Policy' -PolicyType 'ips'
             }
         }
 
@@ -71,13 +68,7 @@ Describe 'Get-SEPMIpsPolicy' {
 
     Context 'IPS policy with empty configuration' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
-                return New-DummyPolicySummary -PolicyName 'Minimal IPS' -PolicyType 'ips'
-            }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{
                     sources          = $null
                     configuration    = @{}
@@ -86,6 +77,9 @@ Describe 'Get-SEPMIpsPolicy' {
                     name             = 'Minimal IPS'
                     lastmodifiedtime = 1693559858824
                 }
+            }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                return New-DummyPolicySummary -PolicyName 'Minimal IPS' -PolicyType 'ips'
             }
         }
 
@@ -101,14 +95,7 @@ Describe 'Get-SEPMIpsPolicy' {
 
     Context 'Using -PolicyList to skip summary fetch' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-
-            # Get-SEPMPoliciesSummary should throw if called
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { throw 'Should not be called' }
-
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{
                     sources          = $null
                     configuration    = @{ blocked_hosts = @(); enabled_signatures = @() }
@@ -118,6 +105,9 @@ Describe 'Get-SEPMIpsPolicy' {
                     lastmodifiedtime = 1693559858824
                 }
             }
+
+            # Get-SEPMPoliciesSummary should throw if called
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { throw 'Should not be called' }
 
             $script:policyList = New-DummyPolicySummary -PolicyName 'Policy From List' -PolicyType 'ips'
         }
@@ -133,9 +123,7 @@ Describe 'Get-SEPMIpsPolicy' {
 
     Context 'Error handling' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            $null = Set-TestMocks -SkipCert -Transport { return @{} }
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return New-DummyPolicySummary -PolicyName 'Not IPS' -PolicyType 'av'
             }
