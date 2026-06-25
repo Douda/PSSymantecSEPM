@@ -153,26 +153,36 @@ function Get-SEPMExceptionPolicy {
             "files" {
                 $files = @()
                 # Add the Windows platform to the files
-                foreach ($f in $resp.configuration.files) {
-                    $f["Platform"] = "Windows"
-                    $files += $f
+                if ($null -ne $resp.configuration.files) {
+                    foreach ($f in $resp.configuration.files) {
+                        $f["Platform"] = "Windows"
+                        $files += $f
+                    }
                 }
 
                 # Add the Mac platform to the files
-                foreach ($f in $resp.configuration.mac.files) {
-                    $f["Platform"] = "Mac"
-                    $files += $f
+                if ($null -ne $resp.configuration.mac.files) {
+                    foreach ($f in $resp.configuration.mac.files) {
+                        $f["Platform"] = "Mac"
+                        $files += $f
+                    }
                 }
 
                 # TODO : 01/23/2024 -  Linux file exception is not a supported exception type in SEPM
                 # Add the Linux platform to the files
-                # foreach ($f in $resp.configuration.linux.files) {
-                #     $f["Platform"] = "Linux"
-                #     $files += $f
+                # if ($null -ne $resp.configuration.linux.files) {
+                #     foreach ($f in $resp.configuration.linux.files) {
+                #         $f["Platform"] = "Linux"
+                #         $files += $f
+                #     }
                 # }
 
-                $result = $files | ConvertTo-SEPMFlatObject
-                Write-Output $result -NoEnumerate
+                if ($files.Count -eq 0) {
+                    Write-Output @() -NoEnumerate
+                } else {
+                    $result = $files | ConvertTo-SEPMFlatObject
+                    Write-Output $result -NoEnumerate
+                }
             }
             "directories" {
                 $directories = @()
@@ -210,19 +220,27 @@ function Get-SEPMExceptionPolicy {
             "extensions" {
                 $extensions = @()
                 # Add the Windows platform to the extensions
-                foreach ($e in $resp.configuration.extension_list) {
-                    $e["Platform"] = "Windows"
-                    $extensions += $e
+                if ($null -ne $resp.configuration.extension_list) {
+                    foreach ($e in $resp.configuration.extension_list) {
+                        $e["Platform"] = "Windows"
+                        $extensions += $e
+                    }
                 }
 
                 # Add the Linux platform to the extensions
-                foreach ($e in $resp.configuration.linux.extension_list) {
-                    $e["Platform"] = "Linux"
-                    $extensions += $e
+                if ($null -ne $resp.configuration.linux.extension_list) {
+                    foreach ($e in $resp.configuration.linux.extension_list) {
+                        $e["Platform"] = "Linux"
+                        $extensions += $e
+                    }
                 }
 
-                $result = $extensions | ConvertTo-SEPMFlatObject
-                Write-Output $result -NoEnumerate
+                if ($extensions.Count -eq 0) {
+                    Write-Output @() -NoEnumerate
+                } else {
+                    $result = $extensions | ConvertTo-SEPMFlatObject
+                    Write-Output $result -NoEnumerate
+                }
             }
             "tamper" {
                 $result = $resp.configuration.tamper_files | ConvertTo-SEPMFlatObject
