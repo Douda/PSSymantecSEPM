@@ -13,9 +13,7 @@ Describe 'Get-SEPMGroups' {
 
     Context 'API dispatch' {
         BeforeEach {
-            $null = Set-TestMocks -Transport {
-                return @{ content = @(); lastPage = $true; totalPages = 1 }
-            }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return New-TestSession }
         }
 
         It 'delegates to Invoke-SepmEndpoint' {

@@ -32,7 +32,7 @@ Describe 'Get-SEPMCommandStatus' {
                             hardwareKey          = 'ABCDEF1234567890ABCDEF1234567890'
                         }
                     )
-                    lastPage  = $true
+                    lastPage   = $true
                     totalPages = 1
                 }
             }
@@ -45,9 +45,7 @@ Describe 'Get-SEPMCommandStatus' {
         }
 
         It 'calls Invoke-SepmEndpoint with the correct parameters' {
-            $null = Set-TestMocks -Transport {
-                return @{ content = @(); lastPage = $true; totalPages = 1 }
-            }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return New-TestSession }
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
                 return @()
             }

@@ -13,9 +13,7 @@ Describe 'Get-SEPMComputers' {
 
     Context 'No parameters' {
         BeforeEach {
-            $null = Set-TestMocks -Transport {
-                return @{ content = @(); lastPage = $true; totalPages = 1 }
-            }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return New-TestSession }
         }
 
         It 'Should return exactly one page of computers' {
@@ -120,9 +118,7 @@ Describe 'Get-SEPMComputers' {
 
     Context 'Invoke-SepmEndpoint parameters' {
         BeforeEach {
-            $null = Set-TestMocks -Transport {
-                return @{ content = @(); lastPage = $true; totalPages = 1 }
-            }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return New-TestSession }
         }
 
         It 'ComputerName path passes BoundParameters to Invoke-SepmEndpoint' {
