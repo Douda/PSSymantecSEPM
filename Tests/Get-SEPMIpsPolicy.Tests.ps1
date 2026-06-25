@@ -106,7 +106,6 @@ Describe 'Get-SEPMIpsPolicy' {
                 }
             }
 
-            # Get-SEPMPoliciesSummary should throw if called
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { throw 'Should not be called' }
 
             $script:policyList = New-DummyPolicySummary -PolicyName 'Policy From List' -PolicyType 'ips'

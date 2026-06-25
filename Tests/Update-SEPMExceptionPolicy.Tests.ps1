@@ -13,7 +13,7 @@ Describe 'Update-SEPMExceptionPolicy' {
 
     Context 'WindowsFile' {
         BeforeEach {
-            $null = Set-TestMocks -SkipCert -Transport { return $null }
+            $null = Set-TestMocks -SkipCert -SkipTransport
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
             }
@@ -87,7 +87,7 @@ Describe 'Update-SEPMExceptionPolicy' {
 
     Context 'WindowsFolder' {
         BeforeEach {
-            $null = Set-TestMocks -SkipCert -Transport { return $null }
+            $null = Set-TestMocks -SkipCert -SkipTransport
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
             }
@@ -177,7 +177,7 @@ Describe 'Update-SEPMExceptionPolicy' {
 
     Context 'WindowsExtension' {
         BeforeEach {
-            $null = Set-TestMocks -SkipCert -Transport { return $null }
+            $null = Set-TestMocks -SkipCert -SkipTransport
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
             }
@@ -337,7 +337,7 @@ Describe 'Update-SEPMExceptionPolicy' {
 
     Context 'Tamper' {
         BeforeEach {
-            $null = Set-TestMocks -SkipCert -Transport { return $null }
+            $null = Set-TestMocks -SkipCert -SkipTransport
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
             }
@@ -397,7 +397,7 @@ Describe 'Update-SEPMExceptionPolicy' {
 
     Context 'MacFile' {
         BeforeEach {
-            $null = Set-TestMocks -SkipCert -Transport { return $null }
+            $null = Set-TestMocks -SkipCert -SkipTransport
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
             }
@@ -457,7 +457,7 @@ Describe 'Update-SEPMExceptionPolicy' {
 
     Context 'Default' {
         BeforeEach {
-            $null = Set-TestMocks -SkipCert -Transport { return $null }
+            $null = Set-TestMocks -SkipCert -SkipTransport
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
             }

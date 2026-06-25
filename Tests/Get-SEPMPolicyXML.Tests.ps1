@@ -13,7 +13,7 @@ Describe 'Get-SEPMPolicyXML' {
 
     Context 'by PolicyName' {
         BeforeAll {
-            $null = Set-TestMocks -Transport { return $null }
+            $null = Set-TestMocks -SkipTransport
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return @(
                     [PSCustomObject]@{
