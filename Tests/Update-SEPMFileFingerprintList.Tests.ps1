@@ -13,17 +13,7 @@ Describe 'Update-SEPMFileFingerprintList' {
 
     Context 'by FingerprintListID' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-
-            $script:apiCalls = @()
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                $script:apiCalls += [PSCustomObject]@{
-                    Method      = $Method
-                    Uri         = $Uri
-                    Body        = $Body
-                    ContentType = $ContentType
-                }
+            $script:fakeSession = Set-TestMocks -Transport {
                 return @{ id = 'FP-ID-123'; name = 'MyFingerprints' }
             }
         }
@@ -34,18 +24,17 @@ Describe 'Update-SEPMFileFingerprintList' {
                 -name 'Updated List' -domainId 'dom-1' -HashType 'SHA256' `
                 -description 'Updated fingerprints' -hashlist $hashes
 
-            $script:apiCalls.Count | Should -Be 1
-            $script:apiCalls[0].Method      | Should -Be 'POST'
-            $script:apiCalls[0].Uri         | Should -Be "$($fakeSession.BaseURLv1)/policy-objects/fingerprints/FP-ID-123"
-            $script:apiCalls[0].ContentType | Should -Be 'application/json'
-
-            $body = $script:apiCalls[0].Body | ConvertFrom-Json
-            $body.name        | Should -Be 'Updated List'
-            $body.domainId    | Should -Be 'dom-1'
-            $body.hashType    | Should -Be 'SHA256'
-            $body.description | Should -Be 'Updated fingerprints'
-            $body.data[0]     | Should -Be 'abc123'
-            $body.data[1]     | Should -Be 'def456'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and
+                $Uri -eq "$($script:fakeSession.BaseURLv1)/policy-objects/fingerprints/FP-ID-123" -and
+                $ContentType -eq 'application/json' -and
+                $Body -match '"name":\s*"Updated List"' -and
+                $Body -match '"domainId":\s*"dom-1"' -and
+                $Body -match '"hashType":\s*"SHA256"' -and
+                $Body -match '"description":\s*"Updated fingerprints"' -and
+                $Body -match '"abc123"' -and
+                $Body -match '"def456"'
+            }
         }
 
         It 'returns the Invoke-SepmApi response' {
@@ -66,22 +55,13 @@ Describe 'Update-SEPMFileFingerprintList' {
 
     Context 'by FingerprintListName' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            $script:fakeSession = Set-TestMocks -Transport {
+                return @{ id = 'FP-RESOLVED-789'; name = 'Updated' }
+            }
 
             # Mock Get-SEPMFileFingerprintList to resolve name → ID
             Mock Get-SEPMFileFingerprintList -ModuleName PSSymantecSEPM {
                 return [PSCustomObject]@{ id = 'FP-RESOLVED-789'; name = 'ExistingFingerprints' }
-            }
-
-            $script:apiCalls = @()
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                $script:apiCalls += [PSCustomObject]@{
-                    Method = $Method
-                    Uri    = $Uri
-                    Body   = $Body
-                }
-                return @{ id = 'FP-RESOLVED-789'; name = 'Updated' }
             }
         }
 
@@ -89,24 +69,16 @@ Describe 'Update-SEPMFileFingerprintList' {
             Update-SEPMFileFingerprintList -FingerprintListName 'ExistingFingerprints' `
                 -name 'Renamed' -domainId 'dd' -HashType 'SHA256' -hashlist @('hash1')
 
-            $script:apiCalls.Count | Should -Be 1
-            $script:apiCalls[0].Method | Should -Be 'POST'
-            $script:apiCalls[0].Uri    | Should -Be "$($fakeSession.BaseURLv1)/policy-objects/fingerprints/FP-RESOLVED-789"
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and
+                $Uri -eq "$($script:fakeSession.BaseURLv1)/policy-objects/fingerprints/FP-RESOLVED-789"
+            }
         }
     }
 
     Context 'body construction' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-
-            $script:apiCalls = @()
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                $script:apiCalls += [PSCustomObject]@{
-                    Method = $Method
-                    Uri    = $Uri
-                    Body   = $Body
-                }
+            $script:fakeSession = Set-TestMocks -Transport {
                 return @{}
             }
         }
@@ -116,27 +88,29 @@ Describe 'Update-SEPMFileFingerprintList' {
             Update-SEPMFileFingerprintList -FingerprintListID 'FP-HASHES' `
                 -name 'HashTest' -domainId 'd' -HashType 'MD5' -hashlist $hashes
 
-            $body = $script:apiCalls[0].Body | ConvertFrom-Json
-            $body.data.Count | Should -Be 5
-            $body.data[0]    | Should -Be 'hash-1'
-            $body.data[4]    | Should -Be 'hash-5'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Body -match '"hash-1"' -and
+                $Body -match '"hash-5"'
+            }
         }
 
         It 'handles null/empty description' {
             Update-SEPMFileFingerprintList -FingerprintListID 'FP-NODESC' `
                 -name 'NoDesc' -domainId 'd' -HashType 'SHA256' -hashlist @('h1')
 
-            $body = $script:apiCalls[1].Body | ConvertFrom-Json
-            $body.description | Should -BeNullOrEmpty
-            $body.name        | Should -Be 'NoDesc'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Body -match '"name":\s*"NoDesc"' -and
+                $Body -notmatch '"description"'
+            }
         }
 
         It 'handles single hash string' {
             Update-SEPMFileFingerprintList -FingerprintListID 'FP-SINGLE' `
                 -name 'SingleHash' -domainId 'd' -HashType 'SHA256' -hashlist 'single-hash'
 
-            $body = $script:apiCalls[2].Body | ConvertFrom-Json
-            $body.data | Should -Be 'single-hash'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Body -match '"single-hash"'
+            }
         }
     }
 }

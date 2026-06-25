@@ -13,34 +13,25 @@ Describe 'Start-SEPMReplication' {
 
     Context 'happy path' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                $script:apiCalls += [PSCustomObject]@{
-                    Method = $Method
-                    Uri    = $Uri
-                }
+            $script:fakeSession = Set-TestMocks -Transport {
                 return @{ code = 0; message = 'Replication initiated' }
             }
-        }
-
-        BeforeEach {
-            $script:apiCalls = @()
         }
 
         It 'sends POST to /replication/replicatenow' {
             Start-SEPMReplication -partnerSiteName 'RemoteSiteAmericas'
 
-            $script:apiCalls.Count | Should -Be 1
-            $script:apiCalls[0].Method | Should -Be 'POST'
-            $script:apiCalls[0].Uri    | Should -Match '/replication/replicatenow'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and $Uri -match '/replication/replicatenow'
+            }
         }
 
         It 'includes partnerSiteName in query string' {
             Start-SEPMReplication -partnerSiteName 'RemoteSiteEurope'
 
-            $script:apiCalls[0].Uri | Should -Match 'partnerSiteName=RemoteSiteEurope'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Uri -match 'partnerSiteName=RemoteSiteEurope'
+            }
         }
 
         It 'returns the Invoke-SepmApi response' {
@@ -59,27 +50,23 @@ Describe 'Start-SEPMReplication' {
         It 'can be called without partnerSiteName parameter' {
             Start-SEPMReplication
 
-            $script:apiCalls[0].Method | Should -Be 'POST'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST'
+            }
         }
 
         It 'URI includes base path for replication endpoint' {
             Start-SEPMReplication -partnerSiteName 'PartnerX'
 
-            $script:apiCalls[0].Uri | Should -Match ([regex]::Escape($fakeSession.BaseURLv1 + '/replication/replicatenow'))
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Uri -match ([regex]::Escape($script:fakeSession.BaseURLv1 + '/replication/replicatenow'))
+            }
         }
     }
 
     Context 'URI construction' {
         BeforeAll {
-            $fakeSession = New-TestSession -ServerAddress 'sepm.example.com' -Port '8446'
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-
-            $script:apiCalls = @()
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                $script:apiCalls += [PSCustomObject]@{
-                    Method = $Method
-                    Uri    = $Uri
-                }
+            $script:fakeSession = Set-TestMocks -Transport {
                 return @{ code = 0 }
             }
         }
@@ -87,7 +74,9 @@ Describe 'Start-SEPMReplication' {
         It 'uses the configured server address from session' {
             Start-SEPMReplication -partnerSiteName 'SiteA'
 
-            $script:apiCalls[0].Uri | Should -Match ([regex]::Escape($fakeSession.BaseURLv1))
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Uri -match ([regex]::Escape($script:fakeSession.BaseURLv1))
+            }
         }
     }
 }

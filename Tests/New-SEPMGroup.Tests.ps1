@@ -13,8 +13,9 @@ Describe 'New-SEPMGroup' {
 
     Context 'happy path' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            $script:fakeSession = Set-TestMocks -Transport {
+                return @{ id = 'new-group-001'; name = 'Win7' }
+            }
 
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
                 return @(
@@ -22,49 +23,39 @@ Describe 'New-SEPMGroup' {
                     [PSCustomObject]@{ id = 'mc-id'; name = 'My Company'; fullPathName = 'My Company' }
                 )
             }
-
-            $script:apiCalls = @()
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                $script:apiCalls += [PSCustomObject]@{
-                    Method      = $Method
-                    Uri         = $Uri
-                    Body        = $Body
-                    ContentType = $ContentType
-                }
-                return @{ id = 'new-group-001'; name = 'Win7' }
-            }
         }
 
         It 'sends POST with group data in JSON body' {
             New-SEPMGroup -GroupName 'Win7' -ParentGroup 'My Company\Workstations'
 
-            $script:apiCalls.Count | Should -Be 1
-            $script:apiCalls[0].Method      | Should -Be 'POST'
-            $script:apiCalls[0].Uri         | Should -Be "$($fakeSession.BaseURLv1)/groups/parent-789"
-            $script:apiCalls[0].ContentType | Should -Be 'application/json'
-
-            $body = $script:apiCalls[0].Body | ConvertFrom-Json
-            $body.name      | Should -Be 'Win7'
-            $body.PSObject.Properties.Name | Should -Not -Contain 'inherits'
-            $body.PSObject.Properties.Name | Should -Not -Contain 'description'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and
+                $Uri -eq "$($script:fakeSession.BaseURLv1)/groups/parent-789" -and
+                $ContentType -eq 'application/json' -and
+                $Body -match '"name":\s*"Win7"' -and
+                $Body -notmatch 'inherits' -and
+                $Body -notmatch 'description'
+            }
         }
 
         It 'sends EnabledInheritance flag in body' {
             New-SEPMGroup -GroupName 'Win10' -ParentGroup 'My Company\Workstations' -EnabledInheritance
 
-            $script:apiCalls.Count | Should -Be 2
-            $body = $script:apiCalls[1].Body | ConvertFrom-Json
-            $body.inherits | Should -BeTrue
-            $body.name     | Should -Be 'Win10'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and
+                $Body -match '"name":\s*"Win10"' -and
+                $Body -match '"inherits":\s*true'
+            }
         }
 
         It 'sends description in body' {
             New-SEPMGroup -GroupName 'Servers' -ParentGroup 'My Company' -Description 'Server group'
 
-            $script:apiCalls.Count | Should -Be 3
-            $body = $script:apiCalls[2].Body | ConvertFrom-Json
-            $body.description | Should -Be 'Server group'
-            $body.name        | Should -Be 'Servers'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and
+                $Body -match '"name":\s*"Servers"' -and
+                $Body -match '"description":\s*"Server group"'
+            }
         }
 
         It 'returns the Invoke-SepmApi response' {
@@ -77,15 +68,12 @@ Describe 'New-SEPMGroup' {
 
     Context 'PassThru behavior' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            $script:fakeSession = Set-TestMocks -Transport {
+                return @{ id = 'new-group-001'; name = 'Win7' }
+            }
 
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
                 return @([PSCustomObject]@{ id = 'parent-789'; name = 'Workstations'; fullPathName = 'My Company\Workstations' })
-            }
-
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                return @{ id = 'new-group-001'; name = 'Win7' }
             }
         }
 
@@ -105,10 +93,9 @@ Describe 'New-SEPMGroup' {
 
     Context 'error handling' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { }
+            $script:fakeSession = Set-TestMocks -Transport {
+                return $null
+            }
         }
 
         It 'writes error when parent group not found' {
