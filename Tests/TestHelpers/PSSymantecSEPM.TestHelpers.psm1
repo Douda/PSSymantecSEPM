@@ -244,11 +244,8 @@ function Set-TestMocks {
 
     $session = New-TestSession -Token $Token -SkipCert:$SkipCert
 
-    # Store session in global scope so the mock scriptblocks (which run in
-    # PSSymantecSEPM module scope) can access it.
-    $global:__SetTestMocks_Session = $session
-
-    Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $global:__SetTestMocks_Session }
+    $mockBody = { return $session }.GetNewClosure()
+    Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM -MockWith $mockBody
     Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -MockWith $Transport
 
     return $session

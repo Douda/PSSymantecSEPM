@@ -34,7 +34,7 @@ Describe 'Set-TestMocks' {
         }
 
         It 'passes the session with correct token to Invoke-SepmApi' {
-            $session = Set-TestMocks -Transport { return @{ ok = $true } }
+            $null = Set-TestMocks -Transport { return @{ ok = $true } }
 
             Get-SEPMVersion | Out-Null
             Should -Invoke Initialize-SEPMSession -ModuleName PSSymantecSEPM -Times 1 -Exactly
