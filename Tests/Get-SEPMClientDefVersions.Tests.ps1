@@ -13,12 +13,7 @@ Describe 'Get-SEPMClientDefVersions' {
 
     Context 'Session-based flow' {
         It 'returns client definition version list' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter {
-                $Method -eq 'GET' -and $Uri -match '/stats/client/content$'
-            } {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{
                     clientDefStatusList = @(
                         @{ version = '2023-09-04 rev. 002'; clientsCount = 15 }
@@ -34,10 +29,7 @@ Describe 'Get-SEPMClientDefVersions' {
         }
 
         It 'returns empty array when API returns null list' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{ clientDefStatusList = $null }
             }
 

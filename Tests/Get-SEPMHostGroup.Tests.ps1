@@ -13,10 +13,7 @@ Describe 'Get-SEPMHostGroup' {
 
     Context 'ById' {
         It 'returns full Host Group detail (name + hosts) when given an ID' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{
                     name  = 'WebServers'
                     hosts = @(
@@ -33,10 +30,7 @@ Describe 'Get-SEPMHostGroup' {
         }
 
         It 'accepts ID from pipeline via property name' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 param($Uri)
                 if ($Uri -match '/hostgroups/hg2') {
                     return @{
@@ -55,10 +49,7 @@ Describe 'Get-SEPMHostGroup' {
 
     Context 'ByName' {
         It 'resolves by exact name and returns full detail' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 param($Uri)
                 if ($Uri -match '/hostgroups/summary') {
                     return @{
@@ -87,11 +78,8 @@ Describe 'Get-SEPMHostGroup' {
         }
 
         It 'resolves by wildcard name and returns all matches' {
-            $fakeSession = New-TestSession -SkipCert
-
             $detailCalls = @()
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 param($Uri)
                 if ($Uri -match '/hostgroups/summary') {
                     return @{
@@ -120,10 +108,7 @@ Describe 'Get-SEPMHostGroup' {
         }
 
         It 'returns empty array when no name matches' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 param($Uri)
                 if ($Uri -match '/hostgroups/summary') {
                     return @{

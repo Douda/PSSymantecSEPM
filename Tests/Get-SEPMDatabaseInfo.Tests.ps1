@@ -12,13 +12,8 @@ Describe 'Get-SEPMDatabaseInfo' {
     }
 
     Context 'happy path' {
-        BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-        }
-
         It 'returns database info with expected keys' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{
                     name                 = 'SQLSRV01'
                     description          = ''
@@ -43,7 +38,7 @@ Describe 'Get-SEPMDatabaseInfo' {
         }
 
         It 'calls the correct API endpoint' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { return @{ ok = $true } }
+            $null = Set-TestMocks -Transport { return @{ ok = $true } }
 
             Get-SEPMDatabaseInfo | Out-Null
             Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
@@ -52,7 +47,7 @@ Describe 'Get-SEPMDatabaseInfo' {
         }
 
         It 'handles response with null fields gracefully' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{
                     name      = 'DB01'
                     dbPasswords = $null

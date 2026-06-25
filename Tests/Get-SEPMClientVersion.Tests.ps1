@@ -13,12 +13,7 @@ Describe 'Get-SEPMClientVersion' {
 
     Context 'Session-based flow' {
         It 'returns client version list with version and count fields' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter {
-                $Method -eq 'GET' -and $Uri -match '/stats/client/version$'
-            } {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{
                     clientVersionList = @(
                         @{ version = '14.3.558.0000'; clientsCount = 5; formattedVersion = '14.3 (14.3) build 0000' }
@@ -35,10 +30,7 @@ Describe 'Get-SEPMClientVersion' {
         }
 
         It 'returns empty array when API returns null list' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{ clientVersionList = $null }
             }
 

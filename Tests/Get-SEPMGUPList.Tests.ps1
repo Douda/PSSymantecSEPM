@@ -12,13 +12,8 @@ Describe 'Get-SEPMGUPList' {
     }
 
     Context 'happy path' {
-        BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-        }
-
         It 'returns GUP list from the API' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @(
                     @{
                         computerName  = 'Server01'
@@ -43,7 +38,7 @@ Describe 'Get-SEPMGUPList' {
         }
 
         It 'calls the correct API endpoint' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { return @() }
+            $null = Set-TestMocks -Transport { return @() }
 
             Get-SEPMGUPList | Out-Null
             Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
@@ -52,7 +47,7 @@ Describe 'Get-SEPMGUPList' {
         }
 
         It 'handles empty GUP list gracefully' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { return @() }
+            $null = Set-TestMocks -Transport { return @() }
 
             # Empty API response should not throw
             { Get-SEPMGUPList } | Should -Not -Throw

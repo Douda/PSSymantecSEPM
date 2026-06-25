@@ -12,13 +12,8 @@ Describe 'Get-SEPMLatestDefinition' {
     }
 
     Context 'happy path' {
-        BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-        }
-
         It 'returns latest definition info with expected keys' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{
                     contentName         = 'AV_DEFS'
                     publishedBySymantec = '6/9/2026 rev. 2'
@@ -33,7 +28,7 @@ Describe 'Get-SEPMLatestDefinition' {
         }
 
         It 'calls the correct API endpoint' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { return @{ ok = $true } }
+            $null = Set-TestMocks -Transport { return @{ ok = $true } }
 
             Get-SEPMLatestDefinition | Out-Null
             Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {

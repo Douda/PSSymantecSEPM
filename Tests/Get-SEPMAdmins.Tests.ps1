@@ -13,10 +13,7 @@ Describe 'Get-SEPMAdmins' {
 
     Context 'Session-based flow' {
         BeforeAll {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @(
                     @{ loginName = 'admin'; email = 'admin@test.com'; role = 'Administrator' }
                     @{ loginName = 'smokeuser'; email = 'smoke@test.com'; role = 'Limited Administrator' }

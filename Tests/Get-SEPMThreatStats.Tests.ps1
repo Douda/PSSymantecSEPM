@@ -12,13 +12,8 @@ Describe 'Get-SEPMThreatStats' {
     }
 
     Context 'happy path' {
-        BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-        }
-
         It 'returns threat stats with expected properties' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{
                     Stats = @{
                         lastUpdated     = '1781052202808'
@@ -33,7 +28,7 @@ Describe 'Get-SEPMThreatStats' {
         }
 
         It 'calls the correct API endpoint' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { return @{ Stats = @{ ok = $true } } }
+            $null = Set-TestMocks -Transport { return @{ Stats = @{ ok = $true } } }
 
             Get-SEPMThreatStats | Out-Null
             Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {

@@ -13,11 +13,9 @@ Describe 'Confirm-SEPMEventInfo' {
 
     Context 'happy path' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-
             $script:apiCalls = @()
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $script:fakeSession = Set-TestMocks -Transport {
+                param($Session, $Method, $Uri, $Body, $ContentType)
                 $script:apiCalls += [PSCustomObject]@{
                     Method = $Method
                     Uri    = $Uri
@@ -31,7 +29,7 @@ Describe 'Confirm-SEPMEventInfo' {
 
             $script:apiCalls.Count | Should -Be 1
             $script:apiCalls[0].Method | Should -Be 'POST'
-            $script:apiCalls[0].Uri    | Should -Be "$($fakeSession.BaseURLv1)/events/acknowledge/EVT-CRITICAL-001"
+            $script:apiCalls[0].Uri    | Should -Be "$($script:fakeSession.BaseURLv1)/events/acknowledge/EVT-CRITICAL-001"
         }
 
         It 'returns $true on successful acknowledgement' {
@@ -43,8 +41,7 @@ Describe 'Confirm-SEPMEventInfo' {
 
     Context 'error handling' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            $null = Set-TestMocks -Transport { return @{ ack = 'ok' } }
         }
 
         It 'returns $false when event is not acknowledgeable' {
@@ -82,11 +79,9 @@ Describe 'Confirm-SEPMEventInfo' {
 
     Context 'URI construction' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-
             $script:apiCalls = @()
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $script:fakeSession = Set-TestMocks -Transport {
+                param($Session, $Method, $Uri, $Body, $ContentType)
                 $script:apiCalls += [PSCustomObject]@{
                     Method = $Method
                     Uri    = $Uri
@@ -98,7 +93,7 @@ Describe 'Confirm-SEPMEventInfo' {
         It 'appends event ID directly to acknowledge URI path' {
             Confirm-SEPMEventInfo -EventID '15B9BDBFAC1E000268F855FB4332BCC6'
 
-            $script:apiCalls[0].Uri | Should -BeExactly "$($fakeSession.BaseURLv1)/events/acknowledge/15B9BDBFAC1E000268F855FB4332BCC6"
+            $script:apiCalls[0].Uri | Should -BeExactly "$($script:fakeSession.BaseURLv1)/events/acknowledge/15B9BDBFAC1E000268F855FB4332BCC6"
         }
     }
 }
