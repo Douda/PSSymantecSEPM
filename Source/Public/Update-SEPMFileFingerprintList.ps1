@@ -66,7 +66,11 @@ function Update-SEPMFileFingerprintList {
             ParameterSetName = 'ID'
         )]
         [string]
-        $FingerprintListID
+        $FingerprintListID,
+
+        [Parameter()]
+        [switch]
+        $PassThru
     )
 
     begin {
@@ -83,6 +87,9 @@ function Update-SEPMFileFingerprintList {
 
         $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session `
             -BoundParameters $PSBoundParameters -PathIds @($FingerprintListID)
-        return $resp
+
+        if ($PassThru) {
+            Write-Output $resp
+        }
     }
 }

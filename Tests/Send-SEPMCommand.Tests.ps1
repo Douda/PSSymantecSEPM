@@ -111,6 +111,25 @@ Describe 'Send-SEPMCommand' {
                 $Method -eq 'POST' -and $Uri -match '/command-queue/activescan' -and $Uri -match 'group_ids=GROUP-456'
             }
         }
+
+        It 'accepts GroupName from the pipeline (via ForEach-Object)' {
+            'My Company\Workstations' | ForEach-Object {
+                Send-SEPMCommand -Type ActiveScan -GroupName $_
+            }
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and $Uri -match '/command-queue/activescan' -and $Uri -match 'group_ids=GROUP-456'
+            }
+        }
+
+        It 'accepts GroupName via ValueFromPipelineByPropertyName' {
+            $inputObj = [PSCustomObject]@{ GroupName = 'My Company\Workstations' }
+            $inputObj | Send-SEPMCommand -Type ActiveScan
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and $Uri -match '/command-queue/activescan' -and $Uri -match 'group_ids=GROUP-456'
+            }
+        }
     }
 
     Context 'pipeline input' {

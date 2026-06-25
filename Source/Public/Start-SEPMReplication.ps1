@@ -20,7 +20,11 @@ function Start-SEPMReplication {
     param (
         [Parameter()]
         [string]
-        $partnerSiteName
+        $partnerSiteName,
+
+        [Parameter()]
+        [switch]
+        $PassThru
 
         # TODO known bug with SEPM API, these parameters are returning invalid option if not set to false 
         # [switch]
@@ -37,6 +41,9 @@ function Start-SEPMReplication {
 
     process {
         $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -BoundParameters $PSBoundParameters
-        return $resp
+
+        if ($PassThru) {
+            Write-Output $resp
+        }
     }
 }

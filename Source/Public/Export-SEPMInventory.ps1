@@ -212,7 +212,7 @@ function Export-SEPMInventory {
         if ($DelayMs -gt 0) { Start-Sleep -Milliseconds $DelayMs }
 
         # ── Infrastructure & Security state (no DelayMs between these) ──
-        Invoke-CategoryFetch -Category 'GUPs' -FetchScript { Get-SEPGUPList }
+        Invoke-CategoryFetch -Category 'GUPs' -FetchScript { Get-SEPMGUPList }
         Invoke-CategoryFetch -Category 'Admins' -FetchScript { Get-SEPMAdmins }
         Invoke-CategoryFetch -Category 'DatabaseInfo' -FetchScript { Get-SEPMDatabaseInfo }
         Invoke-CategoryFetch -Category 'License' -FetchScript { Get-SEPMLicense }
@@ -323,16 +323,16 @@ function Export-SEPMInventory {
         Write-CategoryVerbose -Category 'ExceptionPolicies' -Data $snapshot.ExceptionPolicies -Stopwatch $categoryStopwatch -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $categoryFailed
 
         # ── Computers ──
-        Invoke-CategoryFetch -Category 'Computers' -FetchScript { Get-SEPComputers }
+        Invoke-CategoryFetch -Category 'Computers' -FetchScript { Get-SEPMComputers }
 
         # ── ClientStatus ──
-        Invoke-CategoryFetch -Category 'ClientStatus' -FetchScript { Get-SEPClientStatus }
+        Invoke-CategoryFetch -Category 'ClientStatus' -FetchScript { Get-SEPMClientStatus }
 
         # ── ClientVersions ──
-        Invoke-CategoryFetch -Category 'ClientVersions' -FetchScript { Get-SEPClientVersion }
+        Invoke-CategoryFetch -Category 'ClientVersions' -FetchScript { Get-SEPMClientVersion }
 
         # ── ClientDefVersions ──
-        Invoke-CategoryFetch -Category 'ClientDefVersions' -FetchScript { Get-SEPClientDefVersions }
+        Invoke-CategoryFetch -Category 'ClientDefVersions' -FetchScript { Get-SEPMClientDefVersions }
 
         # ── ClientInfected ──
         Invoke-CategoryFetch -Category 'ClientInfected' -FetchScript {
@@ -340,7 +340,7 @@ function Export-SEPMInventory {
             if ($null -ne $snapshot.Computers) {
                 $ciParams.ComputerList = $snapshot.Computers
             }
-            Get-SEPClientInfectedStatus @ciParams
+            Get-SEPMClientInfectedStatus @ciParams
         }
 
         # ── Groups ──

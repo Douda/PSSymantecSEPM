@@ -37,7 +37,11 @@ function Remove-SEPMGroup {
             ValueFromPipelineByPropertyName = $true
         )]
         [String]
-        $ParentGroup
+        $ParentGroup,
+
+        [Parameter()]
+        [switch]
+        $PassThru
     )
 
     begin {
@@ -61,6 +65,9 @@ function Remove-SEPMGroup {
         }
 
         $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($group.id)
-        return $resp
+
+        if ($PassThru) {
+            Write-Output $resp
+        }
     }
 }

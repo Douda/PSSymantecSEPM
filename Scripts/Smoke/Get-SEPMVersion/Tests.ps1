@@ -4,7 +4,7 @@
 
 .DESCRIPTION
     Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
-    Covers: returns version fields, API_VERSION string check, version string check.
+    Covers: returns version fields, API_VERSION string check, version string check, verbose output.
 #>
 
 $results = @{}
@@ -20,5 +20,26 @@ $results.A2 = T "A2" "API_VERSION is a non-empty string" `
 $results.A3 = T "A3" "version is a non-empty string" `
     { Get-SEPMVersion } `
     { param($r) $r.version -is [string] -and $r.version.Length -gt 0 }
+
+# ── Verbose output test (standalone, not using T helper) ──
+Write-Host "--- A4 : verbose output shows Invoke-SepmApi call ---" -ForegroundColor Cyan
+try {
+    $allOutput = Get-SEPMVersion -Verbose *>&1
+    $matched = @($allOutput | Where-Object {
+        $_ -is [System.Management.Automation.VerboseRecord] -and
+        $_.Message -match 'Invoke-SepmApi: GET'
+    })
+    if ($matched.Count -gt 0) {
+        Write-Host "  VERBOSE: $($matched[0].Message)" -ForegroundColor Gray
+        Write-Host "  VERDICT: PASS" -ForegroundColor Green
+        $results.A4 = "PASS"
+    } else {
+        Write-Host "  VERDICT: FAIL (no Invoke-SepmApi verbose line found)" -ForegroundColor Red
+        $results.A4 = "FAIL"
+    }
+} catch {
+    Write-Host "  ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    $results.A4 = "FAIL"
+}
 
 Write-Summary -Results $results -Label "Get-SEPMVersion Smoke Tests"

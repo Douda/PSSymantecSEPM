@@ -53,7 +53,11 @@ function New-SEPMGroup {
             ValueFromPipelineByPropertyName = $true
         )]
         [String]
-        $Description
+        $Description,
+
+        [Parameter()]
+        [switch]
+        $PassThru
     )
 
     begin {
@@ -77,6 +81,9 @@ function New-SEPMGroup {
 
         $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session `
             -BoundParameters $PSBoundParameters -PathIds @($ParentGroupID)
-        return $resp
+
+        if ($PassThru) {
+            Write-Output $resp
+        }
     }
 }

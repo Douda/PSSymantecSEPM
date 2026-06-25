@@ -27,7 +27,7 @@ and their suite-specific `Tests.ps1`.
 |---|---|
 | `ConfigBackupRestore/` | Converted (#176) |
 | `Confirm-SEPMEventInfo/` | Converted (#174) |
-| `Export-SEPMFirewallPolicyToExcel/` | Converted (#176) |
+| `Export-SEPMFirewallPolicy/` | Converted (#176) |
 | `FileFingerprintList/` | Converted (#175) |
 | `Get-SEPMExceptionPolicy/` | Converted (#174) |
 | `Get-SEPMFiles/` | Converted (#175) |
@@ -42,7 +42,7 @@ and their suite-specific `Tests.ps1`.
 | `Get-SEPSimpleGets1/` | Converted (#153) |
 | `Get-SEPMLocations/` | Converted (#172) |
 | `Get-SEPSimpleGets2/` | Converted (#174) |
-| `Move-SEPClientGroup/` | Converted (#176) |
+| `Move-SEPMClientGroup/` | Converted (#176) |
 | `New-SEPMGroup/` | Converted (#154) |
 | `Seed-Assignments/` | Converted (#177) |
 | `Seed-ExceptionsPolicies/` | Converted (#177) |

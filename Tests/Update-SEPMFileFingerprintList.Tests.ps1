@@ -50,10 +50,17 @@ Describe 'Update-SEPMFileFingerprintList' {
 
         It 'returns the Invoke-SepmApi response' {
             $result = Update-SEPMFileFingerprintList -FingerprintListID 'FP-ID-456' `
-                -name 'Test' -domainId 'd1' -HashType 'MD5' -hashlist @('aaa', 'bbb')
+                -name 'Test' -domainId 'd1' -HashType 'MD5' -hashlist @('aaa', 'bbb') -PassThru
 
             $result.id   | Should -Be 'FP-ID-123'
             $result.name | Should -Be 'MyFingerprints'
+        }
+
+        It 'suppresses output when -PassThru is not specified' {
+            $result = Update-SEPMFileFingerprintList -FingerprintListID 'FP-ID-456' `
+                -name 'Test' -domainId 'd1' -HashType 'MD5' -hashlist @('aaa')
+
+            $result | Should -BeNullOrEmpty
         }
     }
 

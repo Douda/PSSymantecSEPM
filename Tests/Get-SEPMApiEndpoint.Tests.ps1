@@ -79,9 +79,9 @@ Describe 'Get-SEPMApiEndpoint' {
             }
         }
 
-        It 'Move-SEPClientGroup has PATCH method' {
+        It 'Move-SEPMClientGroup has PATCH method' {
             InModuleScope PSSymantecSEPM {
-                $entry = Get-SEPMApiEndpoint -OperationName 'Move-SEPClientGroup'
+                $entry = Get-SEPMApiEndpoint -OperationName 'Move-SEPMClientGroup'
                 $entry.Method | Should -Be 'PATCH'
                 $entry.Path   | Should -Be '/computers'
             }

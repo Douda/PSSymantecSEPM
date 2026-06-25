@@ -9,7 +9,7 @@ Describe 'Invoke-SepmApiPaginated' {
         $script:fakeSession = New-TestSession -ServerAddress 'sepm.example.com' -Port '8446' -Token 'abc123'
 
         $script:pagedEndpoint = @{
-            OperationName = 'Get-SEPComputers'
+            OperationName = 'Get-SEPMComputers'
             Version       = '1.0'
             Method        = 'GET'
             Path          = '/computers'
@@ -142,6 +142,81 @@ Describe 'Invoke-SepmApiPaginated' {
             }
             InModuleScope PSSymantecSEPM -Parameters @{ Endpoint = $nonPagedEndpoint; Session = $script:fakeSession } {
                 { Invoke-SepmApiPaginated -Endpoint $Endpoint -Session $Session } | Should -Throw '*not configured for pagination*'
+            }
+        }
+    }
+
+    Context 'Write-Progress' {
+        It 'emits Write-Progress during multi-page fetches with totalPages' {
+            InModuleScope PSSymantecSEPM -Parameters @{ Endpoint = $script:pagedEndpoint; Session = $script:fakeSession } {
+                $script:callCount = 0
+                $script:progressCalls = @()
+                Mock Write-Progress -ModuleName PSSymantecSEPM {
+                    $script:progressCalls += @{
+                        Activity        = $Activity
+                        Status          = $Status
+                        PercentComplete = $PercentComplete
+                        Completed       = $Completed.IsPresent
+                    }
+                }
+
+                Mock Invoke-SepmApi {
+                    $script:callCount++
+                    if ($script:callCount -eq 1) {
+                        return @{
+                            content     = @( @{ computerName = 'PC1' }, @{ computerName = 'PC2' } )
+                            lastPage    = $false
+                            firstPage   = $true
+                            totalPages  = 2
+                        }
+                    } else {
+                        return @{
+                            content     = @( @{ computerName = 'PC3' } )
+                            lastPage    = $true
+                            firstPage   = $false
+                            totalPages  = 2
+                        }
+                    }
+                }
+
+                Mock Resolve-SepmEndpoint { return 'https://sepm.example.com:8446/sepm/api/v1/computers' }
+
+                $null = Invoke-SepmApiPaginated -Endpoint $Endpoint -Session $Session
+
+                $script:progressCalls | Should -Not -BeNullOrEmpty
+                # Count non-completed progress calls with valid percent
+                $progressCount = @($script:progressCalls | Where-Object { $_.Activity -eq 'Get-SEPMComputers' -and $_.Completed -eq $false }).Count
+                $progressCount | Should -BeGreaterThan 0
+            }
+        }
+
+        It 'skips progress for single-page fetches' {
+            InModuleScope PSSymantecSEPM -Parameters @{ Endpoint = $script:pagedEndpoint; Session = $script:fakeSession } {
+                $script:progressCalls = @()
+                Mock Write-Progress -ModuleName PSSymantecSEPM {
+                    $script:progressCalls += @{ Activity = $Activity; PercentComplete = $PercentComplete; Completed = $Completed.IsPresent }
+                }
+
+                Mock Invoke-SepmApi {
+                    return @{
+                        content    = @( @{ computerName = 'PC1' } )
+                        lastPage   = $true
+                        firstPage  = $true
+                        totalPages = 1
+                    }
+                }
+
+                Mock Resolve-SepmEndpoint { return 'https://sepm.example.com:8446/sepm/api/v1/computers' }
+
+                $null = Invoke-SepmApiPaginated -Endpoint $Endpoint -Session $Session
+
+                # Should have only the -Completed call, no non-completed progress calls
+                $nonCompletedCalls = @($script:progressCalls | Where-Object { $_.Completed -eq $false })
+                $nonCompletedCalls.Count | Should -Be 0
+
+                # Should have a -Completed call to clear the progress bar
+                $completedCalls = @($script:progressCalls | Where-Object { $_.Completed -eq $true })
+                $completedCalls.Count | Should -Be 1
             }
         }
     }

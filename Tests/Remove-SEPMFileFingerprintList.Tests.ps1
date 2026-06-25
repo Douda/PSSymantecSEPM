@@ -72,6 +72,30 @@ Describe 'Remove-SEPMFileFingerprintList' {
         }
     }
 
+    Context 'PassThru behavior' {
+        BeforeAll {
+            $script:fakeSession = New-TestSession
+
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                return @{ id = 'DELETED' }
+            }
+        }
+
+        It 'suppresses output when -PassThru is not specified' {
+            $result = Remove-SEPMFileFingerprintList -FingerprintListID 'FP001'
+
+            $result | Should -BeNullOrEmpty
+        }
+
+        It 'emits response when -PassThru is specified' {
+            $result = Remove-SEPMFileFingerprintList -FingerprintListID 'FP001' -PassThru
+
+            $result | Should -Not -BeNullOrEmpty
+            $result.id | Should -Be 'DELETED'
+        }
+    }
+
     Context 'Default parameter set' {
         BeforeAll {
             $fakeSession = New-TestSession
