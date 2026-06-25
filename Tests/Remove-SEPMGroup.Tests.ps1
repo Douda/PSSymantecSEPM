@@ -17,7 +17,6 @@ Describe 'Remove-SEPMGroup' {
                 return @{ deleted = $true }
             }
 
-            # Mock Get-SEPMGroups to return the target group
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
                 return @(
                     [PSCustomObject]@{ id = 'target-id'; name = 'TestGroup'; fullPathName = 'My Company\TestGroup' },

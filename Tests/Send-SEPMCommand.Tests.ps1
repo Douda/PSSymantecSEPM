@@ -6,7 +6,7 @@ Describe 'Send-SEPMCommand' {
         Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
         $script:TestState = Initialize-TestEnvironment
 
-        $script:TestSession = Set-TestMocks -Transport {
+        $script:fakeSession = Set-TestMocks -Transport {
             return @{ command_id = 'CMD-001' }
         }
         Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {

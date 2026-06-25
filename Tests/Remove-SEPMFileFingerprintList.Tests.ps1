@@ -23,7 +23,7 @@ Describe 'Remove-SEPMFileFingerprintList' {
 
             Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
                 $Method -eq 'DELETE' -and
-                $Uri -eq 'https://FakeServer01:1234/sepm/api/v1/policy-objects/fingerprints/FP_TO_DELETE'
+                $Uri -eq "$($script:fakeSession.BaseURLv1)/policy-objects/fingerprints/FP_TO_DELETE"
             }
         }
     }
@@ -52,7 +52,7 @@ Describe 'Remove-SEPMFileFingerprintList' {
 
             Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
                 $Method -eq 'DELETE' -and
-                $Uri -eq 'https://FakeServer01:1234/sepm/api/v1/policy-objects/fingerprints/FP_BY_NAME'
+                $Uri -eq "$($script:fakeSession.BaseURLv1)/policy-objects/fingerprints/FP_BY_NAME"
             }
             Should -Invoke Get-SEPMFileFingerprintList -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
         }

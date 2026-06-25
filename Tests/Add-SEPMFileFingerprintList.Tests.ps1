@@ -25,7 +25,7 @@ Describe 'Add-SEPMFileFingerprintList' {
 
             Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
                 $Method -eq 'POST' -and
-                $Uri -eq 'https://FakeServer01:1234/sepm/api/v1/policy-objects/fingerprints' -and
+                $Uri -eq "$($script:fakeSession.BaseURLv1)/policy-objects/fingerprints" -and
                 $ContentType -eq 'application/json' -and
                 $Body -match '"name":\s*"NewList"' -and
                 $Body -match '"domainId":\s*"DOM01"' -and
