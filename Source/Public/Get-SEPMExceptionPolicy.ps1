@@ -182,21 +182,22 @@ function Get-SEPMExceptionPolicy {
                     $directories += $d
                 }
 
-                # TODO : 01/23/2024 - Mac directory exception is not a supported exception type in SEPM
-                # Add the Mac platform to the directories
-                # foreach ($d in $resp.configuration.mac.directories) {
-                #     $d["Platform"] = "Mac"
-                #     $directories += $d
-                # }
-
                 # Add the Linux platform to the directories
-                foreach ($d in $resp.configuration.linux.directories) {
-                    $d["Platform"] = "Linux"
-                    $directories += $d
+                if ($null -ne $resp.configuration.linux.directories) {
+                    foreach ($d in $resp.configuration.linux.directories) {
+                        $d["Platform"] = "Linux"
+                        $directories += $d
+                    }
                 }
 
-                $result = $directories | ConvertTo-SEPMFlatObject
-                Write-Output $result -NoEnumerate
+                if ($directories.Count -eq 0) {
+                    # Empty result on PS 5.1: ConvertTo-SEPMFlatObject may throw on empty
+                    # hashtable-based arrays (ConvertTo-Hashtable data shape).
+                    Write-Output @() -NoEnumerate
+                } else {
+                    $result = $directories | ConvertTo-SEPMFlatObject
+                    Write-Output $result -NoEnumerate
+                }
             }
             "webdomains" {
                 $result = $resp.configuration.webdomains | ConvertTo-SEPMFlatObject

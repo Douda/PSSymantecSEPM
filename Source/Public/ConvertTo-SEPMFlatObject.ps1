@@ -99,6 +99,8 @@ Function ConvertTo-SEPMFlatObject {
         }
 
         If ($PSBoundParameters.ContainsKey("OutputObject")) {
+            # Guard: all inputs were $null (filtered by Process), nothing to flatten
+            if ($InputObjects.Count -eq 0) { return }
             $Object = $InputObjects[0]
             $Iterate = [ordered] @{}
             if ($null -eq $Object) {
