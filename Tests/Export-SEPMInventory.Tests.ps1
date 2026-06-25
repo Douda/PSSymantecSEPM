@@ -354,20 +354,20 @@ Describe 'Export-SEPMInventory' {
             }
         }
 
-        It 'passes pre-fetched computer list to Get-SEPClientInfectedStatus as -ComputerList' {
-            Mock Get-SEPComputers -ModuleName PSSymantecSEPM {
+        It 'passes pre-fetched computer list to Get-SEPMClientInfectedStatus as -ComputerList' {
+            Mock Get-SEPMComputers -ModuleName PSSymantecSEPM {
                 Write-Output @(
                     @{ computerName = 'PC-001'; infected = 0 }
                     @{ computerName = 'PC-002'; infected = 1 }
                 ) -NoEnumerate
             }
-            Mock Get-SEPClientInfectedStatus -ModuleName PSSymantecSEPM {
+            Mock Get-SEPMClientInfectedStatus -ModuleName PSSymantecSEPM {
                 Write-Output @() -NoEnumerate
             }
 
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
 
-            Should -Invoke Get-SEPClientInfectedStatus -ModuleName PSSymantecSEPM -Scope It -Exactly 1 -ParameterFilter {
+            Should -Invoke Get-SEPMClientInfectedStatus -ModuleName PSSymantecSEPM -Scope It -Exactly 1 -ParameterFilter {
                 $ComputerList.Count -eq 2 -and
                 $ComputerList[0].computerName -eq 'PC-001'
             }

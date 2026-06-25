@@ -12,7 +12,7 @@ function Get-SEPMClientInfectedStatus {
         List of SEP Clients with Infected status
     .PARAMETER ComputerList
         An array of computer objects to filter by infected status.
-        When provided, the cmdlet filters this list instead of calling Get-SEPComputers.
+        When provided, the cmdlet filters this list instead of calling Get-SEPMComputers.
     .PARAMETER Clean
         If specified, returns SEP Clients with Clean status
     .EXAMPLE
@@ -24,7 +24,7 @@ function Get-SEPMClientInfectedStatus {
 
         Gets computer details for all computers in the domain that are not infected
     .EXAMPLE
-        Get-SEPComputers | Get-SEPClientInfectedStatus -ComputerList $_ -Clean
+        Get-SEPMComputers | Get-SEPMClientInfectedStatus -ComputerList $_ -Clean
 
         Filters already fetched computers for clean status
 #>
