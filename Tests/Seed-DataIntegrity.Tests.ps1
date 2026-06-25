@@ -1,6 +1,5 @@
-# Static data integrity checks for seed data files under Source/Seed/
-# No module bootstrap needed — these are pure data validation tests.
-# New seed categories under Source/Seed/*.psd1 are covered automatically by file discovery.
+[CmdletBinding()]
+param()
 
 BeforeAll {
     $script:SeedRoot = (Resolve-Path "$PSScriptRoot/../Source/Seed").Path
