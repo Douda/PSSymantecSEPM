@@ -32,7 +32,7 @@ Describe 'Get-SEPMComputers' {
 
     Context 'ComputerName parameter' {
         It 'Should contain MyComputer only' {
-            $session = Set-TestMocks -Transport {
+            $null = Set-TestMocks -Transport {
                 return @{
                     content   = @(New-DummyComputer -ComputerName "MyComputer") + (1..4 | ForEach-Object { New-DummyComputer })
                     lastPage  = $true
@@ -47,7 +47,7 @@ Describe 'Get-SEPMComputers' {
         }
 
         It 'With Computername from the pipeline' {
-            $session = Set-TestMocks -Transport {
+            $null = Set-TestMocks -Transport {
                 return @{
                     content   = @(New-DummyComputer -ComputerName "MyComputer") + (1..4 | ForEach-Object { New-DummyComputer })
                     lastPage  = $true
@@ -64,7 +64,7 @@ Describe 'Get-SEPMComputers' {
 
     Context 'GroupName parameter' {
         It 'Should accept GroupName from the pipeline (via ForEach-Object)' {
-            $session = Set-TestMocks -Transport {
+            $null = Set-TestMocks -Transport {
                 return @{
                     content   = 1..5 | ForEach-Object { New-DummyComputer -GroupName 'My Company\Workstations' }
                     lastPage  = $true
@@ -79,7 +79,7 @@ Describe 'Get-SEPMComputers' {
         }
 
         It 'Should accept GroupName from the pipeline with -IncludeSubGroups' {
-            $session = Set-TestMocks -Transport {
+            $null = Set-TestMocks -Transport {
                 $a = 1..5 | ForEach-Object { New-DummyComputer -GroupName 'My Company\Workstations' }
                 $b = 1..3 | ForEach-Object { New-DummyComputer -GroupName 'My Company\Workstations\Sub' }
                 return @{ content = $a + $b; lastPage = $true; totalPages = 1 }
@@ -91,7 +91,7 @@ Describe 'Get-SEPMComputers' {
         }
 
         It 'Should contain only computers from the group "My Company\\MyGroup"' {
-            $session = Set-TestMocks -Transport {
+            $null = Set-TestMocks -Transport {
                 $a = 1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup" }
                 $b = 1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup\\Subgroup" }
                 $c = 1..8 | ForEach-Object { New-DummyComputer }
@@ -104,7 +104,7 @@ Describe 'Get-SEPMComputers' {
         }
 
         It 'Should contain subgroups' {
-            $session = Set-TestMocks -Transport {
+            $null = Set-TestMocks -Transport {
                 $a = 1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup" }
                 $b = 1..5 | ForEach-Object { New-DummyComputer -GroupName "My Company\\MyGroup\\Subgroup" }
                 $c = 1..8 | ForEach-Object { New-DummyComputer }

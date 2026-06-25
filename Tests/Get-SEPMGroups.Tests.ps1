@@ -31,7 +31,7 @@ Describe 'Get-SEPMGroups' {
 
     Context 'Response handling' {
         It 'returns groups from the API' {
-            $session = Set-TestMocks -Transport {
+            $null = Set-TestMocks -Transport {
                 return @{
                     content = @(
                         @{ id = 'grp1'; name = 'My Company'; fullPathName = 'My Company' }
@@ -50,7 +50,7 @@ Describe 'Get-SEPMGroups' {
         }
 
         It 'returns empty array when no groups exist' {
-            $session = Set-TestMocks -Transport {
+            $null = Set-TestMocks -Transport {
                 return @{ content = @(); lastPage = $true; totalPages = 1 }
             }
 
@@ -59,7 +59,7 @@ Describe 'Get-SEPMGroups' {
         }
 
         It 'preserves collection type for single-element results' {
-            $session = Set-TestMocks -Transport {
+            $null = Set-TestMocks -Transport {
                 return @{
                     content = @(
                         @{ id = 'grp1'; name = 'My Company'; fullPathName = 'My Company' }

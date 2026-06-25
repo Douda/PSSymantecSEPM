@@ -12,12 +12,6 @@ Describe 'Get-SEPMCommandStatus' {
     }
 
     Context 'happy path' {
-        BeforeAll {
-            $null = Set-TestMocks -Transport {
-                return @{ content = @(); lastPage = $true; totalPages = 1 }
-            }
-        }
-
         It 'returns command status with SEPM.CommandStatus type' {
             $null = Set-TestMocks -Transport {
                 return @{
@@ -51,6 +45,9 @@ Describe 'Get-SEPMCommandStatus' {
         }
 
         It 'calls Invoke-SepmEndpoint with the correct parameters' {
+            $null = Set-TestMocks -Transport {
+                return @{ content = @(); lastPage = $true; totalPages = 1 }
+            }
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
                 return @()
             }
