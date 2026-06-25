@@ -159,6 +159,40 @@ Describe 'Invoke-SepmApi' {
         }
     }
 
+    Context 'Verbose output' {
+        It 'writes verbose message with method and URI via Session parameter set' {
+            $session = New-TestSession -Token 'VerboseTestToken'
+
+            InModuleScope PSSymantecSEPM -Parameters @{ session = $session } {
+                $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
+
+                Mock Invoke-RestMethod { return '{"ok":true}' }
+
+                $output = Invoke-SepmApi -Method GET -Uri 'https://SEPM01:8446/api/v1/test' -Session $session -Verbose *>&1
+
+                $verboseRecords = @($output | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] })
+                $verboseRecords.Count | Should -BeGreaterThan 0
+                $verboseRecords[0].Message | Should -Be 'Invoke-SepmApi: GET https://SEPM01:8446/api/v1/test'
+            }
+        }
+
+        It 'writes verbose message with method and URI via Manual parameter set' {
+            InModuleScope PSSymantecSEPM {
+                $PSVersionTable = @{ PSVersion = [version]'7.0.0' }
+
+                Mock Invoke-RestMethod { return '{"manual":"ok"}' }
+
+                $output = Invoke-SepmApi -Method POST -Uri 'https://example.com/api/v1/test' `
+                    -Headers @{ Authorization = 'Bearer ManualVerbose' } `
+                    -SkipCert $false -Body '{}' -Verbose *>&1
+
+                $verboseRecords = @($output | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] })
+                $verboseRecords.Count | Should -BeGreaterThan 0
+                $verboseRecords[0].Message | Should -Be 'Invoke-SepmApi: POST https://example.com/api/v1/test'
+            }
+        }
+    }
+
     Context 'Return type consistency' {
         It 'returns [hashtable] for JSON object response on PS7' {
             $session = New-TestSession -Token 'ReturnTypeToken'

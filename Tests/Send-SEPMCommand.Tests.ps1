@@ -6,13 +6,11 @@ Describe 'Send-SEPMCommand' {
         Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
         $script:TestState = Initialize-TestEnvironment
 
-        $script:TestSession = New-TestSession
-        Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:TestSession }
+        $script:fakeSession = Set-TestMocks -Transport {
+            return @{ command_id = 'CMD-001' }
+        }
         Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
             return @{ computer_ids = @('ABC123'); group_ids = @() }
-        }
-        Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-            return @{ command_id = 'CMD-001' }
         }
     }
 
@@ -106,6 +104,25 @@ Describe 'Send-SEPMCommand' {
 
         It 'includes group_ids in query params' {
             Send-SEPMCommand -Type ActiveScan -GroupName 'My Company\Workstations'
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and $Uri -match '/command-queue/activescan' -and $Uri -match 'group_ids=GROUP-456'
+            }
+        }
+
+        It 'accepts GroupName from the pipeline (via ForEach-Object)' {
+            'My Company\Workstations' | ForEach-Object {
+                Send-SEPMCommand -Type ActiveScan -GroupName $_
+            }
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and $Uri -match '/command-queue/activescan' -and $Uri -match 'group_ids=GROUP-456'
+            }
+        }
+
+        It 'accepts GroupName via ValueFromPipelineByPropertyName' {
+            $inputObj = [PSCustomObject]@{ GroupName = 'My Company\Workstations' }
+            $inputObj | Send-SEPMCommand -Type ActiveScan
 
             Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
                 $Method -eq 'POST' -and $Uri -match '/command-queue/activescan' -and $Uri -match 'group_ids=GROUP-456'

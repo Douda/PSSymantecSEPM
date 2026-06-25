@@ -20,7 +20,7 @@ function Initialize-SEPMSession {
 
     # Validate that the module is configured
     if ([String]::IsNullOrEmpty($script:configuration.ServerAddress)) {
-        $message = 'SEPM Server address is not configured. Use Set-SepmConfiguration -ServerAddress <address> to configure.'
+        $message = 'SEPM Server address is not configured. Use Set-SEPMConfiguration -ServerAddress <address> to configure.'
         Write-Error -Message $message -ErrorAction Stop
     }
 

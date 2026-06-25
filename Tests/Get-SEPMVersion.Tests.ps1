@@ -13,12 +13,7 @@ Describe 'Get-SEPMVersion' {
 
     Context 'Session-based flow' {
         It 'returns version object with API_SEQUENCE, API_VERSION, and version fields' {
-            $fakeSession = New-TestSession -Token 'FakeSessionToken'
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter {
-                $Method -eq 'GET' -and $Uri -match '/version$'
-            } {
+            $null = Set-TestMocks -Token 'FakeSessionToken' -Transport {
                 return @{
                     API_SEQUENCE = '230504014'
                     API_VERSION  = '14.3.7000'
@@ -33,10 +28,7 @@ Describe 'Get-SEPMVersion' {
         }
 
         It 'passes the session object to Invoke-SepmApi' {
-            $fakeSession = New-TestSession -Token 'FakeSessionToken'
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { return @{ ok = $true } }
+            $null = Set-TestMocks -Token 'FakeSessionToken' -Transport { return @{ ok = $true } }
 
             Get-SEPMVersion | Out-Null
             Should -Invoke Initialize-SEPMSession -ModuleName PSSymantecSEPM -Times 1 -Exactly
@@ -47,10 +39,7 @@ Describe 'Get-SEPMVersion' {
         }
 
         It 'passes Session with SkipCert to Invoke-SepmApi' {
-            $fakeSession = New-TestSession -SkipCert -Token 'SkipSessionToken'
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { return @{ ok = $true } }
+            $null = Set-TestMocks -Token 'SkipSessionToken' -SkipCert -Transport { return @{ ok = $true } }
 
             Get-SEPMVersion | Out-Null
             Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {

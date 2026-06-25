@@ -25,8 +25,11 @@ function Get-SEPMReplicationStatus {
     process {
         $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session
 
+        # Wrap to ensure array on PS 5.1 (ConvertTo-Hashtable may collapse single-element arrays)
+        $statusList = @($resp.replicationStatus)
+
         # Add a PSTypeName to the object
-        $resp.replicationStatus | ForEach-Object {
+        $statusList | ForEach-Object {
             $_.PSObject.TypeNames.Insert(0, 'SEPM.ReplicationStatus')
             # Add sub PSTypeName to the object
             foreach ($partner in $_.replicationPartnerStatusList) {
@@ -36,6 +39,6 @@ function Get-SEPMReplicationStatus {
             }
         }
 
-        Write-Output $resp.replicationStatus -NoEnumerate
+        Write-Output $statusList -NoEnumerate
     }
 }

@@ -13,20 +13,17 @@ Describe 'Get-SEPMLocation' {
 
     Context 'Array response (multiple locations)' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
-                return @(
-                    [PSCustomObject]@{ id = 'GRP001'; name = 'My Company'; fullPathName = 'My Company' }
-                    [PSCustomObject]@{ id = 'GRP002'; name = 'Workstations'; fullPathName = 'My Company\Workstations' }
-                )
-            }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @(
                     'Default:api/v1/locations/60B5C584AC17D44C6CC60471B7292FC4',
                     'Office:api/v1/locations/0CCB0536AC1485D1233F341B9495C3C5',
                     'VPN:api/v1/locations/F5E857C9AC1485D13095A0D6E1CD5B25'
+                )
+            }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                return @(
+                    [PSCustomObject]@{ id = 'GRP001'; name = 'My Company'; fullPathName = 'My Company' }
+                    [PSCustomObject]@{ id = 'GRP002'; name = 'Workstations'; fullPathName = 'My Company\Workstations' }
                 )
             }
         }
@@ -76,16 +73,13 @@ Describe 'Get-SEPMLocation' {
 
     Context 'Single string response' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            $null = Set-TestMocks -SkipCert -Transport {
+                return 'Home Office:api/v1/locations/HOMEOFF01'
+            }
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
                 return @(
                     [PSCustomObject]@{ id = 'GRP003'; name = 'Single Group'; fullPathName = 'My Company\Single' }
                 )
-            }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                return 'Home Office:api/v1/locations/HOMEOFF01'
             }
         }
 
@@ -101,19 +95,16 @@ Describe 'Get-SEPMLocation' {
 
     Context 'Hashtable (legacy) response' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
-                return @(
-                    [PSCustomObject]@{ id = 'GRP004'; name = 'Legacy'; fullPathName = 'My Company\Legacy' }
-                )
-            }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{
                     0 = 'Default:api/v1/locations/DEFAULT01'
                     1 = 'SiteA:api/v1/locations/SITEA01'
                 }
+            }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                return @(
+                    [PSCustomObject]@{ id = 'GRP004'; name = 'Legacy'; fullPathName = 'My Company\Legacy' }
+                )
             }
         }
 
@@ -129,13 +120,10 @@ Describe 'Get-SEPMLocation' {
 
     Context 'GroupList parameter skips Get-SEPMGroups' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { throw 'Get-SEPMGroups should not be called' }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @('Default:api/v1/locations/DEFAULT01')
             }
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { throw 'Get-SEPMGroups should not be called' }
         }
 
         It 'does not call Get-SEPMGroups when GroupList is provided' {
@@ -156,17 +144,14 @@ Describe 'Get-SEPMLocation' {
 
     Context 'Pipeline support' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            $null = Set-TestMocks -SkipCert -Transport {
+                return @('Default:api/v1/locations/DEFAULT01')
+            }
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
                 return @(
                     [PSCustomObject]@{ id = 'GRP001'; name = 'Group A'; fullPathName = 'My Company\A' }
                     [PSCustomObject]@{ id = 'GRP002'; name = 'Group B'; fullPathName = 'My Company\B' }
                 )
-            }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                return @('Default:api/v1/locations/DEFAULT01')
             }
         }
 

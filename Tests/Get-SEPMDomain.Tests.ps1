@@ -13,12 +13,7 @@ Describe 'Get-SEPMDomain' {
 
     Context 'Session-based flow' {
         It 'returns domain list from the API' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter {
-                $Method -eq 'GET' -and $Uri -match '/domains$'
-            } {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @(
                     @{ id = 'abc123'; name = 'Default'; description = ''; createdTime = 1360247301316; enable = $true }
                     @{ id = 'def456'; name = 'Secondary'; description = 'test'; createdTime = 1360247301317; enable = $false }
@@ -33,10 +28,7 @@ Describe 'Get-SEPMDomain' {
         }
 
         It 'passes session to Invoke-SepmApi' {
-            $fakeSession = New-TestSession -Token 'DomainToken'
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { return @() }
+            $null = Set-TestMocks -Token 'DomainToken' -Transport { return @() }
 
             Get-SEPMDomain | Out-Null
             Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {

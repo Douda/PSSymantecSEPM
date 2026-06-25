@@ -19,7 +19,7 @@ function Get-SEPMPoliciesSummary {
         Get policy statistics for firewall policies and its assigned groups
     .EXAMPLE
         PS C:\PSSymantecSEPM> $csvPoliciesSummary =  Get-SEPMPoliciesSummary | Select-Object -ExcludeProperty sources
-        PS C:\PSSymantecSEPM> $csvPoliciesSummary | ConvertTo-FlatObject | Export-Csv C:\temp\test.csv
+        PS C:\PSSymantecSEPM> $csvPoliciesSummary | ConvertTo-SEPMFlatObject | Export-Csv C:\temp\test.csv
         PS C:\PSSymantecSEPM> $csvPoliciesSummary[0]
 
         enabled                                 : True
@@ -109,8 +109,8 @@ function Get-SEPMPoliciesSummary {
         
 
         # Add a PSTypeName to the object
-        $resp.content | ForEach-Object {
-            $_.PSTypeNames.Insert(0, 'SEPM.PolicySummary')
+        foreach ($policy in $resp.content) {
+            $null = $policy.PSTypeNames.Insert(0, 'SEPM.PolicySummary')
         }
             
         # return the response

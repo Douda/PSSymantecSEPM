@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Shared smoke tests for FileFingerprintList cmdlets.
 
@@ -14,7 +14,9 @@ $domain = Get-SEPMDomain | Where-Object { $_.name -eq 'Default' }
 $domainId = $domain.id
 Write-Host "Domain: Default ($domainId)" -ForegroundColor Gray
 
-$testListName = "SmokeFingerprintTest"
+$timestamp = Get-Date -Format 'yyyyMMddHHmmss'
+$testListName = "SmokeFingerprintTest_$timestamp"
+$testListName2 = "SmokeFingerprintDelID_$timestamp"
 $sha256Hashes = @(
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
     'a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a'
@@ -34,13 +36,10 @@ function Assert-FingerprintListDeleted {
 
 $results = @{}
 
-# Clean up any leftover from previous runs
-try { Remove-SEPMFileFingerprintList -FingerprintListName $testListName | Out-Null } catch { }
-
 # A1: Create fingerprint list
 Write-Host "--- A1 : Create fingerprint list ---" -ForegroundColor Cyan
 try {
-    $created = Add-SEPMFileFingerprintList -name $testListName -domainId $domainId -HashType 'SHA256' -description 'Smoke test' -hashlist $sha256Hashes
+    $created = Add-SEPMFileFingerprintList -name $testListName -PassThru -domainId $domainId -HashType 'SHA256' -description 'Smoke test' -hashlist $sha256Hashes
     if ($created -and $created.id) {
         Write-Host "  VERDICT: PASS (created: $($created.id))" -ForegroundColor Green
         $listId = $created.id
@@ -59,10 +58,15 @@ $results.A2 = T "A2" "Get by name (field check)" `
     { Get-SEPMFileFingerprintList -FingerprintListName $testListName } `
     { param($r) $r -ne $null -and $r.name -eq $testListName -and $r.hashType -eq 'SHA256' -and $r.source -eq 'WEBSERVICE' }
 
-# A3: Get by ID - verify same result
-$results.A3 = T "A3" "Get by ID" `
-    { Get-SEPMFileFingerprintList -FingerprintListID $listId } `
-    { param($r) $r -ne $null -and $r.id -eq $listId -and $r.name -eq $testListName }
+# A3: Get by ID - verify same result (skip if A1 failed)
+if ($listId) {
+    $results.A3 = T "A3" "Get by ID" `
+        { Get-SEPMFileFingerprintList -FingerprintListID $listId } `
+        { param($r) $r -ne $null -and $r.id -eq $listId -and $r.name -eq $testListName }
+} else {
+    Write-Host "  A3 : SKIP (no listId from A1)" -ForegroundColor Yellow
+    $results.A3 = "SKIP"
+}
 
 # A4: Delete by name
 Write-Host "--- A4 : Delete by name ---" -ForegroundColor Cyan
@@ -83,15 +87,21 @@ try {
 # A5: Delete by ID (create first, then delete by ID)
 Write-Host "--- A5 : Delete by ID ---" -ForegroundColor Cyan
 try {
-    $created2 = Add-SEPMFileFingerprintList -name 'SmokeFingerprint2' -domainId $domainId -HashType 'SHA256' -description 'Smoke test 2' -hashlist @($sha256Hashes[0])
-    $id2 = $created2.id
-    Remove-SEPMFileFingerprintList -FingerprintListID $id2 | Out-Null
-    if (Assert-FingerprintListDeleted 'SmokeFingerprint2') {
-        Write-Host "  VERDICT: PASS (deleted by ID)" -ForegroundColor Green
-        $results.A5 = "PASS"
-    } else {
-        Write-Host "  VERDICT: FAIL" -ForegroundColor Red
+    $created2 = Add-SEPMFileFingerprintList -name $testListName2 -PassThru -domainId $domainId -HashType 'SHA256' -description 'Smoke test 2' -hashlist @($sha256Hashes[0])
+    if (-not $created2.id) {
+        Write-Host "  VERDICT: FAIL (create failed)" -ForegroundColor Red
         $results.A5 = "FAIL"
+    } else {
+        $id2 = $created2.id
+        Write-Host "  Created: $testListName2 ($id2)" -ForegroundColor Gray
+        Remove-SEPMFileFingerprintList -FingerprintListID $id2 | Out-Null
+        if (Assert-FingerprintListDeleted $testListName2) {
+            Write-Host "  VERDICT: PASS (deleted by ID)" -ForegroundColor Green
+            $results.A5 = "PASS"
+        } else {
+            Write-Host "  VERDICT: FAIL (list still exists after delete-by-ID)" -ForegroundColor Red
+            $results.A5 = "FAIL"
+        }
     }
 } catch {
     Write-Host "  ERROR: $($_.Exception.Message)" -ForegroundColor Red

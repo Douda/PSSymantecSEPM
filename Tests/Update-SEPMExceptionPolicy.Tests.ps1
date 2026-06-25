@@ -13,9 +13,7 @@ Describe 'Update-SEPMExceptionPolicy' {
 
     Context 'WindowsFile' {
         BeforeEach {
-            $script:fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            $null = Set-TestMocks -SkipCert -SkipTransport
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
             }
@@ -89,8 +87,7 @@ Describe 'Update-SEPMExceptionPolicy' {
 
     Context 'WindowsFolder' {
         BeforeEach {
-            $script:fakeSession = New-TestSession -SkipCert
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            $null = Set-TestMocks -SkipCert -SkipTransport
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
             }
@@ -180,8 +177,7 @@ Describe 'Update-SEPMExceptionPolicy' {
 
     Context 'WindowsExtension' {
         BeforeEach {
-            $script:fakeSession = New-TestSession -SkipCert
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            $null = Set-TestMocks -SkipCert -SkipTransport
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
             }
@@ -341,8 +337,7 @@ Describe 'Update-SEPMExceptionPolicy' {
 
     Context 'Tamper' {
         BeforeEach {
-            $script:fakeSession = New-TestSession -SkipCert
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            $null = Set-TestMocks -SkipCert -SkipTransport
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
             }
@@ -402,8 +397,7 @@ Describe 'Update-SEPMExceptionPolicy' {
 
     Context 'MacFile' {
         BeforeEach {
-            $script:fakeSession = New-TestSession -SkipCert
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            $null = Set-TestMocks -SkipCert -SkipTransport
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
             }
@@ -463,8 +457,7 @@ Describe 'Update-SEPMExceptionPolicy' {
 
     Context 'Default' {
         BeforeEach {
-            $script:fakeSession = New-TestSession -SkipCert
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            $null = Set-TestMocks -SkipCert -SkipTransport
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
             }

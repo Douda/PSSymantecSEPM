@@ -9,6 +9,7 @@
         'Initialize-TestEnvironment'
         'Clear-TestEnvironment'
         'New-TestSession'
+        'Set-TestMocks'
         'New-DummyComputer'
         'New-DummyPolicySummary'
         'New-DummyFirewallPolicy'

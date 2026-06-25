@@ -56,6 +56,8 @@ function Send-SEPMCommand {
 
         [Parameter(
             Mandatory = $true,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true,
             ParameterSetName = 'GroupName'
         )]
         [string]$GroupName,

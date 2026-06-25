@@ -27,7 +27,7 @@ function Initialize-SmokeBootstrap {
 
     .DESCRIPTION
         Branches on $PSVersionTable.PSVersion.Major internally:
-          PS 7+ path: Set PSModulePath, import module from Output/, Set-SepmConfiguration,
+          PS 7+ path: Set PSModulePath, import module from Output/, Set-SEPMConfiguration,
                        clean stale credential/token files, authenticate.
           PS 5.1 path: ServicePointManager cert bypass + TLS 1.2, write config.json to
                        $env:APPDATA, import module from RepoRoot, authenticate.
@@ -53,7 +53,7 @@ function Initialize-SmokeBootstrap {
         $SmokeModule = Get-Module PSSymantecSEPM
         & $SmokeModule { $script:SkipCert = $true }
 
-        Set-SepmConfiguration -ServerAddress 'localhost' -Port 8446 -ErrorAction SilentlyContinue
+        Set-SEPMConfiguration -ServerAddress 'localhost' -Port 8446 -ErrorAction SilentlyContinue
 
         Remove-Item -Path "$HOME/.config/PSSymantecSEPM/creds.xml" -Force -ErrorAction SilentlyContinue
         Remove-Item -Path "$HOME/.local/share/PSSymantecSEPM/accessToken.xml" -Force -ErrorAction SilentlyContinue

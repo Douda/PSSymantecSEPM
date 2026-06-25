@@ -15,7 +15,7 @@ $descGroupName = "SmokeTest_Desc_$(Get-Date -Format 'yyyyMMddHHmmss')"
 
 # ── A1: Create group ──
 $results.A1 = T "A1" "Create group" `
-    { New-SEPMGroup -GroupName $testGroupName -ParentGroup 'My Company' -Description 'Smoke test group' } `
+    { New-SEPMGroup -GroupName $testGroupName -ParentGroup 'My Company' -Description 'Smoke test group' -PassThru } `
     { param($r) $r -ne $null }
 
 # ── A2: Verify group exists via Get-SEPMGroups ──
@@ -25,7 +25,7 @@ $results.A2 = T "A2" "Verify exists" `
 
 # ── A3: Create with EnabledInheritance ──
 $results.A3 = T "A3" "Create with inheritance" `
-    { New-SEPMGroup -GroupName $inheritGroupName -ParentGroup 'My Company' -EnabledInheritance } `
+    { New-SEPMGroup -GroupName $inheritGroupName -ParentGroup 'My Company' -EnabledInheritance -PassThru } `
     { param($r) $r -ne $null }
 
 # ── A4: Invalid parent group writes error ──
@@ -39,7 +39,7 @@ $results.A4 = T "A4" "Error on bad parent" `
 
 # ── A5: Create with description ──
 $results.A5 = T "A5" "Create with description" `
-    { New-SEPMGroup -GroupName $descGroupName -ParentGroup 'My Company' -Description 'Custom description' } `
+    { New-SEPMGroup -GroupName $descGroupName -ParentGroup 'My Company' -Description 'Custom description' -PassThru } `
     { param($r) $r -ne $null }
 
 # ── Cleanup ──

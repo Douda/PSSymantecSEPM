@@ -13,10 +13,7 @@ Describe 'Get-SEPMHostGroupSummary' {
 
     Context 'Single page' {
         It 'returns host group summaries from a single API page' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{
                     content   = @(
                         @{ id = 'hg1'; name = 'Host Group A'; domainid = 'dom1'; lastmodifiedtime = 1693832218775 }
@@ -37,11 +34,8 @@ Describe 'Get-SEPMHostGroupSummary' {
 
     Context 'Pagination' {
         It 'paginates through multiple pages' {
-            $fakeSession = New-TestSession -SkipCert
-
             $state = @{ callCount = 0 }
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 $state.callCount++
                 if ($state.callCount -ge 2) {
                     return @{
@@ -67,10 +61,7 @@ Describe 'Get-SEPMHostGroupSummary' {
 
     Context 'DomainId parameter' {
         It 'passes domainId as a query parameter' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{
                     content   = @(
                         @{ id = 'hg1'; name = 'Host Group A'; domainid = 'abc123'; lastmodifiedtime = 1693832218775 }

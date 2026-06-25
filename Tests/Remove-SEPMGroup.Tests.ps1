@@ -11,49 +11,54 @@ Describe 'Remove-SEPMGroup' {
         Clear-TestEnvironment -State $script:TestState
     }
 
-    Context 'Deletion' {
+    Context 'basic ops' {
         BeforeAll {
-            $fakeSession = New-TestSession -SkipCert
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            $script:fakeSession = Set-TestMocks -SkipCert -Transport {
+                return @{ deleted = $true }
+            }
 
-            # Mock Get-SEPMGroups to return the target group
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
                 return @(
                     [PSCustomObject]@{ id = 'target-id'; name = 'TestGroup'; fullPathName = 'My Company\TestGroup' },
                     [PSCustomObject]@{ id = 'mc-id'; name = 'My Company'; fullPathName = 'My Company' }
                 )
             }
-
-            $script:apiCalls = @()
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                $script:apiCalls += [PSCustomObject]@{
-                    Method = $Method
-                    Uri    = $Uri
-                }
-            }
         }
 
         It 'calls DELETE on the group ID' {
             Remove-SEPMGroup -GroupName 'TestGroup' -ParentGroup 'My Company'
 
-            $script:apiCalls.Count | Should -Be 1
-            $script:apiCalls[0].Method | Should -Be 'DELETE'
-            $script:apiCalls[0].Uri    | Should -Be "$($fakeSession.BaseURLv1)/groups/target-id"
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'DELETE' -and
+                $Uri -eq "$($script:fakeSession.BaseURLv1)/groups/target-id"
+            }
+        }
+
+        It 'suppresses output when -PassThru is not specified' {
+            $result = Remove-SEPMGroup -GroupName 'TestGroup' -ParentGroup 'My Company'
+
+            $result | Should -BeNullOrEmpty
+        }
+
+        It 'emits response when -PassThru is specified' {
+            $result = Remove-SEPMGroup -GroupName 'TestGroup' -ParentGroup 'My Company' -PassThru
+
+            $result | Should -Not -BeNullOrEmpty
+            $result.deleted | Should -BeTrue
         }
     }
 
     Context 'Group not found' {
         BeforeAll {
-            $fakeSession = New-TestSession -SkipCert
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            $script:fakeSession = Set-TestMocks -SkipCert -Transport {
+                return $null
+            }
 
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
                 return @(
                     [PSCustomObject]@{ id = 'mc-id'; name = 'My Company'; fullPathName = 'My Company' }
                 )
             }
-
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { }
 
             $script:errors = @()
         }

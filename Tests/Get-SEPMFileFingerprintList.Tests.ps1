@@ -13,10 +13,7 @@ Describe 'Get-SEPMFileFingerprintList' {
 
     Context 'Name lookup' {
         BeforeAll {
-            $script:fakeSession = New-TestSession
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{
                     source      = 'WEBSERVICE'
                     id          = 'FP001'
@@ -44,10 +41,7 @@ Describe 'Get-SEPMFileFingerprintList' {
 
     Context 'ID lookup' {
         BeforeAll {
-            $script:fakeSession = New-TestSession
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{
                     source      = 'WEBSERVICE'
                     id          = 'FP002'
@@ -75,10 +69,7 @@ Describe 'Get-SEPMFileFingerprintList' {
 
     Context 'Field structure' {
         BeforeAll {
-            $script:fakeSession = New-TestSession
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{
                     source      = 'WEBSERVICE'
                     id          = 'FP003'
@@ -106,10 +97,7 @@ Describe 'Get-SEPMFileFingerprintList' {
 
     Context 'Name not found' {
         BeforeAll {
-            $script:fakeSession = New-TestSession
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return 'Error: fingerprint list not found'
             }
         }

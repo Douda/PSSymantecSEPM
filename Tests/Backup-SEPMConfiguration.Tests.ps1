@@ -14,7 +14,7 @@ Describe 'Backup-SEPMConfiguration' {
 
     Context 'With existing configuration' {
         BeforeAll {
-            Set-SepmConfiguration -ServerAddress 'testserver' -Port 8446
+            Set-SEPMConfiguration -ServerAddress 'testserver' -Port 8446
         }
 
         It 'Creates a backup file at the specified path' {
@@ -56,7 +56,7 @@ Describe 'Backup-SEPMConfiguration' {
 
     Context 'Force parameter' {
         BeforeAll {
-            Set-SepmConfiguration -ServerAddress 'force-test' -Port 8446
+            Set-SEPMConfiguration -ServerAddress 'force-test' -Port 8446
         }
 
         It 'Overwrites existing backup file when Force is specified' {
@@ -74,7 +74,7 @@ Describe 'Backup-SEPMConfiguration' {
 
     Context 'Path acceptance' {
         BeforeAll {
-            Set-SepmConfiguration -ServerAddress 'path-accept-test' -Port 8446
+            Set-SEPMConfiguration -ServerAddress 'path-accept-test' -Port 8446
         }
 
         It 'Accepts Path parameter and creates backup' {

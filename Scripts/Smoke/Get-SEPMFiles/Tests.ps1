@@ -1,10 +1,10 @@
 ﻿<#
 .SYNOPSIS
-    Shared smoke tests for Get-SEPMFileFingerprintList and Get-SEPFileDetails.
+    Shared smoke tests for Get-SEPMFileFingerprintList and Get-SEPMFileDetails.
 
 .DESCRIPTION
     Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
-    Covers: Get-SEPMFileFingerprintList by ID and name, Get-SEPFileDetails by ID.
+    Covers: Get-SEPMFileFingerprintList by ID and name, Get-SEPMFileDetails by ID.
     Includes pre-test discovery of fingerprint lists and file IDs from the command queue.
 #>
 
@@ -45,21 +45,21 @@ $fileId = $null
 # Try known file ID first (notepad.exe uploaded via Send-SEPMCommand -Type GetFile)
 $knownId = "67C2C7AFAC1E00022E681989133418AF"
 try {
-    $test = Get-SEPFileDetails -FileID $knownId
+    $test = Get-SEPMFileDetails -FileID $knownId
     if ($test.id) { $fileId = $knownId }
 } catch { }
 
 if ($fileId) {
     Write-Host "Discovered file ID: $fileId" -ForegroundColor Gray
-    $results.B3 = T "B3" "Get-SEPFileDetails -FileID" `
-        { Get-SEPFileDetails -FileID $fileId } `
+    $results.B3 = T "B3" "Get-SEPMFileDetails -FileID" `
+        { Get-SEPMFileDetails -FileID $fileId } `
         { param($r) $r -ne $null -and $r.id -ne $null -and $r.fileSize -ne $null -and $r.checksum -ne $null }
 } else {
-    $results.B3 = Skip "B3" "Get-SEPFileDetails -FileID" "No files in command queue"
+    $results.B3 = Skip "B3" "Get-SEPMFileDetails -FileID" "No files in command queue"
 }
 
-# ── B4: Get-SEPFileDetails missing FileID (pre-existing: // in URI triggers Spring Security 500) ──
-$results.B4 = Skip "B4" "Get-SEPFileDetails (missing FileID)" "Pre-existing: null FileID causes // in URI"
+# ── B4: Get-SEPMFileDetails missing FileID (pre-existing: // in URI triggers Spring Security 500) ──
+$results.B4 = Skip "B4" "Get-SEPMFileDetails (missing FileID)" "Pre-existing: null FileID causes // in URI"
 
 # ── Summary ──
 Write-Summary -Results $results -Label "Get-SEPMFiles Smoke Tests"

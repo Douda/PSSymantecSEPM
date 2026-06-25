@@ -4,25 +4,25 @@
 
 .DESCRIPTION
     Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
-    Covers: Get-SEPClientInfectedStatus, Get-SEPFileDetails, Get-SEPGUPList,
+    Covers: Get-SEPMClientInfectedStatus, Get-SEPMFileDetails, Get-SEPMGUPList,
             Get-SEPMCommandStatus, Get-SEPMDatabaseInfo, Get-SEPMEventInfo
 #>
 
 $results = @{}
 
-# ── A1: Get-SEPClientInfectedStatus ──
-$results.A1 = T "A1" "Get-SEPClientInfectedStatus" `
-    { Get-SEPClientInfectedStatus } `
+# ── A1: Get-SEPMClientInfectedStatus ──
+$results.A1 = T "A1" "Get-SEPMClientInfectedStatus" `
+    { Get-SEPMClientInfectedStatus } `
     { param($r) $null -ne $r }
 
-# ── A2: Get-SEPClientInfectedStatus -Clean ──
-$results.A2 = T "A2" "Get-SEPClientInfectedStatus -Clean" `
-    { Get-SEPClientInfectedStatus -Clean } `
+# ── A2: Get-SEPMClientInfectedStatus -Clean ──
+$results.A2 = T "A2" "Get-SEPMClientInfectedStatus -Clean" `
+    { Get-SEPMClientInfectedStatus -Clean } `
     { param($r) $null -ne $r }
 
-# ── B1: Get-SEPGUPList ──
-$results.B1 = T "B1" "Get-SEPGUPList" `
-    { Get-SEPGUPList } `
+# ── B1: Get-SEPMGUPList ──
+$results.B1 = T "B1" "Get-SEPMGUPList" `
+    { Get-SEPMGUPList } `
     { param($r) $r -is [array] }
 
 # ── C1: Get-SEPMDatabaseInfo ──
@@ -54,11 +54,11 @@ if ($commandId) {
     $results.E1 = Skip "E1" "Get-SEPMCommandStatus" "No commands in queue"
 }
 
-# ── Discovery: file ID for Get-SEPFileDetails ──
+# ── Discovery: file ID for Get-SEPMFileDetails ──
 $fileId = $null
 $knownId = "67C2C7AFAC1E00022E681989133418AF"
 try {
-    $test = Get-SEPFileDetails -FileID $knownId
+    $test = Get-SEPMFileDetails -FileID $knownId
     if ($test.id) { $fileId = $knownId }
 } catch { }
 if (-not $fileId) {
@@ -72,11 +72,11 @@ if (-not $fileId) {
 
 if ($fileId) {
     Write-Host "Discovered file ID: $fileId" -ForegroundColor Gray
-    $results.F1 = T "F1" "Get-SEPFileDetails -FileID" `
-        { Get-SEPFileDetails -FileID $fileId } `
+    $results.F1 = T "F1" "Get-SEPMFileDetails -FileID" `
+        { Get-SEPMFileDetails -FileID $fileId } `
         { param($r) $r -ne $null -and $r.id -ne $null -and $r.fileSize -ne $null -and $r.checksum -ne $null }
 } else {
-    $results.F1 = Skip "F1" "Get-SEPFileDetails -FileID" "No files in command queue"
+    $results.F1 = Skip "F1" "Get-SEPMFileDetails -FileID" "No files in command queue"
 }
 
 # ── Summary ──

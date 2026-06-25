@@ -61,8 +61,8 @@ $results.A2 = & {
     try {
         $result = & $seedScript -Categories Fingerprints 6>&1
         $outputText = if ($result -is [array]) { $result -join "`n" } else { $result.ToString() }
-        if ($outputText -notmatch 'Fingerprints seeded: 2') {
-            throw "expected 'Fingerprints seeded: 2', got: $outputText"
+        if ($outputText -notmatch 'Fingerprints seeded: 3') {
+            throw "expected 'Fingerprints seeded: 3', got: $outputText"
         }
         Write-Host "  VERDICT: PASS" -ForegroundColor Green
         "PASS"
@@ -157,10 +157,10 @@ $results.A7 = & {
         Write-Host "--- Idempotency ---"
         $idemResult = & $seedScript -Categories Fingerprints 6>&1
         $outputText = if ($idemResult -is [array]) { $idemResult -join "`n" } else { $idemResult.ToString() }
-        if ($outputText -notmatch 'Fingerprints seeded: 2') {
+        if ($outputText -notmatch 'Fingerprints seeded: 3') {
             throw "idempotent re-run output mismatch: $outputText"
         }
-        Write-Host "  Idempotent: re-run seeded 2 fingerprint lists - PASS" -ForegroundColor Green
+        Write-Host "  Idempotent: re-run seeded 3 fingerprint lists - PASS" -ForegroundColor Green
         "PASS"
     } catch {
         Write-Host "  ERROR: $($_.Exception.Message)" -ForegroundColor Red

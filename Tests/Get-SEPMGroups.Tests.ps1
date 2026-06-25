@@ -5,18 +5,17 @@ Describe 'Get-SEPMGroups' {
     BeforeAll {
         Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
         $script:TestState = Initialize-TestEnvironment
-        $script:fakeSession = New-TestSession -SkipCert
     }
 
     AfterAll {
         Clear-TestEnvironment -State $script:TestState
     }
 
-    BeforeEach {
-        Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-    }
-
     Context 'API dispatch' {
+        BeforeEach {
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return New-TestSession }
+        }
+
         It 'delegates to Invoke-SepmEndpoint' {
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
                 return @()
@@ -30,11 +29,15 @@ Describe 'Get-SEPMGroups' {
 
     Context 'Response handling' {
         It 'returns groups from the API' {
-            Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @(
-                    @{ id = 'grp1'; name = 'My Company'; fullPathName = 'My Company' }
-                    @{ id = 'grp2'; name = 'Workstations'; fullPathName = 'My Company\Workstations' }
-                )
+            $null = Set-TestMocks -Transport {
+                return @{
+                    content = @(
+                        @{ id = 'grp1'; name = 'My Company'; fullPathName = 'My Company' }
+                        @{ id = 'grp2'; name = 'Workstations'; fullPathName = 'My Company\Workstations' }
+                    )
+                    lastPage = $true
+                    totalPages = 1
+                }
             }
 
             $result = Get-SEPMGroups
@@ -45,8 +48,8 @@ Describe 'Get-SEPMGroups' {
         }
 
         It 'returns empty array when no groups exist' {
-            Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @()
+            $null = Set-TestMocks -Transport {
+                return @{ content = @(); lastPage = $true; totalPages = 1 }
             }
 
             $result = Get-SEPMGroups
@@ -54,10 +57,14 @@ Describe 'Get-SEPMGroups' {
         }
 
         It 'preserves collection type for single-element results' {
-            Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                return @(
-                    @{ id = 'grp1'; name = 'My Company'; fullPathName = 'My Company' }
-                )
+            $null = Set-TestMocks -Transport {
+                return @{
+                    content = @(
+                        @{ id = 'grp1'; name = 'My Company'; fullPathName = 'My Company' }
+                    )
+                    lastPage = $true
+                    totalPages = 1
+                }
             }
 
             $result = Get-SEPMGroups

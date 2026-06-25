@@ -4,15 +4,15 @@
 
 .DESCRIPTION
     Dot-sourced by run.ps7.ps1 and run.ps51.ps1 after Common.ps1.
-    Covers: Get-SEPGUPList, Get-SEPMLicense, Get-SEPMLicense -Summary,
+    Covers: Get-SEPMGUPList, Get-SEPMLicense, Get-SEPMLicense -Summary,
             Get-SEPMDatabaseInfo, Get-SEPMLatestDefinition.
 #>
 
 $results = @{}
 
-# ── A1: Get-SEPGUPList ──
-$results.A1 = T "A1" "Get-SEPGUPList" `
-    { Get-SEPGUPList } `
+# ── A1: Get-SEPMGUPList ──
+$results.A1 = T "A1" "Get-SEPMGUPList" `
+    { Get-SEPMGUPList } `
     { param($r) ($null -eq $r) -or ($r -is [array] -or $r -is [hashtable]) }
 
 # ── A2: Get-SEPMLicense ──

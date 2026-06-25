@@ -39,7 +39,11 @@ function Remove-SEPMFileFingerprintList {
             ParameterSetName = 'ID'
         )]
         [string]
-        $FingerprintListID
+        $FingerprintListID,
+
+        [Parameter()]
+        [switch]
+        $PassThru
     )
 
     begin {
@@ -55,6 +59,9 @@ function Remove-SEPMFileFingerprintList {
         }
 
         $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($FingerprintListID)
-        return $resp
+
+        if ($PassThru) {
+            Write-Output $resp
+        }
     }
 }

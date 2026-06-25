@@ -148,7 +148,7 @@
                     $revisionString = $this.version
                     $revisionNumbered = $revisionString.Replace("-", "").Replace(" rev. ", "")
                     $revisionNumbered = $revisionNumbered.Substring(2)
-                    $allComputers = Get-SEPComputers
+                    $allComputers = Get-SEPMComputers
                     $computers = $allComputers | Where-Object { $_.avDefsetVersion -eq $revisionNumbered } | Select-Object computerName,ipAddresses,GroupName
                     return $computers
                 </Script>
