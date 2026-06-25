@@ -13,12 +13,7 @@ Describe 'Get-SEPMClientStatus' {
 
     Context 'Session-based flow' {
         It 'returns client status list with ONLINE and OFFLINE counts' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter {
-                $Method -eq 'GET' -and $Uri -match '/stats/client/onlinestatus$'
-            } {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{
                     lastUpdated         = 1693910248728
                     clientCountStatsList = @(
@@ -36,10 +31,7 @@ Describe 'Get-SEPMClientStatus' {
         }
 
         It 'passes session to Invoke-SepmApi' {
-            $fakeSession = New-TestSession -Token 'StatusToken'
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Token 'StatusToken' -Transport {
                 return @{ clientCountStatsList = @() }
             }
 
@@ -52,10 +44,7 @@ Describe 'Get-SEPMClientStatus' {
         }
 
         It 'returns empty array when API returns null list' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{ lastUpdated = 1693910248728; clientCountStatsList = $null }
             }
 

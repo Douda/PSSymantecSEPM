@@ -13,19 +13,16 @@ Describe 'Get-SEPMLocationXML' {
 
     Context 'Single location XML retrieval' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            $null = Set-TestMocks -SkipCert -Transport {
+                return @{
+                    xmlContent = '<Location><Name>Office</Name><Id>LOC001</Id></Location>'
+                }
+            }
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
                 return @(
                     [PSCustomObject]@{ id = 'GRP001'; name = 'My Company'; fullPathName = 'My Company' }
                     [PSCustomObject]@{ id = 'GRP002'; name = 'Workstations'; fullPathName = 'My Company\Workstations' }
                 )
-            }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                return @{
-                    xmlContent = '<Location><Name>Office</Name><Id>LOC001</Id></Location>'
-                }
             }
         }
 

@@ -12,31 +12,29 @@ Describe 'Get-SEPMCommandStatus' {
     }
 
     Context 'happy path' {
-        BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-        }
-
         It 'returns command status with SEPM.CommandStatus type' {
-            Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
-                # -NoEnumerate preserves single-element array on PS 5.1
-                Write-Output @(
-                    @{
-                        beginTime            = $null
-                        lastUpdateTime       = '2026-06-07 17:30:00'
-                        computerName         = 'MyWorkstation01'
-                        computerIp           = '192.168.1.1'
-                        domainName           = 'Default'
-                        currentLoginUserName = 'localadmin'
-                        stateId              = 0
-                        subStateId           = 0
-                        subStateDesc         = ''
-                        binaryFileId         = $null
-                        resultInXML          = $null
-                        computerId           = 'ABCDEF1234567890ABCDEF1234567890'
-                        hardwareKey          = 'ABCDEF1234567890ABCDEF1234567890'
-                    }
-                ) -NoEnumerate
+            $null = Set-TestMocks -Transport {
+                return @{
+                    content = @(
+                        @{
+                            beginTime            = $null
+                            lastUpdateTime       = '2026-06-07 17:30:00'
+                            computerName         = 'MyWorkstation01'
+                            computerIp           = '192.168.1.1'
+                            domainName           = 'Default'
+                            currentLoginUserName = 'localadmin'
+                            stateId              = 0
+                            subStateId           = 0
+                            subStateDesc         = ''
+                            binaryFileId         = $null
+                            resultInXML          = $null
+                            computerId           = 'ABCDEF1234567890ABCDEF1234567890'
+                            hardwareKey          = 'ABCDEF1234567890ABCDEF1234567890'
+                        }
+                    )
+                    lastPage   = $true
+                    totalPages = 1
+                }
             }
 
             $result = Get-SEPMCommandStatus -Command_ID 'CMD123'
@@ -47,6 +45,7 @@ Describe 'Get-SEPMCommandStatus' {
         }
 
         It 'calls Invoke-SepmEndpoint with the correct parameters' {
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return New-TestSession }
             Mock Invoke-SepmEndpoint -ModuleName PSSymantecSEPM {
                 return @()
             }

@@ -6,13 +6,11 @@ Describe 'Send-SEPMCommand' {
         Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'TestHelpers/PSSymantecSEPM.TestHelpers.psd1') -Force
         $script:TestState = Initialize-TestEnvironment
 
-        $script:TestSession = New-TestSession
-        Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:TestSession }
+        $script:fakeSession = Set-TestMocks -Transport {
+            return @{ command_id = 'CMD-001' }
+        }
         Mock Resolve-SepmCommandTarget -ModuleName PSSymantecSEPM {
             return @{ computer_ids = @('ABC123'); group_ids = @() }
-        }
-        Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-            return @{ command_id = 'CMD-001' }
         }
     }
 

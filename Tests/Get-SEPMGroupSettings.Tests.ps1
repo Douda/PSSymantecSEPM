@@ -13,12 +13,7 @@ Describe 'Get-SEPMGroupSettings' {
 
     Context 'Session-based flow' {
         It 'returns group settings for a given location and group' {
-            $fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter {
-                $Method -eq 'GET' -and $Uri -match '/groups/grp123/locations/loc456/settings$'
-            } {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{
                     id   = 'settings-1'
                     name = 'Default Settings'
@@ -33,10 +28,7 @@ Describe 'Get-SEPMGroupSettings' {
         }
 
         It 'passes session to Invoke-SepmApi' {
-            $fakeSession = New-TestSession -Token 'GroupSettingsToken'
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { return @{ ok = $true } }
+            $null = Set-TestMocks -Token 'GroupSettingsToken' -Transport { return @{ ok = $true } }
 
             Get-SEPMGroupSettings -groupId 'grp123' -locationId 'loc456' | Out-Null
             Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {

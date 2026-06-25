@@ -12,13 +12,8 @@ Describe 'Get-SEPMEventInfo' {
     }
 
     Context 'happy path' {
-        BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-        }
-
         It 'returns critical events list with SEPM.EventInfo type' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{
                     criticalEventsInfoList = @(
                         @{
@@ -48,7 +43,7 @@ Describe 'Get-SEPMEventInfo' {
         }
 
         It 'calls the correct API endpoint' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{ criticalEventsInfoList = @(); totalUnacknowledgedMessages = 0 }
             }
 
@@ -59,7 +54,7 @@ Describe 'Get-SEPMEventInfo' {
         }
 
         It 'handles empty critical events list gracefully' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{ criticalEventsInfoList = @(); totalUnacknowledgedMessages = 0 }
             }
 

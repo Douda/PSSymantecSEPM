@@ -13,12 +13,11 @@ Describe 'Get-SEPMFirewallPolicy' {
 
     Context 'All switch' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
+            $null = Set-TestMocks -SkipCert -SkipTransport
         }
 
         It 'returns all FW policies with correct type and count' {
             $apiState = @{ policyCallCount = 0 }
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
                 if ($Uri -match '/groups') {
                     return @{ content = @(); firstPage = $true; lastPage = $true }
@@ -50,7 +49,6 @@ Describe 'Get-SEPMFirewallPolicy' {
 
         It 'honors default DelayMs (200) between API calls' {
             $apiState = @{ policyCallCount = 0 }
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
                 if ($Uri -match '/groups') {
                     return @{ content = @(); firstPage = $true; lastPage = $true }
@@ -79,7 +77,6 @@ Describe 'Get-SEPMFirewallPolicy' {
 
         It 'honors custom DelayMs' {
             $apiState = @{ policyCallCount = 0 }
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
                 if ($Uri -match '/groups') {
                     return @{ content = @(); firstPage = $true; lastPage = $true }
@@ -108,7 +105,6 @@ Describe 'Get-SEPMFirewallPolicy' {
 
         It 'shows per-policy lines with policy name and count' {
             $apiState = @{ policyCallCount = 0 }
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
                 if ($Uri -match '/groups') {
                     return @{ content = @(); firstPage = $true; lastPage = $true }
@@ -143,7 +139,6 @@ Describe 'Get-SEPMFirewallPolicy' {
 
         It 'halts on first API error with terminating error and no partial results' {
             $apiState = @{ policyCallCount = 0 }
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
                 if ($Uri -match '/groups') {
                     return @{ content = @(); firstPage = $true; lastPage = $true }
@@ -188,11 +183,10 @@ Describe 'Get-SEPMFirewallPolicy' {
 
     Context 'PolicyList parameter' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
+            $null = Set-TestMocks -SkipCert -SkipTransport
         }
 
         It 'skips Get-SEPMPoliciesSummary when -PolicyList is provided with -All' {
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { throw 'should not be called' }
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -ParameterFilter { $Method -eq 'GET' } {
                 if ($Uri -match '/groups') {

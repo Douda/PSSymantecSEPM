@@ -12,13 +12,8 @@ Describe 'Get-SEPMReplicationStatus' {
     }
 
     Context 'happy path' {
-        BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-        }
-
         It 'returns replication status with expected fields' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{
                     replicationStatus = @(
                         @{
@@ -38,7 +33,7 @@ Describe 'Get-SEPMReplicationStatus' {
         }
 
         It 'adds SEPM.ReplicationStatus type name' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{
                     replicationStatus = @(
                         @{
@@ -56,7 +51,7 @@ Describe 'Get-SEPMReplicationStatus' {
         }
 
         It 'calls the correct API endpoint' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{ replicationStatus = @() }
             }
 

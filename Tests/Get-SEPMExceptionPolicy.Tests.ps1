@@ -13,13 +13,7 @@ Describe 'Get-SEPMExceptionPolicy' {
 
     Context 'Full policy retrieval (default)' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
-                return New-DummyPolicySummary -PolicyName 'Test Exceptions' -PolicyType 'exceptions'
-            }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{
                     sources          = @{}
                     configuration    = @{
@@ -64,6 +58,9 @@ Describe 'Get-SEPMExceptionPolicy' {
                     name             = 'Test Exceptions'
                     lastmodifiedtime = 1646398353107
                 }
+            }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                return New-DummyPolicySummary -PolicyName 'Test Exceptions' -PolicyType 'exceptions'
             }
         }
 
@@ -129,13 +126,7 @@ Describe 'Get-SEPMExceptionPolicy' {
 
     Context 'Listing specific exception categories' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
-                return New-DummyPolicySummary -PolicyName 'Test Exceptions' -PolicyType 'exceptions'
-            }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{
                     sources          = @{}
                     configuration    = @{
@@ -178,6 +169,9 @@ Describe 'Get-SEPMExceptionPolicy' {
                     name             = 'Test Exceptions'
                     lastmodifiedtime = 1646398353107
                 }
+            }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                return New-DummyPolicySummary -PolicyName 'Test Exceptions' -PolicyType 'exceptions'
             }
         }
 
@@ -228,9 +222,7 @@ Describe 'Get-SEPMExceptionPolicy' {
 
     Context 'Error handling' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            $null = Set-TestMocks -SkipCert -Transport { return @{} }
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
                 return New-DummyPolicySummary -PolicyName 'Not Exceptions' -PolicyType 'av'
             }
@@ -247,13 +239,7 @@ Describe 'Get-SEPMExceptionPolicy' {
 
     Context 'Pipeline support' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
-                return New-DummyPolicySummary -PolicyName 'Pipeline Policy' -PolicyType 'exceptions'
-            }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{
                     sources          = @{}
                     configuration    = @{
@@ -272,6 +258,9 @@ Describe 'Get-SEPMExceptionPolicy' {
                     lastmodifiedtime = 1646398353107
                 }
             }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                return New-DummyPolicySummary -PolicyName 'Pipeline Policy' -PolicyType 'exceptions'
+            }
         }
 
         It 'accepts PolicyName from the pipeline by value' {
@@ -285,11 +274,7 @@ Describe 'Get-SEPMExceptionPolicy' {
 
     Context 'PolicyList parameter skips Get-SEPMPoliciesSummary' {
         BeforeAll {
-            $script:fakeSession = New-TestSession -SkipCert
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { throw 'Get-SEPMPoliciesSummary should not be called' }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -SkipCert -Transport {
                 return @{
                     sources          = @{}
                     configuration    = @{
@@ -308,6 +293,7 @@ Describe 'Get-SEPMExceptionPolicy' {
                     lastmodifiedtime = 1646398353107
                 }
             }
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { throw 'Get-SEPMPoliciesSummary should not be called' }
         }
 
         It 'does not call Get-SEPMPoliciesSummary when PolicyList is provided' {

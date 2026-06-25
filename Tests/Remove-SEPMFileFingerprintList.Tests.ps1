@@ -13,33 +13,26 @@ Describe 'Remove-SEPMFileFingerprintList' {
 
     Context 'Delete by ID' {
         BeforeAll {
-            $script:fakeSession = New-TestSession
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-
-            $script:capturedMethod = $null
-            $script:capturedUri = $null
-
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                $script:capturedMethod = $Method
-                $script:capturedUri = $Uri
+            $script:fakeSession = Set-TestMocks -Transport {
                 return @{ }
             }
         }
 
         It 'sends DELETE to correct URI using fingerprint list ID' {
-            $result = Remove-SEPMFileFingerprintList -FingerprintListID 'FP_TO_DELETE'
+            Remove-SEPMFileFingerprintList -FingerprintListID 'FP_TO_DELETE'
 
-            $script:capturedMethod | Should -Be 'DELETE'
-            $script:capturedUri    | Should -Be 'https://FakeServer01:1234/sepm/api/v1/policy-objects/fingerprints/FP_TO_DELETE'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'DELETE' -and
+                $Uri -eq "$($script:fakeSession.BaseURLv1)/policy-objects/fingerprints/FP_TO_DELETE"
+            }
         }
     }
 
     Context 'Delete by Name' {
         BeforeAll {
-            $script:fakeSession = New-TestSession
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            $script:fakeSession = Set-TestMocks -Transport {
+                return @{ }
+            }
 
             Mock Get-SEPMFileFingerprintList -ModuleName PSSymantecSEPM {
                 return @{
@@ -52,32 +45,22 @@ Describe 'Remove-SEPMFileFingerprintList' {
                     name        = 'ListByName'
                 }
             }
-
-            $script:capturedMethod = $null
-            $script:capturedUri = $null
-
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                $script:capturedMethod = $Method
-                $script:capturedUri = $Uri
-                return @{ }
-            }
         }
 
         It 'resolves name to ID then sends DELETE' {
-            $result = Remove-SEPMFileFingerprintList -FingerprintListName 'ListByName'
+            Remove-SEPMFileFingerprintList -FingerprintListName 'ListByName'
 
-            $script:capturedMethod | Should -Be 'DELETE'
-            $script:capturedUri    | Should -Be 'https://FakeServer01:1234/sepm/api/v1/policy-objects/fingerprints/FP_BY_NAME'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'DELETE' -and
+                $Uri -eq "$($script:fakeSession.BaseURLv1)/policy-objects/fingerprints/FP_BY_NAME"
+            }
             Should -Invoke Get-SEPMFileFingerprintList -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
         }
     }
 
     Context 'PassThru behavior' {
         BeforeAll {
-            $script:fakeSession = New-TestSession
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $script:fakeSession = Set-TestMocks -Transport {
                 return @{ id = 'DELETED' }
             }
         }
@@ -98,8 +81,9 @@ Describe 'Remove-SEPMFileFingerprintList' {
 
     Context 'Default parameter set' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession { return $fakeSession }
+            $script:fakeSession = Set-TestMocks -Transport {
+                return @{ }
+            }
         }
 
         It 'has Name as the default parameter set' {
@@ -110,27 +94,22 @@ Describe 'Remove-SEPMFileFingerprintList' {
 
     Context 'Name not found' {
         BeforeAll {
-            $script:fakeSession = New-TestSession
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
+            $script:fakeSession = Set-TestMocks -Transport {
+                return @{ }
+            }
 
             Mock Get-SEPMFileFingerprintList -ModuleName PSSymantecSEPM {
                 return $null
             }
-
-            $script:capturedUri = $null
-
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                $script:capturedUri = $Uri
-                return @{ }
-            }
         }
 
         It 'attempts DELETE when fingerprint list name does not exist' {
-            $result = Remove-SEPMFileFingerprintList -FingerprintListName 'NonExistent'
+            Remove-SEPMFileFingerprintList -FingerprintListName 'NonExistent'
 
-            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Exactly 1 -Scope It
-            $script:capturedUri | Should -BeLike '*/fingerprints/*'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Exactly 1 -Scope It -ParameterFilter {
+                $Method -eq 'DELETE' -and
+                $Uri -Like '*/fingerprints/*'
+            }
         }
     }
 }

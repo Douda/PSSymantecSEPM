@@ -12,13 +12,8 @@ Describe 'Get-SEPMLicense' {
     }
 
     Context 'full license (default)' {
-        BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-        }
-
         It 'returns license info with expected keys' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{
                     serialNumber       = 'M3689526915'
                     licenseType        = 0
@@ -39,7 +34,7 @@ Describe 'Get-SEPMLicense' {
         }
 
         It 'calls the /licenses endpoint' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { return @{ ok = $true } }
+            $null = Set-TestMocks -Transport { return @{ ok = $true } }
 
             Get-SEPMLicense | Out-Null
             Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
@@ -49,13 +44,8 @@ Describe 'Get-SEPMLicense' {
     }
 
     Context 'license summary' {
-        BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-        }
-
         It 'returns summary with different keys when -Summary is used' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{
                     license_type            = 'TRIAL'
                     ended                   = $false
@@ -74,7 +64,7 @@ Describe 'Get-SEPMLicense' {
         }
 
         It 'calls the /licenses/summary endpoint with -Summary' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { return @{ ok = $true } }
+            $null = Set-TestMocks -Transport { return @{ ok = $true } }
 
             Get-SEPMLicense -Summary | Out-Null
             Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {

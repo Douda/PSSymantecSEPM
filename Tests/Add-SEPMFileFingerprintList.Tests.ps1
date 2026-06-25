@@ -13,20 +13,7 @@ Describe 'Add-SEPMFileFingerprintList' {
 
     Context 'POST method and body shape' {
         BeforeAll {
-            $script:fakeSession = New-TestSession
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-
-            $script:capturedBody = $null
-            $script:capturedContentType = $null
-            $script:capturedMethod = $null
-            $script:capturedUri = $null
-
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                $script:capturedBody = $Body
-                $script:capturedContentType = $ContentType
-                $script:capturedMethod = $Method
-                $script:capturedUri = $Uri
+            $script:fakeSession = Set-TestMocks -Transport {
                 return @{ id = 'NEWFP001' }
             }
         }
@@ -35,32 +22,32 @@ Describe 'Add-SEPMFileFingerprintList' {
             $result = Add-SEPMFileFingerprintList -name 'NewList' -domainId 'DOM01' -HashType 'SHA256' -description 'Test list' -hashlist @('hash1', 'hash2') -PassThru
 
             $result.id | Should -Be 'NEWFP001'
-            $script:capturedMethod | Should -Be 'POST'
-            $script:capturedUri    | Should -Be 'https://FakeServer01:1234/sepm/api/v1/policy-objects/fingerprints'
 
-            $body = $script:capturedBody | ConvertFrom-Json
-            $body.name        | Should -Be 'NewList'
-            $body.domainId    | Should -Be 'DOM01'
-            $body.hashType    | Should -Be 'SHA256'
-            $body.description | Should -Be 'Test list'
-            @($body.data).Count | Should -Be 2
-            $body.data[0] | Should -Be 'hash1'
-            $body.data[1] | Should -Be 'hash2'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'POST' -and
+                $Uri -eq "$($script:fakeSession.BaseURLv1)/policy-objects/fingerprints" -and
+                $ContentType -eq 'application/json' -and
+                $Body -match '"name":\s*"NewList"' -and
+                $Body -match '"domainId":\s*"DOM01"' -and
+                $Body -match '"hashType":\s*"SHA256"' -and
+                $Body -match '"description":\s*"Test list"' -and
+                $Body -match '"hash1"' -and
+                $Body -match '"hash2"'
+            }
         }
 
         It 'sets ContentType to application/json' {
             Add-SEPMFileFingerprintList -name 'JsonTest' -domainId 'DOM02' -HashType 'MD5' -description '' -hashlist @('md5hash') | Out-Null
 
-            $script:capturedContentType | Should -Be 'application/json'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $ContentType -eq 'application/json'
+            }
         }
     }
 
     Context 'Returns API response' {
         BeforeAll {
-            $script:fakeSession = New-TestSession
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $script:fakeSession = Set-TestMocks -Transport {
                 return @{ id = 'API123' }
             }
         }
@@ -75,10 +62,7 @@ Describe 'Add-SEPMFileFingerprintList' {
 
     Context 'PassThru behavior' {
         BeforeAll {
-            $script:fakeSession = New-TestSession
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $script:fakeSession = Set-TestMocks -Transport {
                 return @{ id = 'PASSTHRU001' }
             }
         }
@@ -99,14 +83,7 @@ Describe 'Add-SEPMFileFingerprintList' {
 
     Context 'MD5 hash type' {
         BeforeAll {
-            $script:fakeSession = New-TestSession
-
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $script:fakeSession }
-
-            $script:capturedBodyMD5 = $null
-
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                $script:capturedBodyMD5 = $Body
+            $script:fakeSession = Set-TestMocks -Transport {
                 return @{ id = 'MD5001' }
             }
         }
@@ -115,9 +92,11 @@ Describe 'Add-SEPMFileFingerprintList' {
             $result = Add-SEPMFileFingerprintList -name 'MD5List' -domainId 'DOM04' -HashType 'MD5' -description 'MD5 type' -hashlist @('d41d8cd98f00b204e9800998ecf8427e') -PassThru
 
             $result.id | Should -Be 'MD5001'
-            $body = $script:capturedBodyMD5 | ConvertFrom-Json
-            $body.hashType | Should -Be 'MD5'
-            @($body.data).Count | Should -Be 1
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Body -match '"hashType":\s*"MD5"' -and
+                $Body -match 'd41d8cd98f00b204e9800998ecf8427e'
+            }
         }
     }
 }

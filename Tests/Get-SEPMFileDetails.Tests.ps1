@@ -12,13 +12,8 @@ Describe 'Get-SEPMFileDetails' {
     }
 
     Context 'happy path' {
-        BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-        }
-
         It 'returns file details with expected fields' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{
                     id       = 'CD02BC8E0A6606D53533F2428BB86D4E'
                     fileSize = 1071101
@@ -33,7 +28,7 @@ Describe 'Get-SEPMFileDetails' {
         }
 
         It 'calls the correct API endpoint' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{ id = 'ABC'; fileSize = 0; checksum = 'DEF' }
             }
 
@@ -44,7 +39,7 @@ Describe 'Get-SEPMFileDetails' {
         }
 
         It 'handles response with null fields gracefully' {
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+            $null = Set-TestMocks -Transport {
                 return @{
                     id       = 'NULLTEST'
                     fileSize = $null

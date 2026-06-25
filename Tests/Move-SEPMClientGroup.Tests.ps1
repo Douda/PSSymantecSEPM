@@ -13,8 +13,9 @@ Describe 'Move-SEPMClientGroup' {
 
     Context 'happy path' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            $script:fakeSession = Set-TestMocks -Transport {
+                return @{ responseCode = 0; responseMessage = 'Success' }
+            }
 
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
                 return @(
@@ -27,30 +28,18 @@ Describe 'Move-SEPMClientGroup' {
                 param($ComputerName)
                 return [PSCustomObject]@{ computerName = $ComputerName; hardwareKey = 'HK-ABC123' }
             }
-
-            $script:apiCalls = @()
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                $script:apiCalls += [PSCustomObject]@{
-                    Method      = $Method
-                    Uri         = $Uri
-                    Body        = $Body
-                    ContentType = $ContentType
-                }
-                return @{ responseCode = 0; responseMessage = 'Success' }
-            }
         }
 
         It 'sends PATCH to /computers with hardwareKey and group ID in body' {
             Move-SEPMClientGroup -ComputerName 'MyComputer' -GroupName 'My Company\Workstations'
 
-            $script:apiCalls.Count | Should -Be 1
-            $script:apiCalls[0].Method | Should -Be 'PATCH'
-            $script:apiCalls[0].Uri    | Should -Be "$($fakeSession.BaseURLv1)/computers"
-            $script:apiCalls[0].ContentType | Should -Be 'application/json'
-
-            $body = $script:apiCalls[0].Body | ConvertFrom-Json
-            $body[0].hardwareKey    | Should -Be 'HK-ABC123'
-            $body[0].group.id       | Should -Be 'group-123'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Method -eq 'PATCH' -and
+                $Uri -eq "$($script:fakeSession.BaseURLv1)/computers" -and
+                $ContentType -eq 'application/json' -and
+                $Body -match 'HK-ABC123' -and
+                $Body -match 'group-123'
+            }
         }
 
         It 'returns SEPM.MoveClientGroupResponse type' {
@@ -67,10 +56,9 @@ Describe 'Move-SEPMClientGroup' {
 
     Context 'error handling' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
-
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM { return @{ responseCode = 0; responseMessage = 'Success' } }
+            $script:fakeSession = Set-TestMocks -Transport {
+                return @{ responseCode = 0; responseMessage = 'Success' }
+            }
         }
 
         It 'writes error when computer hardwareKey not found' {
@@ -113,8 +101,9 @@ Describe 'Move-SEPMClientGroup' {
 
     Context 'pipeline input' {
         BeforeAll {
-            $fakeSession = New-TestSession
-            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
+            $script:fakeSession = Set-TestMocks -Transport {
+                return @{ responseCode = 0; responseMessage = 'Success' }
+            }
 
             Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
                 return @(
@@ -126,38 +115,25 @@ Describe 'Move-SEPMClientGroup' {
                 param($ComputerName)
                 return [PSCustomObject]@{ computerName = $ComputerName; hardwareKey = "HK-$ComputerName" }
             }
-
-            $script:apiCalls = @()
-            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                $script:apiCalls += [PSCustomObject]@{
-                    Method = $Method
-                    Uri    = $Uri
-                    Body   = $Body
-                }
-                return @{ responseCode = 0; responseMessage = 'Success' }
-            }
         }
 
-        It 'processes multiple computers via pipeline' {
+        It 'processes multiple computers via 3 PATCH calls with correct hardware keys and target group' {
             'PC1', 'PC2', 'PC3' | Move-SEPMClientGroup -GroupName 'My Company\Servers'
 
-            $script:apiCalls.Count | Should -Be 3
-            $script:apiCalls[0].Uri    | Should -Be "$($fakeSession.BaseURLv1)/computers"
-            $script:apiCalls[0].Method | Should -Be 'PATCH'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 3 -Exactly -ParameterFilter {
+                $Method -eq 'PATCH' -and
+                $Uri -eq "$($script:fakeSession.BaseURLv1)/computers"
+            }
 
-            # Each call should target a different computer
-            $body0 = $script:apiCalls[0].Body | ConvertFrom-Json
-            $body1 = $script:apiCalls[1].Body | ConvertFrom-Json
-            $body2 = $script:apiCalls[2].Body | ConvertFrom-Json
-
-            $body0[0].hardwareKey | Should -Be 'HK-PC1'
-            $body1[0].hardwareKey | Should -Be 'HK-PC2'
-            $body2[0].hardwareKey | Should -Be 'HK-PC3'
-
-            # All target the same group
-            $body0[0].group.id | Should -Be 'group-456'
-            $body1[0].group.id | Should -Be 'group-456'
-            $body2[0].group.id | Should -Be 'group-456'
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Body -match 'HK-PC1' -and $Body -match 'group-456'
+            }
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Body -match 'HK-PC2' -and $Body -match 'group-456'
+            }
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 1 -Exactly -ParameterFilter {
+                $Body -match 'HK-PC3' -and $Body -match 'group-456'
+            }
         }
     }
 }
