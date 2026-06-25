@@ -109,8 +109,8 @@ function Get-SEPMPoliciesSummary {
         
 
         # Add a PSTypeName to the object
-        $resp.content | ForEach-Object {
-            $_.PSTypeNames.Insert(0, 'SEPM.PolicySummary')
+        foreach ($policy in $resp.content) {
+            $null = $policy.PSTypeNames.Insert(0, 'SEPM.PolicySummary')
         }
             
         # return the response
