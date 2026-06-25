@@ -202,6 +202,58 @@ function New-TestSession {
     }
 }
 
+function Set-TestMocks {
+    <#
+    .SYNOPSIS
+        Sets up the standard mock ceremony (session + transport) for PSSymantecSEPM tests.
+
+    .DESCRIPTION
+        Creates a fake session via New-TestSession, mocks Initialize-SEPMSession to return
+        that session, and mocks Invoke-SepmApi with the provided Transport scriptblock.
+        Returns the session handle so callers can inspect BaseURLv1 or Headers.Authorization.
+
+        The Transport scriptblock is used as the mock body for Invoke-SepmApi and receives
+        the same bound parameters ($Session, $Method, $Uri, $Body, $ContentType).
+
+    .PARAMETER Transport
+        A scriptblock that becomes the mock body for Invoke-SepmApi. This scriptblock
+        should return the hashtable (or array) that Invoke-SepmApi would normally return.
+
+    .PARAMETER Token
+        The bearer token value. Default: 'FakeToken'. Passed to New-TestSession.
+
+    .PARAMETER SkipCert
+        If set, SkipCert is $true in the session object.
+
+    .EXAMPLE
+        $session = Set-TestMocks -Transport {
+            return @{ API_SEQUENCE = '123'; API_VERSION = '1.0'; version = '1.0.0.0' }
+        }
+
+    .OUTPUTS
+        System.Management.Automation.PSCustomObject. The fake session object.
+    #>
+    param(
+        [Parameter(Mandatory = $true)]
+        [scriptblock] $Transport,
+
+        [string] $Token = 'FakeToken',
+
+        [switch] $SkipCert
+    )
+
+    $session = New-TestSession -Token $Token -SkipCert:$SkipCert
+
+    # Store session in global scope so the mock scriptblocks (which run in
+    # PSSymantecSEPM module scope) can access it.
+    $global:__SetTestMocks_Session = $session
+
+    Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $global:__SetTestMocks_Session }
+    Mock Invoke-SepmApi -ModuleName PSSymantecSEPM -MockWith $Transport
+
+    return $session
+}
+
 function New-DummyComputer {
     <#
     .SYNOPSIS
