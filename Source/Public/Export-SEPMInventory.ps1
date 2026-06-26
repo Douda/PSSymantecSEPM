@@ -228,9 +228,9 @@ function Export-SEPMInventory {
                     $hgIndex++
                     $hgName = $hg | ForEach-Object { $_.name }
                     if ($hgIndex % $hgHeartbeatInterval -eq 0) {
-                    Write-Verbose "  -> group $hgIndex/$hgCount $hgName"
-                    Write-Host "  -> HostGroups ($hgIndex/$hgCount): $hgName" -ForegroundColor DarkGray
-                }
+                        Write-Verbose "  -> group $hgIndex/$hgCount $hgName"
+                        Write-Host "  -> HostGroups ($hgIndex/$hgCount): $hgName" -ForegroundColor DarkGray
+                    }
                     try {
                         $hgDetail = Get-SEPMHostGroup -Id $hg.id
                         if ($null -ne $hgDetail) { $allHostGroups += $hgDetail }
