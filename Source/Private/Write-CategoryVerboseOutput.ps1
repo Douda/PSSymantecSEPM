@@ -63,7 +63,6 @@ function Write-CategoryVerboseOutput {
     if ($Failed) { $status = 'FAILED' }
     elseif ($null -eq $Data) { $status = 'OK (empty)' }
     elseif ($Data -is [System.Collections.ICollection] -and $Data.Count -eq 0) { $status = 'OK (empty)' }
-    elseif ($Data -is [array] -and $Data.Count -eq 0) { $status = 'OK (empty)' }
     else { $status = 'OK' }
 
     $metric = Get-CategoryMetric -Category $Category -Data $Data -Failed $Failed
