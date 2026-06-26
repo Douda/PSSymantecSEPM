@@ -623,18 +623,21 @@ Describe 'Export-SEPMInventory' {
 
         It 'writes all_policy_summaries.xml' {
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
-                Write-Output @() -NoEnumerate
+                Write-Output @(@{ id = 'P001'; name = 'Test Policy'; policytype = 'fw'; enabled = $true }) -NoEnumerate
             }
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
             Join-Path -Path 'TestDrive:' -ChildPath 'all_policy_summaries.xml' | Should -Exist
         }
 
-        It 'writes all_fw_policies.xml' {
+        It 'writes all_firewall_policies.xml' {
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                Write-Output @(@{ id = 'P001'; name = 'FW Policy'; policytype = 'fw'; enabled = $true }) -NoEnumerate
+            }
             Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM {
-                Write-Output @() -NoEnumerate
+                Write-Output @(@{ name = 'FW Policy' }) -NoEnumerate
             }
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            Join-Path -Path 'TestDrive:' -ChildPath 'all_fw_policies.xml' | Should -Exist
+            Join-Path -Path 'TestDrive:' -ChildPath 'all_firewall_policies.xml' | Should -Exist
         }
 
         It 'writes all_ips_policies.xml' {
@@ -665,14 +668,24 @@ Describe 'Export-SEPMInventory' {
 
         It 'writes policy .clixml files' {
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
-                Write-Output @() -NoEnumerate
+                Write-Output @(
+                    @{ id = 'P001'; name = 'FW Policy'; policytype = 'fw'; enabled = $true },
+                    @{ id = 'P002'; name = 'IPS Policy'; policytype = 'ips'; enabled = $true },
+                    @{ id = 'P003'; name = 'Exception Policy'; policytype = 'exceptions'; enabled = $true }
+                ) -NoEnumerate
             }
             Mock Get-SEPMFirewallPolicy -ModuleName PSSymantecSEPM {
-                Write-Output @() -NoEnumerate
+                Write-Output @(@{ name = 'FW Policy' }) -NoEnumerate
+            }
+            Mock Get-SEPMIpsPolicy -ModuleName PSSymantecSEPM {
+                return @{ name = 'IPS Policy'; configuration = @{ blocked_hosts = @() } }
+            }
+            Mock Get-SEPMExceptionPolicy -ModuleName PSSymantecSEPM {
+                return @{ name = 'Exception Policy'; configuration = @{ files = @() } }
             }
             Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
             Join-Path -Path 'TestDrive:' -ChildPath 'all_policy_summaries.xml' | Should -Exist
-            Join-Path -Path 'TestDrive:' -ChildPath 'all_fw_policies.xml' | Should -Exist
+            Join-Path -Path 'TestDrive:' -ChildPath 'all_firewall_policies.xml' | Should -Exist
             Join-Path -Path 'TestDrive:' -ChildPath 'all_ips_policies.xml' | Should -Exist
             Join-Path -Path 'TestDrive:' -ChildPath 'all_exception_policies.xml' | Should -Exist
         }

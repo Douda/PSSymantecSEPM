@@ -252,24 +252,23 @@ $results.A27 = T "A27" "HostGroups has entries with hosts array" `
     }
 
 # ── B1: Per-category clixml files written ──
-$results.B1 = T "B1" "Writes all category .clixml files" `
+# Empty/null categories are skipped (no zero-length files). This test checks
+# a core set of files that should always have data on a healthy VM with SAMPL data.
+# Files omitted from the core check may not exist if their API returned empty data.
+$results.B1 = T "B1" "Writes core category .clixml files" `
     {
         $allExist = $true
-        $files = @(
+        $coreFiles = @(
             'all_version.xml', 'all_domains.xml', 'all_admins.xml',
             'all_database_info.xml', 'all_license.xml', 'all_license_summary.xml',
             'all_replication_status.xml', 'all_threat_stats.xml',
             'all_latest_definitions.xml', 'all_events.xml',
-            'all_policy_summaries.xml', 'all_fw_policies.xml',
-            'all_ips_policies.xml', 'all_exception_policies.xml',
+            'all_policy_summaries.xml', 'all_firewall_policies.xml',
             'all_computers.xml', 'all_client_status.xml',
             'all_client_versions.xml', 'all_client_def_versions.xml',
-            'all_client_infected.xml',
-            'all_groups.xml', 'all_locations.xml',
-            'all_location_xml.xml', 'all_group_settings.xml',
-            'all_host_groups.xml'
+            'all_groups.xml', 'all_locations.xml'
         )
-        foreach ($f in $files) {
+        foreach ($f in $coreFiles) {
             if (-not (Test-Path (Join-Path $outDir $f))) { $allExist = $false }
         }
         $allExist

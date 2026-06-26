@@ -522,88 +522,10 @@ function Export-SEPMInventory {
         $categoryStopwatch.Stop()
         Write-CategoryVerbose -Category 'HostGroups' -Data $snapshot.HostGroups -Stopwatch $categoryStopwatch -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $categoryFailed
 
-        # ── Write per-category .clixml files ──
+        # ── Write per-category .clixml files via helper ──
         Write-ExportProgress -Counter ([ref]$progressCounter) -Total $totalSteps -StepName 'Snapshot'
-        if ($null -ne $snapshot.Version) {
-            $snapshot.Version | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_version.xml') -Force
-        }
-        if ($null -ne $snapshot.Domains) {
-            $snapshot.Domains | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_domains.xml') -Force
-        }
-        if ($null -ne $snapshot.GUPs) {
-            $snapshot.GUPs | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_gups.xml') -Force
-        }
-        if ($null -ne $snapshot.Admins) {
-            $snapshot.Admins | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_admins.xml') -Force
-        }
-        if ($null -ne $snapshot.DatabaseInfo) {
-            $snapshot.DatabaseInfo | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_database_info.xml') -Force
-        }
-        if ($null -ne $snapshot.License) {
-            $snapshot.License | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_license.xml') -Force
-        }
-        if ($null -ne $snapshot.LicenseSummary) {
-            $snapshot.LicenseSummary | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_license_summary.xml') -Force
-        }
-        if ($null -ne $snapshot.ReplicationStatus) {
-            $snapshot.ReplicationStatus | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_replication_status.xml') -Force
-        }
-        if ($null -ne $snapshot.ThreatStats) {
-            $snapshot.ThreatStats | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_threat_stats.xml') -Force
-        }
-        if ($null -ne $snapshot.LatestDefinitions) {
-            $snapshot.LatestDefinitions | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_latest_definitions.xml') -Force
-        }
-        if ($null -ne $snapshot.Events) {
-            $snapshot.Events | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_events.xml') -Force
-        }
-        if ($null -ne $snapshot.PolicySummaries) {
-            $snapshot.PolicySummaries | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_policy_summaries.xml') -Force
-        }
-        if ($null -ne $snapshot.FirewallPolicies) {
-            $snapshot.FirewallPolicies | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_fw_policies.xml') -Force
-        }
-        if ($null -ne $snapshot.IpsPolicies) {
-            $snapshot.IpsPolicies | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_ips_policies.xml') -Force
-        }
-        if ($null -ne $snapshot.ExceptionPolicies) {
-            $snapshot.ExceptionPolicies | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_exception_policies.xml') -Force
-        }
-        if ($null -ne $snapshot.Computers) {
-            $snapshot.Computers | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_computers.xml') -Force
-        }
-        if ($null -ne $snapshot.ClientStatus) {
-            $snapshot.ClientStatus | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_client_status.xml') -Force
-        }
-        if ($null -ne $snapshot.ClientVersions) {
-            $snapshot.ClientVersions | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_client_versions.xml') -Force
-        }
-        if ($null -ne $snapshot.ClientDefVersions) {
-            $snapshot.ClientDefVersions | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_client_def_versions.xml') -Force
-        }
-        if ($null -ne $snapshot.ClientInfected) {
-            $snapshot.ClientInfected | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_client_infected.xml') -Force
-        }
-        if ($null -ne $snapshot.Groups) {
-            $snapshot.Groups | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_groups.xml') -Force
-        }
-        if ($null -ne $snapshot.Locations) {
-            $snapshot.Locations | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_locations.xml') -Force
-        }
-        if ($null -ne $snapshot.LocationXML -and $snapshot.LocationXML.Count -gt 0) {
-            $snapshot.LocationXML | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_location_xml.xml') -Force
-        }
-        if ($null -ne $snapshot.GroupSettings -and $snapshot.GroupSettings.Count -gt 0) {
-            $snapshot.GroupSettings | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_group_settings.xml') -Force
-        }
-        if ($null -ne $snapshot.HostGroups) {
-            $snapshot.HostGroups | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath 'all_host_groups.xml') -Force
-        }
-
-        # Write timestamped snapshot blob
-        $timestamp = $snapshot.FetchedAt.ToString('yyyy-MM-ddTHH-mm-ss')
         $snapshotStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-        $snapshot | Export-Clixml -Path (Join-Path -Path $OutputDir -ChildPath "SepmInventory_$timestamp.clixml") -Force
+        Write-InventoryClixml -Snapshot $snapshot -OutputDir $OutputDir
         $snapshotStopwatch.Stop()
         Write-CategoryVerbose -Category 'Snapshot' -Data 'written' -Stopwatch $snapshotStopwatch -StepNumber $progressCounter -TotalSteps $totalSteps -Failed $false
 
