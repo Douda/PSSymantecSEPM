@@ -44,6 +44,25 @@ $results.A2 = T "A2" "FetchedAt is a DateTime within last 5 minutes" `
         $r.FetchedAt -gt [DateTime]::UtcNow.AddMinutes(-5)
     }
 
+# ── A2b: Snapshot has 27 properties (25 categories + FetchedAt + Failures) ──
+$results.A2b = T "A2b" "Snapshot has exactly 27 properties (25 categories + FetchedAt + Failures)" `
+    { $snapshot } `
+    { param($r)
+        $expected = @(
+            'FetchedAt', 'Version', 'Domains', 'GUPs', 'Admins',
+            'DatabaseInfo', 'License', 'LicenseSummary', 'ReplicationStatus',
+            'ThreatStats', 'LatestDefinitions', 'Events', 'PolicySummaries',
+            'FirewallPolicies', 'IpsPolicies', 'ExceptionPolicies', 'Computers',
+            'ClientStatus', 'ClientVersions', 'ClientDefVersions', 'ClientInfected',
+            'Groups', 'Locations', 'LocationXML', 'GroupSettings',
+            'HostGroups', 'Failures'
+        )
+        $actual = @($r.PSObject.Properties | ForEach-Object { $_.Name }) | Sort-Object
+        $expectedSorted = $expected | Sort-Object
+        $actual.Count -eq $expected.Count -and
+        (Compare-Object $actual $expectedSorted).Length -eq 0
+    }
+
 # ── A3: Version populated with real SEPM data ──
 $results.A3 = T "A3" "Version property has API_SEQUENCE, API_VERSION, version" `
     { $snapshot } `
@@ -252,24 +271,23 @@ $results.A27 = T "A27" "HostGroups has entries with hosts array" `
     }
 
 # ── B1: Per-category clixml files written ──
-$results.B1 = T "B1" "Writes all category .clixml files" `
+# Empty/null categories are skipped (no zero-length files). This test checks
+# a core set of files that should always have data on a healthy VM with SAMPL data.
+# Files omitted from the core check may not exist if their API returned empty data.
+$results.B1 = T "B1" "Writes core category .clixml files" `
     {
         $allExist = $true
-        $files = @(
+        $coreFiles = @(
             'all_version.xml', 'all_domains.xml', 'all_admins.xml',
             'all_database_info.xml', 'all_license.xml', 'all_license_summary.xml',
             'all_replication_status.xml', 'all_threat_stats.xml',
             'all_latest_definitions.xml', 'all_events.xml',
-            'all_policy_summaries.xml', 'all_fw_policies.xml',
-            'all_ips_policies.xml', 'all_exception_policies.xml',
+            'all_policy_summaries.xml', 'all_firewall_policies.xml',
             'all_computers.xml', 'all_client_status.xml',
             'all_client_versions.xml', 'all_client_def_versions.xml',
-            'all_client_infected.xml',
-            'all_groups.xml', 'all_locations.xml',
-            'all_location_xml.xml', 'all_group_settings.xml',
-            'all_host_groups.xml'
+            'all_groups.xml', 'all_locations.xml'
         )
-        foreach ($f in $files) {
+        foreach ($f in $coreFiles) {
             if (-not (Test-Path (Join-Path $outDir $f))) { $allExist = $false }
         }
         $allExist
@@ -323,12 +341,8 @@ $results.B4 = T "B4" "No failures during inventory collection" `
             Write-Host "  FAILURES: $($r.Failures.Count) failure(s):" -ForegroundColor Yellow
             foreach ($f in $r.Failures) {
                 Write-Host "    Category: $($f.Category)"
-                if ($f.PolicyName)    { Write-Host "    PolicyName: $($f.PolicyName)" }
-                if ($f.GroupID)       { Write-Host "    GroupID: $($f.GroupID)" }
-                if ($f.GroupName)     { Write-Host "    GroupName: $($f.GroupName)" }
-                if ($f.LocationID)    { Write-Host "    LocationID: $($f.LocationID)" }
-                if ($f.HostGroupID)   { Write-Host "    HostGroupID: $($f.HostGroupID)" }
-                if ($f.HostGroupName) { Write-Host "    HostGroupName: $($f.HostGroupName)" }
+                if ($f.Item)   { Write-Host "    Item: $($f.Item)" }
+                if ($f.ItemId) { Write-Host "    ItemId: $($f.ItemId)" }
                 Write-Host "    Error: $($f.Error)"
             }
         }
