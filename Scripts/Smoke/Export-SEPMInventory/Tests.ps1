@@ -44,6 +44,26 @@ $results.A2 = T "A2" "FetchedAt is a DateTime within last 5 minutes" `
         $r.FetchedAt -gt [DateTime]::UtcNow.AddMinutes(-5)
     }
 
+# ── A2b: Snapshot has 27 properties (24 categories + FetchedAt + Failures + PSTypeName) ──
+$results.A2b = T "A2b" "Snapshot has exactly 27 properties (24 categories + FetchedAt + Failures)" `
+    { $snapshot } `
+    { param($r)
+        $expected = @(
+            'FetchedAt', 'Version', 'Domains', 'GUPs', 'Admins',
+            'DatabaseInfo', 'License', 'LicenseSummary', 'ReplicationStatus',
+            'ThreatStats', 'LatestDefinitions', 'Events', 'PolicySummaries',
+            'FirewallPolicies', 'IpsPolicies', 'ExceptionPolicies', 'Computers',
+            'ClientStatus', 'ClientVersions', 'ClientDefVersions', 'ClientInfected',
+            'Groups', 'Locations', 'LocationXML', 'GroupSettings',
+            'HostGroups', 'Failures'
+        )
+        $actual = @($r.PSObject.Properties | ForEach-Object { $_.Name }) | Sort-Object
+        $expectedSorted = $expected | Sort-Object
+        $actual.Count -eq 27 -and
+        (Compare-Object $actual $expectedSorted).Length -eq 0 -and
+        $r.PSObject.TypeNames[0] -eq 'SEPM.Inventory'
+    }
+
 # ── A3: Version populated with real SEPM data ──
 $results.A3 = T "A3" "Version property has API_SEQUENCE, API_VERSION, version" `
     { $snapshot } `
