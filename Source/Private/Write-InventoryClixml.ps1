@@ -28,19 +28,6 @@ function Write-InventoryClixml {
         [string]$OutputDir
     )
 
-    function Convert-CamelToSnake {
-        <#
-        .SYNOPSIS
-            Converts a CamelCase string to snake_case.
-            Inserts underscore before each uppercase letter preceded by a lowercase letter,
-            then lowercases the result.
-        #>
-        param([string]$Name)
-        $snake = $Name -creplace '([a-z])([A-Z])', '$1_$2'
-        return $snake.ToLower()
-    }
-
-    # Walk all properties on the snapshot
     foreach ($prop in $Snapshot.PSObject.Properties) {
         $propName = $prop.Name
         $propValue = $prop.Value
