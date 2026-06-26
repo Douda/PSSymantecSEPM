@@ -115,15 +115,15 @@ function Invoke-CategoryFetch {
             foreach ($item in $Items) {
                 $itemIndex++
 
-                $itemName = $item | ForEach-Object -Process $ItemNameScript
-                $itemId   = $item | ForEach-Object -Process $ItemIdScript
+                $itemName = $item | ForEach-Object $ItemNameScript
+                $itemId   = $item | ForEach-Object $ItemIdScript
 
                 if ($itemIndex % $heartbeatInterval -eq 0) {
                     Write-Host "  -> $Category ($itemIndex/$itemCount): $itemName" -ForegroundColor DarkGray
                 }
 
                 try {
-                    $fetched = $item | ForEach-Object -Process $ItemFetchScript
+                    $fetched = $item | ForEach-Object $ItemFetchScript
                     if ($null -ne $fetched) {
                         $results += $fetched
                     }

@@ -172,7 +172,7 @@ function Export-SEPMInventory {
             $locHeartbeatInterval = [Math]::Max(10, [Math]::Floor($locCount / 10))
             foreach ($locItem in $locationItems) {
                 $locIndex++
-                $locName = $locItem | ForEach-Object { $_.locationName }
+                $locName = $locItem.locationName
                 if ($locIndex % $locHeartbeatInterval -eq 0) {
                     Write-Host "  -> LocationXML ($locIndex/$locCount): $locName" -ForegroundColor DarkGray
                 }
@@ -226,7 +226,7 @@ function Export-SEPMInventory {
                 $hgHeartbeatInterval = [Math]::Max(10, [Math]::Floor($hgCount / 10))
                 foreach ($hg in $hgSummaries) {
                     $hgIndex++
-                    $hgName = $hg | ForEach-Object { $_.name }
+                    $hgName = $hg.name
                     if ($hgIndex % $hgHeartbeatInterval -eq 0) {
                         Write-Verbose "  -> group $hgIndex/$hgCount $hgName"
                         Write-Host "  -> HostGroups ($hgIndex/$hgCount): $hgName" -ForegroundColor DarkGray

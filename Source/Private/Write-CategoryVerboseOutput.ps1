@@ -48,9 +48,6 @@ function Write-CategoryVerboseOutput {
 
     $ts = Get-Date -Format "HH:mm:ss"
 
-    # Compute elapsed time from the stopwatch (approximates cumulative elapsed;
-    # the true cumulative elapsed will be reconnected when Export-SEPMInventory
-    # refactors to pass the overall start time)
     $elapsed = $Stopwatch.Elapsed
     if ($elapsed.TotalMinutes -ge 1) {
         $elapsedStr = "[+$([Math]::Floor($elapsed.TotalMinutes))m $($elapsed.Seconds)s]"
