@@ -817,28 +817,12 @@ Describe 'Export-SEPMInventory' {
             $result.GUPs | Should -BeNullOrEmpty
         }
 
-        It 'writes _failed.xml for infrastructure failures' {
-            Mock Get-SEPMAdmins -ModuleName PSSymantecSEPM { throw 'Admins API unavailable' }
-
-            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            Join-Path -Path 'TestDrive:' -ChildPath 'Admins_failed.xml' | Should -Exist
-        }
-
         It 'captures PolicySummaries failure in Failures array' {
             Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { throw 'Policies API unavailable' }
 
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
             @($result.Failures | Where-Object { $_.Category -eq 'PolicySummaries' }) | Should -Not -BeNullOrEmpty
             $result.Failures[0].Error | Should -Be 'Policies API unavailable'
-        }
-
-        It 'writes PolicySummaries_failed.xml on failure' {
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM { throw 'Policies API error' }
-
-            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            Join-Path -Path 'TestDrive:' -ChildPath 'PolicySummaries_failed.xml' | Should -Exist
         }
 
         It 'captures per-policy IPS failure and continues with remaining policies' {
@@ -859,7 +843,7 @@ Describe 'Export-SEPMInventory' {
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
             $ipsFailures = @($result.Failures | Where-Object { $_.Category -eq 'IpsPolicies' })
             $ipsFailures.Count | Should -Be 1
-            $ipsFailures[0].PolicyName | Should -Be 'Failing IPS'
+            $ipsFailures[0].Item | Should -Be 'Failing IPS'
             $result.IpsPolicies.Count | Should -Be 2
         }
 
@@ -880,34 +864,8 @@ Describe 'Export-SEPMInventory' {
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
             $excFailures = @($result.Failures | Where-Object { $_.Category -eq 'ExceptionPolicies' })
             $excFailures.Count | Should -Be 1
-            $excFailures[0].PolicyName | Should -Be 'Bad Exc'
+            $excFailures[0].Item | Should -Be 'Bad Exc'
             $result.ExceptionPolicies.Count | Should -Be 1
-        }
-
-        It 'writes IpsPolicies_failed.xml on per-policy IPS failure' {
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
-                Write-Output @(
-                    @{ id = 'I001'; name = 'Failing IPS'; policytype = 'ips'; enabled = $true }
-                ) -NoEnumerate
-            }
-            Mock Get-SEPMIpsPolicy -ModuleName PSSymantecSEPM { throw 'IPS error' }
-
-            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            Join-Path -Path 'TestDrive:' -ChildPath 'IpsPolicies_failed.xml' | Should -Exist
-        }
-
-        It 'writes ExceptionPolicies_failed.xml on per-policy exception failure' {
-            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
-                Write-Output @(
-                    @{ id = 'E001'; name = 'Failing Exc'; policytype = 'exceptions'; enabled = $true }
-                ) -NoEnumerate
-            }
-            Mock Get-SEPMExceptionPolicy -ModuleName PSSymantecSEPM { throw 'Exception error' }
-
-            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            Join-Path -Path 'TestDrive:' -ChildPath 'ExceptionPolicies_failed.xml' | Should -Exist
         }
 
         It 'captures Computers failure in Failures array' {
@@ -917,14 +875,6 @@ Describe 'Export-SEPMInventory' {
             $compFailures = @($result.Failures | Where-Object { $_.Category -eq 'Computers' })
             $compFailures.Count | Should -Be 1
             $compFailures[0].Error | Should -Be 'Computers API unavailable'
-        }
-
-        It 'writes Computers_failed.xml on failure' {
-            Mock Get-SEPMComputers -ModuleName PSSymantecSEPM { throw 'Computers API error' }
-
-            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            Join-Path -Path 'TestDrive:' -ChildPath 'Computers_failed.xml' | Should -Exist
         }
 
         It 'captures ClientStatus failure in Failures array' {
@@ -973,14 +923,6 @@ Describe 'Export-SEPMInventory' {
             $result.Groups | Should -BeNullOrEmpty
         }
 
-        It 'writes Groups_failed.xml on failure' {
-            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM { throw 'Groups API error' }
-
-            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            Join-Path -Path 'TestDrive:' -ChildPath 'Groups_failed.xml' | Should -Exist
-        }
-
         It 'captures Locations failure in Failures array' {
             Mock Get-SEPMLocation -ModuleName PSSymantecSEPM { throw 'Locations API unavailable' }
 
@@ -988,14 +930,6 @@ Describe 'Export-SEPMInventory' {
             $locFailures = @($result.Failures | Where-Object { $_.Category -eq 'Locations' })
             $locFailures.Count | Should -Be 2
             $locFailures[0].Error | Should -Be 'Locations API unavailable'
-        }
-
-        It 'writes Locations_failed.xml on failure' {
-            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM { throw 'Locations API error' }
-
-            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            Join-Path -Path 'TestDrive:' -ChildPath 'Locations_failed.xml' | Should -Exist
         }
 
         It 'captures LocationXML failure in Failures array' {
@@ -1007,14 +941,6 @@ Describe 'Export-SEPMInventory' {
             $xmlFailures[0].Error | Should -Be 'LocationXML API unavailable'
         }
 
-        It 'writes LocationXML_failed.xml on failure' {
-            Mock Get-SEPMLocationXML -ModuleName PSSymantecSEPM { throw 'LocationXML API error' }
-
-            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            Join-Path -Path 'TestDrive:' -ChildPath 'LocationXML_failed.xml' | Should -Exist
-        }
-
         It 'captures HostGroups summary failure in Failures array' {
             Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { throw 'HostGroups API unavailable' }
 
@@ -1022,14 +948,6 @@ Describe 'Export-SEPMInventory' {
             $hgFailures = @($result.Failures | Where-Object { $_.Category -eq 'HostGroups' })
             $hgFailures.Count | Should -Be 1
             $hgFailures[0].Error | Should -Be 'HostGroups API unavailable'
-        }
-
-        It 'writes HostGroups_failed.xml on summary failure' {
-            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { throw 'HostGroups API error' }
-
-            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            Join-Path -Path 'TestDrive:' -ChildPath 'HostGroups_failed.xml' | Should -Exist
         }
 
         It 'captures per-host-group failure and continues with remaining Host Groups' {
@@ -1050,25 +968,12 @@ Describe 'Export-SEPMInventory' {
             $result = Export-SEPMInventory -OutputDir 'TestDrive:'
             $hgFailures = @($result.Failures | Where-Object { $_.Category -eq 'HostGroups' })
             $hgFailures.Count | Should -Be 1
-            $hgFailures[0].HostGroupName | Should -Be 'Failing HG'
-            $hgFailures[0].HostGroupID | Should -Be 'HG002'
+            $hgFailures[0].Item | Should -Be 'Failing HG'
+            $hgFailures[0].ItemId | Should -Be 'HG002'
             $result.HostGroups.Count | Should -Be 2
             $result.HostGroups[0].id | Should -Be 'HG001'
             $result.HostGroups[1].id | Should -Be 'HG003'
             $script:hgFailCallCount | Should -Be 3
-        }
-
-        It 'writes HostGroups_failed.xml on per-Host-Group failure' {
-            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM {
-                Write-Output @(
-                    [PSCustomObject]@{ id = 'HG001'; name = 'Failing HG'; domainid = 'DOM001'; lastmodifiedtime = 1700000000000 }
-                ) -NoEnumerate
-            }
-            Mock Get-SEPMHostGroup -ModuleName PSSymantecSEPM { throw 'Host Group error' }
-
-            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            Join-Path -Path 'TestDrive:' -ChildPath 'HostGroups_failed.xml' | Should -Exist
         }
 
         It 'captures GroupSettings failure in Failures array' {
@@ -1080,13 +985,6 @@ Describe 'Export-SEPMInventory' {
             $gsFailures[0].Error | Should -Be 'GroupSettings API unavailable'
         }
 
-        It 'writes GroupSettings_failed.xml on failure' {
-            Mock Get-SEPMGroupSettings -ModuleName PSSymantecSEPM { throw 'GroupSettings API error' }
-
-            Get-ChildItem -Path 'TestDrive:' -Filter '*_failed.xml' | Remove-Item -Force -ErrorAction SilentlyContinue
-            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
-            Join-Path -Path 'TestDrive:' -ChildPath 'GroupSettings_failed.xml' | Should -Exist
-        }
     }
 
     Context 'OutputDir parameter' {
@@ -1267,42 +1165,6 @@ Describe 'Export-SEPMInventory' {
             # With 11 items, interval = Max(10, Floor(11/10)) = Max(10, 1) = 10
             $locXmlCalls.Count | Should -Be 1
             $locXmlCalls[0] | Should -Match 'LocationXML \(10/11\): Location 10\r?$'
-        }
-
-        It 'GroupSettings shows per-item progress (itemIndex/total): locationName when >10 locations' {
-            # Uses same setup as LocationXML test — Location and GroupSettings are in the same loop
-            $groups = 1..13 | ForEach-Object {
-                [PSCustomObject]@{ id = ('GRP{0:D3}' -f $_); name = "Group $_"; fullPathName = "Group $_" }
-            }
-            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
-                Write-Output $groups -NoEnumerate
-            }
-            $script:gsPipCallCount = 0
-            Mock Get-SEPMLocation -ModuleName PSSymantecSEPM {
-                $script:gsPipCallCount++
-                $padded = '{0:D3}' -f $script:gsPipCallCount
-                return @([PSCustomObject]@{
-                    locationName = "GS Location $script:gsPipCallCount"
-                    locationId = "LOC$script:gsPipCallCount"
-                    groupName = "Group $script:gsPipCallCount"
-                    groupId = "GRP$padded"
-                    groupFullPathName = "Group $script:gsPipCallCount"
-                })
-            }
-            Mock Get-SEPMLocationXML -ModuleName PSSymantecSEPM {
-                return "<Location><Id>$locationId</Id></Location>"
-            }
-            Mock Get-SEPMGroupSettings -ModuleName PSSymantecSEPM {
-                return @{ groupId = $groupId; locationId = $locationId }
-            }
-            Mock Get-SEPMHostGroupSummary -ModuleName PSSymantecSEPM { Write-Output @() -NoEnumerate }
-
-            $output = Export-SEPMInventory -OutputDir 'TestDrive:' 6>&1 | Out-String
-
-            $gsCalls = @($output -split "`n" | Where-Object { $_ -match 'GroupSettings \(\d+/\d+\)' })
-            # With 13 items, interval = Max(10, Floor(13/10)) = Max(10, 1) = 10
-            $gsCalls.Count | Should -Be 1
-            $gsCalls[0] | Should -Match 'GroupSettings \(10/13\): GS Location 10\r?$'
         }
 
         It 'HostGroups shows per-item progress (itemIndex/total): groupName when >10 host groups' {

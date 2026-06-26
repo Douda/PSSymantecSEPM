@@ -322,12 +322,8 @@ $results.B4 = T "B4" "No failures during inventory collection" `
             Write-Host "  FAILURES: $($r.Failures.Count) failure(s):" -ForegroundColor Yellow
             foreach ($f in $r.Failures) {
                 Write-Host "    Category: $($f.Category)"
-                if ($f.PolicyName)    { Write-Host "    PolicyName: $($f.PolicyName)" }
-                if ($f.GroupID)       { Write-Host "    GroupID: $($f.GroupID)" }
-                if ($f.GroupName)     { Write-Host "    GroupName: $($f.GroupName)" }
-                if ($f.LocationID)    { Write-Host "    LocationID: $($f.LocationID)" }
-                if ($f.HostGroupID)   { Write-Host "    HostGroupID: $($f.HostGroupID)" }
-                if ($f.HostGroupName) { Write-Host "    HostGroupName: $($f.HostGroupName)" }
+                if ($f.Item)   { Write-Host "    Item: $($f.Item)" }
+                if ($f.ItemId) { Write-Host "    ItemId: $($f.ItemId)" }
                 Write-Host "    Error: $($f.Error)"
             }
         }
