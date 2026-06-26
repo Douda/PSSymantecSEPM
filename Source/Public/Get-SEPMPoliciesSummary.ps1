@@ -9,6 +9,9 @@ function Get-SEPMPoliciesSummary {
         The policy type for which the summary is to be retrieved. 
         The valid values are hid, exceptions, mem, ntr, av, fw, ips, lu, hi, adc, msl, upgrade.
         If not specified, the summary for all policies is retrieved.
+    .PARAMETER GroupList
+        Pre-fetched group list from Get-SEPMGroups. When provided, skips the
+        internal Get-SEPMGroups call, avoiding a redundant API round-trip.
     .EXAMPLE
         PS C:\PSSymantecSEPM> Get-SEPMPoliciesSummary
 
@@ -66,7 +69,11 @@ function Get-SEPMPoliciesSummary {
             'upgrade'
         )]
         [string]
-        $PolicyType
+        $PolicyType,
+
+        [Parameter()]
+        [object[]]
+        $GroupList
     )
 
     begin {
@@ -74,7 +81,11 @@ function Get-SEPMPoliciesSummary {
         $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMPoliciesSummary'
 
         # Get the list of groups and IDs to inject into the response
-        $groups = Get-SEPMGroups
+        if ($PSBoundParameters.ContainsKey('GroupList')) {
+            $groups = $GroupList
+        } else {
+            $groups = Get-SEPMGroups
+        }
     }
 
     process {
