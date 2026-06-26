@@ -118,7 +118,7 @@ function Invoke-CategoryFetch {
                 $itemName = $item | ForEach-Object -Process $ItemNameScript
                 $itemId   = $item | ForEach-Object -Process $ItemIdScript
 
-                if ($heartbeatInterval -gt 0 -and $itemIndex % $heartbeatInterval -eq 0) {
+                if ($itemIndex % $heartbeatInterval -eq 0) {
                     Write-Host "  -> $Category ($itemIndex/$itemCount): $itemName" -ForegroundColor DarkGray
                 }
 
