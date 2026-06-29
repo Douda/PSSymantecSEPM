@@ -545,4 +545,31 @@ Describe 'Update-SEPMExceptionPolicy' {
                 Should -Throw -ExpectedMessage '*EnablePolicy*DisablePolicy*'
         }
     }
+
+    Context 'Error handling' {
+        BeforeAll {
+            $null = Set-TestMocks -SkipCert -SkipTransport
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                return New-DummyPolicySummary -PolicyName 'Not Exceptions' -PolicyType 'av'
+            }
+        }
+
+        It 'throws a terminating error when policy type is not exceptions' {
+            { Update-SEPMExceptionPolicy -PolicyName 'Not Exceptions' -Path 'C:\test\file.exe' } |
+                Should -Throw
+        }
+
+        It 'error message mentions EXCEPTIONS policy type mismatch' {
+            { Update-SEPMExceptionPolicy -PolicyName 'Not Exceptions' -Path 'C:\test\file.exe' } |
+                Should -Throw -ExpectedMessage '*policy type is not of type EXCEPTIONS*'
+        }
+
+        It 'throws a terminating error when policy name is not found' {
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                return @()
+            }
+            { Update-SEPMExceptionPolicy -PolicyName 'NonexistentPolicy' -Path 'C:\test\file.exe' } |
+                Should -Throw -ExpectedMessage "*Policy 'NonexistentPolicy' not found*"
+        }
+    }
 }

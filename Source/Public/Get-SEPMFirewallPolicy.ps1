@@ -119,17 +119,7 @@ function Get-SEPMFirewallPolicy {
         }
 
         if ($PolicyName) {
-            # Get Policy ID from policy name
-            $policies = Get-SEPMPoliciesSummary
-            $policy = $policies | Where-Object { $_.name -eq $PolicyName }
-            $policyID = $policy.id
-            $policy_type = $policy.policytype
-
-            if ($policy_type -ne "fw") {
-                $message = "policy type is not of type FIREWALL or does not exist - Please verify the policy name"
-                Write-Error -Message $message
-                throw $message
-            }
+            $policyID = Resolve-SEPMPolicy -PolicyName $PolicyName -PolicyType 'fw'
         }
 
         try {
