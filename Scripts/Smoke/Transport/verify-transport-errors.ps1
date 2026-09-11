@@ -30,24 +30,30 @@
     directory - point it at the shared volume to read the result from the host.
 
 .PARAMETER ServerAddress
-    SEPM host. Use 'localhost' when running inside the VM, and the VM's bridge address
-    (172.20.0.2) when running from the devcontainer.
+    SEPM host. Defaults to $env:SEPM_HOST, then to the platform's own address (172.20.0.2 on
+    PS 7 from the devcontainer, localhost when running inside the VM).
 
 .PARAMETER Port
-    SEPM REST API port.
+    SEPM REST API port. Defaults to $env:SEPM_PORT, then 8446.
 
 .PARAMETER DeadPort
     A port on ServerAddress with nothing listening, for the unreachable-server check.
+    Defaults to Port + 1.
 
 .PARAMETER UserName
-    SEPM API user.
+    SEPM API user. Defaults to $env:SEPM_USER, then 'sepm_api'.
 
 .PARAMETER Password
-    Password for UserName.
+    Password for UserName. Defaults to $env:SEPM_PASS, then the password that works against
+    the local dev VM.
 
 .EXAMPLE
     # PS 7, from the devcontainer, against the VM's SEPM
-    pwsh -NoProfile -File Scripts/Smoke/Transport/verify-transport-errors.ps1 -ServerAddress 172.20.0.2
+    pwsh -NoProfile -File Scripts/Smoke/Transport/verify-transport-errors.ps1
+
+.EXAMPLE
+    # Rotated credentials, on either platform
+    SEPM_USER=... SEPM_PASS=... pwsh -NoProfile -File Scripts/Smoke/Transport/verify-transport-errors.ps1
 
 .EXAMPLE
     # Windows PowerShell 5.1: deploy the script and the built module to the shared volume,
@@ -64,11 +70,13 @@
 param(
     [string]$ModulePath,
     [string]$ReportPath,
-    [string]$ServerAddress = 'localhost',
-    [int]$Port = 8446,
-    [int]$DeadPort = 8447,
-    [string]$UserName = 'sepm_api',
-    [string]$Password = 'Aurelien1!'
+    # Platform-aware default, matching Bootstrap.ps1: the container reaches the VM at its
+    # bridge address, a process already on the VM uses loopback. SEPM_HOST wins over both.
+    [string]$ServerAddress = $(if ($env:SEPM_HOST) { $env:SEPM_HOST } elseif ($PSVersionTable.PSVersion.Major -ge 7) { '172.20.0.2' } else { 'localhost' }),
+    [int]$Port = $(if ($env:SEPM_PORT) { [int]$env:SEPM_PORT } else { 8446 }),
+    [int]$DeadPort = $(if ($env:SEPM_PORT) { [int]$env:SEPM_PORT + 1 } else { 8447 }),
+    [string]$UserName = $(if ($env:SEPM_USER) { $env:SEPM_USER } else { 'sepm_api' }),
+    [string]$Password = $(if ($env:SEPM_PASS) { $env:SEPM_PASS } else { 'Aurelien1!' })
 )
 
 $ErrorActionPreference = 'Stop'

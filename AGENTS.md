@@ -278,4 +278,4 @@ Single-context — one `CONTEXT.md` at the repo root, one `docs/adr/` directory.
 
 How to interact with the local SEPM VM for live API smoke tests (auth, curl, PS 7, PS 5.1). See `docs/agents/smoke-testing.md`.
 
-Credentials: SEPM API: `sepm_api` / `Aurelien1!`. `admin` / `MyComplexPassword1!` is what `Scripts/init-sepm-vm.ps1` and `Scripts/Smoke/Bootstrap.ps1` assume, but on this VM `admin` answers "Account is locked or invalid username, password, or domain." — restore the account or update those two scripts. WinRM: `douda` / `aurelien`; SEPM backup: `douda` / `Aurelien1!` (VM in docker-compose, local dev only).
+Credentials — all defaults, all overridable by environment variable so they can be rotated per VM (`SEPM_USER` / `SEPM_PASS` / `SEPM_HOST` / `SEPM_PORT`; `WINRM_HOST` / `WINRM_PORT` / `WINRM_USER` / `WINRM_PASS`): SEPM API: `sepm_api` / `Aurelien1!`; WinRM: `douda` / `aurelien`; SEPM backup: `douda` / `Aurelien1!`. Cleartext is fine here — throwaway VMs. See `docs/agents/smoke-testing.md`.

@@ -13,7 +13,7 @@
 #>
 
 $ErrorActionPreference = "Continue"
-$RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
+$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
 
 # ── Bootstrap: import module, cert bypass, config, auth ──
 . "$RepoRoot\Scripts\Smoke\Bootstrap.ps1"

@@ -26,6 +26,34 @@ own `localhost:8446` is only correct for scripts running *inside* the VM.
 
 ## Auth
 
+### Credentials and rotation
+
+SEPM credentials are never hardcoded per call site. Every entry point resolves them the same
+way: environment variable first, then a default that works against the local dev VM.
+
+| Variable | Default | Notes |
+|---|---|---|
+| `SEPM_USER` | `sepm_api` | |
+| `SEPM_PASS` | `Aurelien1!` | Cleartext is fine — throwaway VMs, rotated credentials |
+| `SEPM_HOST` | `172.20.0.2` on PS 7, `localhost` on PS 5.1 | The container reaches the VM at its bridge address; a process on the VM uses loopback |
+| `SEPM_PORT` | `8446` | |
+| `WINRM_HOST` | `localhost` (`172.20.0.2` from the devcontainer) | |
+| `WINRM_PORT` | `5985` | 5986/SSL is broken with pywinrm |
+| `WINRM_USER` / `WINRM_PASS` | `douda` / `aurelien` | The VM's Windows account |
+
+Consumers: `Scripts/Smoke/Bootstrap.ps1` (all 39 suites, both platforms),
+`Scripts/Smoke/Transport/verify-transport-errors.ps1`, `Scripts/init-sepm-vm.ps1`, and
+`Scripts/bootstrap-smoke.sh` (which passes `SEPM_USER`/`SEPM_PASS` down as `SEPM_*`).
+
+`Scripts/invoke-winrm.py` forwards `SEPM_USER` and `SEPM_PASS` into the remote PowerShell
+process, so rotating them once covers the PS 5.1 suites too. The SEPM **address** is
+deliberately not forwarded — the two sides reach SEPM at different addresses.
+
+Bad credentials stop the run at bootstrap, with the address, the user, the server's own message
+and the variables to set — rather than leaving all 39 suites to fail one by one. (Note the
+credential file is still written before it is verified; verifying before persisting is a
+deferred item in ADR-0010's PR.)
+
 ### curl
 ```bash
 TOKEN=$(curl -sk -X POST https://172.20.0.2:8446/sepm/api/v1/identity/authenticate \
@@ -69,9 +97,8 @@ then dot-source the suite's `Tests.ps1`.
 
 `Common.ps1` is a pure helper library — `T`, `Skip`, `Write-Summary` only. No side
 effects, no `$PSVersionTable` branching, no config paths, no module import.
-Credentials live inside `Bootstrap.ps1` / `Initialize-SmokeBootstrap` and are currently
-`admin` / `MyComplexPassword1!`. This VM rejects that account (see Environment), so on this VM
-every suite fails at bootstrap until `Bootstrap.ps1` is updated or the account is restored.
+Credentials are resolved by `Initialize-SmokeBootstrap` from `SEPM_USER` / `SEPM_PASS` (see
+Credentials and rotation), defaulting to `sepm_api` / `Aurelien1!` — not embedded per suite.
 
 See `Scripts/Smoke/README.md` for suite conversion status.
 
@@ -221,12 +248,17 @@ WINRM_HOST=172.20.0.2 WINRM_PORT=5985 WINRM_USER=douda WINRM_PASS=aurelien \
     python3 Scripts/invoke-winrm.py 'C:\Users\douda\Desktop\Shared\Scripts\Smoke\<Suite>\run.ps51.ps1'
 ```
 
-`invoke-winrm.py` handles NTLM auth on port 5985. SSL/5986 is broken with pywinrm. The defaults
-baked into `invoke-winrm.py` (`localhost`, `smokeuser`) do not fit this VM — pass
-`WINRM_HOST` / `WINRM_USER` / `WINRM_PASS` as above.
+`invoke-winrm.py` handles NTLM auth on port 5985 and forwards `SEPM_USER` / `SEPM_PASS` to the
+VM. SSL/5986 is broken with pywinrm. Its defaults (`douda` / `aurelien`, `localhost`) fit this
+VM; override with `WINRM_*` when they do not, and use `WINRM_HOST=172.20.0.2` from the
+devcontainer.
 
 **Transport**: PS5.1 uses `[HttpWebRequest]` with `KeepAlive=false` (via `Invoke-SepmApi`, see Source/Private/Invoke-SepmApi.ps1).
 `Invoke-RestMethod` on .NET Framework 4.x reuses TLS connections which SEPM 14.3 rejects.
+
+`invoke-winrm.py` runs the script through `-EncodedCommand`, so the VM serializes its
+information and error streams to stderr as `#< CLIXML` blobs. That is noise, not a failure —
+stdout and the `TOTAL:` line stay clean, and `bootstrap-smoke.sh` parses those.
 
 **PS 5.1 differences**: no `-SkipCertificateCheck` (use `ServicePointManager` callback); all .ps1 files need UTF-8 BOM; `ConvertFrom-Json` lacks `-AsHashtable`/`-Depth`.
 
