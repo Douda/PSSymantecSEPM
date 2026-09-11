@@ -120,3 +120,19 @@ Location ID→name map for zero, one, or more Policy types. Built by
 `Get-SEPMPolicySnapshot` and consumed by Export-ToExcel cmdlets. Persisted via
 `Export-Clixml` for offline use.
 _Avoid_: Dump, export bundle, policy collection
+
+**Transport Error**:
+A failure raised by the module's REST transport rather than by a cmdlet's own logic. Raised as
+a PowerShell ErrorRecord carrying one of three ErrorIds, each mapping to a remedy the operator
+can act on:
+
+| ErrorId | Meaning | Remedy |
+|---|---|---|
+| `SEPM.AuthenticationFailed` | The credential was rejected, or a 401 arrived because the token expired | Re-authenticate |
+| `SEPM.CertificateError` | TLS validation failed during the handshake, before any API call | Trust the certificate |
+| `SEPM.ApiError` | The server refused the request, or was unreachable | Read the message |
+
+The ErrorCategory refines `SEPM.ApiError`: `InvalidData`, `ObjectNotFound`, `PermissionDenied`,
+`ResourceUnavailable`, `ConnectionError`. A failure is never returned as a value, only thrown, so
+a string returned by a cmdlet is always a successful non-JSON payload.
+_Avoid_: HTTP error, API exception, network error, error string

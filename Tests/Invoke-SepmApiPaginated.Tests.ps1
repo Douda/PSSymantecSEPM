@@ -119,7 +119,7 @@ Describe 'Invoke-SepmApiPaginated' {
     }
 
     Context 'error handling' {
-        It 'throws when Invoke-SepmApi returns an error string' {
+        It 'throws when the response carries no lastPage field' {
             InModuleScope PSSymantecSEPM -Parameters @{ Endpoint = $script:pagedEndpoint; Session = $script:fakeSession } {
                 Mock Invoke-SepmApi {
                     return 'Error: Something went wrong'
@@ -127,7 +127,26 @@ Describe 'Invoke-SepmApiPaginated' {
 
                 Mock Resolve-SepmEndpoint { return 'https://sepm.example.com:8446/sepm/api/v1/computers' }
 
-                { Invoke-SepmApiPaginated -Endpoint $Endpoint -Session $Session } | Should -Throw
+                # lastPage is the loop's only termination condition, so a payload without it
+                # must be rejected rather than trusted - otherwise the loop never ends.
+                { Invoke-SepmApiPaginated -Endpoint $Endpoint -Session $Session } | Should -Throw '*lastPage*'
+            }
+        }
+
+        It 'retries a failed page once and then throws' {
+            InModuleScope PSSymantecSEPM -Parameters @{ Endpoint = $script:pagedEndpoint; Session = $script:fakeSession } {
+                $script:attempts = 0
+                Mock Invoke-SepmApi {
+                    $script:attempts++
+                    throw (New-SEPMApiError -Message 'SEPM API GET /computers failed (HTTP 500): Internal Server Error' `
+                            -Category ([System.Management.Automation.ErrorCategory]::ResourceUnavailable) -Target 'https://sepm')
+                }
+
+                Mock Resolve-SepmEndpoint { return 'https://sepm.example.com:8446/sepm/api/v1/computers' }
+
+                { Invoke-SepmApiPaginated -Endpoint $Endpoint -Session $Session } | Should -Throw '*Internal Server Error*'
+                # One retry means exactly two attempts at the failing page.
+                $script:attempts | Should -Be 2
             }
         }
     }

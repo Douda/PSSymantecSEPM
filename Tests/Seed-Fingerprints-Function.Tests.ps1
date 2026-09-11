@@ -306,7 +306,9 @@ Describe 'Invoke-SeedFingerprints' {
                 }
                 if ($Method -eq 'DELETE') {
                     $script:deletedIds += $Uri
-                    return 'Error: Internal Server Error'
+                    # Simulate DELETE 500 the way the real transport reports it: by throwing.
+                    throw (New-SEPMApiError -Message 'SEPM API DELETE /policies/policy-objects/fingerprints/x failed (HTTP 500): Internal Server Error' `
+                            -Category ([System.Management.Automation.ErrorCategory]::ResourceUnavailable) -Target $Uri)
                 }
                 if ($Method -eq 'POST') {
                     $script:postCalls += $Body

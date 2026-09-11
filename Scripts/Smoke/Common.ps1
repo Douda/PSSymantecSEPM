@@ -43,8 +43,9 @@ function T {
     .PARAMETER Assert
         ScriptBlock that receives the Action output and returns $true (pass) or $false (fail).
     .PARAMETER ExpectedError
-        Optional substring. If the Action throws or returns an API error containing this
-        text, the test is classified as PASS (expected error scenario).
+        Optional substring. If the Action throws an exception whose message contains this
+        text, the test is classified as PASS (expected error scenario). Cmdlets no longer
+        return failures as strings, so only the exception path is matched.
     .PARAMETER SleepMs
         Milliseconds to sleep after running Action (default 0). Use for mutation
         cmdlets that need SEPM to settle before asserting.
@@ -68,15 +69,6 @@ function T {
     Write-Host "--- $Id : $Label ---" -ForegroundColor Cyan
     try {
         $result = & $Action
-
-        if ($result -is [string] -and $result -like "Error:*") {
-            if ($ExpectedError -and $result -like "*$ExpectedError*") {
-                Write-Host "  VERDICT: PASS (expected error: $ExpectedError)" -ForegroundColor Green
-                return "PASS"
-            }
-            Write-Host "  VERDICT: FAIL (API error: $result)" -ForegroundColor Red
-            return "FAIL"
-        }
 
         if ($SleepMs -gt 0) { Start-Sleep -Milliseconds $SleepMs }
         if ($AssertTarget) {

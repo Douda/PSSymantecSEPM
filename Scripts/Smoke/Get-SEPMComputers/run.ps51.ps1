@@ -13,7 +13,7 @@
 #>
 
 $ErrorActionPreference = "Continue"
-$RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
+$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
 
 # ── PS5.1 transport prerequisites ──
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }

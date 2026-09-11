@@ -17,9 +17,14 @@
 #   • Summary report
 #
 # Env vars (all optional — defaults work for local dev):
-#   VM_USER                  — Windows username on VM (default: smokeuser)
-#   WINRM_USER, WINRM_PASS   — Windows VM credentials (default: same as VM_USER)
-#   SEPM_USER, SEPM_PASS     — SEPM admin credentials
+#   VM_USER                  — Windows username on VM (default: douda)
+#   WINRM_USER, WINRM_PASS   — Windows VM credentials (default: VM_USER / aurelien)
+#   WINRM_HOST, WINRM_PORT   — WinRM endpoint (default: 172.20.0.2:5985; 5986/SSL is
+#                              broken with pywinrm)
+#   SEPM_USER, SEPM_PASS     — SEPM API credentials, rotated per VM (default: sepm_api /
+#                              Aurelien1!). These are forwarded to the VM, so one setting
+#                              covers both platforms.
+#   SEPM_HOST, SEPM_PORT     — SEPM address as seen from the host (default: 172.20.0.2:8446)
 #   SHARED_VOLUME            — host-side path mapped to VM Desktop/Shared
 #   SKIP_PS51                — set to 1 to skip WinRM smoke tests
 #   SKIP_PS7                 — set to 1 to skip PS7 smoke tests
@@ -67,11 +72,21 @@ discover_smoke_suites() {
 # Outputs: "tests pass fail skip" (space-separated, defaults to "0 0 0 0").
 parse_smoke_result_file() {
     local log_file="$1"
-    local tests pass fail skip
-    tests=$(grep -oP '\d+(?= tests)' "$log_file" | head -1 || echo "0")
-    pass=$(grep  -oP '\d+(?= pass)'  "$log_file" | head -1 || echo "0")
-    fail=$(grep  -oP '\d+(?= fail)'  "$log_file" | head -1 || echo "0")
-    skip=$(grep  -oP '\d+(?= skip)'  "$log_file" | head -1 || echo "0")
+    local tests=0 pass=0 fail=0 skip=0
+
+    # Read the suite's own summary line. Matching the first number that happens to precede
+    # " fail" anywhere in the log does not work: PowerShell error records and inline script
+    # text contain plenty ("EVT-TEST-000 failed", "999999 fail-safe"), and each one invents
+    # a failure that never happened. ANSI colour is stripped first in case the summary is
+    # ever written with it. tail -1 keeps the last summary when a log has several.
+    local summary
+    summary=$(sed 's/\x1b\[[0-9;]*m//g' "$log_file" \
+        | grep -oP 'TOTAL: \d+ tests, \d+ pass, \d+ fail, \d+ skip' | tail -1)
+
+    if [ -n "$summary" ]; then
+        read -r tests pass fail skip <<< "$(grep -oP '\d+' <<< "$summary" | tr '\n' ' ')"
+    fi
+
     echo "$tests $pass $fail $skip"
 }
 
@@ -144,14 +159,14 @@ if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
 fi
 
 # ── Defaults (from docs/agents/smoke-testing.md) ──
-export VM_USER="${VM_USER:-smokeuser}"
+export VM_USER="${VM_USER:-douda}"
 export WINRM_USER="${WINRM_USER:-$VM_USER}"
-export WINRM_PASS="${WINRM_PASS:-smokepassword}"
-export WINRM_HOST="${WINRM_HOST:-localhost}"
-export WINRM_PORT="${WINRM_PORT:-5986}"
-export SEPM_USER="${SEPM_USER:-admin}"
-export SEPM_PASS="${SEPM_PASS:-MyComplexPassword1!}"
-export SEPM_HOST="${SEPM_HOST:-localhost}"
+export WINRM_PASS="${WINRM_PASS:-aurelien}"
+export WINRM_HOST="${WINRM_HOST:-172.20.0.2}"
+export WINRM_PORT="${WINRM_PORT:-5985}"
+export SEPM_USER="${SEPM_USER:-sepm_api}"
+export SEPM_PASS="${SEPM_PASS:-Aurelien1!}"
+export SEPM_HOST="${SEPM_HOST:-172.20.0.2}"
 export SEPM_PORT="${SEPM_PORT:-8446}"
 SEPM_API="https://${SEPM_HOST}:${SEPM_PORT}/sepm/api/v1/version"
 CONTAINER="${CONTAINER:-omarchy-windows}"

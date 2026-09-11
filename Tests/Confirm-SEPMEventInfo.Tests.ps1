@@ -46,7 +46,8 @@ Describe 'Confirm-SEPMEventInfo' {
 
         It 'returns $false when event is not acknowledgeable' {
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                return 'errorCode: 4104, Failed to update the event, summary:Could not find notification'
+                throw (New-SEPMApiError -Message 'SEPM API POST /sepm/api/v1/events/acknowledge/EVT-NON-ACKABLE failed (HTTP 400): Failed to update the event, summary:Could not find notification' `
+                        -Category ([System.Management.Automation.ErrorCategory]::InvalidData) -Target 'https://sepm')
             }
 
             $result = Confirm-SEPMEventInfo -EventID 'EVT-NON-ACKABLE' -WarningAction SilentlyContinue
@@ -56,24 +57,38 @@ Describe 'Confirm-SEPMEventInfo' {
 
         It 'writes error when event is not acknowledgeable' {
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                return 'errorCode: 4104, Failed to update the event, summary:Could not find notification'
+                throw (New-SEPMApiError -Message 'SEPM API POST /sepm/api/v1/events/acknowledge/EVT-BAD-TYPE failed (HTTP 400): Failed to update the event' `
+                        -Category ([System.Management.Automation.ErrorCategory]::InvalidData) -Target 'https://sepm')
             }
 
-            $script:errors = @()
-            Confirm-SEPMEventInfo -EventID 'EVT-BAD-TYPE' -WarningAction SilentlyContinue -ErrorVariable script:errors
+            $captured = & { Confirm-SEPMEventInfo -EventID 'EVT-BAD-TYPE' -WarningAction SilentlyContinue } 2>&1
+            $errors = @($captured | Where-Object { $_ -is [System.Management.Automation.ErrorRecord] })
 
-            $script:errors.Count | Should -BeGreaterThan 0
-            $script:errors[0].Exception.Message | Should -Match 'acknowledged'
+            $errors.Count | Should -BeGreaterThan 0
+            $errors[0].Exception.Message | Should -Match 'acknowledged'
         }
 
         It 'returns $false on generic API error' {
             Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
-                return 'errorCode: 999, Some other failure'
+                throw (New-SEPMApiError -Message 'SEPM API POST /sepm/api/v1/events/acknowledge/EVT-ERR-003 failed (HTTP 500): Internal Server Error' `
+                        -Category ([System.Management.Automation.ErrorCategory]::ResourceUnavailable) -Target 'https://sepm')
             }
 
             $result = Confirm-SEPMEventInfo -EventID 'EVT-ERR-003' -WarningAction SilentlyContinue
 
             $result | Should -BeFalse
+        }
+
+        It 'keeps SEPMs own message in the error it writes' {
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                throw (New-SEPMApiError -Message 'SEPM API POST /sepm/api/v1/events/acknowledge/EVT-DETAIL failed (HTTP 500): Internal Server Error' `
+                        -Category ([System.Management.Automation.ErrorCategory]::ResourceUnavailable) -Target 'https://sepm')
+            }
+
+            $captured = & { Confirm-SEPMEventInfo -EventID 'EVT-DETAIL' -WarningAction SilentlyContinue } 2>&1
+            $errors = @($captured | Where-Object { $_ -is [System.Management.Automation.ErrorRecord] })
+
+            $errors[0].Exception.Message | Should -Match 'Internal Server Error'
         }
     }
 

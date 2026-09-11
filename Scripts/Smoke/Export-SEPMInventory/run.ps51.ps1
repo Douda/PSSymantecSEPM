@@ -6,11 +6,11 @@
     Bootstraps the module and SEPM connection for PS 5.1 from the shared volume,
     then dot-sources Common.ps1 (auth + helpers) and Tests.ps1 (test cases).
 
-    Usage (from host): python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\smoke-export-inventory.ps1'
+    Usage (from host): python3 Scripts/invoke-winrm.py 'C:\Users\douda\Desktop\Shared\smoke-export-inventory.ps1'
 #>
 
 $ErrorActionPreference = "Continue"
-$RepoRoot = "C:\Users\smokeuser\Desktop\Shared"
+$RepoRoot = (Resolve-Path "$PSScriptRoot/../../..").Path
 
 # ── Bootstrap: import module, cert bypass, config, auth ──
 . "$RepoRoot\Scripts\Smoke\Bootstrap.ps1"

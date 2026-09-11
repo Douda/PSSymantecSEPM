@@ -16,11 +16,17 @@ function Get-SEPMAccessToken {
             - store it in memory and on disk
             - return the token
 
+        A rejected credential, an unreachable server or an untrusted certificate all mean no
+        token comes back. Each is raised as a Transport Error here rather than cached, so the
+        failure is named at the point it happens instead of surfacing later as "invalid_token"
+        on every subsequent call. The cached token file is treated as a cache: if it is empty
+        or unreadable it is discarded and authentication simply runs again.
+
     .PARAMETER AccessToken
         If provided, this will be returned instead of using the cached/configured value
 
     .OUTPUTS
-        System.String
+        System.Management.Automation.PSCustomObject (token, tokenExpiration, SkipCert)
 #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
@@ -43,9 +49,24 @@ function Get-SEPMAccessToken {
         }
     }
 
-    # If still not found, will look to see if there is a file with the API token stored in the disk
+    # If still not found, will look to see if there is a file with the API token stored on disk.
+    # This file is a cache: if it is empty or unreadable, drop it and authenticate again rather
+    # than failing. Import-Clixml on a zero-byte file throws "Root element is missing.", and
+    # -ErrorAction Ignore does not suppress that.
     if (Test-Path $script:accessTokenFilePath) {
-        $AccessToken = Import-Clixml -Path $script:accessTokenFilePath -ErrorAction Ignore
+        $AccessToken = $null
+        if ((Get-Item -Path $script:accessTokenFilePath).Length -eq 0) {
+            Write-Verbose "Cached access token file is empty, discarding it: $script:accessTokenFilePath"
+            Remove-Item -Path $script:accessTokenFilePath -Force -ErrorAction SilentlyContinue
+        } else {
+            try {
+                $AccessToken = Import-Clixml -Path $script:accessTokenFilePath -ErrorAction Stop
+            } catch {
+                Write-Verbose "Cached access token file is unreadable, discarding it: $($_.Exception.Message)"
+                Remove-Item -Path $script:accessTokenFilePath -Force -ErrorAction SilentlyContinue
+                $AccessToken = $null
+            }
+        }
         if (Test-SEPMAccessToken -Token $AccessToken) {
             $script:accessToken = $AccessToken
             return $script:accessToken
@@ -63,9 +84,19 @@ function Get-SEPMAccessToken {
         Set-SEPMConfiguration -ServerAddress $ServerAddress
     }
 
-    # Look for credentials stored in the disk
+    # Look for credentials stored on disk. Unlike the token, this file holds a real secret, so
+    # corruption is reported rather than swallowed: treat the file as absent and let the prompt
+    # below ask for the credential again.
     if (Test-Path $script:credentialsFilePath) {
-        $script:Credential = Import-Clixml -Path $script:credentialsFilePath
+        if ((Get-Item -Path $script:credentialsFilePath).Length -eq 0) {
+            Write-Warning "Stored credential file is empty and will be ignored: $script:credentialsFilePath"
+        } else {
+            try {
+                $script:Credential = Import-Clixml -Path $script:credentialsFilePath -ErrorAction Stop
+            } catch {
+                Write-Warning "Stored credential file could not be read and will be ignored: $($_.Exception.Message)"
+            }
+        }
     }
     if ($null -eq $script:Credential) {
         $message = "Credentials not found. Provide credentials :"
@@ -83,9 +114,34 @@ function Get-SEPMAccessToken {
     }
 
     # Invoke the request and SkipCert if needed (Manual parameter set — no session exists yet)
-    $Response = Invoke-SepmApi -Method POST -Uri $URI_Authenticate `
-        -Body (ConvertTo-SEPMJson -InputObject $body) -ContentType 'application/json' `
-        -Headers @{} -SkipCert $script:SkipCert
+    try {
+        $Response = Invoke-SepmApi -Method POST -Uri $URI_Authenticate `
+            -Body (ConvertTo-SEPMJson -InputObject $body) -ContentType 'application/json' `
+            -Headers @{} -SkipCert $script:SkipCert
+    } catch {
+        # Anything that goes wrong on /identity/authenticate is an authentication failure as far
+        # as the caller is concerned - SEPM answers a wrong password with a generic 400, so the
+        # transport cannot tell. The one exception is a certificate that could not be validated:
+        # the transport already tagged that with the more precise remedy, so it passes through.
+        if ($_.FullyQualifiedErrorId -like 'SEPM.CertificateError*') {
+            throw
+        }
+        $PSCmdlet.ThrowTerminatingError((New-SEPMApiError -Message $_.Exception.Message `
+                    -ErrorId 'SEPM.AuthenticationFailed' `
+                    -Category ([System.Management.Automation.ErrorCategory]::AuthenticationError) `
+                    -Target $URI_Authenticate))
+    }
+
+    # A response carrying no token is not a successful authentication. Without this check the
+    # module would cache a null token, report success, and leave every later call to fail with
+    # "invalid_token" instead of naming the real problem.
+    if ([String]::IsNullOrEmpty($Response.token)) {
+        $message = "SEPM authentication failed for user '$($script:Credential.UserName)'. The server did not return an access token."
+        $PSCmdlet.ThrowTerminatingError((New-SEPMApiError -Message $message `
+                    -ErrorId 'SEPM.AuthenticationFailed' `
+                    -Category ([System.Management.Automation.ErrorCategory]::AuthenticationError) `
+                    -Target $URI_Authenticate))
+    }
 
     # Sort the response
     $CachedToken = [PSCustomObject]@{

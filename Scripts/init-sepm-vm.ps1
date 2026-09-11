@@ -8,10 +8,11 @@
     authenticate non-interactively. Safe to run multiple times.
 
 .PARAMETER SepmUser
-    SEPM admin username (default: admin)
+    SEPM API username. Defaults to $env:SEPM_USER, then 'sepm_api'.
 
 .PARAMETER SepmPass
-    SEPM admin password (default: Aurelien1!)
+    SEPM API password. Defaults to $env:SEPM_PASS, then the password that works against the
+    local dev VM.
 
 .PARAMETER SepmHost
     SEPM server address from the VM's perspective (default: localhost)
@@ -30,11 +31,17 @@
 
 [CmdletBinding()]
 param(
-    [string]$SepmUser = "admin",
-    [string]$SepmPass = "MyComplexPassword1!",
-    [string]$SepmHost = "localhost",
+    [string]$SepmUser = 'sepm_api',
+    [string]$SepmPass = 'Aurelien1!',
+    # This script runs on the VM, where SEPM is always reached over loopback.
+    [string]$SepmHost = 'localhost',
     [int]$SepmPort = 8446
 )
+
+# Credentials rotate per VM, so the environment wins when it sets them. invoke-winrm.py
+# forwards SEPM_USER / SEPM_PASS into this process.
+if ($env:SEPM_USER) { $SepmUser = $env:SEPM_USER }
+if ($env:SEPM_PASS) { $SepmPass = $env:SEPM_PASS }
 
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8

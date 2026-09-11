@@ -28,16 +28,10 @@ Describe 'Common.ps1' {
             $result | Should -Be "FAIL"
         }
 
-        It 'returns FAIL for API error string' {
-            $result = T "X4" "api error" { return "Error: something bad" } { param($r) $true }
-            $result | Should -Be "FAIL"
-        }
-
-        It 'returns PASS when API error matches ExpectedError' {
-            $result = T "X5" "expected api error" `
-                { return "Error: no data found" } `
-                { param($r) $true } `
-                -ExpectedError "no data found"
+        It 'treats a returned string as data, not as an API error' {
+            # Cmdlets no longer return failures as strings, so a string is an ordinary non-JSON
+            # payload. Only a thrown exception can mark an expected error.
+            $result = T "X4" "string payload" { return "Error: something bad" } { param($r) $r -like 'Error:*' }
             $result | Should -Be "PASS"
         }
 
@@ -52,14 +46,6 @@ Describe 'Common.ps1' {
         It 'returns FAIL when exception does not match ExpectedError' {
             $result = T "X7" "unexpected exception" `
                 { throw "permission denied" } `
-                { param($r) $true } `
-                -ExpectedError "not found"
-            $result | Should -Be "FAIL"
-        }
-
-        It 'returns FAIL when API error does not match ExpectedError' {
-            $result = T "X8" "unexpected api error" `
-                { return "Error: timeout" } `
                 { param($r) $true } `
                 -ExpectedError "not found"
             $result | Should -Be "FAIL"
