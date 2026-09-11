@@ -76,7 +76,7 @@ function Invoke-SeedHostGroups {
         $seedNames = $data.HostGroups.Name
 
         $currentResp = _InvokeApi -Method GET -Uri "$baseUrl/policies/policy-objects/hostgroups/summary" -Session $session
-        $currentContent = if ($currentResp -and $currentResp.ContainsKey('content')) {
+        $currentContent = if ($currentResp -is [hashtable] -and $currentResp.ContainsKey('content')) {
             $currentResp.content
         } else {
             $currentResp
@@ -97,7 +97,7 @@ function Invoke-SeedHostGroups {
 
     # ------ Get existing host groups for idempotency check ------
     $existingResp = _InvokeApi -Method GET -Uri "$baseUrl/policies/policy-objects/hostgroups/summary" -Session $session
-    $existingContent = if ($existingResp -and $existingResp.ContainsKey('content')) {
+    $existingContent = if ($existingResp -is [hashtable] -and $existingResp.ContainsKey('content')) {
         $existingResp.content
     } else {
         $existingResp
@@ -134,7 +134,7 @@ function Invoke-SeedHostGroups {
 
         # GET summary to retrieve server-assigned ID
         $summaryResp = _InvokeApi -Method GET -Uri "$baseUrl/policies/policy-objects/hostgroups/summary" -Session $session
-        $summaryContent = if ($summaryResp -and $summaryResp.ContainsKey('content')) {
+        $summaryContent = if ($summaryResp -is [hashtable] -and $summaryResp.ContainsKey('content')) {
             $summaryResp.content
         } else {
             $summaryResp
