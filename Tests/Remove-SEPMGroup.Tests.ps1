@@ -69,4 +69,24 @@ Describe 'Remove-SEPMGroup' {
             $script:errors.Count | Should -BeGreaterThan 0
         }
     }
+
+    Context '-WhatIf support' {
+        BeforeAll {
+            $script:fakeSession = Set-TestMocks -SkipCert -Transport {
+                return @{ }
+            }
+
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                return @(
+                    [PSCustomObject]@{ id = 'target-id'; name = 'TestGroup'; fullPathName = 'My Company\TestGroup' }
+                )
+            }
+        }
+
+        It 'does not call the API when -WhatIf is given' {
+            Remove-SEPMGroup -GroupName 'TestGroup' -ParentGroup 'My Company' -WhatIf
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 0 -Exactly
+        }
+    }
 }

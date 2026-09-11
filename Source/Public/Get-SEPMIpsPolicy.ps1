@@ -80,32 +80,26 @@ function Get-SEPMIpsPolicy {
         $session = Initialize-SEPMSession
         $endpoint = Get-SEPMApiEndpoint -OperationName 'Get-SEPMIpsPolicy'
 
-        # Only fetch all summaries when resolving by name
-        if ($PSCmdlet.ParameterSetName -eq 'ByName') {
-            if ($PSBoundParameters.ContainsKey('PolicyList')) {
-                $policies = $PolicyList
-            } else {
-                $policies = Get-SEPMPoliciesSummary
-            }
-        }
     }
 
     process {
         if ($PSCmdlet.ParameterSetName -eq 'ByName') {
-            # Get Policy ID from policy name
-            $policy = $policies | Where-Object { $_.name -eq $PolicyName }
-            $policyID = $policy.id
-            $policy_type = $policy.policytype
+            $splat = @{
+                PolicyName = $PolicyName
+                PolicyType = 'ips'
+            }
+            if ($PSBoundParameters.ContainsKey('PolicyList')) {
+                $splat.PolicyList = $PolicyList
+            }
+            $policyID = Resolve-SEPMPolicy @splat
         } else {
-            # Extract directly from the pre-fetched summary
             $policyID = $PolicySummary.id
             $policy_type = $PolicySummary.policytype
-        }
-
-        if ($policy_type -ne "ips") {
-            $message = "policy type is not of type IPS or does not exist - Please verify the policy name"
-            Write-Error -Message $message
-            throw $message
+            if ($policy_type -ne "ips") {
+                $message = "policy type is not of type IPS or does not exist - Please verify the policy name"
+                Write-Error -Message $message
+                throw $message
+            }
         }
 
         $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($policyID)

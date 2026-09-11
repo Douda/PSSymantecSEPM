@@ -39,7 +39,7 @@ function Send-SEPMCommand {
         'PC1', 'PC2' | Send-SEPMCommand -Type FullScan
     #>
 
-    [CmdletBinding(DefaultParameterSetName = 'ComputerName')]
+    [CmdletBinding(DefaultParameterSetName = 'ComputerName', SupportsShouldProcess, ConfirmImpact = 'Medium')]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateSet('ActiveScan', 'FullScan', 'Quarantine', 'UpdateContent', 'GetFile', 'ClearIronCache')]
@@ -138,7 +138,7 @@ function Send-SEPMCommand {
 
         # Common parameters can appear in $PSBoundParameters when explicitly passed
         # by the user (e.g. -ErrorAction Stop). Skip them during type-specific validation.
-        $commonParams = @('ErrorAction', 'WarningAction', 'Verbose', 'Debug', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction')
+        $commonParams = @('ErrorAction', 'WarningAction', 'Verbose', 'Debug', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction', 'WhatIf', 'Confirm')
         $alwaysValid = @('Type', 'ComputerName', 'GroupName') + $commonParams
         $allowedParamNames = if ($commandEntry.ContainsKey('Params')) { $commandEntry.Params.Keys } else { @() }
         foreach ($boundParam in $PSBoundParameters.Keys) {
@@ -201,7 +201,10 @@ function Send-SEPMCommand {
             }
         }
 
-        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($commandEntry.Path) -AdditionalQueryParams $queryStrings -Body $body
+        $targetDescription = if ($accumulatedComputerNames.Count -gt 0) { $accumulatedComputerNames -join ', ' } else { "group '$GroupName'" }
+        if ($PSCmdlet.ShouldProcess($targetDescription, "Send $Type command")) {
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($commandEntry.Path) -AdditionalQueryParams $queryStrings -Body $body
+        }
 
         Write-Output $resp -NoEnumerate
     }

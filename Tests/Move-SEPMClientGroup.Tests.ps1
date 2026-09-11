@@ -136,4 +136,29 @@ Describe 'Move-SEPMClientGroup' {
             }
         }
     }
+
+    Context '-WhatIf support' {
+        BeforeAll {
+            $script:fakeSession = Set-TestMocks -Transport {
+                return @{ }
+            }
+
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                return @(
+                    [PSCustomObject]@{ id = 'group-123'; name = 'Workstations'; fullPathName = 'My Company\Workstations' }
+                )
+            }
+
+            Mock Get-SEPMComputers -ModuleName PSSymantecSEPM {
+                param($ComputerName)
+                return [PSCustomObject]@{ computerName = $ComputerName; hardwareKey = 'HK-ABC123' }
+            }
+        }
+
+        It 'does not call the API when -WhatIf is given' {
+            Move-SEPMClientGroup -ComputerName 'MyComputer' -GroupName 'My Company\Workstations' -WhatIf
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 0 -Exactly
+        }
+    }
 }

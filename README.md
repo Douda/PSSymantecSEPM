@@ -19,7 +19,7 @@ Install-Module PSSymantecSEPM
 ## How to use it
 Setup your SEPM Address & Authentication information
 ```PowerShell
-Set-SepmConfiguration -ServerAddress MySEPMServer -Port 8446
+Set-SEPMConfiguration -ServerAddress MySEPMServer -Port 8446
 Set-SEPMAuthentication
 
 Please provide your Username and Password
@@ -37,47 +37,51 @@ Clear-SEPMAuthentication # clear the authentication
 ```PowerShell
 PS C:\PSSymantecSEPM> Get-Command -Module PSSymantecSEPM | Select-Object -Property Name
 ```
-| List                              | List                                 |
-| --------------------------------- | ------------------------------------ |
-| Add-SEPMFileFingerprintList       | Get-SEPClientDefVersions             |
-| Add-SEPMMacFileException          | Get-SEPClientInfectedStatus          |
-| Add-SEPMWindowsExtensionException | Get-SEPClientStatus                  |
-| Add-SEPMWindowsFileException      | Get-SEPClientVersion                 |
-| Add-SEPMWindowsFolderException    | Get-SEPComputers                     |
-| Clear-SEPMAuthentication          | Get-SEPFileDetails                   |
-| Confirm-SEPMEventInfo             | Get-SEPGUPList                       |
-| Get-SEPMAccessToken               | Get-SEPMAdmins                       |
-| Get-SEPMCommandStatus             | Get-SEPMDatabaseInfo                 |
-| Get-SEPMDomain                    | Get-SEPMEventInfo                    |
-| Get-SEPMExceptionPolicy           | Get-SEPMFileFingerprintList          |
-| Get-SEPMFirewallPolicy            | Get-SEPMGroups                       |
-| Get-SEPMIpsPolicy                 | Get-SEPMLatestDefinition             |
-| Get-SEPMPoliciesSummary           | Get-SEPMReplicationStatus            |
-| Get-SEPMThreatStats               | Get-SEPMVersion                      |
-| Get-TDADPolicy                    | Move-SEPClientGroup                  |
-| Remove-SEPMFileFingerprintList    | Remove-SEPMWindowsExtensionException |
-| Remove-SEPMWindowsFileException   | Remove-SEPMWindowsFolderException    |
-| Reset-SEPMConfiguration           | Send-SEPMCommand                     |
-| Set-SEPMAuthentication            | Set-SEPMConfiguration                |
-| Start-SEPMReplication             | Update-SEPMExceptionPolicy           |
-| Update-SEPMFileFingerprintList    |                                      |
+| List                           | List                                 |
+| ------------------------------ | ------------------------------------ |
+| Add-SEPMFileFingerprintList    | Get-SEPMHostGroupSummary             |
+| Backup-SEPMAuthentication      | Get-SEPMIpsPolicy                    |
+| Backup-SEPMConfiguration       | Get-SEPMLatestDefinition             |
+| Clear-SEPMAuthentication       | Get-SEPMLicense                      |
+| Confirm-SEPMEventInfo          | Get-SEPMLocation                     |
+| ConvertTo-SEPMFlatObject       | Get-SEPMLocationXML                  |
+| Export-SEPMFirewallPolicy      | Get-SEPMPoliciesSummary              |
+| Export-SEPMInventory           | Get-SEPMPolicySnapshot               |
+| Get-SEPMAdmins                 | Get-SEPMPolicyXML                    |
+| Get-SEPMClientDefVersions      | Get-SEPMReplicationStatus            |
+| Get-SEPMClientInfectedStatus   | Get-SEPMThreatStats                  |
+| Get-SEPMClientStatus           | Get-SEPMVersion                      |
+| Get-SEPMClientVersion          | Move-SEPMClientGroup                 |
+| Get-SEPMCommandStatus          | New-SEPMGroup                        |
+| Get-SEPMComputers              | Remove-SEPMFileFingerprintList       |
+| Get-SEPMDatabaseInfo           | Remove-SEPMGroup                     |
+| Get-SEPMDomain                 | Reset-SEPMConfiguration              |
+| Get-SEPMEventInfo              | Restore-SEPMAuthentication           |
+| Get-SEPMExceptionPolicy        | Restore-SEPMConfiguration            |
+| Get-SEPMFileDetails            | Send-SEPMCommand                     |
+| Get-SEPMFileFingerprintList    | Set-SEPMAuthentication               |
+| Get-SEPMFirewallPolicy         | Set-SEPMConfiguration                |
+| Get-SEPMGUPList                | Start-SEPMReplication                |
+| Get-SEPMGroupSettings          | Update-SEPMExceptionPolicy           |
+| Get-SEPMGroups                 | Update-SEPMFileFingerprintList       |
+| Get-SEPMHostGroup              |                                      |
 
-Every command has a help page, eg. `Get-Help Get-SEPComputers`
+Every command has a help page, eg. `Get-Help Get-SEPMComputers`
 
 ## Examples
 SEP Clients information
 ```PowerShell
 # Get All SEP Clients information
-PS C:\PSSymantecSEPM> $AllSepClients = Get-SEPComputers
+PS C:\PSSymantecSEPM> $AllSepClients = Get-SEPMComputers
 
 # Get SEP clients from specific group (excluding subgroups)
-PS C:\PSSymantecSEPM> $EMEAWorkstations = Get-SEPComputers -GroupName "My Company\EMEA\Workstations"
+PS C:\PSSymantecSEPM> $EMEAWorkstations = Get-SEPMComputers -GroupName "My Company\EMEA\Workstations"
 
 # Get SEP clients from specific group (including subgroups)
-PS C:\PSSymantecSEPM> $EMEAWorkstations_with_subgroups = Get-SEPComputers -GroupName "My Company\EMEA\Workstations" -IncludeSubGroups
+PS C:\PSSymantecSEPM> $EMEAWorkstations_with_subgroups = Get-SEPMComputers -GroupName "My Company\EMEA\Workstations" -IncludeSubGroups
 
 # SEP Online/Offline Clients
-PS C:\PSSymantecSEPM> (Get-SEPClientStatus).clientCountStatsList
+PS C:\PSSymantecSEPM> (Get-SEPMClientStatus).clientCountStatsList
 
 status  clientsCount
 ------  ------------
@@ -85,7 +89,7 @@ ONLINE          2022
 OFFLINE          930
 
 # SEP Clients version
-PS C:\PSSymantecSEPM> (Get-SEPClientVersion).clientVersionList
+PS C:\PSSymantecSEPM> (Get-SEPMClientVersion).clientVersionList
 
 version        clientsCount formattedVersion
 -------        ------------ ----------------
@@ -101,29 +105,29 @@ version        clientsCount formattedVersion
 Move SEP Clients to a new group
 ```PowerShell
 # Move a specific machine to a group
-PS C:\PSSymantecSEPM> Move-SEPClientGroup -ComputerName "MyComputer" -GroupName  "My Company\EMEA\Workstations"
+PS C:\PSSymantecSEPM> Move-SEPMClientGroup -ComputerName "MyComputer" -GroupName  "My Company\EMEA\Workstations"
 
 # Move multiple machines to a group via pipeline
-PS C:\PSSymantecSEPM> "MyComputer1","MyComputer2" | Move-SEPClientGroup -GroupName "My Company\EMEA\Workstations"
+PS C:\PSSymantecSEPM> "MyComputer1","MyComputer2" | Move-SEPMClientGroup -GroupName "My Company\EMEA\Workstations"
 ```
 
 Update Exceptions policies
 ```PowerShell
-# Add a new file exception to a policy
-# By default, the exception type is for every technologies (AutoProtect, SONAR, Application & Device Control)
-PS C:\PSSymantecSEPM> Add-SEPMWindowsFileException -PolicyName "Workstations Exception policy" -Path "C:\Program Files\MyApp\MyApp.exe"
+# Add a Windows file exception to a policy
+# By default, the exception applies to every technology (AutoProtect, SONAR, Application & Device Control)
+PS C:\PSSymantecSEPM> Update-SEPMExceptionPolicy -PolicyName "Workstations Exception policy" -Path "C:\Program Files\MyApp\MyApp.exe"
 
-# Folder exception
-PS C:\PSSymantecSEPM> Add-SEPMWindowsFolderException -PolicyName "Workstations Exception policy" -Path "C:\Program Files\MyApp\"
+# Folder exception (with subfolders)
+PS C:\PSSymantecSEPM> Update-SEPMExceptionPolicy -PolicyName "Workstations Exception policy" -FolderPath "C:\Program Files\MyApp" -IncludeSubFolders
 
-# Folder exception with subfolders
-PS C:\PSSymantecSEPM> Add-SEPMWindowsFolderException -PolicyName "Workstations Exception policy" -Path "C:\Program Files\MyApp\" -IncludeSubFolders
+# Remove an existing exception
+PS C:\PSSymantecSEPM> Update-SEPMExceptionPolicy -PolicyName "Workstations Exception policy" -Path "C:\Program Files\MyApp\MyApp.exe" -Remove
 ```
 
 Virus Definitions
 ```PowerShell
 # SEP Virus Definitions
-PS C:\PSSymantecSEPM> (Get-SEPClientDefVersions).clientDefStatusList
+PS C:\PSSymantecSEPM> (Get-SEPMClientDefVersions).clientDefStatusList
 
 version             clientsCount
 -------             ------------
@@ -143,7 +147,7 @@ AV_DEFS     10/19/2023 rev. 3   10/19/2023 rev. 3
 
 GUPs
 ```PowerShell
-PS C:\PSSymantecSEPM> Get-SEPGUPList | Select-Object Computername, AgentVersion, IpAddress, port
+PS C:\PSSymantecSEPM> Get-SEPMGUPList | Select-Object Computername, AgentVersion, IpAddress, port
 
 computerName    agentVersion   ipAddress     port
 ------------    ------------   ---------     ----
@@ -215,7 +219,10 @@ Name
 Get-SEPMExceptionPolicy
 Get-SEPMFirewallPolicy
 Get-SEPMIpsPolicy
-Get-TDADPolicy
+Get-SEPMPolicySnapshot
+Get-SEPMPolicyXML
+Update-SEPMExceptionPolicy
+Export-SEPMFirewallPolicy
 ```
 
 Database information
@@ -256,14 +263,17 @@ To build the module, you need to have [ModuleBuilder](https://www.powershellgall
 cd PSSymantecSEPM
 ```
 
-3. run `Install-RequiredModule`
+3. install the build dependencies
+```powershell
+Install-Module -Name ModuleBuilder, Configuration -Force -Scope CurrentUser
+```
 
-4. run `Build-Module .\Source -SemVer 1.0.0`
-   
+4. run `Build-Module -SourcePath ./Source/PSSymantecSEPM.psd1 -SemVer 1.0.0`
+
 **Note**: a build version will be required when building the module, eg. 1.0.0
 compiled module appears in the `Output` folder
 
-5. import the newly built module `Import-Module .\Output\PSSymantecSEPM\1.0.0\PSSymantecSEPM.ps1m -Force`
+5. import the newly built module `Import-Module ./Output/PSSymantecSEPM/PSSymantecSEPM.psm1 -Force`
 
 
 ## Versioning
@@ -271,7 +281,7 @@ compiled module appears in the `Output` folder
 ModuleBuilder will automatically apply the next semver version
 if you have installed [gitversion](https://gitversion.readthedocs.io/en/latest/).
 
-To manually create a new version run `Build-Module .\Source -SemVer 0.0.2`
+To manually create a new version run `Build-Module -SourcePath ./Source/PSSymantecSEPM.psd1 -SemVer 0.0.2`
 
 ## Development with Dev Container (Linux / VS Code)
 
@@ -325,7 +335,7 @@ Invoke-Pester -Path ./Tests -Output Normal
 ### Configuring for Your SEPM Server
 
 ```powershell
-Set-SepmConfiguration -ServerAddress "192.168.x.x" -Port 8446
+Set-SEPMConfiguration -ServerAddress "192.168.x.x" -Port 8446
 Set-SEPMAuthentication
 Get-SEPMVersion
 ```

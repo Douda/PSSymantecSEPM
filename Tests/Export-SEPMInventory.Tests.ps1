@@ -8,6 +8,7 @@ Describe 'Export-SEPMInventory' {
 
         # ── Shared base mocks for all contexts ──
         $fakeSession = New-TestSession
+        $script:authCred = [PSCredential]::new('admin', (ConvertTo-SecureString 'P@ssw0rd' -AsPlainText -Force))
         Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return $fakeSession }
 
         Mock Get-SEPMVersion -ModuleName PSSymantecSEPM {
@@ -1613,6 +1614,199 @@ Describe 'Export-SEPMInventory' {
             Export-SEPMInventory -OutputDir 'TestDrive:' -DelayMs 0 | Out-Null
 
             Should -Invoke Start-Sleep -ModuleName PSSymantecSEPM -Exactly 0 -Scope It
+        }
+    }
+
+    Context 'OutputDir default (date-stamped)' {
+        It 'creates a date-stamped folder when -OutputDir is omitted' {
+            Push-Location TestDrive:
+            try {
+                Export-SEPMInventory | Out-Null
+            } finally {
+                Pop-Location
+            }
+            $dir = Get-ChildItem -Path 'TestDrive:' -Directory | Where-Object { $_.Name -like 'sepm-data-*' } | Select-Object -First 1
+            $dir | Should -Not -BeNullOrEmpty
+            (Get-ChildItem -Path $dir.FullName -Filter 'SepmInventory_*.clixml').Count | Should -BeGreaterThan 0
+        }
+    }
+
+    Context 'ExplicitAuth parameter set' {
+        BeforeAll {
+            Mock Set-SEPMConfiguration -ModuleName PSSymantecSEPM { }
+            Mock Set-SEPMAuthentication -ModuleName PSSymantecSEPM { }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return (New-TestSession) }
+        }
+
+        # Redirect the date-stamped default output into TestDrive so it doesn't leak into the repo CWD
+        BeforeEach {
+            Push-Location TestDrive:
+        }
+        AfterEach {
+            Pop-Location
+        }
+
+        It 'selects ExplicitAuth (calls Set-SEPMConfiguration) when -ServerAddress is given' {
+            Export-SEPMInventory -ServerAddress 'sepm01' -Credential $script:authCred | Out-Null
+            Should -Invoke Set-SEPMConfiguration -ModuleName PSSymantecSEPM -Scope It -Exactly 1
+        }
+
+        It 'does not call Set-SEPMConfiguration in the default ExistingConfig set' {
+            Export-SEPMInventory -OutputDir 'TestDrive:' | Out-Null
+            Should -Invoke Set-SEPMConfiguration -ModuleName PSSymantecSEPM -Scope It -Exactly 0
+        }
+
+        It 'errors when -ServerAddress is omitted from ExplicitAuth' {
+            { Export-SEPMInventory -Port 9999 } | Should -Throw
+        }
+
+        It 'passes -ServerAddress and -Port to Set-SEPMConfiguration' {
+            Export-SEPMInventory -ServerAddress 'sepm01' -Port 8446 -Credential $script:authCred | Out-Null
+            Should -Invoke Set-SEPMConfiguration -ModuleName PSSymantecSEPM -Scope It -Exactly 1 -ParameterFilter {
+                $ServerAddress -eq 'sepm01' -and $Port -eq 8446
+            }
+        }
+
+        It 'passes only -ServerAddress to Set-SEPMConfiguration when -Port is omitted' {
+            Export-SEPMInventory -ServerAddress 'sepm01' -Credential $script:authCred | Out-Null
+            Should -Invoke Set-SEPMConfiguration -ModuleName PSSymantecSEPM -Scope It -Exactly 1 -ParameterFilter {
+                $ServerAddress -eq 'sepm01' -and -not $PSBoundParameters.ContainsKey('Port')
+            }
+        }
+    }
+
+    Context 'Credential resolution' {
+        BeforeAll {
+            Mock Set-SEPMConfiguration -ModuleName PSSymantecSEPM { }
+            Mock Set-SEPMAuthentication -ModuleName PSSymantecSEPM { }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return (New-TestSession) }
+        }
+
+        BeforeEach {
+            Push-Location TestDrive:
+        }
+        AfterEach {
+            Pop-Location
+        }
+
+        It 'stores a directly-provided -Credential via Set-SEPMAuthentication' {
+            Export-SEPMInventory -ServerAddress 'sepm01' -Credential $script:authCred | Out-Null
+            Should -Invoke Set-SEPMAuthentication -ModuleName PSSymantecSEPM -Scope It -Exactly 1 -ParameterFilter {
+                $Credentials.UserName -eq 'admin'
+            }
+        }
+
+        It 'restores a -CredentialPath file via Restore-SEPMAuthentication -Credential' {
+            $credFile = Join-Path 'TestDrive:' 'creds-file.xml'
+            $script:authCred | Export-Clixml -Path $credFile
+            Mock Restore-SEPMAuthentication -ModuleName PSSymantecSEPM { }
+            Export-SEPMInventory -ServerAddress 'sepm01' -CredentialPath $credFile | Out-Null
+            Should -Invoke Restore-SEPMAuthentication -ModuleName PSSymantecSEPM -Scope It -Exactly 1 -ParameterFilter {
+                $Path -eq $credFile -and $Credential
+            }
+        }
+
+        It 'prompts via Get-Credential when no credential source is provided' {
+            Mock Get-Credential -ModuleName PSSymantecSEPM { return $script:authCred }
+            Export-SEPMInventory -ServerAddress 'sepm01' | Out-Null
+            Should -Invoke Get-Credential -ModuleName PSSymantecSEPM -Scope It -Exactly 1
+            Should -Invoke Set-SEPMAuthentication -ModuleName PSSymantecSEPM -Scope It -Exactly 1 -ParameterFilter {
+                $Credentials.UserName -eq 'admin'
+            }
+        }
+
+        It 'throws when both -Credential and -CredentialPath are bound' {
+            $credFile = Join-Path 'TestDrive:' 'creds-file.xml'
+            $script:authCred | Export-Clixml -Path $credFile
+            { Export-SEPMInventory -ServerAddress 'sepm01' -Credential $script:authCred -CredentialPath $credFile } | Should -Throw
+        }
+
+        It 'throws when -CredentialPath points to a corrupt or non-credential file' {
+            $badFile = Join-Path 'TestDrive:' 'bad-creds.xml'
+            Set-Content -Path $badFile -Value 'this is not valid clixml'
+            Mock Restore-SEPMAuthentication -ModuleName PSSymantecSEPM { }
+            { Export-SEPMInventory -ServerAddress 'sepm01' -CredentialPath $badFile } | Should -Throw
+        }
+    }
+
+    Context 'SkipCertificateCheck' {
+        BeforeAll {
+            Mock Set-SEPMConfiguration -ModuleName PSSymantecSEPM { }
+            Mock Set-SEPMAuthentication -ModuleName PSSymantecSEPM { }
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { return (New-TestSession) }
+        }
+
+        BeforeEach {
+            Push-Location TestDrive:
+        }
+        AfterEach {
+            Pop-Location
+        }
+
+        # InModuleScope is the only observation point for the module-scope SkipCert
+        # flag: the -SkipCertificateCheck bootstrap switch sets $script:SkipCert,
+        # which no exported seam surfaces (the session object it feeds is built by
+        # the seam itself, which these tests mock). This is a documented, bootstrap-only
+        # exception to the InModuleScope rule (see AGENTS.md / ADR-0002).
+        It 'sets the module-scope SkipCert flag from -SkipCertificateCheck' {
+            InModuleScope PSSymantecSEPM { $script:SkipCert = $false }
+            Export-SEPMInventory -ServerAddress 'sepm01' -Credential $script:authCred -SkipCertificateCheck | Out-Null
+            InModuleScope PSSymantecSEPM { $script:SkipCert } | Should -BeTrue
+        }
+
+        It 'does not set SkipCert when -SkipCertificateCheck is not provided' {
+            InModuleScope PSSymantecSEPM { $script:SkipCert = $false }
+            Export-SEPMInventory -ServerAddress 'sepm01' -Credential $script:authCred | Out-Null
+            InModuleScope PSSymantecSEPM { $script:SkipCert } | Should -BeFalse
+        }
+    }
+
+    Context 'Auth verification + interactive fallback' {
+        BeforeAll {
+            Mock Set-SEPMConfiguration -ModuleName PSSymantecSEPM { }
+            Mock Set-SEPMAuthentication -ModuleName PSSymantecSEPM { }
+        }
+
+        It 'verifies auth on first success and proceeds without prompting' {
+            $script:seamCalls = 0
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM {
+                $script:seamCalls++
+                return (New-TestSession)
+            }
+            Mock Get-Credential -ModuleName PSSymantecSEPM { return $script:authCred }
+            $out = Join-Path 'TestDrive:' 'verify-ok'
+            Export-SEPMInventory -ServerAddress 'sepm01' -Credential $script:authCred -OutputDir $out | Out-Null
+
+            Should -Invoke Initialize-SEPMSession -ModuleName PSSymantecSEPM -Scope It -Exactly 1
+            Should -Invoke Get-Credential -ModuleName PSSymantecSEPM -Scope It -Exactly 0
+            (Get-ChildItem -Path $out -Filter 'SepmInventory_*.clixml').Count | Should -BeGreaterThan 0
+        }
+
+        It 'falls back to Get-Credential on rejection and proceeds after a successful retry' {
+            $script:seamCalls = 0
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM {
+                $script:seamCalls++
+                if ($script:seamCalls -eq 1) { throw 'rejected by SEPM' }
+                return (New-TestSession)
+            }
+            Mock Get-Credential -ModuleName PSSymantecSEPM { return $script:authCred }
+            $out = Join-Path 'TestDrive:' 'verify-fallback'
+            Export-SEPMInventory -ServerAddress 'sepm01' -Credential $script:authCred -OutputDir $out | Out-Null
+
+            Should -Invoke Initialize-SEPMSession -ModuleName PSSymantecSEPM -Scope It -Exactly 2
+            Should -Invoke Get-Credential -ModuleName PSSymantecSEPM -Scope It -Exactly 1
+            Should -Invoke Set-SEPMAuthentication -ModuleName PSSymantecSEPM -Scope It -Exactly 2
+            (Get-ChildItem -Path $out -Filter 'SepmInventory_*.clixml').Count | Should -BeGreaterThan 0
+        }
+
+        It 'throws a terminating error and writes no files when the fallback also fails' {
+            Mock Initialize-SEPMSession -ModuleName PSSymantecSEPM { throw 'rejected by SEPM' }
+            Mock Get-Credential -ModuleName PSSymantecSEPM { return $script:authCred }
+            $out = Join-Path 'TestDrive:' 'verify-fail'
+            { Export-SEPMInventory -ServerAddress 'sepm01' -Credential $script:authCred -OutputDir $out } | Should -Throw
+
+            Test-Path $out | Should -BeFalse
+            Should -Invoke Get-Credential -ModuleName PSSymantecSEPM -Scope It -Exactly 1
         }
     }
 }

@@ -79,4 +79,18 @@ Describe 'Start-SEPMReplication' {
             }
         }
     }
+
+    Context '-WhatIf support' {
+        BeforeAll {
+            $script:fakeSession = Set-TestMocks -Transport {
+                return @{ }
+            }
+        }
+
+        It 'does not call the API when -WhatIf is given' {
+            Start-SEPMReplication -partnerSiteName 'RemoteSiteAmericas' -WhatIf
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 0 -Exactly
+        }
+    }
 }

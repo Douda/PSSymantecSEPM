@@ -22,6 +22,7 @@ function Set-SEPMConfiguration {
 
 
 #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Local file state only, no SEPM mutation')]
     [CmdletBinding(
         PositionalBinding = $false
     )]

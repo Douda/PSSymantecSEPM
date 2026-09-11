@@ -18,6 +18,10 @@ function Reset-SEPMConfiguration {
         Please use Clear-SEPMAuthentication to accomplish that.
 #>
 
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Local file state only, no SEPM mutation')]
+    [CmdletBinding()]
+    param ()
+
     $null = Remove-Item -Path $script:configurationFilePath -Force -ErrorAction SilentlyContinue -ErrorVariable ev
 
     if (($null -ne $ev) -and ($ev.Count -gt 0) -and ($ev[0].FullyQualifiedErrorId -notlike 'PathNotFound*')) {

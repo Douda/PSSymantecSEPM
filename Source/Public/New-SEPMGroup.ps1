@@ -23,7 +23,7 @@ function New-SEPMGroup {
         Creates a new group Win 10 under the group My Company\EMEA\Workstations and enables inheritance
     #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
     param (
         # group name
         [Parameter(
@@ -79,8 +79,10 @@ function New-SEPMGroup {
             return
         }
 
-        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session `
-            -BoundParameters $PSBoundParameters -PathIds @($ParentGroupID)
+        if ($PSCmdlet.ShouldProcess($GroupName, "Create SEPM group")) {
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session `
+                -BoundParameters $PSBoundParameters -PathIds @($ParentGroupID)
+        }
 
         if ($PassThru) {
             Write-Output $resp

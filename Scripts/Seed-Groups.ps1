@@ -149,7 +149,7 @@ function Invoke-SeedGroups {
             -ExistingGroups $existingGroups -GroupMap $groupMap
     }
 
-    return @{
-        GroupMap = $groupMap
-    }
+    # Merge GroupMap into State (preserve existing keys + Force + Session)
+    $State['GroupMap'] = $groupMap
+    return $State
 }

@@ -20,6 +20,7 @@ function Backup-SEPMConfiguration {
 
         Writes the user's current configuration file to c:\foo\config.json.
 #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Local file state only, no SEPM mutation')]
     [CmdletBinding()]
     param(
         [string] $Path,

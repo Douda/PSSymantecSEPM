@@ -75,7 +75,7 @@ function Invoke-SeedTDADPolicies {
         $seedNames = $data.Policies.Name
 
         $currentPolicies = _InvokeApi -Method GET -Uri "$baseUrl/policies/summary/tdad" -Session $session
-        $currentContent = if ($currentPolicies -and $currentPolicies.ContainsKey('content')) {
+        $currentContent = if ($currentPolicies -is [hashtable] -and $currentPolicies.ContainsKey('content')) {
             $currentPolicies.content
         } else {
             $currentPolicies
@@ -96,7 +96,7 @@ function Invoke-SeedTDADPolicies {
 
     # ------ Get existing policies for idempotency check ------
     $existingPolicies = _InvokeApi -Method GET -Uri "$baseUrl/policies/summary/tdad" -Session $session
-    $existingContent = if ($existingPolicies -and $existingPolicies.ContainsKey('content')) {
+    $existingContent = if ($existingPolicies -is [hashtable] -and $existingPolicies.ContainsKey('content')) {
         $existingPolicies.content
     } else {
         $existingPolicies
@@ -130,7 +130,7 @@ function Invoke-SeedTDADPolicies {
         $null = _InvokeApi -Method POST -Uri $createUri -Session $session -Body $postBody
 
         $summaryResp = _InvokeApi -Method GET -Uri "$baseUrl/policies/summary/tdad" -Session $session
-        $summaryContent = if ($summaryResp -and $summaryResp.ContainsKey('content')) {
+        $summaryContent = if ($summaryResp -is [hashtable] -and $summaryResp.ContainsKey('content')) {
             $summaryResp.content
         } else {
             $summaryResp

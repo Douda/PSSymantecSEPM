@@ -20,6 +20,7 @@ function Set-SEPMAuthentication {
         $Credentials = Get-Credential
         Set-SEPMAuthentication -Credential $cred
 #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Local file state only, no SEPM mutation')]
     [CmdletBinding()]
     param(
         [PSCredential] $Credentials

@@ -15,6 +15,7 @@ function Restore-SEPMAuthentication {
 
         Makes the contents of c:\foo\config.xml be the user's authentication for the module.
 #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Local file state only, no SEPM mutation')]
     [CmdletBinding()]
     param(
         [ValidateScript({

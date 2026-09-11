@@ -26,7 +26,7 @@ function Update-SEPMExceptionPolicy {
         Remove the exception instead of adding it.
     #>
 
-    [CmdletBinding(DefaultParameterSetName = 'Default')]
+    [CmdletBinding(DefaultParameterSetName = 'Default', SupportsShouldProcess, ConfirmImpact = 'Medium')]
     param (
         # Policy Name
         [Parameter(
@@ -192,14 +192,8 @@ function Update-SEPMExceptionPolicy {
             throw "-EnablePolicy and -DisablePolicy cannot be specified together."
         }
 
-        # Fetch policy summary and resolve PolicyID
-        $policies = Get-SEPMPoliciesSummary
-        $PolicyID = ($policies | Where-Object { $_.name -eq $PolicyName } | Select-Object -First 1).id
-
-        # Validate PolicyName exists before making API call
-        if (-not $PolicyID) {
-            throw "Policy '$PolicyName' not found. Verify the policy name and try again."
-        }
+        # Resolve policy name to ID (with type validation)
+        $PolicyID = Resolve-SEPMPolicy -PolicyName $PolicyName -PolicyType 'exceptions'
 
         # Instantiate the policy exception structure
         $ObjBody = [SEPMPolicyExceptionsStructure]::new()
@@ -354,7 +348,9 @@ function Update-SEPMExceptionPolicy {
 
         $bodyJson = ConvertTo-SEPMJson -InputObject $ObjBody -Compress
 
-        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($PolicyID) -Body $bodyJson
+        if ($PSCmdlet.ShouldProcess($PolicyName, "Update exceptions policy")) {
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($PolicyID) -Body $bodyJson
+        }
         return $resp
     }
 }

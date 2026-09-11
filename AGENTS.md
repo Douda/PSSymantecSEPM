@@ -9,19 +9,17 @@ Target environment: SEPM 14.3 (Windows VM running via dockur/windows in Docker).
 Source/
 ├── PSSymantecSEPM.psd1          # Module manifest
 ├── PSSymantecSEPM.Types.ps1xml  # Extended type data (epoch→DateTime, ScriptMethod)
-├── Classes/
-│   └── Exceptions-Policy.ps1    # PowerShell class for policy exception payloads
 ├── Private/                     # Internal helpers (not exported)
 │   ├── Build-SEPMQueryURI.ps1
 │   ├── Invoke-SepmApi.ps1       # Unified REST transport (ADR-0003)
 │   ├── Initialize-SEPMSession.ps1
 │   ├── Get-SEPMAccessToken.ps1
-│   ├── ... (24 files total)
+│   ├── zz_Initialize-SepmConfiguration.ps1  # Module initializer — loads last via zz_ prefix
+│   ├── ... (36 files total)
 │   └── Skip-Cert.ps1            # PS 5.1 cert bypass via Add-Type C#
-├── Public/                      # Exported cmdlets (55 files)
-│   ├── Get-SEPComputers.ps1     # Paginated, filterable by name or group
-│   ├── Set-SepmAuthentication.ps1
-│   ├── Get-SEPMAccessToken.ps1
+├── Public/                      # Exported cmdlets (51 files)
+│   ├── Get-SEPMComputers.ps1    # Paginated, filterable by name or group
+│   ├── Set-SEPMAuthentication.ps1
 │   ├── Update-SEPMExceptionPolicy.ps1
 │   └── ... (one file per cmdlet)
 ├── en-US/about_PSSymantecSEPM.help.txt
@@ -31,10 +29,10 @@ Tests/
 │   ├── PSSymantecSEPM.TestHelpers.psd1
 │   └── PSSymantecSEPM.TestHelpers.psm1
 ├── fixtures/                    # JSON response fixtures for seed tests
-├── Get-SEPComputers.Tests.ps1
+├── Get-SEPMComputers.Tests.ps1
 ├── Get-SEPMVersion.Tests.ps1
 ├── Seed-SEPMData.Tests.ps1
-└── ... (35+ test files, one per cmdlet/private function)
+└── ... (~80 test files, one per cmdlet/private function)
 Scripts/
 ├── Smoke/                        # Live smoke tests (per cmdlet)
 │   └── Update-SEPMExceptionPolicy/
@@ -78,10 +76,10 @@ Branches on `$PSVersionTable.PSVersion.Major`:
 - `~/.local/share/PSSymantecSEPM/accessToken.xml` — cached token (Export-Clixml)
 
 ### Module build (ModuleBuilder)
-Source is split into individual `.ps1` files. `ModuleBuilder` assembles them into a single `.psm1` in `Output/`. The `zz_` prefix on `zz_Initialize-SepmConfiguration.ps1` ensures it loads last.
+Source is split into individual `.ps1` files. `ModuleBuilder` assembles them into a single `.psm1` in `Output/`, concatenating all `Private/` files before all `Public/` files. The `zz_` prefix on `Private/zz_Initialize-SepmConfiguration.ps1` makes it the last `Private/` file — it must not depend on `Public/` functions (see the file's header comment).
 
 ### Pagination
-Some cmdlets (e.g. `Get-SEPComputers`) paginate through the API using `pageIndex`/`pageSize` query params, looping until `lastPage == true`.
+Some cmdlets (e.g. `Get-SEPMComputers`) paginate through the API using `pageIndex`/`pageSize` query params, looping until `lastPage == true`.
 
 ## Current State
 
@@ -119,14 +117,14 @@ Audited 2026-06-09 — 13 cmdlets use this pattern:
 
 | Cmdlet | Returns |
 |---|---|
-| `Get-SEPComputers` | Paginated computer array |
+| `Get-SEPMComputers` | Paginated computer array |
 | `Get-SEPMGroups` | Paginated group array |
 | `Get-SEPMCommandStatus` | Paginated command status array |
-| `Get-SEPGUPList` | GUP array |
+| `Get-SEPMGUPList` | GUP array |
 | `Get-SEPMLocation` | Location array |
-| `Get-SEPClientDefVersions` | Definition version array |
-| `Get-SEPClientStatus` | Client status array |
-| `Get-SEPClientVersion` | Client version array |
+| `Get-SEPMClientDefVersions` | Definition version array |
+| `Get-SEPMClientStatus` | Client status array |
+| `Get-SEPMClientVersion` | Client version array |
 | `Get-SEPMEventInfo` | Critical events array |
 | `Get-SEPMPoliciesSummary` | Policy summary array |
 | `Get-SEPMReplicationStatus` | Replication status array |
@@ -194,20 +192,18 @@ Build-ModuleLocal
 Invoke-Pester -Path ./Tests -Output Normal
 
 # Run single test file
-Invoke-Pester -Path ./Tests/Get-SEPComputers.Tests.ps1 -Output Normal
+Invoke-Pester -Path ./Tests/Get-SEPMComputers.Tests.ps1 -Output Normal
 
 # Configure & auth against local VM
-Set-SepmConfiguration -ServerAddress "host.docker.internal" -Port 8446
+Set-SEPMConfiguration -ServerAddress "host.docker.internal" -Port 8446
 Set-SEPMAuthentication
 
 # SkipCert must be set INSIDE module scope (Test-SEPMCertificate is disabled)
 $mod = Get-Module PSSymantecSEPM; & $mod { $script:SkipCert = $true }
 
-Get-SEPMAccessToken
-
 # Quick smoke test
 Get-SEPMVersion
-Get-SEPComputers
+Get-SEPMComputers
 
 # PS 5.1 testing (via WinRM SSL transport)
 # Set env vars on your host before opening the devcontainer:
@@ -254,6 +250,7 @@ python3 Scripts/invoke-winrm.py 'C:\Users\<username>\Desktop\Shared\test-module.
   - **File seam**: Paths redirected to `TestDrive:` by `Initialize-TestEnvironment`. No direct filesystem access in tests.
   - **HTTP seam**: Not tested at unit level — smoke tests cover the live API.
 - **InModuleScope** is reserved for transport/auth/tooling layer tests only: `Invoke-SepmApi`, `Initialize-SEPMSession`, and TestHelpers lifecycle functions.
+  - **Documented exception — `Export-SEPMInventory` ExplicitAuth bootstrap** (issue #242): the self-contained bootstrap re-introduces the `-SkipCertificateCheck` switch (ADR-0001, which removed it from every public cmdlet, post-dates the issue's spec) purely to set the module-scope `$script:SkipCert` flag for a fresh, unconfigured process. No exported seam surfaces that flag, so the two `SkipCertificateCheck` tests read `$script:SkipCert` via `InModuleScope`. The bootstrap's fail-fast verification routes through the `Initialize-SEPMSession` seam (mocked per the auth-seam rule) rather than the raw `Get-SEPMAccessToken`.
 - **PS version strategy**: Unit tests mock `$PSVersionTable.PSVersion.Major` where needed to exercise PS 5.1 vs 7+ code paths. Transport tests (`Invoke-SepmApi`) test both branches. Most cmdlet tests don't branch on PS version — the transport layer abstracts it away.
 - **Seed tests** (`Seed-*.Tests.ps1`) validate that `Seed-SEPMData` correctly populates the SEPM VM with test data. They hit the live API.
 

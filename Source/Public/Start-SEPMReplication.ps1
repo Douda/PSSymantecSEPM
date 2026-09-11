@@ -16,7 +16,7 @@ function Start-SEPMReplication {
         Initiates replication with the remote site Americas. Response code 0 indicates success.
 #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
     param (
         [Parameter()]
         [string]
@@ -40,7 +40,9 @@ function Start-SEPMReplication {
     }
 
     process {
-        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -BoundParameters $PSBoundParameters
+        if ($PSCmdlet.ShouldProcess($partnerSiteName, "Start SEPM replication")) {
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -BoundParameters $PSBoundParameters
+        }
 
         if ($PassThru) {
             Write-Output $resp

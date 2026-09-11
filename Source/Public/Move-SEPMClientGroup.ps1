@@ -26,7 +26,7 @@ function Move-SEPMClientGroup {
         Moves the computer MyComputer to the group My Company\EMEA\Workstations and skips certificate check
     #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
     param (
         # Skip certificate check
 
@@ -89,7 +89,9 @@ function Move-SEPMClientGroup {
         )
 
         $bodyJson = ConvertTo-SEPMJson -InputObject $body -AsArray
-        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -Body $bodyJson
+        if ($PSCmdlet.ShouldProcess("$ComputerName → group '$GroupName'", "Move client to group")) {
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -Body $bodyJson
+        }
 
         $fullResponse = [PSCustomObject]@{
             computerName        = $ComputerName
