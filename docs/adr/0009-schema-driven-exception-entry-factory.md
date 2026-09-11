@@ -1,5 +1,8 @@
 # Replace 16 Exception Rule factory methods with a schema-driven Build-ExceptionEntry
 
+> Originally numbered ADR-0007 (number collision with the pagination ADR, written the same day);
+> renumbered to ADR-0009 on 2026-09-11. Content unchanged.
+
 `SEPMPolicyExceptionsStructure` had 16 `Create*Hashtable` methods and 13 `Add*`
 methods — each ~40–60 lines of the same pattern: build a hashtable, conditionally
 add optional fields, construct a `rulestate` sub-object, validate mandatory params.
