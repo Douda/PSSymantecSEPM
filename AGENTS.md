@@ -15,7 +15,7 @@ Source/
 │   ├── Initialize-SEPMSession.ps1
 │   ├── Get-SEPMAccessToken.ps1
 │   ├── zz_Initialize-SepmConfiguration.ps1  # Module initializer — loads last via zz_ prefix
-│   ├── ... (36 files total)
+│   ├── ... (38 files total)
 │   └── Skip-Cert.ps1            # PS 5.1 cert bypass via Add-Type C#
 ├── Public/                      # Exported cmdlets (51 files)
 │   ├── Get-SEPMComputers.ps1    # Paginated, filterable by name or group
@@ -84,7 +84,8 @@ Some cmdlets (e.g. `Get-SEPMComputers`) paginate through the API using `pageInde
 ## Current State
 
 ### Known issues
-- **Test-SEPMCertificate.ps1** — entirely commented out (commit `e1f2178`). Self-signed certs are never detected automatically. The `-SkipCertificateCheck` parameter on each cmdlet works, but there's no automatic fallback.
+- **No automatic certificate fallback.** `Test-SEPMCertificate.ps1` no longer exists — ADR-0001 deleted it, so a self-signed SEPM certificate is never trusted on its own. Set the flag inside module scope:
+  `& (Get-Module PSSymantecSEPM) { $script:SkipCert = $true }`. A failed TLS handshake surfaces as a Transport Error with ErrorId `SEPM.CertificateError`.
 
 ### What works
 - Authentication against SEPM (token-based)
@@ -142,10 +143,13 @@ Linux Host (Omarchy/Arch)        Docker container: omarchy-windows
       └─ pwsh + ModuleBuilder          └─ Windows 11 + SEPM 14.3
 ```
 
-- VM accessible at `https://127.0.0.1:8446/sepm/api/v1/` (SEPM REST API)
-- Also `https://127.0.0.1:9090` (SEPM Console)
-- Shared volume: `/home/douda/Windows/` ↔ `C:\Shared\` in VM
-- Docker compose: `~/.config/windows/docker-compose.yml`
+- VM services are reached at **`172.20.0.2`** (the container's docker bridge address) from the host,
+  **not** `127.0.0.1`. Only 3389 and 8006 are published on the host; the container DNATs every
+  other port to the VM, so nothing else needs publishing. Inside the VM, use `localhost`.
+  - SEPM REST API: `https://172.20.0.2:8446/sepm/api/v1/`
+  - SEPM Console: `https://172.20.0.2:9090`
+- Shared volume: `/home/douda/Windows/` ↔ `C:\Users\douda\Desktop\Shared\` in VM (a symlink to `\\host.lan\Data`)
+- Docker compose: `/var/lib/omarchy/windows/docker-compose.yml`
 
 ## Fresh VM Setup
 
@@ -218,7 +222,9 @@ python3 Scripts/invoke-winrm.py 'C:\Users\<username>\Desktop\Shared\test-module.
 - WinRM enabled on Windows VM with HTTP (5985) and HTTPS (5986) listeners.
 - HTTPS/SSL listener broken for pywinrm (timeout/ConnectionReset). Use **NTLM transport on port 5985**.
 - Python `pywinrm` with `transport='ntlm'` on port 5985 works. Pre-installed in image.
-- Credentials: `smokeuser` / `smokepassword`. Set via `WINRM_USER` / `WINRM_PASS` env vars.
+- Credentials: `douda` / `aurelien` — the VM's Windows account. There is no `smokeuser` on this VM. Set via `WINRM_USER` / `WINRM_PASS` env vars.
+- From the host, set `WINRM_HOST=172.20.0.2 WINRM_PORT=5985`; `localhost:5985` is not published.
+- The module carries `#Requires -Modules ImportExcel`, so the VM needs it installed before the module can be imported at all: `Install-Module ImportExcel -Scope CurrentUser` (verified with 7.8.10).
 - Always pass `-ExecutionPolicy Bypass` — WinRM sessions have Restricted policy.
 - Setup script: copy `Scripts/setup-vm.ps1` to shared volume, run as Admin once on new VM.
 - Runner: `python3 Scripts/invoke-winrm.py '<path-to-ps1-on-vm>'`
@@ -235,7 +241,7 @@ python3 Scripts/invoke-winrm.py 'C:\Users\<username>\Desktop\Shared\test-module.
 ### Certificate handling
 - On PS 5.1 (Windows VM): use `[System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }` to bypass. `-SkipCertificateCheck` doesn't exist.
 - On PS 7+ (devcontainer): use `-SkipCertificateCheck`.
-- The module's `Test-SEPMCertificate.ps1` is currently a no-op (everything commented out).
+- There is no automatic certificate fallback: `Test-SEPMCertificate.ps1` was deleted by ADR-0001. Set `$script:SkipCert` in module scope (see Local Commands).
 
 ### Build system
 - `ModuleBuilder` assembles split source into a single `.psm1`. Always rebuild after adding new source files.
@@ -272,4 +278,4 @@ Single-context — one `CONTEXT.md` at the repo root, one `docs/adr/` directory.
 
 How to interact with the local SEPM VM for live API smoke tests (auth, curl, PS 7, PS 5.1). See `docs/agents/smoke-testing.md`.
 
-Credentials: SEPM: `admin` / `MyComplexPassword1!`; WinRM: `smokeuser` / `smokepassword`; SEPM backup: `douda` / `Aurelien1!` (VM in docker-compose, local dev only).
+Credentials: SEPM API: `sepm_api` / `Aurelien1!`. `admin` / `MyComplexPassword1!` is what `Scripts/init-sepm-vm.ps1` and `Scripts/Smoke/Bootstrap.ps1` assume, but on this VM `admin` answers "Account is locked or invalid username, password, or domain." — restore the account or update those two scripts. WinRM: `douda` / `aurelien`; SEPM backup: `douda` / `Aurelien1!` (VM in docker-compose, local dev only).

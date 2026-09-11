@@ -5,28 +5,32 @@
 | What | Value |
 |------|-------|
 | VM container | `omarchy-windows` (dockur/windows) |
-| SEPM API | `https://localhost:8446/sepm/api/v{1,2}` |
+| SEPM API | `https://172.20.0.2:8446/sepm/api/v{1,2}` from the devcontainer; `https://localhost:8446/sepm/api/v{1,2}` inside the VM. `localhost` does **not** work from the host — only 3389/8006 are published, and the container DNATs the rest to the VM. |
 | SEPM version | 14.3.25029.9000 |
-| Credentials | SEPM: `admin` / `MyComplexPassword1!` / domain: `""`; WinRM: `smokeuser` / `smokepassword` |
-| WinRM (PS 5.1) | NTLM transport, port 5985, `localhost` (SSL/5986 broken with pywinrm) |
-| Shared volume | `/home/douda/Windows/` ↔ `C:\Users\smokeuser\Desktop\Shared\` |
+| Credentials | SEPM API: `sepm_api` / `Aurelien1!` / domain: `""` — `admin` / `MyComplexPassword1!` is what `Bootstrap.ps1` and `init-sepm-vm.ps1` assume, and this VM rejects it. WinRM: `douda` / `aurelien` |
+| WinRM (PS 5.1) | NTLM transport, port 5985, host `172.20.0.2` from the devcontainer (SSL/5986 is broken with pywinrm) |
+| Shared volume | `/home/douda/Windows/` ↔ `C:\Users\douda\Desktop\Shared\` (a symlink to `\\host.lan\Data`) |
+| VM prerequisites | The module carries `#Requires -Modules ImportExcel`; install it on the VM once with `Install-Module ImportExcel -Scope CurrentUser` or the module cannot be imported at all |
 
 ## Connectivity
 
 ```bash
 docker ps --filter name=omarchy-windows          # VM running?
 docker start omarchy-windows                      # start if stopped
-curl -sk https://localhost:8446/sepm/api/v1/version
+curl -sk https://172.20.0.2:8446/sepm/api/v1/version
 # → {"API_SEQUENCE":"240604011","API_VERSION":"14.3.9000","version":"14.3.25029.9000"}
 ```
+
+From the devcontainer, always use `172.20.0.2`; `https://localhost:8446` fails there. The VM's
+own `localhost:8446` is only correct for scripts running *inside* the VM.
 
 ## Auth
 
 ### curl
 ```bash
-TOKEN=$(curl -sk -X POST https://localhost:8446/sepm/api/v1/identity/authenticate \
+TOKEN=$(curl -sk -X POST https://172.20.0.2:8446/sepm/api/v1/identity/authenticate \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"MyComplexPassword1!","appName":"test","domain":""}' \
+  -d '{"username":"sepm_api","password":"Aurelien1!","appName":"test","domain":""}' \
   | pwsh -NoProfile -c '$i=$input|Out-String;($i|ConvertFrom-Json).token')
 # Use: -H "Authorization: Bearer $TOKEN"
 ```
@@ -65,8 +69,9 @@ then dot-source the suite's `Tests.ps1`.
 
 `Common.ps1` is a pure helper library — `T`, `Skip`, `Write-Summary` only. No side
 effects, no `$PSVersionTable` branching, no config paths, no module import.
-Credentials (`admin` / `MyComplexPassword1!`) live inside `Bootstrap.ps1` /
-`Initialize-SmokeBootstrap`.
+Credentials live inside `Bootstrap.ps1` / `Initialize-SmokeBootstrap` and are currently
+`admin` / `MyComplexPassword1!`. This VM rejects that account (see Environment), so on this VM
+every suite fails at bootstrap until `Bootstrap.ps1` is updated or the account is restored.
 
 See `Scripts/Smoke/README.md` for suite conversion status.
 
@@ -79,7 +84,7 @@ Import-Module ./Output/PSSymantecSEPM/PSSymantecSEPM.psm1 -Force
 $mod = Get-Module PSSymantecSEPM; & $mod { $script:SkipCert = $true }
 ```
 
-**`$script:SkipCert` must be set in module scope** — `Test-SEPMCertificate` is disabled (no auto-detect of self-signed certs).
+**`$script:SkipCert` must be set in module scope** — `Test-SEPMCertificate.ps1` was deleted by ADR-0001, so nothing auto-detects a self-signed cert.
 
 ## Transport error contract — `Scripts/Smoke/Transport/verify-transport-errors.ps1`
 
@@ -148,7 +153,7 @@ Invoke-SepmApi uses Invoke-RestMethod on PS7 and HttpWebRequest+KeepAlive=false 
 ### Verify state (curl)
 
 ```bash
-curl -sk https://localhost:8446/sepm/api/v2/policies/exceptions/4C4BC60CAC1E00027A25369C305828F9 \
+curl -sk https://172.20.0.2:8446/sepm/api/v2/policies/exceptions/4C4BC60CAC1E00027A25369C305828F9 \
   -H "Authorization: Bearer $TOKEN" | python3 -c "
 import json,sys; d=json.load(sys.stdin)
 print(f'enabled={d.get(\"enabled\")} desc={d.get(\"desc\")} files={len(d.get(\"configuration\",{}).get(\"files\",[]))}')"
@@ -158,7 +163,7 @@ print(f'enabled={d.get(\"enabled\")} desc={d.get(\"desc\")} files={len(d.get(\"c
 
 ```bash
 # ADD
-curl -sk -X PATCH https://localhost:8446/sepm/api/v2/policies/exceptions/4C4BC60CAC1E00027A25369C305828F9 \
+curl -sk -X PATCH https://172.20.0.2:8446/sepm/api/v2/policies/exceptions/4C4BC60CAC1E00027A25369C305828F9 \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d '{"configuration":{"files":[{"pathvariable":"[NONE]","scancategory":"AllScans","rulestate":{"source":"PSSymantecSEPM","enabled":true},"path":"C:\\Temp\\TestSmoke.exe","deleted":false,"securityrisk":true,"applicationcontrol":true,"sonar":true}]},"name":"Exceptions policy"}'
 
@@ -211,11 +216,14 @@ suite status.
 cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM
 cp -r ./Scripts/Smoke /home/douda/Windows/Scripts/Smoke
 
-# Run via WinRM (NTLM transport, port 5985)
-python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\Scripts\Smoke\<Suite>\run.ps51.ps1'
+# Run via WinRM (NTLM transport, port 5985; 172.20.0.2 from the devcontainer)
+WINRM_HOST=172.20.0.2 WINRM_PORT=5985 WINRM_USER=douda WINRM_PASS=aurelien \
+    python3 Scripts/invoke-winrm.py 'C:\Users\douda\Desktop\Shared\Scripts\Smoke\<Suite>\run.ps51.ps1'
 ```
 
-`invoke-winrm.py` handles NTLM auth on port 5985. SSL/5986 is broken with pywinrm.
+`invoke-winrm.py` handles NTLM auth on port 5985. SSL/5986 is broken with pywinrm. The defaults
+baked into `invoke-winrm.py` (`localhost`, `smokeuser`) do not fit this VM — pass
+`WINRM_HOST` / `WINRM_USER` / `WINRM_PASS` as above.
 
 **Transport**: PS5.1 uses `[HttpWebRequest]` with `KeepAlive=false` (via `Invoke-SepmApi`, see Source/Private/Invoke-SepmApi.ps1).
 `Invoke-RestMethod` on .NET Framework 4.x reuses TLS connections which SEPM 14.3 rejects.
@@ -241,7 +249,8 @@ pwsh -NoProfile -File Scripts/Smoke/<Suite>/run.ps7.ps1
 # PS5.1 (single suite — manual deploy first)
 cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM
 cp -r ./Scripts/Smoke /home/douda/Windows/Scripts/Smoke
-python3 Scripts/invoke-winrm.py 'C:\Users\smokeuser\Desktop\Shared\Scripts\Smoke\<Suite>\run.ps51.ps1'
+WINRM_HOST=172.20.0.2 WINRM_USER=douda WINRM_PASS=aurelien \
+    python3 Scripts/invoke-winrm.py 'C:\Users\douda\Desktop\Shared\Scripts\Smoke\<Suite>\run.ps51.ps1'
 
 # All suites (both platforms)
 bash Scripts/bootstrap-smoke.sh
