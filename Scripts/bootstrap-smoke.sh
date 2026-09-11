@@ -67,11 +67,21 @@ discover_smoke_suites() {
 # Outputs: "tests pass fail skip" (space-separated, defaults to "0 0 0 0").
 parse_smoke_result_file() {
     local log_file="$1"
-    local tests pass fail skip
-    tests=$(grep -oP '\d+(?= tests)' "$log_file" | head -1 || echo "0")
-    pass=$(grep  -oP '\d+(?= pass)'  "$log_file" | head -1 || echo "0")
-    fail=$(grep  -oP '\d+(?= fail)'  "$log_file" | head -1 || echo "0")
-    skip=$(grep  -oP '\d+(?= skip)'  "$log_file" | head -1 || echo "0")
+    local tests=0 pass=0 fail=0 skip=0
+
+    # Read the suite's own summary line. Matching the first number that happens to precede
+    # " fail" anywhere in the log does not work: PowerShell error records and inline script
+    # text contain plenty ("EVT-TEST-000 failed", "999999 fail-safe"), and each one invents
+    # a failure that never happened. ANSI colour is stripped first in case the summary is
+    # ever written with it. tail -1 keeps the last summary when a log has several.
+    local summary
+    summary=$(sed 's/\x1b\[[0-9;]*m//g' "$log_file" \
+        | grep -oP 'TOTAL: \d+ tests, \d+ pass, \d+ fail, \d+ skip' | tail -1)
+
+    if [ -n "$summary" ]; then
+        read -r tests pass fail skip <<< "$(grep -oP '\d+' <<< "$summary" | tr '\n' ' ')"
+    fi
+
     echo "$tests $pass $fail $skip"
 }
 

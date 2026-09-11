@@ -105,6 +105,18 @@ assert_eq "no TOTAL → zeros" "0 0 0 0" "$t $p $f $s"
 read t p f s <<< "$(parse_smoke_result_file "$TEST_DIR/smoke4.log")"
 assert_eq "empty file → zeros" "0 0 0 0" "$t $p $f $s"
 
+# Regression: error text containing "<digits> fail" must not be mistaken for the summary.
+# A real Confirm-SEPMEventInfo log reported 3 tests, 3 pass, 60 fail this way.
+cat > "$TEST_DIR/smoke5.log" <<'LOG'
+  ERROR: SEPM API POST /sepm/api/v1/events/acknowledge/EVT-TEST-000 failed (HTTP 400): Failed to update the event
+  for ($i = 0; $i -lt 999999 fail-safe) { }
+========== Confirm-SEPMEventInfo Smoke Tests ==========
+  A1 : PASS
+TOTAL: 3 tests, 3 pass, 0 fail, 0 skip
+LOG
+read t p f s <<< "$(parse_smoke_result_file "$TEST_DIR/smoke5.log")"
+assert_eq "summary beats error text" "3 3 0 0" "$t $p $f $s"
+
 # ── Summary ──
 echo ""
 echo "Results: $PASS pass, $FAIL fail"
