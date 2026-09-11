@@ -2,10 +2,11 @@
 # Init script for the whole module #
 ####################################
 
-## This is the initialization script for the module.  It is invoked at the end of the module's
-## prefix file as "zz_" to load this module at last.  This is done to ensure that all other functions are first loaded
-## This function should be private but will stay Public for the moment as it needs to be the last function to be loaded in the module
-## TODO make this function private
+## This is the initialization script for the module. The "zz_" prefix keeps it last in the
+## alphabetically-ordered concatenation so all functions it calls are already defined.
+## It lives in Private/ (not exported); its only import-time dependency is Import-SepmConfiguration,
+## which sorts before it. It must NOT depend on Public functions — ModuleBuilder concatenates
+## all Private files before all Public files.
 
 # Update the data types when loading the module
 Update-TypeData -PrependPath (Join-Path -Path $PSScriptRoot -ChildPath 'PSSymantecSEPM.Types.ps1xml')
@@ -66,10 +67,11 @@ function Initialize-SepmConfiguration {
     if ($script:configuration.ServerAddress -and $script:configuration.port) {
         $script:BaseURLv1 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v1"
         $script:BaseURLv2 = "https://" + $script:configuration.ServerAddress + ":" + $script:configuration.port + "/sepm/api/v2"
-    } else {
-        # If no configuration was loaded from disk, or no server address was specified, reset the configuration
-        Reset-SEPMConfiguration
     }
+    # No config on disk (or incomplete): script variables keep the defaults set at the top of
+    # this file. We deliberately do NOT call Reset-SEPMConfiguration here — that cmdlet deletes
+    # the user's config file, and an import must not have filesystem side effects (it also
+    # would force this file to stay in Public/, since it loads last).
 
     # Load in the credentials from disk
     if (Test-Path $script:credentialsFilePath) {
