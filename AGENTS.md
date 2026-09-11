@@ -78,7 +78,7 @@ Branches on `$PSVersionTable.PSVersion.Major`:
 - `~/.local/share/PSSymantecSEPM/accessToken.xml` — cached token (Export-Clixml)
 
 ### Module build (ModuleBuilder)
-Source is split into individual `.ps1` files. `ModuleBuilder` assembles them into a single `.psm1` in `Output/`. The `zz_` prefix on `zz_Initialize-SepmConfiguration.ps1` ensures it loads last.
+Source is split into individual `.ps1` files. `ModuleBuilder` assembles them into a single `.psm1` in `Output/`, concatenating all `Private/` files before all `Public/` files. The `zz_` prefix on `Private/zz_Initialize-SepmConfiguration.ps1` makes it the last `Private/` file — it must not depend on `Public/` functions (see the file's header comment).
 
 ### Pagination
 Some cmdlets (e.g. `Get-SEPComputers`) paginate through the API using `pageIndex`/`pageSize` query params, looping until `lastPage == true`.
