@@ -99,4 +99,18 @@ Describe 'Add-SEPMFileFingerprintList' {
             }
         }
     }
+
+    Context '-WhatIf support' {
+        BeforeAll {
+            $script:fakeSession = Set-TestMocks -Transport {
+                return @{ }
+            }
+        }
+
+        It 'does not call the API when -WhatIf is given' {
+            Add-SEPMFileFingerprintList -name 'WhatIfList' -domainId 'DOM01' -HashType 'SHA256' -description 'test' -hashlist @('hash1') -WhatIf
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 0 -Exactly
+        }
+    }
 }

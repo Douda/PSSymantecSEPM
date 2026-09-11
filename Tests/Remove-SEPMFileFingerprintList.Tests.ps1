@@ -112,4 +112,18 @@ Describe 'Remove-SEPMFileFingerprintList' {
             }
         }
     }
+
+    Context '-WhatIf support' {
+        BeforeAll {
+            $script:fakeSession = Set-TestMocks -Transport {
+                return @{ }
+            }
+        }
+
+        It 'does not call the API when -WhatIf is given' {
+            Remove-SEPMFileFingerprintList -FingerprintListID 'FP_TO_DELETE' -WhatIf
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 0 -Exactly
+        }
+    }
 }

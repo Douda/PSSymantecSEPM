@@ -110,4 +110,24 @@ Describe 'New-SEPMGroup' {
             $script:errors[0].Exception.Message | Should -Match 'group'
         }
     }
+
+    Context '-WhatIf support' {
+        BeforeAll {
+            $script:fakeSession = Set-TestMocks -Transport {
+                return @{ }
+            }
+
+            Mock Get-SEPMGroups -ModuleName PSSymantecSEPM {
+                return @(
+                    [PSCustomObject]@{ id = 'parent-789'; name = 'Workstations'; fullPathName = 'My Company\Workstations' }
+                )
+            }
+        }
+
+        It 'does not call the API when -WhatIf is given' {
+            New-SEPMGroup -GroupName 'Win7' -ParentGroup 'My Company\Workstations' -WhatIf
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 0 -Exactly
+        }
+    }
 }

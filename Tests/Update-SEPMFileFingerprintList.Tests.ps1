@@ -113,4 +113,19 @@ Describe 'Update-SEPMFileFingerprintList' {
             }
         }
     }
+
+    Context '-WhatIf support' {
+        BeforeAll {
+            $script:fakeSession = Set-TestMocks -Transport {
+                return @{ }
+            }
+        }
+
+        It 'does not call the API when -WhatIf is given' {
+            Update-SEPMFileFingerprintList -FingerprintListID 'FP-ID-123' `
+                -name 'Renamed' -domainId 'dd' -HashType 'SHA256' -hashlist @('hash1') -WhatIf
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 0 -Exactly
+        }
+    }
 }
