@@ -27,7 +27,7 @@ function Add-SEPMFileFingerprintList {
         Adds the hash list as a blacklist to the default domain
 #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
     param (
         [Parameter()]
         [string]$name,
@@ -56,7 +56,9 @@ function Add-SEPMFileFingerprintList {
     }
 
     process {
-        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -BoundParameters $PSBoundParameters
+        if ($PSCmdlet.ShouldProcess($name, "Add file fingerprint list")) {
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -BoundParameters $PSBoundParameters
+        }
 
         if ($PassThru) {
             Write-Output $resp

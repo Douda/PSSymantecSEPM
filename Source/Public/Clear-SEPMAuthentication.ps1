@@ -15,6 +15,7 @@ function Clear-SEPMAuthentication {
         This command will not clear your configuration settings.
         Please use Reset-SEPMConfiguration to accomplish that.
 #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Local file state only, no SEPM mutation')]
     [CmdletBinding()]
     param()
 

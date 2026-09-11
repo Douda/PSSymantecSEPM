@@ -572,4 +572,22 @@ Describe 'Update-SEPMExceptionPolicy' {
                 Should -Throw -ExpectedMessage "*Policy 'NonexistentPolicy' not found*"
         }
     }
+
+    Context '-WhatIf support' {
+        BeforeEach {
+            $null = Set-TestMocks -SkipCert -SkipTransport
+            Mock Get-SEPMPoliciesSummary -ModuleName PSSymantecSEPM {
+                return New-DummyPolicySummary -PolicyName 'TestPolicy' -PolicyType 'exceptions'
+            }
+            Mock Invoke-SepmApi -ModuleName PSSymantecSEPM {
+                return @{ }
+            }
+        }
+
+        It 'does not call the API when -WhatIf is given' {
+            Update-SEPMExceptionPolicy -PolicyName 'TestPolicy' -Path 'C:\test\file.exe' -AllScans -WhatIf
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 0 -Exactly
+        }
+    }
 }

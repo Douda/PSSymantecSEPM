@@ -21,7 +21,7 @@ function Remove-SEPMGroup {
         Deletes the group TestGroup directly under My Company
     #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
     param (
         # group name
         [Parameter(
@@ -64,7 +64,9 @@ function Remove-SEPMGroup {
             return
         }
 
-        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($group.id)
+        if ($PSCmdlet.ShouldProcess($fullPathName, "Remove SEPM group")) {
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($group.id)
+        }
 
         if ($PassThru) {
             Write-Output $resp

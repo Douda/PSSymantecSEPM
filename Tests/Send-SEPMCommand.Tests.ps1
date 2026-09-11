@@ -360,4 +360,12 @@ Describe 'Send-SEPMCommand' {
             { Send-SEPMCommand -Type GetFile -ComputerName 'PC1' -Source BOGUS -ErrorAction Stop } | Should -Throw '-Source must be one of: FILESYSTEM, QUARANTINE, BOTH'
         }
     }
+
+    Context '-WhatIf support' {
+        It 'does not call the API when -WhatIf is given' {
+            Send-SEPMCommand -Type ActiveScan -ComputerName 'PC1' -WhatIf
+
+            Should -Invoke Invoke-SepmApi -ModuleName PSSymantecSEPM -Times 0 -Exactly
+        }
+    }
 }
