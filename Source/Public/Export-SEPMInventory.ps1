@@ -8,11 +8,33 @@ function Export-SEPMInventory {
         writes per-category .clixml files, and a timestamped snapshot blob.
         Failures from individual sub-cmdlets are captured rather than propagated.
 
+        Two parameter sets: 'ExistingConfig' (the default - the server and credentials are
+        already configured via Set-SEPMConfiguration and Set-SEPMAuthentication) and
+        'ExplicitAuth' (pass -ServerAddress plus optional -Port, -Credential/-CredentialPath,
+        -SkipCertificateCheck to configure, authenticate, and verify the connection in a single
+        call for unattended operation).
+
     .PARAMETER OutputDir
-        Directory where exported files are written. Default: current directory ('.').
+        Directory where exported files are written. Default: 'sepm-data-YYYY-MM-DD',
+        a date-stamped folder in the current directory (local time).
 
     .PARAMETER DelayMs
         Delay in milliseconds between sub-cmdlet calls to reduce API load. Default: 0.
+
+    .PARAMETER ServerAddress
+        [ExplicitAuth] SEPM server hostname or IP. Mandatory in this set.
+
+    .PARAMETER Port
+        [ExplicitAuth] SEPM server port. Optional; the configured default is used when omitted.
+
+    .PARAMETER Credential
+        [ExplicitAuth] PSCredential for the SEPM server. Optional; takes precedence over -CredentialPath.
+
+    .PARAMETER CredentialPath
+        [ExplicitAuth] Path to a credentials .xml file to restore. Optional.
+
+    .PARAMETER SkipCertificateCheck
+        [ExplicitAuth] Bypass TLS certificate validation (for self-signed certificates).
 
     .EXAMPLE
         PS C:\> Export-SEPMInventory -OutputDir 'C:\inventory'
@@ -20,13 +42,96 @@ function Export-SEPMInventory {
         Gathers SEPM data and writes clixml exports to C:\inventory.
     #>
 
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'ExistingConfig')]
     param(
-        [string]$OutputDir = '.',
-        [int]$DelayMs = 0
+        # Shared across both parameter sets
+        [string]$OutputDir = '',
+        [int]$DelayMs = 0,
+
+        # ExplicitAuth parameter set - self-contained auth bootstrap
+        [Parameter(Mandatory = $true, ParameterSetName = 'ExplicitAuth')]
+        [string]$ServerAddress,
+
+        [Parameter(Mandatory = $false, ParameterSetName = 'ExplicitAuth')]
+        [int]$Port,
+
+        [Parameter(Mandatory = $false, ParameterSetName = 'ExplicitAuth')]
+        [PSCredential]$Credential,
+
+        [Parameter(Mandatory = $false, ParameterSetName = 'ExplicitAuth')]
+        [string]$CredentialPath,
+
+        [Parameter(Mandatory = $false, ParameterSetName = 'ExplicitAuth')]
+        [switch]$SkipCertificateCheck
     )
 
     begin {
+        # Default to a date-stamped folder when no explicit OutputDir is given
+        if ([string]::IsNullOrEmpty($OutputDir)) {
+            $OutputDir = "sepm-data-$(Get-Date -Format 'yyyy-MM-dd')"
+        }
+
+        # Self-contained auth bootstrap for the ExplicitAuth parameter set
+        if ($PSCmdlet.ParameterSetName -eq 'ExplicitAuth') {
+            # 1. Configure the server (partial update of only the provided values)
+            $configParams = @{}
+            if ($PSBoundParameters.ContainsKey('ServerAddress')) { $configParams['ServerAddress'] = $ServerAddress }
+            if ($PSBoundParameters.ContainsKey('Port')) { $configParams['Port'] = $Port }
+            if ($configParams.Count -gt 0) { Set-SEPMConfiguration @configParams }
+
+            # 2. Bypass certificate validation if requested
+            if ($PSBoundParameters.ContainsKey('SkipCertificateCheck') -and $SkipCertificateCheck) {
+                $script:SkipCert = $true
+            }
+
+            # 3. Resolve the credential from the most specific source available
+            $resolvedCredential = $null
+            if ($PSBoundParameters.ContainsKey('Credential') -and $null -ne $Credential) {
+                $resolvedCredential = $Credential
+            }
+            elseif ($PSBoundParameters.ContainsKey('CredentialPath') -and $CredentialPath) {
+                Restore-SEPMAuthentication -Path $CredentialPath -Credential
+                $resolvedCredential = $script:Credential
+            }
+            else {
+                $resolvedCredential = Get-Credential
+            }
+
+            # 4. Store the credential in module scope and persist to disk
+            Set-SEPMAuthentication -Credentials $resolvedCredential
+
+            # 5. Invalidate the cached session and any token (memory + disk). The
+            #    fail-fast gate below must query SEPM with the NEW credential; a
+            #    stale cached token (for a different server/credential) would
+            #    otherwise be returned without ever being verified.
+            $script:_session = $null
+            $script:accessToken = $null
+            Remove-Item -Path $script:accessTokenFilePath -Force -ErrorAction SilentlyContinue
+
+            # Verify credentials fail-fast before starting a multi-minute export
+            try {
+                $null = Get-SEPMAccessToken
+                Write-Host '[OK] Authentication verified' -ForegroundColor Green
+            }
+            catch {
+                Write-Host '[FAIL] Provided credentials rejected by SEPM' -ForegroundColor Red
+                Write-Host 'Prompting for credentials...' -ForegroundColor Yellow
+                $fallbackCredential = Get-Credential
+                Set-SEPMAuthentication -Credentials $fallbackCredential
+                $script:_session = $null
+                $script:accessToken = $null
+                Remove-Item -Path $script:accessTokenFilePath -Force -ErrorAction SilentlyContinue
+                try {
+                    $null = Get-SEPMAccessToken
+                    Write-Host '[OK] Authentication verified' -ForegroundColor Green
+                }
+                catch {
+                    throw
+                }
+            }
+        }
+
+        # Create the output directory if it doesn't exist
         if (-not (Test-Path -Path $OutputDir)) {
             New-Item -Path $OutputDir -ItemType Directory -Force | Out-Null
         }
