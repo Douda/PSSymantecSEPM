@@ -15,6 +15,7 @@ function Restore-SEPMConfiguration {
 
         Makes the contents of c:\foo\config.json be the user's configuration for the module.
 #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Local file state only, no SEPM mutation')]
     [CmdletBinding()]
     param(
         [ValidateScript({

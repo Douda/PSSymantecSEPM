@@ -20,6 +20,7 @@ function Backup-SEPMAuthentication {
 
         Writes the user's current authentication file to c:\foo\credentials.xml.
 #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Local file state only, no SEPM mutation')]
     [CmdletBinding()]
     param(
         [string] $Path,
