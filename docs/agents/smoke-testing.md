@@ -81,6 +81,51 @@ $mod = Get-Module PSSymantecSEPM; & $mod { $script:SkipCert = $true }
 
 **`$script:SkipCert` must be set in module scope** — `Test-SEPMCertificate` is disabled (no auto-detect of self-signed certs).
 
+## Transport error contract — `Scripts/Smoke/Transport/verify-transport-errors.ps1`
+
+Standalone suite, **not** the four-file pattern: it is one self-contained script so it can be
+dropped on the VM without the rest of `Scripts/Smoke`. It asserts the ErrorId, ErrorCategory
+and message of every way a REST call can fail, against a real SEPM.
+
+Run it before merging any change to `Invoke-SepmApi`, `ConvertTo-SEPMTransportError`,
+`Get-SEPMAccessToken` or `Invoke-SepmApiPaginated`.
+
+**Why it exists**: `Tests/Invoke-SepmApi.Tests.ps1` mocks `$PSVersionTable` and
+`Invoke-RestMethod`, so the PS 5.1 `HttpWebRequest` branch never executes under Pester and CI
+is green either way. A live run is what found the `GetRequestStream` defect — a TLS failure
+that escaped the transport as a `MethodInvocationException`, so every POST (authentication
+included) reported `SEPM.AuthenticationFailed` instead of `SEPM.CertificateError`. See
+`docs/adr/0010-transport-throws-structured-errors.md`.
+
+| Platform | Command |
+|---|---|
+| PS 7 (devcontainer) | `pwsh -NoProfile -File Scripts/Smoke/Transport/verify-transport-errors.ps1 -ServerAddress 172.20.0.2` |
+| PS 5.1 (VM, over WinRM) | deploy first, then `WINRM_HOST=172.20.0.2 WINRM_USER=douda WINRM_PASS=aurelien python3 Scripts/invoke-winrm.py 'C:\Users\douda\Desktop\Shared\verify-transport-errors.ps1'` |
+
+Deploy for the PS 5.1 run (build the module first):
+
+```bash
+cp Scripts/Smoke/Transport/verify-transport-errors.ps1 /home/douda/Windows/
+rm -rf /home/douda/Windows/PSSymantecSEPM && cp -r ./Output/PSSymantecSEPM /home/douda/Windows/PSSymantecSEPM
+```
+
+It imports the built module, points it at SEPM, and snapshots/restores the module's
+config / credential / token files around the run. Both platforms print the same
+`TOTAL: N tests, N pass, N fail, N skip` line as the smoke suites, exit non-zero on failure,
+and accept `-ReportPath` to write the full log somewhere readable from the host.
+
+Two things that will otherwise waste an hour:
+
+- **Check 1 (untrusted certificate) must run before anything sets `$script:SkipCert = $true`.**
+  `Skip-Cert` installs a process-wide `ServicePointManager.ServerCertificateValidationCallback`
+  that cannot be unset, so the check is only meaningful in a fresh process. Do not reorder it,
+  and do not run it in the same process as `Initialize-SmokeBootstrap`, which authenticates and
+  installs the callback.
+- **The VM caches the shared folder over SMB.** After redeploying a file, the VM can still run
+  the previous copy, and reading a file the host replaced in place can fail with *"The parameter
+  is incorrect"* until the share is revalidated. Delete the target from the VM side, or read a
+  different file in the same folder, to force a fresh read.
+
 ## Test policy
 
 Only one exception policy exists:

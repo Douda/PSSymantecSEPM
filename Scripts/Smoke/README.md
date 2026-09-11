@@ -59,3 +59,9 @@ and their suite-specific `Tests.ps1`.
 | `Update-SEPMFileFingerprintList/` | Converted (#176) |
 
 All 32 smoke suites are now converted to the run pattern.
+
+## Standalone suites (not the run pattern)
+
+| Suite | Why it is different |
+|---|---|
+| `Transport/verify-transport-errors.ps1` | Asserts the transport error contract (ErrorId / ErrorCategory / message) against a real SEPM, on both PS 7 and PS 5.1. One self-contained script, deliberately **not** converted: `Initialize-SmokeBootstrap` authenticates and installs the `Skip-Cert` callback, and the untrusted-certificate check is only meaningful in a process where that callback has not been installed yet. See `docs/agents/smoke-testing.md`. |
