@@ -254,6 +254,7 @@ python3 Scripts/invoke-winrm.py 'C:\Users\<username>\Desktop\Shared\test-module.
   - **File seam**: Paths redirected to `TestDrive:` by `Initialize-TestEnvironment`. No direct filesystem access in tests.
   - **HTTP seam**: Not tested at unit level — smoke tests cover the live API.
 - **InModuleScope** is reserved for transport/auth/tooling layer tests only: `Invoke-SepmApi`, `Initialize-SEPMSession`, and TestHelpers lifecycle functions.
+  - **Documented exception — `Export-SEPMInventory` ExplicitAuth bootstrap** (issue #242): the self-contained bootstrap re-introduces the `-SkipCertificateCheck` switch (ADR-0001, which removed it from every public cmdlet, post-dates the issue's spec) purely to set the module-scope `$script:SkipCert` flag for a fresh, unconfigured process. No exported seam surfaces that flag, so the two `SkipCertificateCheck` tests read `$script:SkipCert` via `InModuleScope`. The bootstrap's fail-fast verification routes through the `Initialize-SEPMSession` seam (mocked per the auth-seam rule) rather than the raw `Get-SEPMAccessToken`.
 - **PS version strategy**: Unit tests mock `$PSVersionTable.PSVersion.Major` where needed to exercise PS 5.1 vs 7+ code paths. Transport tests (`Invoke-SepmApi`) test both branches. Most cmdlet tests don't branch on PS version — the transport layer abstracts it away.
 - **Seed tests** (`Seed-*.Tests.ps1`) validate that `Seed-SEPMData` correctly populates the SEPM VM with test data. They hit the live API.
 

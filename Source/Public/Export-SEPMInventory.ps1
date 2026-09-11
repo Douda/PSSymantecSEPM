@@ -36,6 +36,11 @@ function Export-SEPMInventory {
     .PARAMETER SkipCertificateCheck
         [ExplicitAuth] Bypass TLS certificate validation (for self-signed certificates).
 
+        Bootstrap-only: sets the session-wide SkipCert flag so a fresh, unconfigured
+        process can connect to a SEPM with a self-signed certificate. This is a
+        documented exception to the module-wide removal of the per-cmdlet switch
+        (see ADR-0001 and AGENTS.md).
+
     .EXAMPLE
         PS C:\> Export-SEPMInventory -OutputDir 'C:\inventory'
 
@@ -61,6 +66,8 @@ function Export-SEPMInventory {
         [Parameter(Mandatory = $false, ParameterSetName = 'ExplicitAuth')]
         [string]$CredentialPath,
 
+        # Bootstrap-only: sets the session-wide SkipCert flag for a fresh,
+        # unconfigured process (documented ADR-0001 exception - see AGENTS.md).
         [Parameter(Mandatory = $false, ParameterSetName = 'ExplicitAuth')]
         [switch]$SkipCertificateCheck
     )
@@ -73,6 +80,13 @@ function Export-SEPMInventory {
 
         # Self-contained auth bootstrap for the ExplicitAuth parameter set
         if ($PSCmdlet.ParameterSetName -eq 'ExplicitAuth') {
+            # -Credential and -CredentialPath are mutually exclusive. There is no
+            # declarative attribute form that parses in both PS 5.1 and PS 7, so
+            # guard here: fail fast instead of silently letting -Credential win.
+            if ($PSBoundParameters.ContainsKey('Credential') -and $PSBoundParameters.ContainsKey('CredentialPath')) {
+                throw 'Cannot specify both -Credential and -CredentialPath. Provide one credential source only.'
+            }
+
             # 1. Configure the server (partial update of only the provided values)
             $configParams = @{}
             if ($PSBoundParameters.ContainsKey('ServerAddress')) { $configParams['ServerAddress'] = $ServerAddress }
@@ -91,7 +105,10 @@ function Export-SEPMInventory {
             }
             elseif ($PSBoundParameters.ContainsKey('CredentialPath') -and $CredentialPath) {
                 Restore-SEPMAuthentication -Path $CredentialPath -Credential
-                $resolvedCredential = $script:Credential
+                # Read the PSCredential straight from the supplied file so a
+                # corrupt/unreadable file fails loudly here instead of silently
+                # degrading to an interactive Get-Credential prompt.
+                $resolvedCredential = Import-Clixml -Path $CredentialPath
             }
             else {
                 $resolvedCredential = Get-Credential
@@ -100,17 +117,16 @@ function Export-SEPMInventory {
             # 4. Store the credential in module scope and persist to disk
             Set-SEPMAuthentication -Credentials $resolvedCredential
 
-            # 5. Invalidate the cached session and any token (memory + disk). The
-            #    fail-fast gate below must query SEPM with the NEW credential; a
-            #    stale cached token (for a different server/credential) would
-            #    otherwise be returned without ever being verified.
-            $script:_session = $null
-            $script:accessToken = $null
-            Remove-Item -Path $script:accessTokenFilePath -Force -ErrorAction SilentlyContinue
+            # 5. Invalidate the cached session and any token (memory + disk) so the
+            #    fail-fast gate below re-authenticates with the NEW credential. A
+            #    stale cached session (for a different server/credential) would
+            #    otherwise be returned by the seam without ever being verified.
+            Invalidate-SEPMSession
 
-            # Verify credentials fail-fast before starting a multi-minute export
+            # Verify credentials fail-fast through the session seam before starting
+            # a multi-minute export
             try {
-                $null = Get-SEPMAccessToken
+                $null = Initialize-SEPMSession
                 Write-Host '[OK] Authentication verified' -ForegroundColor Green
             }
             catch {
@@ -118,11 +134,9 @@ function Export-SEPMInventory {
                 Write-Host 'Prompting for credentials...' -ForegroundColor Yellow
                 $fallbackCredential = Get-Credential
                 Set-SEPMAuthentication -Credentials $fallbackCredential
-                $script:_session = $null
-                $script:accessToken = $null
-                Remove-Item -Path $script:accessTokenFilePath -Force -ErrorAction SilentlyContinue
+                Invalidate-SEPMSession
                 try {
-                    $null = Get-SEPMAccessToken
+                    $null = Initialize-SEPMSession
                     Write-Host '[OK] Authentication verified' -ForegroundColor Green
                 }
                 catch {
