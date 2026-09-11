@@ -84,9 +84,10 @@ function Invoke-SeedFingerprints {
             $existing = _InvokeApi -Method GET -Uri "$baseUrl/policy-objects/fingerprints?name=$([System.Uri]::EscapeDataString($fpName))" -Session $session
             if ($existing -and $existing.id) {
                 $null = $forceResetNames.Add($fpName)
-                $delResp = _InvokeApi -Method DELETE -Uri "$baseUrl/policy-objects/fingerprints/$($existing.id)" -Session $session
-                if ($delResp -is [string] -and $delResp -like 'Error:*') {
-                    Write-Warning "Failed to delete fingerprint list '$fpName': $delResp. Will recreate anyway."
+                try {
+                    $null = _InvokeApi -Method DELETE -Uri "$baseUrl/policy-objects/fingerprints/$($existing.id)" -Session $session
+                } catch {
+                    Write-Warning "Failed to delete fingerprint list '$fpName': $($_.Exception.Message) Will recreate anyway."
                 }
             }
         }

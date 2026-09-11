@@ -23,7 +23,7 @@ function Confirm-SEPMEventInfo {
     .EXAMPLE
         PS C:\PSSymantecSEPM> Confirm-SEPMEventInfo -EventID "15B9BDBFAC1E000268F855FB4332BCC6"
 
-        Confirm-SEPMEventInfo: Event '15B9BDBF...' cannot be acknowledged via the SEPM REST API...
+        Confirm-SEPMEventInfo: Event '15B9BDBF...' could not be acknowledged via the SEPM REST API...
         False
 
         Attempting to acknowledge a non-acknowledgeable event type returns
@@ -48,24 +48,23 @@ function Confirm-SEPMEventInfo {
     }
 
     process {
-        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($EventID)
-
-        # Detect error responses (PS7: "Error: ...", PS5.1: raw JSON with errorCode)
-        if ($resp -is [string] -and $resp -match 'errorCode|Failed to update') {
-            if ($resp -match 'Failed to update the event') {
-                $msg = @"
-Event '$EventID' cannot be acknowledged via the SEPM REST API.
+        try {
+            $null = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($EventID)
+            return $true
+        } catch {
+            # The transport throws on every failure. SEPM rejects the event types it cannot
+            # acknowledge with its own message, and the Transport Error carries that message
+            # through, so it is reported verbatim rather than matched against expected text.
+            $msg = @"
+Event '$EventID' could not be acknowledged via the SEPM REST API.
 Only certain critical event types (e.g., Server Health Alert) support acknowledgement.
 Events such as software update notifications and system notifications must be
 acknowledged through the SEPM console (Monitors > Notifications).
+
+$($_.Exception.Message)
 "@
-                Write-Error -Message $msg -ErrorId 'EventNotAcknowledgeable' -ErrorAction Continue
-            } else {
-                Write-Error -Message "Failed to acknowledge event '$EventID'. Response: $resp" -ErrorId 'EventAcknowledgeFailed' -ErrorAction Continue
-            }
+            Write-Error -Message $msg -ErrorId 'EventAcknowledgeFailed' -ErrorAction Continue
             return $false
         }
-
-        return $true
     }
 }

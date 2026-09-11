@@ -7,8 +7,13 @@ function Invoke-SepmApiPaginated {
         Starts pageIndex = 1, merges $Endpoint.PageDefaults into query params,
         calls Resolve-SepmEndpoint + Invoke-SepmApi per page, and concatenates
         $resp.content arrays. Returns the full result array via Write-Output
-        -NoEnumerate. Throws immediately if Invoke-SepmApi returns a string
-        (error response).
+        -NoEnumerate.
+
+        A failed page is retried once after a short pause, then the whole read is
+        aborted with a Transport Error naming the page, so a caller never silently
+        receives a partial result. The retry lives here rather than in Invoke-SepmApi
+        because only these reads are GETs: retrying in the transport would also retry
+        POSTs, where a slow-but-successful create would be applied twice.
 
     .PARAMETER Endpoint
         A hashtable from the endpoint registry with Method, Version, Path,
@@ -92,11 +97,45 @@ function Invoke-SepmApiPaginated {
             $apiSplat.ContentType = 'application/json'
         }
 
-        $resp = Invoke-SepmApi @apiSplat
+        # Retry the page once before giving up. Only GETs reach this loop, so re-issuing
+        # the request is safe; the pause is what gives a transient blip a chance to clear,
+        # since an immediate retry tends to hit the same failure again.
+        $attempt = 0
+        do {
+            try {
+                $resp = Invoke-SepmApi @apiSplat
+                break
+            } catch {
+                $attempt++
+                $currentPage = $queryParams['pageIndex']
+                if ($attempt -ge 2) {
+                    # Keep the original ErrorId and Category, and add the page context the
+                    # transport could not know.
+                    if ($currentPage -le 1) {
+                        $context = 'the first page failed'
+                    } else {
+                        $context = "page $currentPage failed; pages 1-$($currentPage - 1) were read successfully"
+                    }
+                    $PSCmdlet.ThrowTerminatingError((New-SEPMApiError `
+                                -Message "$($_.Exception.Message) ($context)" `
+                                -ErrorId $_.FullyQualifiedErrorId.Split(',')[0] `
+                                -Category $_.CategoryInfo.Category `
+                                -Target $_.TargetObject))
+                }
+                Write-Verbose "Page $currentPage of $($Endpoint.OperationName) failed, retrying once: $($_.Exception.Message)"
+                Start-Sleep -Milliseconds 1000
+            }
+        } while ($true)
 
-        # If Invoke-SepmApi returns a string, it's an error — throw immediately
-        if ($resp -is [string]) {
-            throw "Paginated API call failed: $resp"
+        # The response must carry lastPage - it is the loop's only termination condition. A
+        # string payload (a non-JSON body returned with a 2xx status) has no properties at all,
+        # so trusting it would spin this loop forever against the server. The transport only
+        # rejects a string when the HTTP status is an error, so it is checked here too.
+        if ($null -eq $resp -or $resp -is [string] -or $null -eq $resp.lastPage) {
+            $PSCmdlet.ThrowTerminatingError((New-SEPMApiError `
+                        -Message "SEPM API $($Endpoint.Method) $($Endpoint.Path) returned a response with no 'lastPage' field, so pagination cannot continue (page $($queryParams['pageIndex']))." `
+                        -Category ([System.Management.Automation.ErrorCategory]::InvalidResult) `
+                        -Target $uri))
         }
 
         if ($resp.content) {

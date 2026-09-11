@@ -86,10 +86,11 @@ function Invoke-SeedHostGroups {
             $existing = $currentContent | Where-Object { $_.name -eq $hgName } | Select-Object -First 1
             if ($existing -and $existing.id) {
                 $null = $forceResetNames.Add($hgName)
-                $delResp = _InvokeApi -Method DELETE -Uri "$baseUrl/policies/policy-objects/hostgroups/$($existing.id)" `
-                    -Session $session
-                if ($delResp -is [string] -and $delResp -like 'Error:*') {
-                    Write-Warning "Failed to delete host group '$hgName': $delResp. Will recreate anyway."
+                try {
+                    $null = _InvokeApi -Method DELETE -Uri "$baseUrl/policies/policy-objects/hostgroups/$($existing.id)" `
+                        -Session $session
+                } catch {
+                    Write-Warning "Failed to delete host group '$hgName': $($_.Exception.Message) Will recreate anyway."
                 }
             }
         }

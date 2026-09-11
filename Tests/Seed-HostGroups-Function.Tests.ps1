@@ -219,8 +219,10 @@ Describe 'Invoke-SeedHostGroups' {
                 }
                 if ($Method -eq 'DELETE') {
                     $script:deletedIds += $Uri
-                    # Simulate DELETE 500: return error string, do NOT remove from list
-                    return 'Error: Internal Server Error'
+                    # Simulate DELETE 500 the way the real transport reports it: by throwing.
+                    # The list is deliberately left untouched.
+                    throw (New-SEPMApiError -Message 'SEPM API DELETE /policies/policy-objects/hostgroups/x failed (HTTP 500): Internal Server Error' `
+                            -Category ([System.Management.Automation.ErrorCategory]::ResourceUnavailable) -Target $Uri)
                 }
                 if ($Method -eq 'POST') {
                     $script:postCalls += $Body

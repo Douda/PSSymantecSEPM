@@ -12,6 +12,14 @@ function Invoke-SepmApi {
                 KeepAlive=false forces a fresh TLS handshake per request.
                 JSON parsed via JavaScriptSerializer, converted to [hashtable].
 
+        A failed request is raised as a structured Transport Error, never returned as a
+        value. ConvertTo-SEPMTransportError builds the ErrorRecord, so both PS branches
+        report the same ErrorId, ErrorCategory and message.
+
+        The value returned on success is a [hashtable], or a string for endpoints whose
+        payload is not JSON (the XML policy and location endpoints). A string return
+        therefore always means success.
+
     .PARAMETER Session
         Session object from Initialize-SEPMSession. Provides Headers and SkipCert.
         Mutually exclusive with -Headers/-SkipCert.
@@ -34,6 +42,12 @@ function Invoke-SepmApi {
 
     .PARAMETER ContentType
         Content-Type header value (defaults to application/json when Body present).
+
+    .OUTPUTS
+        System.Collections.Hashtable, or System.String for a non-JSON payload.
+
+    .NOTES
+        Internal helper method. Not exported. Throws a Transport Error on any failure.
     #>
 
     [CmdletBinding(DefaultParameterSetName = 'Session')]
@@ -96,8 +110,15 @@ function Invoke-SepmApi {
                 $resp = Invoke-RestMethod @irmParams
             }
         } catch {
-            Write-Warning "Invoke-RestMethod error: $_"
-            return "Error: $_"
+            # A failure is a failure, not a value. The HTTP status is only available on
+            # the response object; a connection or TLS failure has none, so it stays 0.
+            $statusCode = 0
+            if ($_.Exception.Response) {
+                $statusCode = [int]$_.Exception.Response.StatusCode
+            }
+            $PSCmdlet.ThrowTerminatingError((ConvertTo-SEPMTransportError `
+                        -Exception $_.Exception -Method $Method -Uri $Uri `
+                        -StatusCode $statusCode -Body $_.ErrorDetails.Message))
         }
 
         # Convert JSON string to [hashtable] for uniform return type
@@ -123,6 +144,10 @@ function Invoke-SepmApi {
     }
 
     # === PS 5.1 path: HttpWebRequest + KeepAlive=false ===
+    # One try around the whole exchange: a TLS handshake fails while the body is being
+    # written (GetRequestStream) just as easily as at GetResponse, so there is no single
+    # call to guard. Every failure is raised as a structured Transport Error here, never
+    # returned as a value.
     try {
         if ($effectiveSkipCert) {
             Skip-Cert
@@ -158,45 +183,54 @@ function Invoke-SepmApi {
             $reqStream.Close()
         }
 
-        # Get response
-        try {
-            $httpResp = $req.GetResponse()
-        } catch [System.Net.WebException] {
-            $errResp = $_.Exception.Response
-            if ($errResp) {
-                $errStream = $errResp.GetResponseStream()
-                $errReader = New-Object System.IO.StreamReader($errStream)
-                $errBody = $errReader.ReadToEnd()
-                $errReader.Close()
-                $errResp.Close()
-                return $errBody
-            }
-            throw
-        }
+        $httpResp = $req.GetResponse()
 
         $respStream = $httpResp.GetResponseStream()
         $respReader = New-Object System.IO.StreamReader($respStream)
         $respBodyStr = $respReader.ReadToEnd()
         $respReader.Close()
         $httpResp.Close()
-
-        # Parse JSON to [hashtable] (uniform return type, no Dictionary→PSObject conversion)
-        if ($respBodyStr -match '^\s*[\[\{]') {
-            try {
-                Add-Type -AssemblyName System.Web.Extensions -ErrorAction SilentlyContinue
-                $jss = New-Object System.Web.Script.Serialization.JavaScriptSerializer
-                $jss.MaxJsonLength = [int]::MaxValue
-                $jss.RecursionLimit = 100
-                $parsed = $jss.DeserializeObject($respBodyStr)
-                return ConvertTo-Hashtable -InputObject $parsed
-            } catch {
-                return $respBodyStr
-            }
+    } catch {
+        # Unwrap to the real exception. PowerShell wraps a failed GetRequestStream (but not
+        # GetResponse) in a MethodInvocationException, which carries neither the WebException
+        # response nor the AuthenticationException that identifies a certificate failure.
+        $failure = $_.Exception
+        while ($null -ne $failure -and $failure -is [System.Management.Automation.MethodInvocationException]) {
+            $failure = $failure.InnerException
         }
 
-        return $respBodyStr
-    } catch {
-        Write-Warning "HttpWebRequest error: $_"
-        return "Error: $_"
+        # SEPM's error body is only readable while the WebException is being handled - the
+        # response stream is disposed afterwards - so it is read here and handed to the
+        # shared error builder. A connection or TLS failure has no response at all.
+        $statusCode = 0
+        $errBody = $null
+        if ($failure -is [System.Net.WebException] -and $null -ne $failure.Response) {
+            $statusCode = [int]$failure.Response.StatusCode
+            $errStream = $failure.Response.GetResponseStream()
+            $errReader = New-Object System.IO.StreamReader($errStream)
+            $errBody = $errReader.ReadToEnd()
+            $errReader.Close()
+            $failure.Response.Close()
+        }
+
+        $PSCmdlet.ThrowTerminatingError((ConvertTo-SEPMTransportError `
+                    -Exception $failure -Method $Method -Uri $Uri `
+                    -StatusCode $statusCode -Body $errBody))
     }
+
+    # Parse JSON to [hashtable] (uniform return type, no Dictionary→PSObject conversion)
+    if ($respBodyStr -match '^\s*[\[\{]') {
+        try {
+            Add-Type -AssemblyName System.Web.Extensions -ErrorAction SilentlyContinue
+            $jss = New-Object System.Web.Script.Serialization.JavaScriptSerializer
+            $jss.MaxJsonLength = [int]::MaxValue
+            $jss.RecursionLimit = 100
+            $parsed = $jss.DeserializeObject($respBodyStr)
+            return ConvertTo-Hashtable -InputObject $parsed
+        } catch {
+            return $respBodyStr
+        }
+    }
+
+    return $respBodyStr
 }

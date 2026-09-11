@@ -98,15 +98,13 @@ Describe 'Get-SEPMFileFingerprintList' {
     Context 'Name not found' {
         BeforeAll {
             $null = Set-TestMocks -Transport {
-                return 'Error: fingerprint list not found'
+                throw (New-SEPMApiError -Message 'SEPM API GET /policies/policy-objects/fingerprints failed (HTTP 404): fingerprint list not found' `
+                        -Category ([System.Management.Automation.ErrorCategory]::ObjectNotFound) -Target 'https://sepm')
             }
         }
 
-        It 'returns error string when fingerprint list name does not exist' {
-            $result = Get-SEPMFileFingerprintList -FingerprintListName 'NonExistent'
-
-            $result | Should -BeOfType ([string])
-            $result | Should -Match 'Error: fingerprint list not found'
+        It 'throws a Transport Error when fingerprint list name does not exist' {
+            { Get-SEPMFileFingerprintList -FingerprintListName 'NonExistent' } | Should -Throw '*fingerprint list not found*'
         }
     }
 }
