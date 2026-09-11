@@ -35,7 +35,9 @@ function Update-SEPMFileFingerprintList {
         The fingerprint list needs to be existing before it can be updated
 #>
     [CmdletBinding(
-        DefaultParameterSetName = 'Name'
+        DefaultParameterSetName = 'Name',
+        SupportsShouldProcess,
+        ConfirmImpact = 'Medium'
     )]
     param (
         [Parameter()]
@@ -85,8 +87,10 @@ function Update-SEPMFileFingerprintList {
             $FingerprintListID = if ($fp) { $fp.id } else { $null }
         }
 
-        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session `
-            -BoundParameters $PSBoundParameters -PathIds @($FingerprintListID)
+        if ($PSCmdlet.ShouldProcess("$(if ($FingerprintListName) { $FingerprintListName } else { $FingerprintListID })", "Update file fingerprint list")) {
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session `
+                -BoundParameters $PSBoundParameters -PathIds @($FingerprintListID)
+        }
 
         if ($PassThru) {
             Write-Output $resp

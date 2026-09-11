@@ -23,7 +23,9 @@ function Remove-SEPMFileFingerprintList {
 #>
 
     [CmdletBinding(
-        DefaultParameterSetName = 'Name'
+        DefaultParameterSetName = 'Name',
+        SupportsShouldProcess,
+        ConfirmImpact = 'Medium'
     )]
     param (
         [Parameter(
@@ -58,7 +60,9 @@ function Remove-SEPMFileFingerprintList {
             $FingerprintListID = if ($fp) { $fp.id } else { $null }
         }
 
-        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($FingerprintListID)
+        if ($PSCmdlet.ShouldProcess("$(if ($FingerprintListName) { $FingerprintListName } else { $FingerprintListID })", "Remove file fingerprint list")) {
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($FingerprintListID)
+        }
 
         if ($PassThru) {
             Write-Output $resp

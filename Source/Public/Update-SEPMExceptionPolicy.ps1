@@ -26,7 +26,7 @@ function Update-SEPMExceptionPolicy {
         Remove the exception instead of adding it.
     #>
 
-    [CmdletBinding(DefaultParameterSetName = 'Default')]
+    [CmdletBinding(DefaultParameterSetName = 'Default', SupportsShouldProcess, ConfirmImpact = 'Medium')]
     param (
         # Policy Name
         [Parameter(
@@ -348,7 +348,9 @@ function Update-SEPMExceptionPolicy {
 
         $bodyJson = ConvertTo-SEPMJson -InputObject $ObjBody -Compress
 
-        $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($PolicyID) -Body $bodyJson
+        if ($PSCmdlet.ShouldProcess($PolicyName, "Update exceptions policy")) {
+            $resp = Invoke-SepmEndpoint -Endpoint $endpoint -Session $session -PathIds @($PolicyID) -Body $bodyJson
+        }
         return $resp
     }
 }
