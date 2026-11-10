@@ -31,7 +31,7 @@
 [CmdletBinding()]
 param(
     [string]$SepmUser = "admin",
-    [string]$SepmPass = "MyComplexPassword1!",
+    [string]$SepmPass = "Aurelien1!",
     [string]$SepmHost = "localhost",
     [int]$SepmPort = 8446
 )

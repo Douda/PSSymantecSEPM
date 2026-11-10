@@ -7,7 +7,7 @@
 | VM container | `omarchy-windows` (dockur/windows) |
 | SEPM API | `https://localhost:8446/sepm/api/v{1,2}` |
 | SEPM version | 14.3.25029.9000 |
-| Credentials | SEPM: `admin` / `MyComplexPassword1!` / domain: `""`; WinRM: `smokeuser` / `smokepassword` |
+| Credentials | agent: `api_user` / `ApiUser!SePM26xQ` (sysadmin); admin: `admin` / `Aurelien1!`; WinRM: `smokeuser` / `smokepassword` |
 | WinRM (PS 5.1) | NTLM transport, port 5985, `localhost` (SSL/5986 broken with pywinrm) |
 | Shared volume | `/home/douda/Windows/` ↔ `C:\Users\smokeuser\Desktop\Shared\` |
 
@@ -26,7 +26,7 @@ curl -sk https://localhost:8446/sepm/api/v1/version
 ```bash
 TOKEN=$(curl -sk -X POST https://localhost:8446/sepm/api/v1/identity/authenticate \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"MyComplexPassword1!","appName":"test","domain":""}' \
+  -d '{"username":"api_user","password":"ApiUser!SePM26xQ","appName":"test","domain":""}' \
   | pwsh -NoProfile -c '$i=$input|Out-String;($i|ConvertFrom-Json).token')
 # Use: -H "Authorization: Bearer $TOKEN"
 ```
@@ -65,7 +65,7 @@ then dot-source the suite's `Tests.ps1`.
 
 `Common.ps1` is a pure helper library — `T`, `Skip`, `Write-Summary` only. No side
 effects, no `$PSVersionTable` branching, no config paths, no module import.
-Credentials (`admin` / `MyComplexPassword1!`) live inside `Bootstrap.ps1` /
+Credentials (`api_user` / `ApiUser!SePM26xQ`) live inside `Bootstrap.ps1` /
 `Initialize-SmokeBootstrap`.
 
 See `Scripts/Smoke/README.md` for suite conversion status.

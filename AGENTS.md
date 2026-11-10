@@ -272,4 +272,4 @@ Single-context — one `CONTEXT.md` at the repo root, one `docs/adr/` directory.
 
 How to interact with the local SEPM VM for live API smoke tests (auth, curl, PS 7, PS 5.1). See `docs/agents/smoke-testing.md`.
 
-Credentials: SEPM: `admin` / `MyComplexPassword1!`; WinRM: `smokeuser` / `smokepassword`; SEPM backup: `douda` / `Aurelien1!` (VM in docker-compose, local dev only).
+Credentials: agent/tests: `api_user` / `ApiUser!SePM26xQ` (sysadmin, via SEPM API v1 /admin-users); admin fallback: `admin` / `Aurelien1!`; WinRM: `smokeuser` / `smokepassword` (VM in docker-compose, local dev only).
