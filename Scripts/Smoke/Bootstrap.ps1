@@ -75,8 +75,8 @@ function Initialize-SmokeBootstrap {
     }
 
     # ── Authenticate (common to both platforms) ──
-    $SmokeCredPassword = ConvertTo-SecureString -String 'MyComplexPassword1!' -AsPlainText -Force
-    $SmokeCredential   = New-Object System.Management.Automation.PSCredential -ArgumentList 'admin', $SmokeCredPassword
+    $SmokeCredPassword = ConvertTo-SecureString -String 'ApiUser!SePM26xQ' -AsPlainText -Force
+    $SmokeCredential   = New-Object System.Management.Automation.PSCredential -ArgumentList 'api_user', $SmokeCredPassword
     Set-SEPMAuthentication -Credential $SmokeCredential -ErrorAction SilentlyContinue
     Get-SEPMAccessToken | Out-Null
 }
