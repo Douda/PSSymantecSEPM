@@ -17,9 +17,10 @@ Source/
 │   ├── zz_Initialize-SepmConfiguration.ps1  # Module initializer — loads last via zz_ prefix
 │   ├── ... (36 files total)
 │   └── Skip-Cert.ps1            # PS 5.1 cert bypass via Add-Type C#
-├── Public/                      # Exported cmdlets (51 files)
+├── Public/                      # Exported cmdlets (52 files)
 │   ├── Get-SEPMComputers.ps1    # Paginated, filterable by name or group
 │   ├── Set-SEPMAuthentication.ps1
+│   ├── Export-SEPMFirewallPolicyXml.ps1  # All fw policies → firewall_policy_xml/<name>.xml raw XML
 │   ├── Update-SEPMExceptionPolicy.ps1
 │   └── ... (one file per cmdlet)
 ├── en-US/about_PSSymantecSEPM.help.txt
@@ -97,6 +98,7 @@ Some cmdlets (e.g. `Get-SEPMComputers`) paginate through the API using `pageInde
 - GUPs, domains, admins, database info, license, replication status, threat stats
 - Move clients between groups
 - Location management (list, get XML)
+- Firewall policy raw-XML export (all policies, named after SEPM policy names)
 - File fingerprint list management
 - Configuration backup/restore
 - Excel export (firewall policies)
@@ -113,7 +115,7 @@ other array-dependent downstream code.
 **Does not apply to**: cmdlets returning a single object (hashtable, PSCustomObject,
 boolean, string), even if the object internally contains nested arrays.
 
-Audited 2026-06-09 — 13 cmdlets use this pattern:
+Audited 2026-06-09 — 14 cmdlets use this pattern:
 
 | Cmdlet | Returns |
 |---|---|
@@ -130,6 +132,7 @@ Audited 2026-06-09 — 13 cmdlets use this pattern:
 | `Get-SEPMReplicationStatus` | Replication status array |
 | `Get-SEPMThreatStats` | Threat stats array |
 | `Send-SEPMCommand` | Command result array |
+| `Export-SEPMFirewallPolicyXml` | Written-file info array (Name, PolicyId, Path, Bytes) |
 
 New cmdlets returning collections should follow this pattern.
 
